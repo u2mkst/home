@@ -447,7 +447,7 @@
         }
 
         function sendMessageToTeacher() {
-    const msgInput = document.getElementById('studentMsgInput'); // 학생 메시지 입력창 ID 확인 필요
+    const msgInput = document.getElementById('studentMsgInput'); // 학생 메시지 입력창 ID
     const text = msgInput.value.trim();
 
     if (!text) { 
@@ -459,17 +459,25 @@
         return; 
     }
 
-    // 🚨 현재 로그인한 학생의 고유 UID 가져오기
+    // 🚨 현재 로그인한 학생의 인증 정보 체크
     const currentUser = firebase.auth().currentUser;
+    
     if (!currentUser) {
-        alert('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+        // 인증 세션이 끊겼거나 아직 로드되지 않은 경우 안내
+        alert('❌ 세션이 종료되었습니다. 앱을 종료 후 다시 실행하거나 다시 로그인해 주세요.');
+        return;
+    }
+
+    // 예외 처리: UID가 비어있는지 2차 검증
+    if (!currentUser.uid) {
+        alert('❌ 학생 식별값을 가져오지 못했습니다. 다시 로그인해 주세요.');
         return;
     }
 
     const msgData = {
-        studentName: currentStudentData.name,
-        u2mId: currentStudentData.u2mId || '',       // 관리자창에 ID 띄우기용
-        studentUid: currentUser.uid,                 // 👈 획득한 studentUid를 여기에 명확히 포함!
+        studentName: currentStudentData.name || '이름없음',
+        u2mId: currentStudentData.u2mId || '',       
+        studentUid: currentUser.uid,                 // 👈 확실하게 인증된 UID 주입
         teacher: currentStudentData.teacher,
         message: text,
         timestamp: firebase.database.ServerValue.TIMESTAMP,
@@ -482,7 +490,7 @@
             alert(`${currentStudentData.teacher} 선생님께 메시지가 전송되었습니다.`);
             msgInput.value = ''; // 입력창 비우기
             if (typeof closeSendMessageModal === 'function') {
-                closeSendMessageModal(); // 모달창 닫기 함수가 있다면 실행
+                closeSendMessageModal(); // 모달창이 있다면 닫기
             }
         })
         .catch(err => alert('전송 실패: ' + err.message));
