@@ -447,33 +447,46 @@
         }
 
         function sendMessageToTeacher() {
-            const msgInput = document.getElementById('studentMsgInput');
-            const text = msgInput.value.trim();
+    const msgInput = document.getElementById('studentMsgInput'); // 학생 메시지 입력창 ID 확인 필요
+    const text = msgInput.value.trim();
 
-            if (!text) {
-                alert('보낼 내용을 입력해 주세요.');
-                return;
+    if (!text) { 
+        alert('보낼 내용을 입력해 주세요.'); 
+        return; 
+    }
+    if (!currentStudentData || !currentStudentData.teacher) { 
+        alert('선생님 정보가 없습니다. 다시 로그인해 주세요.'); 
+        return; 
+    }
+
+    // 🚨 현재 로그인한 학생의 고유 UID 가져오기
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+        alert('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+        return;
+    }
+
+    const msgData = {
+        studentName: currentStudentData.name,
+        u2mId: currentStudentData.u2mId || '',       // 관리자창에 ID 띄우기용
+        studentUid: currentUser.uid,                 // 👈 획득한 studentUid를 여기에 명확히 포함!
+        teacher: currentStudentData.teacher,
+        message: text,
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        read: false
+    };
+
+    // 데이터베이스 'messages' 노드로 전송
+    firebase.database().ref('messages').push(msgData)
+        .then(() => {
+            alert(`${currentStudentData.teacher} 선생님께 메시지가 전송되었습니다.`);
+            msgInput.value = ''; // 입력창 비우기
+            if (typeof closeSendMessageModal === 'function') {
+                closeSendMessageModal(); // 모달창 닫기 함수가 있다면 실행
             }
-            if (!currentStudentData || !currentStudentData.teacher) {
-                alert('담당 선생님 정보가 등록되지 않아 메시지를 보낼 수 없습니다.');
-                return;
-            }
-
-            const msgData = {
-                studentName: currentStudentData.name,
-                teacher: currentStudentData.teacher,
-                message: text,
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-                read: false
-            };
-
-            database.ref('messages').push(msgData)
-                .then(() => {
-                    alert(`${currentStudentData.teacher} 선생님께 메시지가 전송되었습니다.`);
-                    closeSendMessageModal();
-                })
-                .catch(err => alert('전송 실패: ' + err.message));
-        }
+        })
+        .catch(err => alert('전송 실패: ' + err.message));
+}
 
         function deleteAccount() {
             const user = auth.currentUser;
