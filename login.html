@@ -8,6 +8,8 @@
     <!-- Firebase SDK (v8 버전) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <!-- Realtime Database 사용을 위해 데이터베이스 SDK 추가 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         @font-face {
@@ -31,11 +33,10 @@
             padding: 20px 24px; box-sizing: border-box;
         }
 
-        /* 📦 [수정] 로고를 감싸는 흰색 박스 디자인 */
         .header-zone { 
             text-align: center; 
             margin-bottom: 25px; 
-            background: rgba(255, 255, 255, 0.7); /* 카드보다 약간 더 밝은 흰색 배경 */
+            background: rgba(255, 255, 255, 0.7);
             padding: 20px 15px;
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -48,12 +49,11 @@
             overflow: hidden;
         }
 
-        /* ✂️ [수정] 이미지 여백을 강제로 잘라내는 매직 CSS */
         .header-zone .logo-wrapper {
             width: 100%;
             max-width: 250px;
-            height: 48px; /* 보이고 싶은 로고의 세로 영역을 타이트하게 제한 */
-            overflow: hidden; /* 영역 밖으로 나가는 여백은 전부 숨김(컷팅) */
+            height: 48px;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -61,9 +61,9 @@
 
         .header-zone .logo-img {
             width: 100%;
-            height: 140px; /* 원본의 불필요한 위아래 여백을 밀어내기 위해 높이를 키움 */
-            object-fit: cover; /* 비율을 유지하면서 채우기 */
-            object-position: center 48%; /* 미세하게 위아래 컷팅 위치 조정 (글자가 정중앙에 오도록) */
+            height: 140px;
+            object-fit: cover;
+            object-position: center 48%;
         }
 
         .auth-card { 
@@ -77,12 +77,12 @@
         h2 { margin-top: 0; color: #2c3e50; font-size: 1.2rem; font-weight: bold; margin-bottom: 24px; text-align: center; }
         label { display: block; font-weight: bold; font-size: 0.85rem; color: #4a5568; margin-bottom: 6px; padding-left: 4px; }
 
-        input { 
+        input, select { 
             width: 100%; padding: 14px; border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 14px; 
             box-sizing: border-box; margin-bottom: 18px; font-size: 0.95rem; font-family: inherit;
             background-color: rgba(255, 255, 255, 0.7); color: #333; transition: all 0.2s ease;
         }
-        input:focus { outline: none; border-color: #6c5ce7; background-color: #fff; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); }
+        input:focus, select:focus { outline: none; border-color: #6c5ce7; background-color: #fff; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); }
 
         .info-text { font-size: 0.8rem; color: #7f8c8d; margin-top: -12px; margin-bottom: 16px; padding-left: 4px; }
         .warning-text { font-size: 0.8rem; color: #e74c3c; margin-top: -12px; margin-bottom: 16px; padding-left: 4px; font-weight: 600; }
@@ -106,7 +106,6 @@
 <body>
 
     <div class="container">
-        <!-- 🤍 [수정] 이제 로고 전체가 둥근 흰색 박스 안에 배치됩니다. -->
         <div class="header-zone">
             <div class="logo-wrapper">
                 <img src="https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250713_196%2F1752417299448f8dDm_PNG%2FKP%25BC%25F6%25C7%25D0%25C0%25D4%25BD%25C3%25C7%25D0%25BF%25F8_%25B7%25CE%25B0%25ED-%25B0%25A1%25B7%25CE1.png" alt="K&P 수학입시학원 로고" class="logo-img">
@@ -145,6 +144,19 @@
                 <input type="text" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="numeric" required>
                 <div class="info-text">※ 이 번호가 앞으로 로그인할 때 비밀번호가 됩니다.</div>
                 
+                <!-- 🆕 요청하신 담당 선생님 명단 적용 -->
+                <label>담당 선생님 선택</label>
+                <select id="registerTeacher" required>
+                    <option value="" disabled selected>담당 선생님을 선택해 주세요</option>
+                    <option value="김동진">김동진 선생님</option>
+                    <option value="이주희">이주희 선생님</option>
+                    <option value="차현준">차현준 선생님</option>
+                    <option value="권준수">권준수 선생님</option>
+                    <option value="박다희">박다희 선생님</option>
+                    <option value="정찬호">정찬호 선생님</option>
+                    <option value="김영호">김영호 선생님</option>
+                </select>
+                
                 <button type="submit">가입 완료하기</button>
             </form>
             <div class="switch-mode">
@@ -166,6 +178,7 @@
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const database = firebase.database();
 
         function toggleMode(mode) {
             if(mode === 'register') {
@@ -182,6 +195,7 @@
             const studentName = document.getElementById('registerName').value.trim();
             const u2mId = document.getElementById('registerId').value.trim().toLowerCase();
             const phoneTail = document.getElementById('registerParentPhone').value.trim();
+            const selectedTeacher = document.getElementById('registerTeacher').value;
 
             if (!u2mId.startsWith('ufes') || u2mId.length < 6) {
                 alert('⚠️ 올바른 유투엠 아이디 형식이 아닙니다!\n아이디는 반드시 ufes로 시작해야 합니다.');
@@ -193,14 +207,29 @@
                 return;
             }
 
+            if (!selectedTeacher) {
+                alert('담당 선생님을 선택해 주세요.');
+                return;
+            }
+
             const studentEmail = u2mId + "@kst.com"; 
             const studentPassword = "00" + phoneTail; 
 
             auth.createUserWithEmailAndPassword(studentEmail, studentPassword)
                 .then((userCredential) => {
                     const user = userCredential.user;
+                    
+                    // 1. Firebase Auth 프로필에 이름 업데이트
                     return user.updateProfile({
                         displayName: studentName
+                    }).then(() => {
+                        // 2. Realtime Database에 담당 선생님 및 학생 정보 기록 저장
+                        return database.ref('users/' + user.uid).set({
+                            name: studentName,
+                            u2mId: u2mId,
+                            teacher: selectedTeacher,
+                            joinedAt: firebase.database.ServerValue.TIMESTAMP
+                        });
                     });
                 })
                 .then(() => {
@@ -225,21 +254,16 @@
             const studentEmail = u2mId.includes('@') ? u2mId : u2mId + "@kst.com";
             const studentPassword = "00" + phoneTail;
 
-            // 기존 로그인 성공 리스너 내부 코드 수정
-auth.signInWithEmailAndPassword(studentEmail, studentPassword)
-    .then((userCredential) => {
-        // 💾 [추가] 유투엠 자동 입력을 위해 로컬 저장소에 아이디와 비번을 임시 저장합니다.
-        // 이메일 앞자리(유투엠 아이디)와 입력한 비밀번호를 저장
-        const u2mId = studentEmail.split('@')[0];
-        localStorage.setItem('u2m_id', u2mId);
-        localStorage.setItem('u2m_pw', studentPassword);
-
-        // 메인 화면으로 이동
-        window.location.href = './index.html'; 
-    })
-    .catch((error) => {
-        alert("로그인에 실패했습니다: " + error.message);
-    });
+            auth.signInWithEmailAndPassword(studentEmail, studentPassword)
+                .then((userCredential) => {
+                    const u2mId = studentEmail.split('@')[0];
+                    localStorage.setItem('u2m_id', u2mId);
+                    localStorage.setItem('u2m_pw', studentPassword);
+                    window.location.href = './index.html'; 
+                })
+                .catch((error) => {
+                    alert("로그인에 실패했습니다: " + error.message);
+                });
         }
     </script>
 </body>
