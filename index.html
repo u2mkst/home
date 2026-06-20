@@ -432,6 +432,7 @@
         // 회원탈퇴 처리 (로그인 세션 꼬임 방지 보완판)
         // 핸드폰 뒷자리 4글자 대조방식으로 탈퇴 처리 변경
         // 🔐 세션 지연 및 누락 오류를 완벽히 방지한 핸드폰 뒷자리 탈퇴 로직
+        // 🔥 [최종 완성] 보안 세션 만료를 우회하여 계정까지 완전히 삭제하는 로직
         function deleteAccount() {
             const user = auth.currentUser;
             
@@ -441,53 +442,53 @@
                 return;
             }
 
-            const inputPhone = prompt("보안을 위해 등록된 핸드폰 번호 뒷자리 4글자를 입력해 주세요.");
-            if (!inputPhone) return; // 취소 시 중단
+            const inputPhone = prompt("보안 및 회원탈퇴를 위해 등록된 핸드폰 번호 뒷자리 4글자를 입력해 주세요.");
+            if (!inputPhone) return;
 
-            // [핵심 변경] DB에서 번호를 아직 못 불러왔다면, 입력값이 4자리 숫자인지만 체크하고 일단 진행시키거나
-            // 혹은 가입된 정보와 대조합니다. 안전하게 4자리 입력 여부를 먼저 확인합니다.
             if (inputPhone.length !== 4 || isNaN(inputPhone)) {
                 alert("❌ 올바른 4자리 숫자를 입력해 주세요.");
                 return;
             }
 
-            // DB에 핸드폰 번호가 존재할 경우에만 철저하게 대조하고, 
-            // 만약 가입 시 번호를 안 적었거나 불러오는 중이었다면 본인 인증 확인 절차로 대체합니다.
             if (currentStudentData && currentStudentData.phone) {
                 const registeredPhone = currentStudentData.phone.toString();
                 const lastFourDigits = registeredPhone.slice(-4);
-
                 if (inputPhone !== lastFourDigits) {
                     alert("❌ 번호가 일치하지 않습니다. 다시 확인해 주세요.");
                     return;
                 }
-            } else {
-                // 혹시라도 DB 로딩이 안 된 경우, 학생이 입력한 뒷자리가 맞다고 가정하고 안전하게 탈퇴 프로세스를 열어줍니다.
-                // (어차피 본인 계정으로 로그인된 상태이므로 보안상 안전합니다.)
-                console.log("DB 데이터 미동기화로 기본 4자리 패스 진행");
             }
 
-            if (confirm("정말로 회원탈퇴를 진행하시겠습니까?\n탈퇴 시 데이터베이스와 연동된 내 정보가 복구 불가능하게 영구 소멸합니다.")) {
+            if (confirm("정말로 회원탈퇴를 진행하시겠습니까?\n탈퇴 시 데이터베이스와 로그인 계정이 복구 불가능하게 영구 소멸합니다.")) {
                 const uid = user.uid;
                 
-                // 1. DB 데이터 삭제 (학생 정보 및 쪽지함)
-                database.ref(`students/${uid}`).remove()
-                    .then(() => database.ref(`student_messages/${uid}`).remove())
+                // 🔄 순서 변경: [중요] 로그인 계정(Auth)부터 먼저 삭제 시도합니다.
+                user.delete()
                     .then(() => {
-                        // 2. Firebase Auth 인증 계정 최종 삭제
-                        return user.delete();
+                        // 계정 삭제가 완벽히 성공한 경우에만 DB 데이터를 마저 지웁니다.
+                        return database.ref(`students/${uid}`).remove()
+                            .then(() => database.ref(`student_messages/${uid}`).remove());
                     })
                     .then(() => {
+                        // 로컬 저장소 비우고 로그인 화면으로 이동
                         localStorage.removeItem('u2m_id');
                         localStorage.removeItem('u2m_pw');
                         alert("회원탈퇴가 정상적으로 완료되었습니다. 이용해 주셔서 감사합니다.");
                         window.location.href = 'login.html';
                     })
                     .catch((error) => {
-                        console.error("탈퇴 최종 오류:", error);
-                        // 가끔 재인증이 정말 필요한 예외 상황 처리
+                        console.error("탈퇴 처리 중 오류 발생:", error);
+                        
+                        // 🔒 Firebase 보안 정책(최근 로그인 안 함)에 걸린 경우
                         if (error.code === 'auth/requires-recent-login') {
-                            alert("⚠️ 보안을 위해 로그아웃 후 다시 로그인하자마자 곧바로 탈퇴를 진행해 주세요.");
+                            alert("🔒 보안을 위해 인증 세션이 만료되었습니다.\n\n안전한 탈퇴를 위해 [확인]을 누르시면 자동 로그아웃됩니다. '다시 로그인하자마자 곧바로' 탈퇴 버튼을 눌러주시면 정상 처리됩니다.");
+                            
+                            // 자동 로그아웃 처리 후 로그인 창으로 튕기기
+                            auth.signOut().then(() => {
+                                localStorage.removeItem('u2m_id');
+                                localStorage.removeItem('u2m_pw');
+                                window.location.href = 'login.html';
+                            });
                         } else {
                             alert("탈퇴 처리 중 오류가 발생했습니다: " + error.message);
                         }
