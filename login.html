@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K&P 수학입시학원</title>
+    
+    <!-- Firebase SDK (v8 버전) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'Paperozi';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+            font-weight: 500; font-display: swap;
+        }
+
+        body { 
+            font-family: 'Paperozi', 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
+            background-blend-mode: multiply;
+            margin: 0; padding: 0; color: #333;
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%; max-width: 430px;
+            padding: 20px 24px; box-sizing: border-box;
+        }
+
+        /* 📦 [수정] 로고를 감싸는 흰색 박스 디자인 */
+        .header-zone { 
+            text-align: center; 
+            margin-bottom: 25px; 
+            background: rgba(255, 255, 255, 0.7); /* 카드보다 약간 더 밝은 흰색 배경 */
+            padding: 20px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 8px 25px rgba(149, 157, 165, 0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* ✂️ [수정] 이미지 여백을 강제로 잘라내는 매직 CSS */
+        .header-zone .logo-wrapper {
+            width: 100%;
+            max-width: 250px;
+            height: 48px; /* 보이고 싶은 로고의 세로 영역을 타이트하게 제한 */
+            overflow: hidden; /* 영역 밖으로 나가는 여백은 전부 숨김(컷팅) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-zone .logo-img {
+            width: 100%;
+            height: 140px; /* 원본의 불필요한 위아래 여백을 밀어내기 위해 높이를 키움 */
+            object-fit: cover; /* 비율을 유지하면서 채우기 */
+            object-position: center 48%; /* 미세하게 위아래 컷팅 위치 조정 (글자가 정중앙에 오도록) */
+        }
+
+        .auth-card { 
+            background: rgba(255, 255, 255, 0.55); 
+            padding: 30px 24px; border-radius: 20px; backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 12px 30px rgba(149, 157, 165, 0.06);
+            box-sizing: border-box;
+        }
+
+        h2 { margin-top: 0; color: #2c3e50; font-size: 1.2rem; font-weight: bold; margin-bottom: 24px; text-align: center; }
+        label { display: block; font-weight: bold; font-size: 0.85rem; color: #4a5568; margin-bottom: 6px; padding-left: 4px; }
+
+        input { 
+            width: 100%; padding: 14px; border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 14px; 
+            box-sizing: border-box; margin-bottom: 18px; font-size: 0.95rem; font-family: inherit;
+            background-color: rgba(255, 255, 255, 0.7); color: #333; transition: all 0.2s ease;
+        }
+        input:focus { outline: none; border-color: #6c5ce7; background-color: #fff; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); }
+
+        .info-text { font-size: 0.8rem; color: #7f8c8d; margin-top: -12px; margin-bottom: 16px; padding-left: 4px; }
+        .warning-text { font-size: 0.8rem; color: #e74c3c; margin-top: -12px; margin-bottom: 16px; padding-left: 4px; font-weight: 600; }
+
+        button { 
+            display: block; background-color: #6c5ce7; color: #ffffff; border: none;
+            padding: 16px 20px; border-radius: 14px; cursor: pointer; font-weight: 600; font-size: 1rem;
+            width: 100%; font-family: inherit; box-shadow: 0 6px 15px rgba(108, 92, 231, 0.2);
+            transition: all 0.2s ease; margin-top: 10px;
+        }
+        button:hover { background-color: #5b4cc4; transform: translateY(-2px); }
+        button:active { transform: translateY(0) scale(0.98); }
+
+        .switch-mode { text-align: center; margin-top: 22px; font-size: 0.88rem; color: #718096; }
+        .switch-link { color: #6c5ce7; text-decoration: none; font-weight: 600; margin-left: 5px; cursor: pointer; }
+        .switch-link:hover { text-decoration: underline; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 🤍 [수정] 이제 로고 전체가 둥근 흰색 박스 안에 배치됩니다. -->
+        <div class="header-zone">
+            <div class="logo-wrapper">
+                <img src="https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250713_196%2F1752417299448f8dDm_PNG%2FKP%25BC%25F6%25C7%25D0%25C0%25D4%25BD%25C3%25C7%25D0%25BF%25F8_%25B7%25CE%25B0%25ED-%25B0%25A1%25B7%25CE1.png" alt="K&P 수학입시학원 로고" class="logo-img">
+            </div>
+        </div>
+
+        <!-- [1] 학생 로그인 카드 -->
+        <div id="loginCard" class="auth-card">
+            <h2>학생 로그인</h2>
+            <form onsubmit="handleStudentLogin(event)">
+                <label>유투엠 아이디</label>
+                <input type="text" id="loginId" placeholder="ufes로 시작하는 아이디 입력" required>
+                
+                <label>부모님 전화번호 뒷자리</label>
+                <input type="password" id="loginPassword" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric" required>
+                
+                <button type="submit">로그인하고 입장하기</button>
+            </form>
+            <div class="switch-mode">
+                처음 왔나요? <span class="switch-link" onclick="toggleMode('register')">회원가입 하기</span>
+            </div>
+        </div>
+
+        <!-- [2] 학생 회원가입 카드 -->
+        <div id="registerCard" class="auth-card hidden">
+            <h2>학생 회원가입</h2>
+            <form onsubmit="handleStudentRegister(event)">
+                <label>학생 이름</label>
+                <input type="text" id="registerName" placeholder="실명을 입력하세요 (예: 홍길동)" required>
+
+                <label>유투엠 아이디</label>
+                <input type="text" id="registerId" placeholder="예: ufes123456" required>
+                <div class="warning-text">※ 반드시 ufes로 시작하는 아이디를 정확히 입력하세요.</div>
+                
+                <label>부모님 전화번호 뒷자리 (4자리)</label>
+                <input type="text" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="numeric" required>
+                <div class="info-text">※ 이 번호가 앞으로 로그인할 때 비밀번호가 됩니다.</div>
+                
+                <button type="submit">가입 완료하기</button>
+            </form>
+            <div class="switch-mode">
+                이미 계정이 있나요? <span class="switch-link" onclick="toggleMode('login')">로그인하러 가기</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+            authDomain: "ksthome-76889.firebaseapp.com",
+            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+            projectId: "ksthome-76889",
+            storageBucket: "ksthome-76889.firebasestorage.app",
+            messagingSenderId: "411945142173",
+            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+            measurementId: "G-72TJ0364MJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        function toggleMode(mode) {
+            if(mode === 'register') {
+                document.getElementById('loginCard').classList.add('hidden');
+                document.getElementById('registerCard').classList.remove('hidden');
+            } else {
+                document.getElementById('registerCard').classList.add('hidden');
+                document.getElementById('loginCard').classList.remove('hidden');
+            }
+        }
+
+        function handleStudentRegister(e) {
+            e.preventDefault();
+            const studentName = document.getElementById('registerName').value.trim();
+            const u2mId = document.getElementById('registerId').value.trim().toLowerCase();
+            const phoneTail = document.getElementById('registerParentPhone').value.trim();
+
+            if (!u2mId.startsWith('ufes') || u2mId.length < 6) {
+                alert('⚠️ 올바른 유투엠 아이디 형식이 아닙니다!\n아이디는 반드시 ufes로 시작해야 합니다.');
+                return;
+            }
+
+            if (!/^\d{4}$/.test(phoneTail)) {
+                alert('부모님 전화번호 뒷자리는 숫자 4자리로 입력해주세요.');
+                return;
+            }
+
+            const studentEmail = u2mId + "@kst.com"; 
+            const studentPassword = "00" + phoneTail; 
+
+            auth.createUserWithEmailAndPassword(studentEmail, studentPassword)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    return user.updateProfile({
+                        displayName: studentName
+                    });
+                })
+                .then(() => {
+                    alert('🎉 회원가입이 완료되었습니다!\n유투엠 아이디와 비밀번호로 로그인해 주세요.');
+                    toggleMode('login');
+                    document.getElementById('loginId').value = u2mId;
+                })
+                .catch((error) => {
+                    if(error.code === "auth/email-already-in-use") {
+                        alert("이미 등록된 유투엠 아이디입니다.");
+                    } else {
+                        alert('회원가입 실패: ' + error.message);
+                    }
+                });
+        }
+
+        function handleStudentLogin(e) {
+            e.preventDefault();
+            const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
+            const phoneTail = document.getElementById('loginPassword').value.trim();
+
+            const studentEmail = u2mId.includes('@') ? u2mId : u2mId + "@kst.com";
+            const studentPassword = "00" + phoneTail;
+
+            auth.signInWithEmailAndPassword(studentEmail, studentPassword)
+                .then((userCredential) => {
+                    window.location.href = './index.html';
+                })
+                .catch((error) => {
+                    alert('❌ 로그인 실패: 유투엠 아이디 또는 비밀번호가 일치하지 않습니다.');
+                });
+        }
+    </script>
+</body>
+</html>
