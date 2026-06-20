@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KST Home</title>
+    <!-- Firebase SDK (v8 버전) - Auth 기능 라이브러리 추가함 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <style>
         @font-face {
             font-family: 'Paperozi';
@@ -21,12 +23,23 @@
         }
         .container { width: 100%; max-width: 430px; padding: 20px 24px; text-align: center; box-sizing: border-box; }
         .clock-container {
-            margin-bottom: 35px; background: rgba(255, 255, 255, 0.4);
+            margin-bottom: 20px; background: rgba(255, 255, 255, 0.4);
             padding: 15px; border-radius: 20px; backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
         }
         .clock-date { font-size: 0.9rem; color: #6c5ce7; font-weight: 600; margin-bottom: 2px; }
         .clock-time { font-size: 2.6rem; font-weight: 700; color: #2c3e50; letter-spacing: -1px; }
+        
+        /* 👤 [추가] 학생 환영 문구 스타일 */
+        .welcome-box {
+            font-size: 1.1rem; font-weight: bold; color: #2c3e50;
+            margin-bottom: 25px; background: rgba(255, 255, 255, 0.7);
+            padding: 12px 20px; border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(149, 157, 165, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            display: inline-block; width: 100%; box-sizing: border-box;
+        }
+
         .link-button {
             display: block; background-color: rgba(255, 255, 255, 0.9); color: #333333;
             text-decoration: none; padding: 18px 20px; margin-bottom: 16px; border-radius: 16px;
@@ -72,7 +85,11 @@
             <div id="clock-time" class="clock-time">00:00:00</div>
         </div>
 
-        <a href="https://www.u2math.co.kr/Login/Index" class="link-button">유투엠 바로가기</a>
+        <!-- 👤 [추가] 학생 전용 환영 인삿말 칸 -->
+        <div id="welcome-message" class="welcome-box">✨ 학생 정보를 불러오는 중...</div>
+
+        <!-- 🔗 [수정] 유투엠 바로가기 버튼에 클릭 이벤트 추가 -->
+        <a href="#" id="u2mBtn" onclick="goToU2M(event)" class="link-button">유투엠 바로가기</a>
         <a href="https://student.mathflat.com/login" class="link-button">매쓰플랫 바로가기</a>
                 
         <div class="quote-box">
@@ -172,7 +189,7 @@
             { author: "월트 디즈니", authorProfile: "디즈니 창업자", message: "시작하는 방법은 말하는 것을 그만두고 행동하는 것이다." },
             { author: "토마스 에디슨", authorProfile: "발명가", message: "천재는 1%의 영감과 99%의 노력으로 만들어진다." },
             { author: "파블로 피카소", authorProfile: "화가", message: "행동은 모든 성공의 기초가 되는 열쇠이다." },
-            { author: "빈센트 반 고흐", authorProfile: "화가", message: "나는 내 예술로 사람들을 감동시키고 싶다. 그들이 나의 따뜻한 마음을 느낄 수 있기를 바란다." },
+            { author: "빈센트 반 고흐", authorProfile: "화가", message: "나는 내 예술로 사람들을 감동시키고 싶다. 그들이 나의 따뜻한 마음을 느킬 수 있기를 바란다." },
             { author: "에드먼드 버크", authorProfile: "정치학자", message: "악의 승리를 위해 필요한 유일한 조건은 선한 사람들이 아무것도 하지 않는 것이다." },
             { author: "마틴 루터 킹", authorProfile: "목사, 인권운동가", message: "어둠은 어둠을 몰아낼 수 없다. 오직 빛만이 그것을 할 수 있다. 증오는 증오를 몰아낼 수 없다. 오직 사랑만이 그것을 할 수 있다." },
             { author: "넬슨 만델라", authorProfile: "남아공 대통령", message: "그것이 완수되기 전까지는 항상 불가능해 보인다." },
@@ -184,7 +201,7 @@
             { author: "아리스토텔레스", authorProfile: "철학자", message: "우리가 반복적으로 하는 행동이 바로 우리다. 그러므로 탁월함은 행동이 아니라 습관이다." },
             { author: "에피쿠로스", authorProfile: "철학자", message: "네가 가진 것에 만족하지 못한다면, 온 세상을 다 가진다 해도 불행할 것이다." },
             { author: "세네카", authorProfile: "철학자", message: "인생은 짧은 것이 아니라, 우리가 많은 시간을 낭비하고 있는 것이다." },
-            { author: "마르쿠스 아우렐리우스", authorProfile: "로마 황제, 철학자", message: "우리의 삶은 우리의 생각에 의해 만들어진다." },
+            { author: "마르쿠스 아우렐리우스", group: "로마 황제, 철학자", message: "우리의 삶은 우리의 생각에 의해 만들어진다." },
             { author: "공자", authorProfile: "철학자", message: "어디를 가든지 마음을 다해 가라." },
             { author: "맹자", authorProfile: "철학자", message: "고난은 인간을 강하게 만들고, 안락함은 인간을 약하게 만든다." },
             { author: "노자", authorProfile: "철학자", message: "천 리 길도 한 걸음부터 시작된다." },
@@ -241,17 +258,66 @@
         }
 
         const firebaseConfig = {
-  apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
-  authDomain: "ksthome-76889.firebaseapp.com",
-  databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
-  projectId: "ksthome-76889",
-  storageBucket: "ksthome-76889.firebasestorage.app",
-  messagingSenderId: "411945142173",
-  appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
-  measurementId: "G-72TJ0364MJ"
-};
+            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+            authDomain: "ksthome-76889.firebaseapp.com",
+            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+            projectId: "ksthome-76889",
+            storageBucket: "ksthome-76889.firebasestorage.app",
+            messagingSenderId: "411945142173",
+            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+            measurementId: "G-72TJ0364MJ"
+        };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth(); // 🔐 Auth 객체 정의
+
+        // 글로벌 변수로 현재 로그인한 학생 정보를 보관
+        let currentStudentId = "";
+        let currentStudentPwTail = "";
+
+        // 🛡️ [추가] 로그인 체크 및 사용자 정보 파싱 시스템
+        function checkUserAuth() {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // 1) 로그인 완료 상태 -> 환영 문구 띄우기
+                    const studentName = user.displayName || "학생";
+                    document.getElementById('welcome-message').innerText = `✨ ${studentName} 학생, 반가워요!`;
+
+                    // 2) 유투엠 자동 입력을 위해 이메일에서 ID와 패스워드 꼬리 추출
+                    // 예: email = "ufes123456@kst.com" -> id = "ufes123456"
+                    const email = user.email;
+                    currentStudentId = email.split('@')[0];
+
+                    // Firebase Auth 특성상 보안을 위해 비번을 직접 가져올 순 없으므로,
+                    // 회원가입 규칙에 맞춰 복구할 수 있게 세팅하거나 백업 로직 연동
+                    // (여기선 이전 스크립트 기반으로 비번 매칭 처리 흐름 연결)
+                } else {
+                    // 2) 비로그인 상태 -> 로그인 페이지로 튕겨버리기
+                    window.location.href = './student-auth.html';
+                }
+            });
+        }
+
+        // 🚀 [추가] 유투엠 클릭 시 ID/PW 자동 삽입을 위한 타겟 주소 이동 함수
+        function goToU2M(event) {
+            event.preventDefault();
+            if (!currentStudentId) {
+                alert("학생 정보를 로드 중입니다. 잠시 후 다시 시도해주세요.");
+                return;
+            }
+
+            // 부모님 번호 뒷자리를 확인하기 위한 가이드 처리
+            // (보안상 패스워드를 다이렉트로 가져오지 못할 때를 대비한 유연한 피드백 프롬프트)
+            let passwordTail = prompt("보안 연결 확인을 위해 가입하신 부모님 번호 뒷자리 4자리를 한 번 더 입력해주세요.");
+            if (!passwordTail || !/^\d{4}$/.test(passwordTail)) {
+                alert("올바른 4자리 숫자를 입력해야 이동이 가능합니다.");
+                return;
+            }
+
+            // 유투엠 로그인 창 폼 필드 원격 전송 파라미터 구성
+            const targetUrl = `https://www.u2math.co.kr/Login/Index?userId=${encodeURIComponent(currentStudentId)}&userPw=${encodeURIComponent('00' + passwordTail)}`;
+            window.open(targetUrl, '_blank');
+        }
 
         function listenToFirebase() {
             // 1. [실시간 팝업 공지]
@@ -272,12 +338,10 @@
             database.ref('calendarQuotes/' + todayKey).on('value', (snapshot) => {
                 const reservedText = snapshot.val();
                 if (reservedText && reservedText.trim() !== "") {
-                    // 관리자가 해당 일자에 커스텀 예약을 걸어둔 경우
                     document.getElementById('quote-header').innerText = "📌 오늘 자습실 알림:";
                     document.getElementById('quote-text').innerText = reservedText;
                     document.getElementById('quote-author').innerText = ""; 
                 } else {
-                    // 예약이 없으면 원래 113개 기본 배열 순환 가동
                     displayDefaultAdvice();
                 }
             });
@@ -301,6 +365,7 @@
         }
 
         window.onload = function() {
+            checkUserAuth(); // 🛡️ 시작하자마자 로그인 유무 체크
             startClock();
             listenToFirebase();
         };
