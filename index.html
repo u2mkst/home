@@ -429,19 +429,30 @@
                 .catch(err => alert('전송 실패: ' + err.message));
         }
 
+        // 회원탈퇴 처리 (로그인 세션 꼬임 방지 보완판)
         function deleteAccount() {
             const user = auth.currentUser;
             
             if (!user) {
-                alert("로그인된 정보가 없습니다.");
+                alert("로그인된 정보가 없습니다. 다시 로그인해 주세요.");
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // 로그인할 때 쓰신 바로 그 이메일을 정확히 타겟팅합니다.
+            const userEmail = user.email || user.providerData[0]?.email;
+            
+            if (!userEmail) {
+                alert("이메일 정보를 확인할 수 없습니다. 보안을 위해 로그아웃 후 다시 로그인해서 시도해 주세요.");
                 return;
             }
 
             const password = prompt("보안 및 안전한 탈퇴를 위해 비밀번호를 다시 한번 입력해 주세요.");
-            if (!password) return;
+            if (!password) return; 
 
             if (confirm("정말로 회원탈퇴를 진행하시겠습니까?\n탈퇴 시 데이터베이스와 연동된 내 정보가 복구 불가능하게 영구 소멸합니다.")) {
-                const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+                // 수동으로 추출한 이메일과 입력한 비밀번호로 크레덴셜 생성
+                const credential = firebase.auth.EmailAuthProvider.credential(userEmail, password);
                 
                 user.reauthenticateWithCredential(credential)
                     .then(() => {
@@ -459,9 +470,9 @@
                         window.location.href = 'login.html';
                     })
                     .catch((error) => {
-                        console.error("회원탈퇴 오류:", error);
-                        if (error.code === 'auth/wrong-password') {
-                            alert("❌ 비밀번호가 올바르지 않습니다. 다시 시도해 주세요.");
+                        console.error("회원탈퇴 오류 상세:", error);
+                        if (error.code === 'auth/wrong-password' || error.message.includes('INVALID_LOGIN_CREDENTIALS')) {
+                            alert("❌ 인증 실패: 비밀번호가 올바르지 않거나 세션이 만료되었습니다. 맞게 입력하셨다면 로그아웃 후 새로 로그인해서 다시 시도해 주세요.");
                         } else {
                             alert("탈퇴 처리 중 오류가 발생했습니다: " + error.message);
                         }
