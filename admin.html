@@ -193,7 +193,7 @@
             justify-content: center; align-items: center;
         }
         .modal-box {
-            background: #ffffff; width: 90%; max-width: 400px; padding: 24px;
+            background: #ffffff; width: 90%; max-width: 420px; padding: 24px;
             border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;
         }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -202,11 +202,23 @@
         .close-modal:hover { color: #333; }
         
         .msg-list { max-height: 280px; overflow-y: auto; margin-bottom: 15px; padding-right: 4px; }
-        .msg-item { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 0.9rem; border-left: 4px solid #6c5ce7; }
+        .msg-item { background: #f8f9fa; padding: 14px; border-radius: 12px; margin-bottom: 12px; font-size: 0.9rem; border-left: 4px solid #6c5ce7; }
         .msg-item.unread { background: #edf2ff; border-left-color: #ff7675; }
-        .msg-meta { font-size: 0.75rem; color: #888; margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .msg-meta { font-size: 0.75rem; color: #888; margin-bottom: 6px; display: flex; justify-content: space-between; }
         .msg-sender { font-weight: bold; color: #4a5568; }
-        .msg-body { word-break: break-all; color: #333; line-height: 1.4; }
+        .msg-body { word-break: break-all; color: #333; line-height: 1.4; margin-bottom: 8px; }
+
+        /* ↩️ 수신함 내부의 답장 폼 및 누적 기록창 스타일 */
+        .reply-box { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1; }
+        .reply-toggle-btn { background: #6c5ce7; color: white; border: none; padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; cursor: pointer; width: auto; font-family: inherit; }
+        .reply-input-zone { display: none; margin-top: 6px; }
+        .reply-mini-textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; resize: none; font-size: 0.85rem; box-sizing: border-box; margin-bottom: 5px; }
+        .reply-send-btn { background: #2ecc71; color: white; border: none; padding: 4px 12px; font-size: 0.75rem; border-radius: 6px; cursor: pointer; width: auto; font-family: inherit; }
+        .history-list { margin-top: 6px; background: #f1f5f9; padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; color: #475569; }
+        .history-item { margin-bottom: 4px; line-height: 1.3; }
+        .history-item:last-child { margin-bottom: 0; }
+        .history-teacher { font-weight: bold; color: #6c5ce7; }
+
         .no-msg { text-align: center; color: #aaa; padding: 30px 0; font-size: 0.9rem; }
 
         #loginCard { display: none; }
@@ -221,7 +233,6 @@
             <p id="currentTeacherTitle">by KST</p>
         </div>
 
-        <!-- 🔒 관리자 로그인 카드 -->
         <div id="loginCard" class="card">
             <h2>🔒 관리자 계정 인증</h2>
             
@@ -246,16 +257,13 @@
             <button onclick="handleLogin()">보안 로그인</button>
         </div>
 
-        <!-- ⚡ 컨트롤 패널 -->
         <div id="controlPanel">
-            <!-- 👥 내 학생 검색 및 쪽지 발송 카드 -->
             <div class="card">
                 <h2>👥 내 학생 현황 및 쪽지</h2>
                 <label>학생 이름 검색</label>
                 <input type="text" id="studentSearchInput" placeholder="이름을 입력해 주세요" oninput="filterStudents()">
                 <div id="studentListZone" class="student-list">
-                    <!-- 필터링된 학생 목록이 기입됨 -->
-                </div>
+                    </div>
             </div>
 
             <div class="card">
@@ -266,7 +274,7 @@
             </div>
 
             <div class="card">
-                <h2>🤫 하단 리마인더 자막 방송</h2>
+                <h2>🔔 하단 리마인더 자막 방송</h2>
                 <label>화면 밑에 흘려보낼 메시지</label>
                 <input type="text" id="reminderInput" placeholder="예시) 소곤소곤 잡담 엄금! 즉시 퇴실 조치">
                 <button onclick="publishData('reminder', 'reminderInput')">⚡ 자막 전송 / 갱신</button>
@@ -281,13 +289,11 @@
         </div>
     </div>
 
-    <!-- ✉️ 우측 하단 플로팅 메시지 버튼 -->
     <button id="msgFabBtn" class="msg-fab" onclick="openMessageModal()">
         ✉️
         <span id="msgBadgeCount" class="msg-badge">0</span>
     </button>
 
-    <!-- 🗂️ 메시지 확인 모달 (학생 -> 선생님) -->
     <div id="messageModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -295,13 +301,11 @@
                 <button class="close-modal" onclick="closeMessageModal()">✕</button>
             </div>
             <div id="modalMsgList" class="msg-list">
-                <!-- 자바스크립트로 메시지가 동적 생성됨 -->
-            </div>
-            <button onclick="closeMessageModal()" style="margin-bottom:0;">닫기</button>
+                </div>
+            <button onclick="closeMessageModal()" style="margin-bottom:0; background:#f1f2f6; color:#333;">닫기</button>
         </div>
     </div>
 
-    <!-- 📝 쪽지 보내기 모달 (선생님 -> 학생) -->
     <div id="sendNoteModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -393,7 +397,7 @@
             });
         }
 
-        // 학생 실시간 검색 및 렌더링 (가상 더미 데이터 삭제 완료)
+        // 학생 실시간 검색 및 렌더링 (💡 ufesId -> u2mId 오타 교정 완료!)
         function filterStudents() {
             const keyword = document.getElementById('studentSearchInput').value.trim().toLowerCase();
             const listZone = document.getElementById('studentListZone');
@@ -417,12 +421,15 @@
             }
 
             filtered.forEach(student => {
+                // 🔍 database에 저장해 둔 'u2mId' 키값을 띄우도록 원천 수정
+                const studentIdStr = student.u2mId ? student.u2mId : '없음';
+
                 const item = document.createElement('div');
                 item.className = 'student-item';
                 item.innerHTML = `
                     <div class="student-info">
                         <span class="student-name">👤 ${student.name}</span>
-                        <span class="student-id">ID: ${student.ufesId || '없음'}</span>
+                        <span class="student-id">ID: ${studentIdStr}</span>
                     </div>
                     <button class="btn-note" onclick="openNoteModal('${student.id}', '${student.name}')">쪽지</button>
                 `;
@@ -468,7 +475,7 @@
                 .catch(err => alert('전송 실패: ' + err.message));
         }
 
-        // 실시간 학생 메시지 수신 리스너
+        // 실시간 학생 메시지 수신 리스너 + [↩️ 답장하기 컨트롤러 장착]
         function listenToIncomingMessages(teacherName) {
             messageListener = database.ref('messages').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -494,17 +501,34 @@
 
                             const date = new Date(msg.timestamp);
                             const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                            
+                            // 🔍 학생 아이디 표출 보정 및 답장 고유 구조 결합
+                            const msgStudentId = msg.u2mId ? msg.u2mId : '아이디 누락';
 
                             const item = document.createElement('div');
                             item.className = `msg-item ${!msg.read ? 'unread' : ''}`;
                             item.innerHTML = `
                                 <div class="msg-meta">
-                                    <span class="msg-sender">👤 ${msg.studentName || '알수없음'} 학생</span>
+                                    <span class="msg-sender">👤 ${msg.studentName || '알수없음'} (${msgStudentId})</span>
                                     <span>${timeStr}</span>
                                 </div>
                                 <div class="msg-body">${msg.message || ''}</div>
+                                
+                                <div class="reply-box">
+                                    <button class="reply-toggle-btn" onclick="toggleReplyZone('${msg.id}')">↩️ 답장하기</button>
+                                    
+                                    <div class="reply-input-zone" id="replyZone-${msg.id}">
+                                        <textarea class="reply-mini-textarea" id="replyInput-${msg.id}" rows="2" placeholder="학생에게 보낼 답장을 기입하세요."></textarea>
+                                        <button class="reply-send-btn" onclick="sendReplyFromModal('${msg.id}', '${msg.studentUid}', '${msg.teacher}')">전송 및 저장</button>
+                                    </div>
+                                    
+                                    <div class="history-list" id="history-${msg.id}" style="display:none;"></div>
+                                </div>
                             `;
                             listEl.appendChild(item);
+                            
+                            // 이 메시지에 이미 달아둔 기존 내 답장 보관 내역 추적 시동
+                            listenToExistingReplies(msg.id);
                         });
                     }
                 } else {
@@ -520,6 +544,80 @@
                         badge.style.display = 'none';
                     }
                 }
+            });
+        }
+
+        // 모달창 내부의 답장 토글
+        function toggleReplyZone(msgId) {
+            const zone = document.getElementById(`replyZone-${msgId}`);
+            zone.style.display = zone.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // 수신함 모달 안에서 바로 학생에게 답장 전송 및 데이터 이중 저장
+        function sendReplyFromModal(msgId, studentUid, teacherName) {
+            const inputEl = document.getElementById(`replyInput-${msgId}`);
+            const text = inputEl.value.trim();
+
+            if (!text) {
+                alert("답장 내용을 입력해 주세요.");
+                return;
+            }
+            if (!studentUid || studentUid === "undefined") {
+                alert("❌ 학생의 식별자(studentUid)를 찾을 수 없습니다. 학생 화면에서 메시지를 보낼 때 studentUid가 같이 전송되게끔 처리해야 합니다.");
+                return;
+            }
+
+            const timestamp = firebase.database.ServerValue.TIMESTAMP;
+
+            // 1단계: 학생의 개인 쪽지 알림함(student_messages)으로 밀어넣기
+            database.ref(`student_messages/${studentUid}`).push({
+                teacher: teacherName,
+                message: `[답장완료] ${text}`,
+                timestamp: timestamp,
+                read: false
+            })
+            .then(() => {
+                // 2단계: 내 답장 보관 내역 저장을 위해 해당 메시지 아래(messages/메시지ID/replies)에 누적 기입
+                return database.ref(`messages/${msgId}/replies`).push({
+                    teacher: teacherName,
+                    message: text,
+                    timestamp: timestamp
+                });
+            })
+            .then(() => {
+                alert("학생에게 답장이 전송되었으며 내역이 기록되었습니다.");
+                inputEl.value = '';
+                document.getElementById(`replyZone-${msgId}`).style.display = 'none';
+            })
+            .catch(err => alert("전송 실패: " + err.message));
+        }
+
+        // 메시지에 달린 선생님의 답장 목록 실시간 트래킹 출력
+        function listenToExistingReplies(msgId) {
+            database.ref(`messages/${msgId}/replies`).on('value', (snapshot) => {
+                const historyContainer = document.getElementById(`history-${msgId}`);
+                if (!historyContainer) return;
+                historyContainer.innerHTML = '';
+
+                if (!snapshot.exists()) {
+                    historyContainer.style.display = 'none';
+                    return;
+                }
+
+                historyContainer.style.display = 'block';
+                snapshot.forEach((child) => {
+                    const data = child.val();
+                    const dateObj = new Date(data.timestamp);
+                    const timeStr = `${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                    
+                    const itemHtml = `
+                        <div class="history-item">
+                            <span class="history-teacher">└ ↩️ 내 답장:</span> ${data.message} 
+                            <span style="font-size:0.7rem; color:#aaa;">(${timeStr})</span>
+                        </div>
+                    `;
+                    historyContainer.insertAdjacentHTML('beforeend', itemHtml);
+                });
             });
         }
 
