@@ -225,13 +225,21 @@
             const studentEmail = u2mId.includes('@') ? u2mId : u2mId + "@kst.com";
             const studentPassword = "00" + phoneTail;
 
-            auth.signInWithEmailAndPassword(studentEmail, studentPassword)
-                .then((userCredential) => {
-                    window.location.href = './index.html';
-                })
-                .catch((error) => {
-                    alert('❌ 로그인 실패: 유투엠 아이디 또는 비밀번호가 일치하지 않습니다.');
-                });
+            // 기존 로그인 성공 리스너 내부 코드 수정
+auth.signInWithEmailAndPassword(studentEmail, studentPassword)
+    .then((userCredential) => {
+        // 💾 [추가] 유투엠 자동 입력을 위해 로컬 저장소에 아이디와 비번을 임시 저장합니다.
+        // 이메일 앞자리(유투엠 아이디)와 입력한 비밀번호를 저장
+        const u2mId = studentEmail.split('@')[0];
+        localStorage.setItem('u2m_id', u2mId);
+        localStorage.setItem('u2m_pw', studentPassword);
+
+        // 메인 화면으로 이동
+        window.location.href = './index.html'; 
+    })
+    .catch((error) => {
+        alert("로그인에 실패했습니다: " + error.message);
+    });
         }
     </script>
 </body>
