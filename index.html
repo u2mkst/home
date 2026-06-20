@@ -21,22 +21,22 @@
             min-height: 100vh; color: #333; overflow-x: hidden; padding-bottom: 50px;
         }
         .container { width: 100%; max-width: 430px; padding: 20px 24px; text-align: center; box-sizing: border-box; }
+        
+        /* ✨ 환영 인사: 박스 제거 및 텍스트 사이즈 확대 */
+        .welcome-text {
+            font-size: 1.4rem; font-weight: bold; color: #2c3e50;
+            margin-bottom: 20px; display: inline-block; width: 100%; 
+            box-sizing: border-box; word-break: keep-all;
+        }
+
+        /* 🕒 시계 컨테이너 */
         .clock-container {
-            margin-bottom: 20px; background: rgba(255, 255, 255, 0.4);
-            padding: 15px; border-radius: 20px; backdrop-filter: blur(5px);
+            margin-bottom: 25px; background: rgba(255, 255, 255, 0.4);
+            padding: 12px; border-radius: 20px; backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
         }
-        .clock-date { font-size: 0.9rem; color: #6c5ce7; font-weight: 600; margin-bottom: 2px; }
-        .clock-time { font-size: 2.6rem; font-weight: 700; color: #2c3e50; letter-spacing: -1px; }
-        
-        .welcome-box {
-            font-size: 1.1rem; font-weight: bold; color: #2c3e50;
-            margin-bottom: 25px; background: rgba(255, 255, 255, 0.7);
-            padding: 12px 20px; border-radius: 14px;
-            box-shadow: 0 4px 12px rgba(149, 157, 165, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            display: inline-block; width: 100%; box-sizing: border-box;
-        }
+        .clock-date { font-size: 0.85rem; color: #6c5ce7; font-weight: 600; margin-bottom: 2px; }
+        .clock-time { font-size: 2rem; font-weight: 700; color: #2c3e50; letter-spacing: -1px; }
 
         .link-button {
             display: block; background-color: rgba(255, 255, 255, 0.9); color: #333333;
@@ -45,6 +45,7 @@
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); border: 1px solid rgba(255, 255, 255, 0.6);
         }
         .link-button:hover { transform: translateY(-4px); background-color: #6c5ce7; color: #ffffff; border-color: #6c5ce7; }
+        
         .quote-box {
             background: rgba(255, 255, 255, 0.5); padding: 18px; border-radius: 16px;
             margin-top: 30px; font-size: 0.95rem; color: #4a5568; line-height: 1.5;
@@ -53,6 +54,14 @@
         .quote-author { display: block; margin-top: 8px; font-size: 0.85rem; color: #718096; font-weight: bold; }
         .more-links { display: inline-block; margin-top: 35px; font-size: 0.82rem; color: #6c5ce7; text-decoration: none; font-weight: 600; }
         .footer { margin-top: 15px; font-size: 0.85rem; color: #8892b0; }
+        
+        /* 🔴 하단 계정삭제 링크 */
+        .delete-link {
+            display: inline-block; margin-top: 8px; font-size: 0.7rem; color: #b2bec3;
+            text-decoration: none; cursor: pointer; background: none; border: none; padding: 0;
+        }
+        .delete-link:hover { color: #e74c3c; text-decoration: underline; }
+
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000;
@@ -78,14 +87,16 @@
 <body>
 
     <div class="container">
+        <!-- ⬆️ 박스가 사라지고 글자 크기가 커진 환영인사 -->
+        <div id="welcome-message" class="welcome-text">학생 정보를 불러오는 중...</div>
+
+        <!-- 🕒 시계 레이아웃 -->
         <div class="clock-container">
             <div id="clock-date" class="clock-date">0월 0일 0요일</div>
             <div id="clock-time" class="clock-time">00:00:00</div>
         </div>
 
-        <div id="welcome-message" class="welcome-box">✨ 학생 정보를 불러오는 중...</div>
-
-        <a href="#" onclick="goToU2M(event)" class="link-button">유투엠 바로가기</a>
+        <a href="https://www.u2math.co.kr/Login/Index" target="_blank" class="link-button">유투엠 바로가기</a>
         <a href="https://student.mathflat.com/login" class="link-button">매쓰플랫 바로가기</a>
                 
         <div class="quote-box">
@@ -96,6 +107,8 @@
 
         <a href="https://litt.ly/theu2m" target="_blank" class="more-links">KST가 만든 더 많은 것들</a>
         <div class="footer">© 2026 KST</div>
+        
+        <button onclick="deleteAccount()" class="delete-link">계정삭제</button>
     </div>
 
     <div id="noticeModal" class="modal-overlay">
@@ -122,7 +135,6 @@
             }, 1000);
         }
 
-        // [명언 데이터 생략 - 기존 113개 그대로 유지됨]
         const advices = [
             { author: "빌 게이츠", authorProfile: "마이크로소프트 창업자", message: "인생이란 결코 공평하지 않다. 이 사실에 익숙해져라." },
             { author: "김애란", authorProfile: "소설가", message: "두근두근 내 인생은 그렇게 지나간다." }
@@ -152,57 +164,43 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        // 🛡️ 로그인 여부 체크 및 환영 문구 띄우기
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     const studentName = user.displayName || "학생";
-                    document.getElementById('welcome-message').innerText = `✨ ${studentName} 학생, 반가워요!`;
+                    document.getElementById('welcome-message').innerText = `${studentName}님 반가워요!`;
                 } else {
-                    // 로그인 안 되어 있으면 로그인 창으로 튕기기
-                    window.location.href = '.login.html';
+                    window.location.href = 'login.html';
                 }
             });
         }
 
-        // 🚀 유투엠 자동 로그인 구현 핵심 함수
-        function goToU2M(event) {
-            event.preventDefault();
-
-            // 로컬 저장소에서 로그인할 때 저장했던 진짜 아이디와 패스워드를 쏙 빼옵니다.
-            const savedId = localStorage.getItem('u2m_id');
-            const savedPw = localStorage.getItem('u2m_pw');
-
-            if (!savedId || !savedPw) {
-                alert("로그인 정보 동의가 만료되었습니다. 다시 로그인해 주세요.");
-                window.location.href = './student-auth.html';
+        function deleteAccount() {
+            const user = auth.currentUser;
+            
+            if (!user) {
+                alert("로그인된 정보가 없습니다.");
                 return;
             }
 
-            // 1. 먼저 유투엠 로그인 페이지를 새 창(새 탭)으로 엽니다.
-            const u2mWindow = window.open('https://www.u2math.co.kr/Login/Index', '_blank');
-
-            // 2. 새 창이 열리고 로드가 완료되면, 그 창의 입력 칸에 아이디와 비번을 주입합니다.
-            u2mWindow.onload = function() {
-                setTimeout(() => {
-                    try {
-                        // 유투엠 사이트 내부의 실제 ID 입력창 input 태그의 id나 name을 추적해 매칭시킵니다.
-                        const idInput = u2mWindow.document.querySelector('input[type="text"]') || u2mWindow.document.getElementById('userId');
-                        const pwInput = u2mWindow.document.querySelector('input[type="password"]') || u2mWindow.document.getElementById('userPw');
-                        const loginBtn = u2mWindow.document.querySelector('button[type="submit"]') || u2mWindow.document.querySelector('.btn_login');
-
-                        if(idInput && pwInput) {
-                            idInput.value = savedId;
-                            pwInput.value = savedPw;
-                            
-                            // 자동으로 로그인 버튼까지 클릭 처리
-                            if(loginBtn) loginBtn.click();
-                        }
-                    } catch (e) {
-                        console.log("크로스 도메인 보안 정책으로 직접 주입이 막힌 경우, 가이드 창을 대안으로 띄웁니다.");
+            if (confirm("정말로 회원탈퇴를 진행하시겠습니까?\n탈퇴 시 모든 정보가 복구 불가능하게 삭제됩니다.")) {
+                user.delete().then(() => {
+                    localStorage.removeItem('u2m_id');
+                    localStorage.removeItem('u2m_pw');
+                    alert("회원탈퇴가 정상적으로 완료되었습니다. 이용해 주셔서 감사합니다.");
+                    window.location.href = 'login.html';
+                }).catch((error) => {
+                    console.error("회원탈퇴 오류:", error);
+                    if (error.code === 'auth/requires-recent-login') {
+                        alert("보안을 위해 재로그인이 필요합니다. 다시 로그인 후 탈퇴를 시도해 주세요.");
+                        auth.signOut().then(() => {
+                            window.location.href = 'login.html';
+                        });
+                    } else {
+                        alert("탈퇴 처리 중 오류가 발생했습니다: " + error.message);
                     }
-                }, 1000); // 창이 안정적으로 열릴 때까지 1초 대기 후 실행
-            };
+                });
+            }
         }
 
         function listenToFirebase() {
