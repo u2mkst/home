@@ -22,7 +22,7 @@
         }
         .container { width: 100%; max-width: 430px; padding: 20px 24px; text-align: center; box-sizing: border-box; }
         
-        /* ✨ 환영 인사: 박스 제거 및 텍스트 사이즈 확대 */
+        /* ✨ 환영 인사 */
         .welcome-text {
             font-size: 1.4rem; font-weight: bold; color: #2c3e50;
             margin-bottom: 20px; display: inline-block; width: 100%; 
@@ -48,7 +48,7 @@
         
         .quote-box {
             background: rgba(255, 255, 255, 0.5); padding: 18px; border-radius: 16px;
-            margin-top: 30px; font-size: 0.95rem; color: #4a5568; line-height: 1.5;
+            margin-top: 20px; font-size: 0.95rem; color: #4a5568; line-height: 1.5;
             border: 1px dashed rgba(108, 92, 231, 0.3); word-break: keep-all;
         }
         .quote-author { display: block; margin-top: 8px; font-size: 0.85rem; color: #718096; font-weight: bold; }
@@ -57,11 +57,12 @@
         
         /* 🔴 하단 계정삭제 링크 */
         .delete-link {
-            display: inline-block; margin-top: 8px; font-size: 0.7rem; color: #b2bec3;
+            display: inline-block; margin-top: 12px; font-size: 0.75rem; color: #b2bec3;
             text-decoration: none; cursor: pointer; background: none; border: none; padding: 0;
         }
         .delete-link:hover { color: #e74c3c; text-decoration: underline; }
 
+        /* 🗂️ 모달 기본 디자인 (공지/쪽지 공용) */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000;
@@ -74,6 +75,30 @@
         .modal-title { font-size: 1.3rem; font-weight: 700; color: #6c5ce7; margin-bottom: 15px; }
         .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; }
         .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
+        
+        /* 🆕 쪽지 발송 전용 폼 요소 스타일 */
+        .modal-box textarea {
+            width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 14px;
+            box-sizing: border-box; margin-bottom: 15px; font-size: 0.95rem; font-family: inherit;
+            resize: none; background: #f8f9fa;
+        }
+        .modal-box textarea:focus { outline: none; border-color: #6c5ce7; background: #fff; }
+        .btn-flex-group { display: flex; gap: 8px; }
+        .btn-cancel { background-color: #e2e8f0; color: #4a5568; }
+        .btn-cancel:hover { background-color: #cbd5e1; }
+
+        /* ✉️ 우측 하단 플로팅 메시지 버튼 */
+        .msg-fab {
+            position: fixed; bottom: 25px; right: 25px;
+            width: 60px; height: 60px; border-radius: 50%;
+            background-color: #6c5ce7; color: white; border: none;
+            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+            cursor: pointer; display: none; justify-content: center; align-items: center;
+            font-size: 1.6rem; z-index: 999; transition: all 0.2s ease;
+        }
+        .msg-fab:hover { transform: scale(1.08); background-color: #5b4cc4; }
+
+        /* 자막 자습실 알림 바 */
         .marquee-container {
             display: none; position: fixed; bottom: 0; left: 0; width: 100%;
             background: rgba(44, 62, 80, 0.95); color: #fff; padding: 10px 0;
@@ -87,10 +112,8 @@
 <body>
 
     <div class="container">
-        <!-- ⬆️ 박스가 사라지고 글자 크기가 커진 환영인사 -->
         <div id="welcome-message" class="welcome-text">학생 정보를 불러오는 중...</div>
 
-        <!-- 🕒 시계 레이아웃 -->
         <div class="clock-container">
             <div id="clock-date" class="clock-date">0월 0일 0요일</div>
             <div id="clock-time" class="clock-time">00:00:00</div>
@@ -98,7 +121,7 @@
 
         <a href="https://www.u2math.co.kr/Login/Index" target="_blank" class="link-button">유투엠 바로가기</a>
         <a href="https://student.mathflat.com/login" class="link-button">매쓰플랫 바로가기</a>
-                
+                            
         <div class="quote-box">
             💡 <b id="quote-header">오늘의 한마디:</b><br>
             <span id="quote-text">문구를 불러오는 중...</span>
@@ -111,9 +134,22 @@
         <button onclick="deleteAccount()" class="delete-link">계정삭제</button>
     </div>
 
+    <button id="msgFabBtn" class="msg-fab" onclick="openSendMessageModal()">✉️</button>
+
+    <div id="sendMsgModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">✉️ 선생님께 메시지 전송</div>
+            <textarea id="studentMsgInput" rows="4" placeholder="담당 선생님께 질문이나 요청사항을 실시간으로 적어주세요."></textarea>
+            <div class="btn-flex-group">
+                <button class="modal-btn btn-cancel" onclick="closeSendMessageModal()">취소</button>
+                <button class="modal-btn" onclick="sendMessageToTeacher()">보내기</button>
+            </div>
+        </div>
+    </div>
+
     <div id="noticeModal" class="modal-overlay">
         <div class="modal-box">
-            <div class="modal-title">📢 안내 말씀 드립니다</div>
+            <div id="modalTitle" class="modal-title">📢 안내 말씀 드립니다</div>
             <div id="modalNoticeContent" class="modal-content">공지사항을 불러오는 중...</div>
             <button class="modal-btn" onclick="document.getElementById('noticeModal').style.display='none'">확인</button>
         </div>
@@ -124,6 +160,9 @@
     </div>
 
     <script>
+        let currentStudentData = null; 
+        let noteListener = null;
+
         function startClock() {
             const dateEl = document.getElementById('clock-date');
             const timeEl = document.getElementById('clock-time');
@@ -136,8 +175,156 @@
         }
 
         const advices = [
-            { author: "빌 게이츠", authorProfile: "마이크로소프트 창업자", message: "인생이란 결코 공평하지 않다. 이 사실에 익숙해져라." },
-            { author: "김애란", authorProfile: "소설가", message: "두근두근 내 인생은 그렇게 지나간다." }
+            { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
+{ author: "아리스토텔레스", authorProfile: "철학자", message: "교육의 뿌리는 쓰지만 그 열매는 달다." },
+{ author: "알베르트 아인슈타인", authorProfile: "물리학자", message: "배움을 멈추는 순간 늙기 시작한다." },
+{ author: "넬슨 만델라", authorProfile: "전 남아프리카공화국 대통령", message: "교육은 세상을 바꿀 가장 강력한 무기다." },
+{ author: "벤저민 프랭클린", authorProfile: "정치가·발명가", message: "지식에 대한 투자는 최고의 이자를 남긴다." },
+{ author: "레오나르도 다 빈치", authorProfile: "예술가·발명가", message: "배움은 결코 정신을 지치게 하지 않는다." },
+{ author: "마리아 몬테소리", authorProfile: "교육자", message: "아이들은 스스로 배우려는 강한 의지를 가지고 있다." },
+{ author: "존 듀이", authorProfile: "교육학자", message: "교육은 미래를 위한 준비가 아니라 삶 그 자체다." },
+{ author: "빌 게이츠", authorProfile: "마이크로소프트 창업자", message: "인내심은 성공을 위한 중요한 열쇠다." },
+{ author: "스티브 잡스", authorProfile: "애플 공동창업자", message: "배움에 대한 열정이 있다면 어떤 일이든 가능하다." },
+{ author: "마크 트웨인", authorProfile: "작가", message: "학교 교육이 내 학습을 방해하게 두지 마라." },
+{ author: "토머스 에디슨", authorProfile: "발명가", message: "천재는 1퍼센트의 영감과 99퍼센트의 노력이다." },
+{ author: "헨리 포드", authorProfile: "기업가", message: "배움을 멈추는 사람은 스무 살이든 여든 살이든 늙은 사람이다." },
+{ author: "플루타르코스", authorProfile: "철학자", message: "배움은 그릇을 채우는 것이 아니라 불을 지피는 것이다." },
+{ author: "소크라테스", authorProfile: "철학자", message: "나는 내가 아무것도 모른다는 것을 안다." },
+{ author: "칼 세이건", authorProfile: "천문학자", message: "어딘가에는 믿을 수 없을 만큼 놀라운 진실이 발견되기를 기다리고 있다." },
+{ author: "리처드 파인만", authorProfile: "물리학자", message: "이해하지 못하면 진정으로 배운 것이 아니다." },
+{ author: "워런 버핏", authorProfile: "투자자", message: "매일 조금씩 배우면 큰 차이를 만든다." },
+{ author: "피터 드러커", authorProfile: "경영학자", message: "지식은 끊임없이 갱신해야 하는 자산이다." },
+{ author: "말콤 X", authorProfile: "인권운동가", message: "교육은 미래로 가는 여권이다." },
+{ author: "김구", authorProfile: "독립운동가", message: "한없이 가지고 싶은 것은 높은 문화의 힘이다." },
+{ author: "안창호", authorProfile: "독립운동가", message: "배우고 힘써 실천하라." },
+{ author: "이순신", authorProfile: "조선 장군", message: "뜻이 있는 곳에 길이 있다." },
+{ author: "정약용", authorProfile: "실학자", message: "배운 것은 반드시 실천으로 이어져야 한다." },
+{ author: "세종대왕", authorProfile: "조선 국왕", message: "백성을 가르치는 일은 나라의 근본이다." },
+{ author: "김대중", authorProfile: "전 대통령", message: "지식정보화 시대의 힘은 교육에서 나온다." },
+{ author: "이어령", authorProfile: "문학평론가", message: "생각하는 힘이 미래를 만든다." },
+{ author: "신영복", authorProfile: "교수·작가", message: "배움은 사람과 사람을 잇는 과정이다." },
+{ author: "김난도", authorProfile: "교수", message: "오늘의 노력이 내일의 경쟁력이 된다." },
+{ author: "유재석", authorProfile: "방송인", message: "꾸준함은 재능을 이긴다." },
+{ author: "J.K. 롤링", authorProfile: "작가", message: "실패는 불필요한 것을 벗겨내고 본질에 집중하게 한다." },
+{ author: "오프라 윈프리", authorProfile: "방송인", message: "교육은 인생을 바꾸는 가장 강력한 도구다." },
+{ author: "엘론 머스크", authorProfile: "기업가", message: "중요한 것은 끊임없이 질문하는 것이다." },
+{ author: "제프 베이조스", authorProfile: "기업가", message: "매일 조금씩 발전하는 것이 중요하다." },
+{ author: "마이클 조던", authorProfile: "농구선수", message: "나는 실패를 반복했기에 성공할 수 있었다." },
+{ author: "코비 브라이언트", authorProfile: "농구선수", message: "매일 더 나아지려는 노력이 차이를 만든다." },
+{ author: "손흥민", authorProfile: "축구선수", message: "노력은 절대 배신하지 않는다." },
+{ author: "박지성", authorProfile: "축구선수", message: "성공은 꾸준함에서 시작된다." },
+{ author: "페이커", authorProfile: "프로게이머", message: "연습은 실력을 만든다." },
+{ author: "류현진", authorProfile: "야구선수", message: "기본을 지키는 것이 가장 중요하다." },
+{ author: "공자", authorProfile: "중국 사상가", message: "아는 것을 안다고 하고 모르는 것을 모른다고 하는 것이 참된 앎이다." },
+{ author: "맹자", authorProfile: "사상가", message: "배움에는 끝이 없다." },
+{ author: "주희", authorProfile: "성리학자", message: "작은 공부도 쌓이면 큰 힘이 된다." },
+{ author: "프랜시스 베이컨", authorProfile: "철학자", message: "아는 것이 힘이다." },
+{ author: "임마누엘 칸트", authorProfile: "철학자", message: "스스로 생각하는 용기를 가져라." },
+{ author: "볼테르", authorProfile: "철학자", message: "배움은 인간을 자유롭게 한다." },
+{ author: "괴테", authorProfile: "작가", message: "아는 것만으로는 충분하지 않다. 실천해야 한다." },
+{ author: "파블로 피카소", authorProfile: "화가", message: "배움의 목적은 규칙을 깨기 위함이다." },
+{ author: "헬렌 켈러", authorProfile: "작가", message: "세상은 노력하는 사람에게 길을 열어준다." },
+{ author: "앤드루 카네기", authorProfile: "기업가", message: "스스로 배우는 사람이 가장 멀리 간다." },
+{ author: "나폴레옹", authorProfile: "프랑스 황제", message: "승리는 가장 끈기 있는 사람의 것이다." },
+{ author: "윈스턴 처칠", authorProfile: "전 영국 총리", message: "성공은 실패를 거듭해도 열정을 잃지 않는 것이다." },
+{ author: "에이브러햄 링컨", authorProfile: "전 미국 대통령", message: "미래를 예측하는 가장 좋은 방법은 미래를 만드는 것이다." },
+{ author: "시어도어 루스벨트", authorProfile: "전 미국 대통령", message: "할 수 있다고 믿으면 이미 절반은 이룬 것이다." },
+{ author: "존 F. 케네디", authorProfile: "전 미국 대통령", message: "변화는 삶의 법칙이다." },
+{ author: "마틴 루터 킹 주니어", authorProfile: "인권운동가", message: "첫걸음을 내딛어라. 계단 전체를 볼 필요는 없다." },
+{ author: "데일 카네기", authorProfile: "작가", message: "오늘을 최대한 활용하라." },
+{ author: "스티븐 코비", authorProfile: "작가", message: "습관이 인생을 만든다." },
+{ author: "브라이언 트레이시", authorProfile: "작가", message: "매일 공부하는 사람이 결국 앞서간다." },
+{ author: "짐 론", authorProfile: "동기부여 연설가", message: "형식적인 교육은 생계를, 자기 교육은 부를 만든다." },
+{ author: "칼 융", authorProfile: "심리학자", message: "당신이 바라보는 것이 아니라 보는 방식이 중요하다." },
+{ author: "지그문트 프로이트", authorProfile: "심리학자", message: "배움은 자기 이해에서 시작된다." },
+{ author: "에릭 호퍼", authorProfile: "철학자", message: "배우는 사람은 변화하는 세상을 상속받는다." },
+{ author: "스티븐 호킹", authorProfile: "물리학자", message: "지적 성장에는 한계가 없다." },
+{ author: "칼 포퍼", authorProfile: "철학자", message: "모든 지식은 가설에서 시작된다." },
+{ author: "닐 디그래스 타이슨", authorProfile: "천체물리학자", message: "질문은 과학의 시작이다." },
+{ author: "리처드 브랜슨", authorProfile: "기업가", message: "배우고 도전하고 반복하라." },
+{ author: "사티아 나델라", authorProfile: "마이크로소프트 CEO", message: "성장하는 사람은 끊임없이 학습하는 사람이다." },
+{ author: "잭 마", authorProfile: "기업가", message: "오늘 힘들어도 배우는 것을 멈추지 마라." },
+{ author: "래리 페이지", authorProfile: "구글 공동창업자", message: "큰 꿈은 큰 배움에서 시작된다." },
+{ author: "김연아", authorProfile: "피겨스케이팅 선수", message: "연습은 배신하지 않는다." },
+{ author: "박세리", authorProfile: "골프선수", message: "포기하지 않으면 성장할 수 있다." },
+{ author: "차범근", authorProfile: "축구인", message: "노력은 재능보다 강하다." },
+{ author: "이강인", authorProfile: "축구선수", message: "매 순간 배우려는 자세가 중요하다." },
+{ author: "황희찬", authorProfile: "축구선수", message: "작은 발전이 큰 결과를 만든다." },
+{ author: "유관순", authorProfile: "독립운동가", message: "뜻을 세우고 끝까지 밀고 나가라." },
+{ author: "안중근", authorProfile: "독립운동가", message: "배움은 나라와 자신을 위한 힘이다." },
+{ author: "법정", authorProfile: "승려·수필가", message: "하루하루 성실하게 살아가는 것이 중요하다." },
+{ author: "이외수", authorProfile: "작가", message: "상상력이 배움의 날개다." },
+{ author: "박경리", authorProfile: "소설가", message: "배움은 사람을 깊게 만든다." },
+{ author: "알베르 카뮈", authorProfile: "작가", message: "한겨울 속에서도 내 안에 여름이 있었다." },
+{ author: "빅터 위고", authorProfile: "작가", message: "미래에는 여러 이름이 있다. 노력하는 사람에게는 기회다." },
+{ author: "톨스토이", authorProfile: "작가", message: "배움은 스스로를 변화시키는 과정이다." },
+{ author: "헤르만 헤세", authorProfile: "작가", message: "지혜는 가르칠 수 없고 스스로 얻어야 한다." },
+{ author: "앙투안 드 생텍쥐페리", authorProfile: "작가", message: "목표를 향한 열정이 사람을 성장시킨다." },
+{ author: "조앤 디디온", authorProfile: "작가", message: "배움은 세상을 이해하는 창이다." },
+{ author: "마야 안젤루", authorProfile: "시인", message: "더 나은 것을 알게 되면 더 나은 행동을 하게 된다." },
+{ author: "랄프 왈도 에머슨", authorProfile: "철학자", message: "열정 없이는 위대한 일을 이룰 수 없다." },
+{ author: "헨리 데이비드 소로", authorProfile: "작가", message: "꿈을 향해 자신 있게 나아가라." },
+{ author: "버락 오바마", authorProfile: "전 미국 대통령", message: "독서는 아이디어를 현실로 바꾸는 힘을 준다." },
+{ author: "유발 하라리", authorProfile: "역사학자", message: "21세기 핵심 능력은 계속 배우는 능력이다." },
+{ author: "정재승", authorProfile: "과학자", message: "호기심은 배움의 출발점이다." },
+{ author: "김상욱", authorProfile: "물리학자", message: "질문하는 사람이 더 멀리 간다." },
+{ author: "최재천", authorProfile: "생물학자", message: "독서는 가장 쉬운 자기 혁신이다." },
+{ author: "한강", authorProfile: "소설가", message: "깊이 생각하는 힘이 사람을 성장시킨다." },
+{ author: "김영하", authorProfile: "소설가", message: "읽고 쓰는 사람은 계속 성장한다." },
+{ author: "박웅현", authorProfile: "광고인", message: "생각의 깊이가 인생의 깊이다." },
+{ author: "도종환", authorProfile: "시인", message: "천천히 가더라도 멈추지 마라." },
+{ author: "이국종", authorProfile: "의사", message: "실력을 쌓는 데는 지름길이 없다." },
+{ author: "백종원", authorProfile: "기업인", message: "기본을 제대로 익히는 것이 가장 중요하다." }
+{ author: "익명", authorProfile: "학생들의 현실", message: "내일의 나는 오늘의 나보다 공부를 잘할 거라 믿었다. 그리고 내일도 그렇게 믿었다." },
+{ author: "익명", authorProfile: "시험 전날", message: "공부는 미리 하는 것이다. 나는 늘 그 사실을 시험 전날 깨닫는다." },
+{ author: "익명", authorProfile: "수학 문제집", message: "답지를 보면 이해가 된다. 덮는 순간 다시 모른다." },
+{ author: "익명", authorProfile: "숙제 전문가", message: "숙제는 빨리 시작할수록 일찍 끝난다. 문제는 시작이다." },
+{ author: "익명", authorProfile: "벼락치기 협회", message: "벼락치기도 꾸준히 하면 습관이 된다." },
+{ author: "익명", authorProfile: "국어 시간", message: "지문은 읽었는데 내용은 지문만 안다." },
+{ author: "익명", authorProfile: "수학 시간", message: "분명 배웠는데 처음 보는 문제처럼 생겼다." },
+{ author: "익명", authorProfile: "시험 감독관", message: "시험 시간은 평소보다 3배 빠르게 흐른다." },
+{ author: "익명", authorProfile: "알람 시계", message: "공부할 때 10분은 1시간 같고, 쉬는 시간 10분은 1분 같다." },
+{ author: "익명", authorProfile: "교과서", message: "나를 펼치면 졸리고 덮으면 불안하다." },
+{ author: "익명", authorProfile: "학생 공통", message: "공부 계획표는 세울 때가 가장 완벽하다." },
+{ author: "익명", authorProfile: "시험지", message: "나는 항상 학생보다 문제를 더 잘 안다." },
+{ author: "익명", authorProfile: "연필", message: "네가 포기해도 나는 끝까지 닳는다." },
+{ author: "익명", authorProfile: "지우개", message: "실수는 지울 수 있지만 점수는 안 지워진다." },
+{ author: "익명", authorProfile: "학원 가방", message: "지식보다 문제집이 더 무겁다." },
+{ author: "익명", authorProfile: "학생의 다짐", message: "오늘은 진짜 공부한다. 이 말은 어제도 했다." },
+{ author: "익명", authorProfile: "독서실", message: "들어올 때는 의욕이 넘치고 나갈 때는 배가 고프다." },
+{ author: "익명", authorProfile: "수면 연구소", message: "교과서는 최고의 수면 유도 장치다." },
+{ author: "익명", authorProfile: "영어 단어장", message: "외운 단어는 시험날 잠시 여행을 떠난다." },
+{ author: "익명", authorProfile: "수학 공식", message: "나를 외우지 말고 이해하라. 물론 이해도 어렵다." },
+{ author: "익명", authorProfile: "시험 결과", message: "공부를 안 하면 후회하고, 공부를 해도 더 할걸 후회한다." },
+{ author: "익명", authorProfile: "문제집", message: "한 권 끝내면 자신감이 생기고, 다음 권이 나타난다." },
+{ author: "익명", authorProfile: "방학 계획", message: "계획은 7월에 세우고 실천은 언젠가 한다." },
+{ author: "익명", authorProfile: "공부 명언 제조기", message: "집중은 5분, 휴식은 50분이면 균형 잡힌 삶이다." },
+{ author: "익명", authorProfile: "수학 선생님", message: "쉽죠? 라는 말은 보통 쉽지 않다는 뜻이다." },
+{ author: "익명", authorProfile: "과학 시간", message: "실험은 재밌고 보고서는 과학적으로 싫다." },
+{ author: "익명", authorProfile: "역사 시간", message: "연도는 외웠는데 어느 사건인지 모르겠다." },
+{ author: "익명", authorProfile: "학생 정신", message: "모르는 문제를 오래 보면 아는 척하게 된다." },
+{ author: "익명", authorProfile: "교실 시계", message: "쉬는 시간에는 달리고 수업 시간에는 걷는다." },
+{ author: "익명", authorProfile: "점수", message: "나는 노력의 결과지만 가끔 노력과 안 친하다." },
+{ author: "익명", authorProfile: "공부의 진실", message: "한 문제를 맞히면 자신감이 생기고, 다음 문제는 겸손을 가르친다." },
+{ author: "익명", authorProfile: "학생의 눈물", message: "답을 보면 왜 틀렸는지 안다. 시험 중엔 몰랐다." },
+{ author: "익명", authorProfile: "야식", message: "공부할 때 가장 열심히 생각나는 친구다." },
+{ author: "익명", authorProfile: "시험기간", message: "갑자기 방 청소가 하고 싶어진다." },
+{ author: "익명", authorProfile: "휴대폰", message: "공부 시작 3분 만에 가장 매력적인 물건이 된다." },
+{ author: "익명", authorProfile: "책상", message: "네 꿈과 간식이 함께 올라오는 곳." },
+{ author: "익명", authorProfile: "필통", message: "시험날 펜은 항상 한 개가 안 나온다." },
+{ author: "익명", authorProfile: "공부 고수", message: "천재는 노력한다. 나는 계획한다." },
+{ author: "익명", authorProfile: "수학 오답노트", message: "틀린 문제는 다시 만난다." },
+{ author: "익명", authorProfile: "국어 문제", message: "출제자의 마음을 맞히는 심리 게임." },
+{ author: "익명", authorProfile: "시험 직전", message: "지금 보면 나올 것 같고, 안 보면 나올 것 같다." },
+{ author: "익명", authorProfile: "학생 생태계", message: "공부는 하기 싫지만 성적은 갖고 싶다." },
+{ author: "익명", authorProfile: "벼락치기 장인", message: "시간은 없지만 희망은 있다." },
+{ author: "익명", authorProfile: "학습 통계", message: "공부 시간보다 공부할 생각한 시간이 더 길다." },
+{ author: "익명", authorProfile: "수업 시작 5분 전", message: "모든 숙제는 이때 떠오른다." },
+{ author: "익명", authorProfile: "영어 시험", message: "아는 단어보다 모르는 단어가 더 반갑다." },
+{ author: "익명", authorProfile: "모의고사", message: "현실을 알려주는 친절하지 않은 친구." },
+{ author: "익명", authorProfile: "공부 습관", message: "매일 조금씩 하면 된다. 그 조금씩이 어렵다." },
+{ author: "익명", authorProfile: "학생의 희망", message: "이번 시험은 다르다. 매 시험마다 다르다." },
+{ author: "익명", authorProfile: "학습의 결론", message: "포기하지 않으면 언젠가 맞힌다. 찍어서라도." }
         ];
 
         function displayDefaultAdvice() {
@@ -167,14 +354,83 @@
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    const studentName = user.displayName || "학생";
-                    document.getElementById('welcome-message').innerText = `${studentName}님 반가워요!`;
+                    document.getElementById('msgFabBtn').style.display = 'flex'; // 로그인 완료 시 플로팅 버튼 활성화
+
+                    database.ref(`students/${user.uid}`).once('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            currentStudentData = data;
+                            document.getElementById('welcome-message').innerText = `${data.name}님 반가워요!`;
+                        } else {
+                            const studentName = user.displayName || "학생";
+                            document.getElementById('welcome-message').innerText = `${studentName}님 반가워요!`;
+                        }
+                    });
+                    
+                    listenToTeacherNotes(user.uid);
                 } else {
+                    document.getElementById('msgFabBtn').style.display = 'none';
+                    if (noteListener) database.ref(`student_messages/${auth.currentUser?.uid}`).off();
                     window.location.href = 'login.html';
                 }
             });
         }
 
+        // 🆕 플로팅 모달 제어 함수
+        function openSendMessageModal() {
+            document.getElementById('studentMsgInput').value = '';
+            document.getElementById('sendMsgModal').style.display = 'flex';
+        }
+        function closeSendMessageModal() {
+            document.getElementById('sendMsgModal').style.display = 'none';
+        }
+
+        // 선생님이 보낸 개인 쪽지 실시간 수신
+        function listenToTeacherNotes(uid) {
+            noteListener = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false).limitToLast(1);
+            noteListener.on('child_added', (snapshot) => {
+                const note = snapshot.val();
+                if (note) {
+                    document.getElementById('modalTitle').innerText = "✉️ 선생님이 보낸 쪽지";
+                    document.getElementById('modalNoticeContent').innerText = `[${note.teacher} 선생님]\n\n${note.message}`;
+                    document.getElementById('noticeModal').style.display = 'flex';
+                    
+                    database.ref(`student_messages/${uid}/${snapshot.key}/read`).set(true);
+                }
+            });
+        }
+
+        // 선생님께 메시지 전송 로직
+        function sendMessageToTeacher() {
+            const msgInput = document.getElementById('studentMsgInput');
+            const text = msgInput.value.trim();
+
+            if (!text) {
+                alert('보낼 내용을 입력해 주세요.');
+                return;
+            }
+            if (!currentStudentData || !currentStudentData.teacher) {
+                alert('담당 선생님 정보가 등록되지 않아 메시지를 보낼 수 없습니다.');
+                return;
+            }
+
+            const msgData = {
+                studentName: currentStudentData.name,
+                teacher: currentStudentData.teacher,
+                message: text,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                read: false
+            };
+
+            database.ref('messages').push(msgData)
+                .then(() => {
+                    alert(`${currentStudentData.teacher} 선생님께 메시지가 전송되었습니다.`);
+                    closeSendMessageModal();
+                })
+                .catch(err => alert('전송 실패: ' + err.message));
+        }
+
+        // 회원탈퇴 처리 (재인증 및 DB 동시 삭제 보완완료)
         function deleteAccount() {
             const user = auth.currentUser;
             
@@ -183,23 +439,35 @@
                 return;
             }
 
-            if (confirm("정말로 회원탈퇴를 진행하시겠습니까?\n탈퇴 시 모든 정보가 복구 불가능하게 삭제됩니다.")) {
-                user.delete().then(() => {
-                    localStorage.removeItem('u2m_id');
-                    localStorage.removeItem('u2m_pw');
-                    alert("회원탈퇴가 정상적으로 완료되었습니다. 이용해 주셔서 감사합니다.");
-                    window.location.href = 'login.html';
-                }).catch((error) => {
-                    console.error("회원탈퇴 오류:", error);
-                    if (error.code === 'auth/requires-recent-login') {
-                        alert("보안을 위해 재로그인이 필요합니다. 다시 로그인 후 탈퇴를 시도해 주세요.");
-                        auth.signOut().then(() => {
-                            window.location.href = 'login.html';
-                        });
-                    } else {
-                        alert("탈퇴 처리 중 오류가 발생했습니다: " + error.message);
-                    }
-                });
+            const password = prompt("보안 및 안전한 탈퇴를 위해 비밀번호를 다시 한번 입력해 주세요.");
+            if (!password) return;
+
+            if (confirm("정말로 회원탈퇴를 진행하시겠습니까?\n탈퇴 시 데이터베이스와 연동된 내 정보가 복구 불가능하게 영구 소멸합니다.")) {
+                const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+                
+                user.reauthenticateWithCredential(credential)
+                    .then(() => {
+                        const uid = user.uid;
+                        return database.ref(`students/${uid}`).remove()
+                            .then(() => database.ref(`student_messages/${uid}`).remove())
+                            .then(() => {
+                                return user.delete();
+                            });
+                    })
+                    .then(() => {
+                        localStorage.removeItem('u2m_id');
+                        localStorage.removeItem('u2m_pw');
+                        alert("회원탈퇴가 정상적으로 완료되었습니다. 이용해 주셔서 감사합니다.");
+                        window.location.href = 'login.html';
+                    })
+                    .catch((error) => {
+                        console.error("회원탈퇴 오류:", error);
+                        if (error.code === 'auth/wrong-password') {
+                            alert("❌ 비밀번호가 올바르지 않습니다. 다시 시도해 주세요.");
+                        } else {
+                            alert("탈퇴 처리 중 오류가 발생했습니다: " + error.message);
+                        }
+                    });
             }
         }
 
@@ -207,6 +475,7 @@
             database.ref('notice').on('value', (snapshot) => {
                 const text = snapshot.val() || "";
                 if (text.trim() !== "") {
+                    document.getElementById('modalTitle').innerText = "📢 안내 말씀 드립니다";
                     document.getElementById('modalNoticeContent').innerText = text;
                     document.getElementById('noticeModal').style.display = 'flex';
                 } else {
