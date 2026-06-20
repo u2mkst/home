@@ -267,18 +267,39 @@
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
+                    // 플로팅 버튼 활성화
                     document.getElementById('msgFabBtn').style.display = 'flex';
-                    document.getElementById('historyFabBtn').style.display = 'flex'; // 보관함 버튼 활성화
+                    document.getElementById('historyFabBtn').style.display = 'flex'; 
 
+                    // 데이터베이스에서 실시간으로 학생 정보를 단 한 번 가져옵니다.
                     database.ref(`students/${user.uid}`).once('value', (snapshot) => {
                         const data = snapshot.val();
+                        
                         if (data) {
+                            // 1. 학생 데이터가 정상적으로 존재하는 경우
                             currentStudentData = data;
                             const actualName = data.name || data.studentName || data.userName || user.displayName || "학생";
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                         } else {
-                            const studentName = user.displayName || "학생";
-                            document.getElementById('welcome-message').innerText = `${studentName}님 반가워요!`;
+                            // 2. 학생 데이터가 없는데 로그인 세션이 유지된 경우 (관리자 페이지를 다녀왔을 때 주로 발생)
+                            console.log("학생 노드에 데이터가 없거나 관리자 계정 감지됨");
+                            
+                            // Firebase 인증 프로필에 저장된 이름이나 이메일 앞자리를 활용해 가짜 '학생' 표기를 방지합니다.
+                            let backupName = user.displayName;
+                            
+                            if (!backupName && user.email) {
+                                // 이메일 주소에서 @ 앞부분을 이름 대신 추출 (예: admin@test.com -> admin)
+                                backupName = user.email.split('@')[0]; 
+                            }
+                            
+                            // 최종적으로 이름 구출에 성공하면 해당 이름 표시, 실패 시에만 '학생' 표시
+                            const finalDisplayName = backupName || "최고관리자";
+                            
+                            if(user.email && (user.email.includes('admin') || user.email === '학원관리자이메일@도메인.com')) {
+                                document.getElementById('welcome-message').innerText = `⚙️ ${finalDisplayName}(관리자)님 로그인 중`;
+                            } else {
+                                document.getElementById('welcome-message').innerText = `${finalDisplayName}님 반가워요!`;
+                            }
                         }
                     });
                     
