@@ -76,7 +76,7 @@
         .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; }
         .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
         
-        /* 🆕 쪽지 발송 전용 폼 요소 스타일 */
+        /* 쪽지 발송 전용 폼 요소 스타일 */
         .modal-box textarea {
             width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 14px;
             box-sizing: border-box; margin-bottom: 15px; font-size: 0.95rem; font-family: inherit;
@@ -84,7 +84,7 @@
         }
         .modal-box textarea:focus { outline: none; border-color: #6c5ce7; background: #fff; }
         .btn-flex-group { display: flex; gap: 8px; }
-        .btn-cancel { background-color: #e2e8f0; color: #4a5568; }
+        .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
 
         /* ✉️ 우측 하단 플로팅 메시지 버튼 */
@@ -141,7 +141,7 @@
             <div class="modal-title">✉️ 선생님께 메시지 전송</div>
             <textarea id="studentMsgInput" rows="4" placeholder="담당 선생님께 질문이나 요청사항을 실시간으로 적어주세요."></textarea>
             <div class="btn-flex-group">
-                <button class="modal-btn btn-cancel" onclick="closeSendMessageModal()">취소</button>
+                <button class="btn-cancel" onclick="closeSendMessageModal()">취소</button>
                 <button class="modal-btn" onclick="sendMessageToTeacher()">보내기</button>
             </div>
         </div>
@@ -174,6 +174,7 @@
             }, 1000);
         }
 
+        // 💡 명언 데이터 배열
         const advices = [
             { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
 { author: "아리스토텔레스", authorProfile: "철학자", message: "교육의 뿌리는 쓰지만 그 열매는 달다." },
@@ -327,10 +328,11 @@
 { author: "익명", authorProfile: "학습의 결론", message: "포기하지 않으면 언젠가 맞힌다. 찍어서라도." }
         ];
 
+        // 🔄 핵심: 명언을 랜덤(무작위)으로 출력하는 함수
         function displayDefaultAdvice() {
-            const today = new Date();
-            const index = (today.getFullYear() + today.getMonth() + today.getDate()) % advices.length;
-            const dailyData = advices[index];
+            const randomIndex = Math.floor(Math.random() * advices.length);
+            const dailyData = advices[randomIndex];
+            
             document.getElementById('quote-header').innerText = "오늘의 한마디:";
             document.getElementById('quote-text').innerText = `"${dailyData.message}"`;
             const profileStr = dailyData.authorProfile && dailyData.authorProfile !== "-" ? ` (${dailyData.authorProfile})` : "";
@@ -354,7 +356,7 @@
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    document.getElementById('msgFabBtn').style.display = 'flex'; // 로그인 완료 시 플로팅 버튼 활성화
+                    document.getElementById('msgFabBtn').style.display = 'flex';
 
                     database.ref(`students/${user.uid}`).once('value', (snapshot) => {
                         const data = snapshot.val();
@@ -370,22 +372,20 @@
                     listenToTeacherNotes(user.uid);
                 } else {
                     document.getElementById('msgFabBtn').style.display = 'none';
-                    if (noteListener) database.ref(`student_messages/${auth.currentUser?.uid}`).off();
                     window.location.href = 'login.html';
                 }
             });
         }
 
-        // 🆕 플로팅 모달 제어 함수
         function openSendMessageModal() {
             document.getElementById('studentMsgInput').value = '';
             document.getElementById('sendMsgModal').style.display = 'flex';
         }
+        
         function closeSendMessageModal() {
             document.getElementById('sendMsgModal').style.display = 'none';
         }
 
-        // 선생님이 보낸 개인 쪽지 실시간 수신
         function listenToTeacherNotes(uid) {
             noteListener = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false).limitToLast(1);
             noteListener.on('child_added', (snapshot) => {
@@ -400,7 +400,6 @@
             });
         }
 
-        // 선생님께 메시지 전송 로직
         function sendMessageToTeacher() {
             const msgInput = document.getElementById('studentMsgInput');
             const text = msgInput.value.trim();
@@ -430,7 +429,6 @@
                 .catch(err => alert('전송 실패: ' + err.message));
         }
 
-        // 회원탈퇴 처리 (재인증 및 DB 동시 삭제 보완완료)
         function deleteAccount() {
             const user = auth.currentUser;
             
