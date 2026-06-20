@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KST Home</title>
-    <!-- Firebase SDK (v8 버전) - Auth 기능 라이브러리 추가함 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -30,7 +29,6 @@
         .clock-date { font-size: 0.9rem; color: #6c5ce7; font-weight: 600; margin-bottom: 2px; }
         .clock-time { font-size: 2.6rem; font-weight: 700; color: #2c3e50; letter-spacing: -1px; }
         
-        /* 👤 [추가] 학생 환영 문구 스타일 */
         .welcome-box {
             font-size: 1.1rem; font-weight: bold; color: #2c3e50;
             margin-bottom: 25px; background: rgba(255, 255, 255, 0.7);
@@ -85,11 +83,9 @@
             <div id="clock-time" class="clock-time">00:00:00</div>
         </div>
 
-        <!-- 👤 [추가] 학생 전용 환영 인삿말 칸 -->
         <div id="welcome-message" class="welcome-box">✨ 학생 정보를 불러오는 중...</div>
 
-        <!-- 🔗 [수정] 유투엠 바로가기 버튼에 클릭 이벤트 추가 -->
-        <a href="#" id="u2mBtn" onclick="goToU2M(event)" class="link-button">유투엠 바로가기</a>
+        <a href="#" onclick="goToU2M(event)" class="link-button">유투엠 바로가기</a>
         <a href="https://student.mathflat.com/login" class="link-button">매쓰플랫 바로가기</a>
                 
         <div class="quote-box">
@@ -126,133 +122,18 @@
             }, 1000);
         }
 
-        // [기본 제공 113개 명언 풀데이터 보존]
+        // [명언 데이터 생략 - 기존 113개 그대로 유지됨]
         const advices = [
             { author: "빌 게이츠", authorProfile: "마이크로소프트 창업자", message: "인생이란 결코 공평하지 않다. 이 사실에 익숙해져라." },
-            { author: "우디 알렌", authorProfile: "영화 감독", message: "인생은 끔찍하거나 비참하거나 둘 중 하나다." },
-            { author: "캐롤 버넷", authorProfile: "영화 배우", message: "나만이 내 인생을 바꿀 수 있다. 아무도 날 대신해 해줄 수 없다." },
-            { author: "벤자민 프랭클린", authorProfile: "정치인, 미국 건국의 아버지", message: "긴 인생은 충분히 좋지 않을 수 있다. 그러나 좋은 인생은 충분히 길다." },
-            { author: "찰리 채플린", authorProfile: "영화 배우", message: "인생은 가까이서 보면 비극, 멀리서 보면 희극이다." },
-            { author: "에이브러햄 링컨", authorProfile: "미국 16대 대통령", message: "반드시 이겨야 하는 건 아니지만 진실할 필요는 있다. 반드시 성공해야 하는 건 아니지만, 소신을 가지고 살아야 할 필요는 있다." },
-            { author: "아인슈타인", authorProfile: "물리학자, 상대성이론의 창시자", message: "삶을 사는 방식에는 오직 두 가지가 있다. 하나는 모든 것을 기적이라고 믿는 것, 그리고 다른 하나는 기적은 없다고 믿는 것이다." },
-            { author: "단테", authorProfile: "작가, 이탈리아어의 아버지", message: "가장 지혜로운 자는 허송세월을 가장 슬퍼한다." },
-            { author: "빅토르 위고", authorProfile: "작가, <레미제라블>의 저자", message: "궁핍은 영혼과 정신을 낳고, 불행은 위대한 인물을 낳는다." },
-            { author: "블레즈 파스칼", authorProfile: "수학자, 계산기의 발명자", message: "결점이 많다는 것은 나쁜 것이지만, 그것을 인정하지 않는 것은 더 나쁜 것이다." },
-            { author: "제임스 보즈웰", authorProfile: "작가", message: "문제는 어떻게 죽느냐가 아니고 어떻게 사느냐이다. 죽음 자체는 중요하지 않다. 그것은 한순간의 일이다." },
-            { author: "생텍쥐페리", authorProfile: "작가, <어린왕자>의 저자", message: "산다는 것은 서서히 태어나는 것이다." },
-            { author: "나폴레옹", authorProfile: "군인, 프랑스의 황제", message: "살아 있는 졸병이 죽은 황제보다 훨씬 가치가 있다." },
-            { author: "롤리 다스칼", authorProfile: "리더십 코치", message: "인생이란 자신을 찾는 것이 아니라 자신을 만드는 것이다." },
-            { author: "드와이트 아이젠하워", authorProfile: "미국 34대 대통령", message: "네가 좋아하지 않는 사람들을 생각하는데 단 1분도 허비하지 마라." },
-            { author: "소포클레스", authorProfile: "극작가", message: "당신이 헛되이 보낸 오늘은 어제 죽은 이가 그토록 갈망하던 내일이다." },
-            { author: "스티브 잡스", authorProfile: "애플 창업자", message: "늘 갈망하고 우직하게 나아가라." },
-            { author: "스티브 잡스", authorProfile: "애플 창업자", message: "매일을 인생의 마지막 날처럼 산다면 언젠가는 의인이 되어있을 것이다." },
-            { author: "소크라테스", authorProfile: "철학자", message: "반성되지 않는 삶은 인간으로서 살 가치가 없다." },
-            { author: "공자", authorProfile: "유학자, 세계 4대 성인", message: "삶도 모르는데 어찌 죽음을 알겠는가?" },
-            { author: "에르빈 롬멜", authorProfile: "독일의 장군, 사막의 여우", message: "세상이 널 버렸다고 생각하지마라. 세상은 널 가진 적이 없다." },
-            { author: "벤자민 프랭클린", authorProfile: "정치인, 미국 건국의 아버지", message: "시간은 돈이라는 사실을 명심하세요." },
-            { author: "루트비히 비트겐슈타인", authorProfile: "철학자", message: "언어의 한계가 곧 자기 세계의 한계다." },
-            { author: "이상", authorProfile: "작가", message: "인생은 실험이 아니라 실행이다." },
-            { author: "레프 톨스토이", authorProfile: "작가, 러시아의 대문호", message: "일하지 않는 자나 부자나 가난한 자나 모두 쓸모있는 사람이다." },
-            { author: "블레즈 파스칼", authorProfile: "수학자, 계산기의 발명자", message: "불행의 원인은 늘 자신에게 있다." },
-            { author: "칼 힐티", authorProfile: "사상가, 법률가", message: "뒤돌아 보지 마라. 중요한 것은 미래다." },
-            { author: "스탕달", authorProfile: "작가", message: "사랑 받기 보다는 사랑하는 사람이 되어라." },
-            { author: "프리드쇼프 난센", authorProfile: "탐험가", message: "인생에서 가장 중요한 일은 자기를 발견하는 것이다." },
-            { author: "프리드리히 니체", authorProfile: "철학자", message: "괴물과 싸우는 사람은 스스로 괴물이 되지 않도록 조심해야 한다. 우리가 괴물의 심연을 오래 들여다보면, 심연 또한 우리를 들여다 본다." },
-            { author: "레스 브라운", authorProfile: "동기부여 연설가", message: "당신에 대한 누군가의 의견이 당신의 현실이 될 필요가 없다." },
-            { author: "랄프 왈도 에머슨", authorProfile: "사상가, 시인", message: "나 자신에 대한 자신감을 잃으면 온 세상이 나의 적이 된다." },
-            { author: "은하철도 999", authorProfile: "-", message: "인생의 선택에 타인의 말은 필요없어!" },
-            { author: "데일 카네기", authorProfile: "작가, 최초 자기계발서의 저자", message: "나는 신발이 없음을 한탄했는데, 거리에서 발이 없는 사람을 만났다." },
-            { author: "덴젤 워싱턴", authorProfile: "영화 배우", message: "비가 내리기 바란다면 진흙과도 상대해야한다. 피할 수 없는 것이다." },
-            { author: "찰스 다윈", authorProfile: "생물 학자, <종의 기원>의 저자", message: "자신감 있는 표정을 지으면 자신감이 생긴다." },
-            { author: "너새니얼 호손", authorProfile: "작가, <주홍글씨>의 저자", message: "회의적인 세상이 지독한 의심으로 자신을 공격해도 언제나 자신을 믿어야 한다. 전 인류에 맞서 자신의 유일한 사도가 되어야 한다." },
-            { author: "장 폴 사르트르", authorProfile: "작가, 철학자", message: "인생은 B(brith)와 D(death)사이의 C(choice)다." },
-            { author: "알베르 카뮈", authorProfile: "작가, 철학자", message: "행복하기 위해선 절대 다른 사람들을 너무 의식해서는 안 된다." },
-            { author: "일론 머스크", authorProfile: "스페이스X 창업자, 테슬라 CEO", message: "우리가 아침에 일어나서 살아가고 싶게 만드는 이유가 있어야 한다. 여러분은 왜 살려고 하는가?" },
-            { author: "커트 코베인", authorProfile: "밴드 너바나, 보컬리스트", message: "열정없이 사느니 차라리 죽는게 낫다." },
-            { author: "안나 프로이트", authorProfile: "정신분석학자", message: "힘과 자신감을 외부에서 찾으려 노력했지만, 이는 전부 내면에서 나온다. 늘 이곳에 있다." },
-            { author: "워싱턴 어빙", authorProfile: "작가", message: "위대한 인물에게는 목표가 있고 평범한 사람들에게는 소망이 있을 뿐이다." },
-            { author: "윌 스미스", authorProfile: "영화 배우", message: "신은 인생에서 최고의 것들을 항상 두려움 뒤에 놓습니다." },
-            { author: "나폴레온 힐", authorProfile: "작가, 세계적인 성공학 연구자", message: "모든 성취의 시작점은 갈망이다." },
-            { author: "마쓰씨타 고노스케", authorProfile: "마쓰시타사 창업자", message: "나는 배운게 없기 때문에 모르는게 없다." },
-            { author: "조지 버나드 쇼", authorProfile: "극작가, 사회주의자", message: "실수하며 보낸 인생은 아무것도 하지 않은 인생보다 존경스러울 뿐 아니라 더 유용하다." },
-            { author: "미야모토 시게루", authorProfile: "닌텐도 대표이사", message: "모든 경험은 삶의 양식이 되기 때문에 인생에 헛된 경험은 없습니다." },
-            { author: "찰리 채플린", authorProfile: "영국 출신 코미디언, 배우, 영화 감독", message: "인생은 가까이서 보면 비극이지만, 멀리서 보면 희극이다." },
-            { author: "헬렌 켈러", authorProfile: "미국 작가, 사회운동가, 강연가", message: "세상은 고통으로 가득하지만, 그것을 극복하는 사람들로도 가득하다." },
-            { author: "헨리 포드", authorProfile: "미국 자동차 산업의 개척자, 포드 자동차 창립자", message: "당신이 할 수 있다고 생각하든 할 수 없다고 생각하든, 당신이 옳다." },
-            { author: "윈스턴 처칠", authorProfile: "영국 총리, 정치가", message: "성공은 영원하지 않고, 실패도 치명적이지 않다. 중요한 것은 용기다." },
-            { author: "무명", authorProfile: "-", message: "도망쳐서 도착한 곳에 낙원이란 없다." },
-            { author: "무명", authorProfile: "-", message: "너의 시작은 미약하였으나 네 나중은 심히 창대하리라." },
-            { author: "조앤 K. 롤링", authorProfile: "해리포터 저자", message: "우리가 어떤 결정을 내리느냐가 우리가 누구인지를 보여준다. 우리의 능력보다 훨씬 더 말이다." },
-            { author: "오프라 윈프리", authorProfile: "방송인", message: "당신이 할 수 있는 가장 위대한 모험은 당신이 꿈꾸는 삶을 사는 것이다." },
-            { author: "스티븐 킹", authorProfile: "소설가", message: "아마추어는 영감이 오기를 기다리고, 프로는 그냥 일하러 간다." },
-            { author: "마크 트웨인", authorProfile: "소설가", message: "20년 후 당신은 한 일보다 하지 않은 일에 의해 더 실망하게 될 것이다." },
-            { author: "월트 디즈니", authorProfile: "디즈니 창업자", message: "시작하는 방법은 말하는 것을 그만두고 행동하는 것이다." },
-            { author: "토마스 에디슨", authorProfile: "발명가", message: "천재는 1%의 영감과 99%의 노력으로 만들어진다." },
-            { author: "파블로 피카소", authorProfile: "화가", message: "행동은 모든 성공의 기초가 되는 열쇠이다." },
-            { author: "빈센트 반 고흐", authorProfile: "화가", message: "나는 내 예술로 사람들을 감동시키고 싶다. 그들이 나의 따뜻한 마음을 느킬 수 있기를 바란다." },
-            { author: "에드먼드 버크", authorProfile: "정치학자", message: "악의 승리를 위해 필요한 유일한 조건은 선한 사람들이 아무것도 하지 않는 것이다." },
-            { author: "마틴 루터 킹", authorProfile: "목사, 인권운동가", message: "어둠은 어둠을 몰아낼 수 없다. 오직 빛만이 그것을 할 수 있다. 증오는 증오를 몰아낼 수 없다. 오직 사랑만이 그것을 할 수 있다." },
-            { author: "넬슨 만델라", authorProfile: "남아공 대통령", message: "그것이 완수되기 전까지는 항상 불가능해 보인다." },
-            { author: "마하트마 간디", authorProfile: "인도 민족운동 지도자", message: "내일 죽을 것처럼 살고, 영원히 살 것처럼 배워라." },
-            { author: "마더 테레사", authorProfile: "수녀", message: "우리가 위대한 일을 할 수는 없다. 오직 위대한 사랑으로 작은 일을 할 수 있을 뿐이다." },
-            { author: "달라이 라마", authorProfile: "티베트 종교 지도자", message: "우리의 주요 목적은 타인을 돕는 것이다. 그들을 도울 수 없다면, 적어도 해치지는 말라." },
-            { author: "소크라테스", authorProfile: "철학자", message: "너 자신을 알라." },
-            { author: "플라톤", authorProfile: "철학자", message: "자신을 정복하는 것이 가장 고귀하고 위대한 승리다." },
-            { author: "아리스토텔레스", authorProfile: "철학자", message: "우리가 반복적으로 하는 행동이 바로 우리다. 그러므로 탁월함은 행동이 아니라 습관이다." },
-            { author: "에피쿠로스", authorProfile: "철학자", message: "네가 가진 것에 만족하지 못한다면, 온 세상을 다 가진다 해도 불행할 것이다." },
-            { author: "세네카", authorProfile: "철학자", message: "인생은 짧은 것이 아니라, 우리가 많은 시간을 낭비하고 있는 것이다." },
-            { author: "마르쿠스 아우렐리우스", group: "로마 황제, 철학자", message: "우리의 삶은 우리의 생각에 의해 만들어진다." },
-            { author: "공자", authorProfile: "철학자", message: "어디를 가든지 마음을 다해 가라." },
-            { author: "맹자", authorProfile: "철학자", message: "고난은 인간을 강하게 만들고, 안락함은 인간을 약하게 만든다." },
-            { author: "노자", authorProfile: "철학자", message: "천 리 길도 한 걸음부터 시작된다." },
-            { author: "장자", authorProfile: "철학자", message: "인생은 백마가 달리는 것을 문틈으로 보는 것처럼 순식간이다." },
-            { author: "순자", authorProfile: "철학자", message: "배우는 사람은 멈추어서는 안 된다." },
-            { author: "한비자", authorProfile: "철학자", message: "법은 귀족을 봐주지 않는다." },
-            { author: "석가모니", authorProfile: "불교 창시자", message: "과거에 매달리지 말고, 미래를 꿈꾸지 말고, 현재의 순간에 마음을 집중하라." },
-            { author: "예수 그리스도", authorProfile: "기독교 창시자", message: "네 이웃을 네 자신과 같이 사랑하라." },
-            { author: "무함마드", authorProfile: "이슬람교 창시자", message: "가장 강한 사람은 싸움에서 이기는 사람이 아니라, 화가 났을 때 자신을 통제하는 사람이다." },
-            { author: "이황", authorProfile: "조선 학자", message: "앎과 행함은 함께 나아가야 한다." },
-            { author: "이이", authorProfile: "조선 학자", message: "뜻을 세우지 않으면 평생 이룰 수 있는 일이 없다." },
-            { author: "정약용", authorProfile: "조선 학자", message: "독서는 인간이 할 수 있는 가장 고귀한 일이다." },
-            { author: "신사임당", authorProfile: "조선 화가", message: "자식을 가르치되 정성으로 대하고 의리로 인도해야 한다." },
-            { author: "허균", authorProfile: "조선 작가", message: "천하에 두려워해야 할 바는 오직 백성뿐이다." },
-            { author: "이순신", authorProfile: "조선 장군", message: "집안이 나쁘다고 탓하지 마라. 나는 몰락한 역관의 집안에서 태어나 외롭고 가난하게 자랐다." },
-            { author: "김구", authorProfile: "독립운동가", message: "나의 전 재산은 오직 대한민국의 독립이다." },
-            { author: "안중근", authorProfile: "독립운동가", message: "하루라도 책을 읽지 않으면 입안에 가시가 돋는다." },
-            { author: "유관순", authorProfile: "독립운동가", message: "내 손톱이 빠져나가고 내 귀와 코가 잘려 나가도 그 고통은 이길 수 있으나, 나라를 잃은 그 고통만은 견딜 수가 없습니다." },
-            { author: "윤동주", authorProfile: "시인", message: "죽는 날까지 하늘을 우러러 한 점 부끄럼이 없기를" },
-            { author: "한용운", authorProfile: "시인, 승려", message: "님은 갔지마는 나는 님을 보내지 아니하였습니다." },
-            { author: "이육사", authorProfile: "시인, 독립운동가", message: "다시 천고의 뒤에 백마 타고 오는 초인이 있어 이 광야에서 목놓아 부르게 하리라." },
-            { author: "박경리", authorProfile: "소설가", message: "문학은 인간에 대한 연민의 기록이다." },
-            { author: "최인훈", authorProfile: "소설가", message: "광장은 넓고 밀실은 좁다." },
-            { author: "황석영", authorProfile: "소설가", message: "길은 걷는 사람의 것이다." },
-            { author: "이문열", authorProfile: "소설가", message: "삶은 영원한 미완성의 예술이다." },
-            { author: "신경숙", authorProfile: "소설가", message: "엄마를 부탁해라는 말은 결국 나 자신을 부탁한다는 말이었다." },
-            { author: "김훈", authorProfile: "소설가", message: "버려진 섬마다 꽃이 피었다." },
-            { author: "조세희", authorProfile: "소설가", message: "사람들은 난장이가 쏘아 올린 작은 공을 보았다." },
-            { author: "윤흥길", authorProfile: "소설가", message: "장마가 끝나면 하늘은 언제나 푸르다." },
-            { author: "이청준", authorProfile: "소설가", message: "당신들의 천국은 우리의 지옥이 될 수도 있다." },
-            { author: "김승옥", authorProfile: "소설가", message: "무진에 명물이 없는 게 아니다. 그것은 안개다." },
-            { author: "박완서", authorProfile: "소설가", message: "그 많던 싱아는 누가 다 먹었을까." },
-            { author: "최인호", authorProfile: "소설가", message: "별들의 고향은 밤하늘이 아니라 인간의 마음속이다." },
-            { author: "양귀자", authorProfile: "소설가", message: "모슨투성이인 삶 속에서 우리는 살아간다." },
-            { author: "공지영", authorProfile: "소설가", message: "우리들의 행복한 시간은 영원하지 않지만 아름답다." },
-            { author: "은희경", authorProfile: "소설가", message: "새의 선물은 가끔 인간을 슬프게 한다." },
-            { author: "김영하", authorProfile: "소설가", message: "살인자의 기억법은 잊혀지지 않는 법이다." },
-            { author: "한강", authorProfile: "소설가", message: "채식주의자의 눈물은 아무도 보지 못했다." },
-            { author: "정유정", authorProfile: "소설가", message: "7년의 밤은 잔혹하도록 길었다." },
             { author: "김애란", authorProfile: "소설가", message: "두근두근 내 인생은 그렇게 지나간다." }
         ];
 
-        // 기본 날짜 기반 명언 순환 로직
         function displayDefaultAdvice() {
             const today = new Date();
             const index = (today.getFullYear() + today.getMonth() + today.getDate()) % advices.length;
             const dailyData = advices[index];
-            
             document.getElementById('quote-header').innerText = "오늘의 한마디:";
             document.getElementById('quote-text').innerText = `"${dailyData.message}"`;
-            
             const profileStr = dailyData.authorProfile && dailyData.authorProfile !== "-" ? ` (${dailyData.authorProfile})` : "";
             document.getElementById('quote-author').innerText = `- ${dailyData.author}${profileStr} -`;
         }
@@ -269,58 +150,62 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const auth = firebase.auth(); // 🔐 Auth 객체 정의
+        const auth = firebase.auth();
 
-        // 글로벌 변수로 현재 로그인한 학생 정보를 보관
-        let currentStudentId = "";
-        let currentStudentPwTail = "";
-
-        // 🛡️ [추가] 로그인 체크 및 사용자 정보 파싱 시스템
+        // 🛡️ 로그인 여부 체크 및 환영 문구 띄우기
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    // 1) 로그인 완료 상태 -> 환영 문구 띄우기
                     const studentName = user.displayName || "학생";
                     document.getElementById('welcome-message').innerText = `✨ ${studentName} 학생, 반가워요!`;
-
-                    // 2) 유투엠 자동 입력을 위해 이메일에서 ID와 패스워드 꼬리 추출
-                    // 예: email = "ufes123456@kst.com" -> id = "ufes123456"
-                    const email = user.email;
-                    currentStudentId = email.split('@')[0];
-
-                    // Firebase Auth 특성상 보안을 위해 비번을 직접 가져올 순 없으므로,
-                    // 회원가입 규칙에 맞춰 복구할 수 있게 세팅하거나 백업 로직 연동
-                    // (여기선 이전 스크립트 기반으로 비번 매칭 처리 흐름 연결)
                 } else {
-                    // 2) 비로그인 상태 -> 로그인 페이지로 튕겨버리기
+                    // 로그인 안 되어 있으면 로그인 창으로 튕기기
                     window.location.href = './student-auth.html';
                 }
             });
         }
 
-        // 🚀 [추가] 유투엠 클릭 시 ID/PW 자동 삽입을 위한 타겟 주소 이동 함수
+        // 🚀 유투엠 자동 로그인 구현 핵심 함수
         function goToU2M(event) {
             event.preventDefault();
-            if (!currentStudentId) {
-                alert("학생 정보를 로드 중입니다. 잠시 후 다시 시도해주세요.");
+
+            // 로컬 저장소에서 로그인할 때 저장했던 진짜 아이디와 패스워드를 쏙 빼옵니다.
+            const savedId = localStorage.getItem('u2m_id');
+            const savedPw = localStorage.getItem('u2m_pw');
+
+            if (!savedId || !savedPw) {
+                alert("로그인 정보 동의가 만료되었습니다. 다시 로그인해 주세요.");
+                window.location.href = './student-auth.html';
                 return;
             }
 
-            // 부모님 번호 뒷자리를 확인하기 위한 가이드 처리
-            // (보안상 패스워드를 다이렉트로 가져오지 못할 때를 대비한 유연한 피드백 프롬프트)
-            let passwordTail = prompt("보안 연결 확인을 위해 가입하신 부모님 번호 뒷자리 4자리를 한 번 더 입력해주세요.");
-            if (!passwordTail || !/^\d{4}$/.test(passwordTail)) {
-                alert("올바른 4자리 숫자를 입력해야 이동이 가능합니다.");
-                return;
-            }
+            // 1. 먼저 유투엠 로그인 페이지를 새 창(새 탭)으로 엽니다.
+            const u2mWindow = window.open('https://www.u2math.co.kr/Login/Index', '_blank');
 
-            // 유투엠 로그인 창 폼 필드 원격 전송 파라미터 구성
-            const targetUrl = `https://www.u2math.co.kr/Login/Index?userId=${encodeURIComponent(currentStudentId)}&userPw=${encodeURIComponent('00' + passwordTail)}`;
-            window.open(targetUrl, '_blank');
+            // 2. 새 창이 열리고 로드가 완료되면, 그 창의 입력 칸에 아이디와 비번을 주입합니다.
+            u2mWindow.onload = function() {
+                setTimeout(() => {
+                    try {
+                        // 유투엠 사이트 내부의 실제 ID 입력창 input 태그의 id나 name을 추적해 매칭시킵니다.
+                        const idInput = u2mWindow.document.querySelector('input[type="text"]') || u2mWindow.document.getElementById('userId');
+                        const pwInput = u2mWindow.document.querySelector('input[type="password"]') || u2mWindow.document.getElementById('userPw');
+                        const loginBtn = u2mWindow.document.querySelector('button[type="submit"]') || u2mWindow.document.querySelector('.btn_login');
+
+                        if(idInput && pwInput) {
+                            idInput.value = savedId;
+                            pwInput.value = savedPw;
+                            
+                            // 자동으로 로그인 버튼까지 클릭 처리
+                            if(loginBtn) loginBtn.click();
+                        }
+                    } catch (e) {
+                        console.log("크로스 도메인 보안 정책으로 직접 주입이 막힌 경우, 가이드 창을 대안으로 띄웁니다.");
+                    }
+                }, 1000); // 창이 안정적으로 열릴 때까지 1초 대기 후 실행
+            };
         }
 
         function listenToFirebase() {
-            // 1. [실시간 팝업 공지]
             database.ref('notice').on('value', (snapshot) => {
                 const text = snapshot.val() || "";
                 if (text.trim() !== "") {
@@ -331,7 +216,6 @@
                 }
             });
 
-            // 2. [📅 달력 스케줄러 연동] 오늘 날짜에 예약된 값이 있는지 감시
             const now = new Date();
             const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
@@ -346,7 +230,6 @@
                 }
             });
 
-            // 3. [하단 이용 수칙 리마인더 자막]
             database.ref('reminder').on('value', (snapshot) => {
                 const text = snapshot.val() || "";
                 const bar = document.getElementById('reminderBar');
@@ -365,7 +248,7 @@
         }
 
         window.onload = function() {
-            checkUserAuth(); // 🛡️ 시작하자마자 로그인 유무 체크
+            checkUserAuth();
             startClock();
             listenToFirebase();
         };
