@@ -211,26 +211,34 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
+        // 🔒 로그인 상태를 감시하여 비로그인 시 즉시 login.html로 강제 이동
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
+                    // 로그인이 확실히 되어 있는 경우에만 UI 요소를 보여주고 데이터를 로드합니다.
                     document.getElementById('msgFabBtn').style.display = 'flex';
 
                     database.ref(`students/${user.uid}`).once('value', (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
                             currentStudentData = data;
-                            document.getElementById('welcome-message').innerText = `${data.name}님 반가워요!`;
+                            const actualName = data.name || data.studentName || data.userName || user.displayName || "학생";
+                            document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                         } else {
+                            // 계정은 있으나 DB에 데이터가 아직 안 넘어온 특수 상황 예외처리
                             const studentName = user.displayName || "학생";
                             document.getElementById('welcome-message').innerText = `${studentName}님 반가워요!`;
                         }
                     });
                     
+                    // 선생님 쪽지 감시 시작
                     listenToTeacherNotes(user.uid);
                 } else {
-                    document.getElementById('msgFabBtn').style.display = 'none';
-                    window.location.href = 'login.html';
+                    // 🚨 [핵심] 로그인이 안 되어 있다면 국물도 없이 바로 로그인 페이지로 이동!
+                    console.log("비로그인 사용자 감지 - 로그인 페이지로 강제 리다이렉트");
+                    window.location.replace('login.html'); 
+                    // 💡 window.location.href 대신 replace를 쓰면 
+                    // 로그인 페이지로 간 뒤 브라우저 [뒤로가기]를 눌러도 다시 이 화면으로 넘어오지 못하게 완전히 막아버립니다.
                 }
             });
         }
