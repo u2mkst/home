@@ -223,11 +223,12 @@
                     return user.updateProfile({
                         displayName: studentName
                     }).then(() => {
-                        // 2. Realtime Database에 담당 선생님 및 학생 정보 기록 저장
-                        return database.ref('users/' + user.uid).set({
+                        // 2. [✨ 수정] 저장 경로를 'users'에서 'students'로 변경하고 phone 데이터 추가!
+                        return database.ref('students/' + user.uid).set({
                             name: studentName,
                             u2mId: u2mId,
                             teacher: selectedTeacher,
+                            phone: phoneTail, // 👈 탈퇴할 때 쓸 핸드폰 뒷자리 저장
                             joinedAt: firebase.database.ServerValue.TIMESTAMP
                         });
                     });
