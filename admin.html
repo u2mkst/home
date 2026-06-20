@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학생 태블릿 제어 by KST</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>K&P 수학입시학원 관리자</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -76,7 +77,7 @@
             padding-bottom: 8px;
         }
         
-        textarea, input[type="text"], input[type="email"], input[type="password"] { 
+        textarea, input[type="text"], input[type="email"], input[type="password"], select { 
             width: 100%; 
             padding: 14px; 
             border: 1px solid rgba(255, 255, 255, 0.8); 
@@ -90,7 +91,7 @@
             transition: all 0.2s ease;
         }
 
-        textarea:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+        textarea:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, select:focus {
             outline: none;
             border-color: #6c5ce7;
             background-color: #fff;
@@ -127,6 +128,10 @@
         .btn-logout { background-color: transparent; color: #7f8c8d; border: none; box-shadow: none; font-size: 0.85rem; padding: 5px; margin-top: 10px;}
         .btn-logout:hover { background-color: rgba(0,0,0,0.05); color: #333; }
 
+        .reset-teacher-zone { text-align: center; margin-top: 15px; }
+        .btn-reset-teacher { background: none; border: none; color: #b2bec3; font-size: 0.75rem; text-decoration: underline; cursor: pointer; padding: 5px; }
+        .btn-reset-teacher:hover { color: #6c5ce7; }
+
         label {
             display: block;
             font-weight: bold;
@@ -135,7 +140,75 @@
             margin-bottom: 6px;
         }
 
-        /* 초기 상태 제어 및 컴포넌트 은닉 */
+        /* 👥 학생 목록 및 검색 스타일 */
+        .student-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.7);
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .student-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .student-name { font-weight: bold; font-size: 0.95rem; color: #2c3e50; }
+        .student-id { font-size: 0.8rem; color: #7f8c8d; }
+        .btn-note {
+            width: auto; margin-bottom: 0; padding: 6px 14px; font-size: 0.8rem; border-radius: 8px;
+            background-color: #6c5ce7; color: white; border: none;
+        }
+        .btn-note:hover { background-color: #5b4cc4; }
+
+        /* ✉️ 우측 하단 플로팅 메시지 버튼 디자인 */
+        .msg-fab {
+            position: fixed; bottom: 25px; right: 25px;
+            width: 60px; height: 60px; border-radius: 50%;
+            background-color: #6c5ce7; color: white; border: none;
+            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+            cursor: pointer; display: none; justify-content: center; align-items: center;
+            font-size: 1.6rem; z-index: 999; transition: all 0.2s ease;
+        }
+        .msg-fab:hover { transform: scale(1.08); background-color: #5b4cc4; }
+        .msg-badge {
+            position: absolute; top: -2px; right: -2px;
+            background-color: #ff7675; color: white;
+            font-size: 0.75rem; font-weight: bold;
+            padding: 3px 7px; border-radius: 10px;
+            border: 2px solid white; display: none;
+        }
+
+        /* 🗂️ 메시지 팝업 모달창 디자인 */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: #ffffff; width: 90%; max-width: 400px; padding: 24px;
+            border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-title { font-size: 1.2rem; font-weight: 700; color: #2c3e50; }
+        .close-modal { background: none; border: none; font-size: 1.2rem; color: #aaa; cursor: pointer; width: auto; margin: 0; padding: 0; }
+        .close-modal:hover { color: #333; }
+        
+        .msg-list { max-height: 280px; overflow-y: auto; margin-bottom: 15px; padding-right: 4px; }
+        .msg-item { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 0.9rem; border-left: 4px solid #6c5ce7; }
+        .msg-item.unread { background: #edf2ff; border-left-color: #ff7675; }
+        .msg-meta { font-size: 0.75rem; color: #888; margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .msg-sender { font-weight: bold; color: #4a5568; }
+        .msg-body { word-break: break-all; color: #333; line-height: 1.4; }
+        .no-msg { text-align: center; color: #aaa; padding: 30px 0; font-size: 0.9rem; }
+
         #loginCard { display: none; }
         #controlPanel { display: none; }
     </style>
@@ -145,11 +218,25 @@
     <div class="container">
         <div class="header-zone">
             <h1>학생 태블릿 제어</h1>
-            <p>by KST</p>
+            <p id="currentTeacherTitle">by KST</p>
         </div>
 
+        <!-- 🔒 관리자 로그인 카드 -->
         <div id="loginCard" class="card">
             <h2>🔒 관리자 계정 인증</h2>
+            
+            <label>선생님 선택</label>
+            <select id="adminTeacher" required>
+                <option value="" disabled selected>선생님 이름을 선택해 주세요</option>
+                <option value="김동진">김동진 선생님</option>
+                <option value="이주희">이주희 선생님</option>
+                <option value="차현준">차현준 선생님</option>
+                <option value="권준수">권준수 선생님</option>
+                <option value="박다희">박다희 선생님</option>
+                <option value="정찬호">정찬호 선생님</option>
+                <option value="김영호">김영호 선생님</option>
+            </select>
+
             <label>이메일 주소</label>
             <input type="email" id="adminEmail" placeholder="example@u2m.com">
             
@@ -159,7 +246,18 @@
             <button onclick="handleLogin()">보안 로그인</button>
         </div>
 
+        <!-- ⚡ 컨트롤 패널 -->
         <div id="controlPanel">
+            <!-- 👥 내 학생 검색 및 쪽지 발송 카드 -->
+            <div class="card">
+                <h2>👥 내 학생 현황 및 쪽지</h2>
+                <label>학생 이름 검색</label>
+                <input type="text" id="studentSearchInput" placeholder="이름을 입력해 주세요" oninput="filterStudents()">
+                <div id="studentListZone" class="student-list">
+                    <!-- 필터링된 학생 목록이 기입됨 -->
+                </div>
+            </div>
+
             <div class="card">
                 <h2>🔔 전체 화면 강제 팝업</h2>
                 <label>공지할 내용을 작성해 주세요</label>
@@ -176,66 +274,300 @@
             </div>
             
             <button class="btn-logout" onclick="handleLogout()">로그아웃 (세션 종료)</button>
+            
+            <div class="reset-teacher-zone">
+                <button class="btn-reset-teacher" onclick="resetTeacherConfig()">🔄 다른 담당 선생님으로 다시 선택하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✉️ 우측 하단 플로팅 메시지 버튼 -->
+    <button id="msgFabBtn" class="msg-fab" onclick="openMessageModal()">
+        ✉️
+        <span id="msgBadgeCount" class="msg-badge">0</span>
+    </button>
+
+    <!-- 🗂️ 메시지 확인 모달 (학생 -> 선생님) -->
+    <div id="messageModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">📬 도착한 학생 메시지</div>
+                <button class="close-modal" onclick="closeMessageModal()">✕</button>
+            </div>
+            <div id="modalMsgList" class="msg-list">
+                <!-- 자바스크립트로 메시지가 동적 생성됨 -->
+            </div>
+            <button onclick="closeMessageModal()" style="margin-bottom:0;">닫기</button>
+        </div>
+    </div>
+
+    <!-- 📝 쪽지 보내기 모달 (선생님 -> 학생) -->
+    <div id="sendNoteModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">📝 학생에게 쪽지 전송</div>
+                <button class="close-modal" onclick="closeNoteModal()">✕</button>
+            </div>
+            <label>수신 학생</label>
+            <input type="text" id="targetStudentDisplay" readonly style="background: #f1f2f6; font-weight: bold;">
+            <input type="hidden" id="targetStudentId">
+            
+            <label>쪽지 내용</label>
+            <textarea id="noteContentInput" rows="4" placeholder="학생 화면에 실시간으로 띄울 쪽지 내용을 적어주세요."></textarea>
+            
+            <button onclick="submitNoteToStudent()">✉️ 쪽지 보내기</button>
+            <button onclick="closeNoteModal()" style="background:#f1f2f6; color:#333; margin-bottom:0;">취소</button>
         </div>
     </div>
 
     <script>
-        // ⚠️ Firebase 설정 정보 입력 (본인의 키값으로 꼭 채워넣으세요!)
         const firebaseConfig = {
-
-  apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
-
-  authDomain: "ksthome-76889.firebaseapp.com",
-
-  databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
-
-  projectId: "ksthome-76889",
-
-  storageBucket: "ksthome-76889.firebasestorage.app",
-
-  messagingSenderId: "411945142173",
-
-  appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
-
-  measurementId: "G-72TJ0364MJ"
-
-};
+            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+            authDomain: "ksthome-76889.firebaseapp.com",
+            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+            projectId: "ksthome-76889",
+            storageBucket: "ksthome-76889.firebasestorage.app",
+            messagingSenderId: "411945142173",
+            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+            measurementId: "G-72TJ0364MJ"
+        };
         firebase.initializeApp(firebaseConfig);
         
         const auth = firebase.auth();
         const database = firebase.database();
+        let messageListener = null; 
+        let allStudents = []; 
 
-        // 인증 상태 실시간 모니터링 (자동 로그인 및 페이지 세션 방어)
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // 로그인 완료 상태
-                document.getElementById('loginCard').style.display = 'none';
-                document.getElementById('controlPanel').style.display = 'block';
-                loadCurrentStatus();
-            } else {
-                // 로그아웃 혹은 비인증 상태
-                document.getElementById('controlPanel').style.display = 'none';
-                document.getElementById('loginCard').style.display = 'block';
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTeacher = localStorage.getItem('admin_teacher');
+            const savedEmail = localStorage.getItem('admin_email');
+            const savedPassword = localStorage.getItem('admin_password');
+
+            if (savedTeacher) {
+                document.getElementById('adminTeacher').value = savedTeacher;
+            }
+
+            if (savedTeacher && savedEmail && savedPassword) {
+                auth.signInWithEmailAndPassword(savedEmail, savedPassword).catch((err) => {
+                    clearLocalStorageAuth();
+                });
             }
         });
 
-        // 로그인 실행 함수
+        // 인증 상태 모니터링
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('loginCard').style.display = 'none';
+                document.getElementById('controlPanel').style.display = 'block';
+                document.getElementById('msgFabBtn').style.display = 'flex'; 
+                
+                const currentTeacher = localStorage.getItem('admin_teacher') || "관리자";
+                document.getElementById('currentTeacherTitle').innerText = `담당 관리자: ${currentTeacher} 선생님`;
+                
+                loadCurrentStatus();
+                fetchTeacherStudents(currentTeacher); 
+                listenToIncomingMessages(currentTeacher); 
+            } else {
+                document.getElementById('controlPanel').style.display = 'none';
+                document.getElementById('loginCard').style.display = 'block';
+                document.getElementById('msgFabBtn').style.display = 'none';
+                document.getElementById('currentTeacherTitle').innerText = "by KST";
+                
+                if (messageListener) {
+                    database.ref('messages').off('value', messageListener);
+                }
+            }
+        });
+
+        // 담당 선생님의 학생 명단 가져오기
+        function fetchTeacherStudents(teacherName) {
+            database.ref('students').orderByChild('teacher').equalTo(teacherName).on('value', (snapshot) => {
+                allStudents = [];
+                const data = snapshot.val();
+                if (data) {
+                    for (let id in data) {
+                        allStudents.push({ id, ...data[id] });
+                    }
+                }
+                filterStudents(); 
+            });
+        }
+
+        // 학생 실시간 검색 및 렌더링 (가상 더미 데이터 삭제 완료)
+        function filterStudents() {
+            const keyword = document.getElementById('studentSearchInput').value.trim().toLowerCase();
+            const listZone = document.getElementById('studentListZone');
+            
+            if (!listZone) return;
+            listZone.innerHTML = '';
+
+            if (allStudents.length === 0) {
+                listZone.innerHTML = '<div class="no-msg">등록된 담당 학생이 없습니다.</div>';
+                return;
+            }
+
+            const filtered = allStudents.filter(student => {
+                if (keyword === "") return true; 
+                return student.name && student.name.toLowerCase().includes(keyword); 
+            });
+
+            if (filtered.length === 0) {
+                listZone.innerHTML = '<div class="no-msg">일치하는 학생이 없습니다.</div>';
+                return;
+            }
+
+            filtered.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div class="student-info">
+                        <span class="student-name">👤 ${student.name}</span>
+                        <span class="student-id">ID: ${student.ufesId || '없음'}</span>
+                    </div>
+                    <button class="btn-note" onclick="openNoteModal('${student.id}', '${student.name}')">쪽지</button>
+                `;
+                listZone.appendChild(item);
+            });
+        }
+
+        // 쪽지 보내기 모달 열기
+        function openNoteModal(studentId, studentName) {
+            document.getElementById('targetStudentId').value = studentId;
+            document.getElementById('targetStudentDisplay').value = studentName;
+            document.getElementById('noteContentInput').value = '';
+            document.getElementById('sendNoteModal').style.display = 'flex';
+        }
+
+        function closeNoteModal() {
+            document.getElementById('sendNoteModal').style.display = 'none';
+        }
+
+        // 학생에게 쪽지 전송 (DB 저장)
+        function submitNoteToStudent() {
+            const studentId = document.getElementById('targetStudentId').value;
+            const content = document.getElementById('noteContentInput').value.trim();
+            const teacherName = localStorage.getItem('admin_teacher');
+
+            if (!content) {
+                alert('쪽지 내용을 입력해 주세요.');
+                return;
+            }
+
+            const noteData = {
+                teacher: teacherName,
+                message: content,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                read: false
+            };
+
+            database.ref(`student_messages/${studentId}`).push(noteData)
+                .then(() => {
+                    alert('학생에게 쪽지가 전송되었습니다.');
+                    closeNoteModal();
+                })
+                .catch(err => alert('전송 실패: ' + err.message));
+        }
+
+        // 실시간 학생 메시지 수신 리스너
+        function listenToIncomingMessages(teacherName) {
+            messageListener = database.ref('messages').on('value', (snapshot) => {
+                const data = snapshot.val();
+                let unreadCount = 0;
+                const listEl = document.getElementById('modalMsgList');
+                if (!listEl) return;
+                listEl.innerHTML = '';
+
+                if (data) {
+                    const msgArray = [];
+                    for (let id in data) {
+                        if (data[id].teacher === teacherName) {
+                            msgArray.push({ id, ...data[id] });
+                        }
+                    }
+                    msgArray.sort((a, b) => b.timestamp - a.timestamp);
+
+                    if(msgArray.length === 0) {
+                        listEl.innerHTML = '<div class="no-msg">받은 메시지가 없습니다.</div>';
+                    } else {
+                        msgArray.forEach(msg => {
+                            if (!msg.read) unreadCount++;
+
+                            const date = new Date(msg.timestamp);
+                            const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+                            const item = document.createElement('div');
+                            item.className = `msg-item ${!msg.read ? 'unread' : ''}`;
+                            item.innerHTML = `
+                                <div class="msg-meta">
+                                    <span class="msg-sender">👤 ${msg.studentName || '알수없음'} 학생</span>
+                                    <span>${timeStr}</span>
+                                </div>
+                                <div class="msg-body">${msg.message || ''}</div>
+                            `;
+                            listEl.appendChild(item);
+                        });
+                    }
+                } else {
+                    listEl.innerHTML = '<div class="no-msg">받은 메시지가 없습니다.</div>';
+                }
+
+                const badge = document.getElementById('msgBadgeCount');
+                if (badge) {
+                    if (unreadCount > 0) {
+                        badge.innerText = unreadCount;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function openMessageModal() {
+            document.getElementById('messageModal').style.display = 'flex';
+            const currentTeacher = localStorage.getItem('admin_teacher');
+            
+            database.ref('messages').once('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    for(let id in data) {
+                        if(data[id].teacher === currentTeacher && !data[id].read) {
+                            database.ref(`messages/${id}/read`).set(true);
+                        }
+                    }
+                }
+            });
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
         function handleLogin() {
+            const teacher = document.getElementById('adminTeacher').value;
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
 
+            if(!teacher) {
+                alert("담당 선생님 이름을 먼저 선택해 주세요.");
+                return;
+            }
             if(!email || !password) {
                 alert("이메일과 비밀번호를 모두 입력해주세요.");
                 return;
             }
 
             auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    localStorage.setItem('admin_teacher', teacher);
+                    localStorage.setItem('admin_email', email);
+                    localStorage.setItem('admin_password', password);
+                })
                 .catch((error) => {
                     alert("❌ 인증 실패: " + error.message);
                 });
         }
 
-        // 로그아웃 실행 함수
         function handleLogout() {
             if(confirm("안전을 위해 로그아웃 하시겠습니까?")) {
                 auth.signOut().then(() => {
@@ -244,21 +576,36 @@
             }
         }
 
-        // 실시간 전송 처리 함수
+        function resetTeacherConfig() {
+            if(confirm("저장된 선생님 설정과 자동 로그인 정보를 모두 삭제하고 다시 선택하시겠습니까?")) {
+                clearLocalStorageAuth();
+                auth.signOut().then(() => {
+                    document.getElementById('adminTeacher').value = "";
+                    document.getElementById('adminEmail').value = "";
+                    document.getElementById('adminPassword').value = "";
+                    alert("초기화되었습니다. 새로운 선생님 정보를 입력하세요.");
+                });
+            }
+        }
+
+        function clearLocalStorageAuth() {
+            localStorage.removeItem('admin_teacher');
+            localStorage.removeItem('admin_email');
+            localStorage.removeItem('admin_password');
+        }
+
         function publishData(path, inputId) {
             const val = document.getElementById(inputId).value;
             database.ref(path).set(val);
             alert("전송 완료! 모든 태블릿에 실시간 반영되었습니다.");
         }
         
-        // 데이터 초기화(끄기) 함수
         function clearData(path, inputId) {
             document.getElementById(inputId).value = "";
             database.ref(path).remove();
             alert("원격 전송을 중단했습니다.");
         }
 
-        // DB 현재 상황 데이터 노드 연동
         function loadCurrentStatus() {
             database.ref('notice').once('value', s => { if(s.val()) document.getElementById('noticeInput').value = s.val(); });
             database.ref('reminder').once('value', s => { if(s.val()) document.getElementById('reminderInput').value = s.val(); });
