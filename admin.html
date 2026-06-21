@@ -221,6 +221,71 @@
 
         .no-msg { text-align: center; color: #aaa; padding: 30px 0; font-size: 0.9rem; }
 
+        /* 📬 통합 실시간 1:1 대화방(카톡형) 스타일 */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 320px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+        .chat-history-zone {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 2px;
+            margin-bottom: 10px;
+        }
+        .chat-no-data {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px 0;
+            font-size: 0.85rem;
+            margin: auto;
+        }
+        .admin-bubble {
+            padding: 9px 13px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            max-width: 78%;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+        /* 학생 발신 말풍선 */
+        .admin-bubble.student {
+            background: #ffffff;
+            color: #1e293b;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        /* 선생님 발신 말풍선 */
+        .admin-bubble.teacher {
+            background: #6c5ce7;
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .admin-chat-meta {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-bottom: 2px;
+            display: block;
+        }
+        .admin-chat-meta.teacher { text-align: right; }
+        .chat-sender-name { font-weight: bold; color: #475569; }
+        .chat-sender-name.me { color: #6c5ce7; }
+        
+        .chat-input-row { display: flex; gap: 6px; }
+        .chat-input-row input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; margin-bottom: 0; }
+        .chat-send-btn { width: auto; background: #6c5ce7; color: white; border: none; padding: 0 14px; border-radius: 10px; font-weight: bold; margin-bottom: 0; font-size: 0.85rem; }
+        .chat-send-btn:hover { background: #5b4cc4; }
+
         #loginCard { display: none; }
         #controlPanel { display: none; }
     </style>
@@ -259,11 +324,24 @@
 
         <div id="controlPanel">
             <div class="card">
-                <h2>👥 내 학생 현황 및 쪽지</h2>
+                <h2>👥 내 학생 현황</h2>
                 <label>학생 이름 검색</label>
                 <input type="text" id="studentSearchInput" placeholder="이름을 입력해 주세요" oninput="filterStudents()">
-                <div id="studentListZone" class="student-list">
+                <div id="studentListZone" class="student-list"></div>
+            </div>
+
+            <div class="card" id="adminChatCard">
+                <h2>💬 1:1 실시간 대화방</h2>
+                <label style="color:#6c5ce7; margin-bottom:10px;">선택된 학생: <span id="selectedStudentName" style="font-weight:bold; font-size:0.95rem;">없음</span></label>
+                <div class="chat-container">
+                    <div id="adminChatHistoryZone" class="chat-history-zone">
+                        <div class="chat-no-data">위 학생 목록에서 [💬 대화방] 버튼을 누르면 대화 내역이 실시간 로드됩니다.</div>
                     </div>
+                    <div class="chat-input-row">
+                        <input type="text" id="teacherReplyInput" placeholder="실시간 답장/쪽지 입력..." onkeydown="if(event.keyCode==13) sendTeacherReply()">
+                        <button class="chat-send-btn" onclick="sendTeacherReply()">전송</button>
+                    </div>
+                </div>
             </div>
 
             <div class="card">
@@ -300,27 +378,8 @@
                 <div class="modal-title">📬 도착한 학생 메시지</div>
                 <button class="close-modal" onclick="closeMessageModal()">✕</button>
             </div>
-            <div id="modalMsgList" class="msg-list">
-                </div>
+            <div id="modalMsgList" class="msg-list"></div>
             <button onclick="closeMessageModal()" style="margin-bottom:0; background:#f1f2f6; color:#333;">닫기</button>
-        </div>
-    </div>
-
-    <div id="sendNoteModal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-title">📝 학생에게 쪽지 전송</div>
-                <button class="close-modal" onclick="closeNoteModal()">✕</button>
-            </div>
-            <label>수신 학생</label>
-            <input type="text" id="targetStudentDisplay" readonly style="background: #f1f2f6; font-weight: bold;">
-            <input type="hidden" id="targetStudentId">
-            
-            <label>쪽지 내용</label>
-            <textarea id="noteContentInput" rows="4" placeholder="학생 화면에 실시간으로 띄울 쪽지 내용을 적어주세요."></textarea>
-            
-            <button onclick="submitNoteToStudent()">✉️ 쪽지 보내기</button>
-            <button onclick="closeNoteModal()" style="background:#f1f2f6; color:#333; margin-bottom:0;">취소</button>
         </div>
     </div>
 
@@ -341,6 +400,11 @@
         const database = firebase.database();
         let messageListener = null; 
         let allStudents = []; 
+
+        // 📬 대화방 변수 선언
+        let currentSelectedStudentUid = null;
+        let currentSelectedStudentName = "";
+        let adminChatListeners = [];
 
         window.addEventListener('DOMContentLoaded', () => {
             const savedTeacher = localStorage.getItem('admin_teacher');
@@ -380,6 +444,8 @@
                 if (messageListener) {
                     database.ref('messages').off('value', messageListener);
                 }
+                detachAdminChatListeners();
+                resetChatRoomUI();
             }
         });
 
@@ -397,7 +463,7 @@
             });
         }
 
-        // 학생 실시간 검색 및 렌더링 (💡 ufesId -> u2mId 오타 교정 완료!)
+        // 학생 실시간 검색 및 렌더링
         function filterStudents() {
             const keyword = document.getElementById('studentSearchInput').value.trim().toLowerCase();
             const listZone = document.getElementById('studentListZone');
@@ -421,7 +487,6 @@
             }
 
             filtered.forEach(student => {
-                // 🔍 database에 저장해 둔 'u2mId' 키값을 띄우도록 원천 수정
                 const studentIdStr = student.u2mId ? student.u2mId : '없음';
 
                 const item = document.createElement('div');
@@ -431,51 +496,143 @@
                         <span class="student-name">👤 ${student.name}</span>
                         <span class="student-id">ID: ${studentIdStr}</span>
                     </div>
-                    <button class="btn-note" onclick="openNoteModal('${student.id}', '${student.name}')">쪽지</button>
+                    <button class="btn-note" onclick="loadStudentChatRoom('${student.id}', '${student.name}')">💬 대화방</button>
                 `;
                 listZone.appendChild(item);
             });
         }
 
-        // 쪽지 보내기 모달 열기
-        function openNoteModal(studentId, studentName) {
-            document.getElementById('targetStudentId').value = studentId;
-            document.getElementById('targetStudentDisplay').value = studentName;
-            document.getElementById('noteContentInput').value = '';
-            document.getElementById('sendNoteModal').style.display = 'flex';
+        // 💬 [핵심 추가] 특정 학생 선택 시 대화방 데이터 실시간 바인딩
+        function loadStudentChatRoom(studentUid, studentName) {
+            currentSelectedStudentUid = studentUid;
+            currentSelectedStudentName = studentName;
+            document.getElementById('selectedStudentName').innerText = studentName;
+            
+            detachAdminChatListeners();
+
+            let studentQuestions = [];
+            let teacherReplies = [];
+
+            // 1) 학생 발신 데이터 추적 (`messages`)
+            const qRef = database.ref('messages').orderByChild('studentUid').equalTo(studentUid);
+            adminChatListeners.push({ ref: qRef, type: 'value' });
+            qRef.on('value', (snapshot) => {
+                studentQuestions = [];
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const val = child.val();
+                        studentQuestions.push({ id: child.key, origin: 'student', ...val });
+                        if (val.read === false) {
+                            database.ref(`messages/${child.key}/read`).set(true);
+                        }
+                    });
+                }
+                renderAdminChatFeed(studentQuestions, teacherReplies);
+            });
+
+            // 2) 선생님 발신 데이터 추적 (`student_messages/학생UID`)
+            const rRef = database.ref(`student_messages/${studentUid}`);
+            adminChatListeners.push({ ref: rRef, type: 'value' });
+            rRef.on('value', (snapshot) => {
+                teacherReplies = [];
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        teacherReplies.push({ id: child.key, origin: 'teacher', ...child.val() });
+                    });
+                }
+                renderAdminChatFeed(studentQuestions, teacherReplies);
+            });
         }
 
-        function closeNoteModal() {
-            document.getElementById('sendNoteModal').style.display = 'none';
-        }
+        // 💬 [핵심 추가] 카카오톡 스타일 빌드 및 렌더링 함수
+        function renderAdminChatFeed(questions, replies) {
+            const zoneEl = document.getElementById('adminChatHistoryZone');
+            if (!zoneEl) return;
 
-        // 학생에게 쪽지 전송 (DB 저장)
-        function submitNoteToStudent() {
-            const studentId = document.getElementById('targetStudentId').value;
-            const content = document.getElementById('noteContentInput').value.trim();
-            const teacherName = localStorage.getItem('admin_teacher');
+            const totalChat = [...questions, ...replies];
+            totalChat.sort((a, b) => a.timestamp - b.timestamp);
 
-            if (!content) {
-                alert('쪽지 내용을 입력해 주세요.');
+            if (totalChat.length === 0) {
+                zoneEl.innerHTML = '<div class="chat-no-data"> 주고받은 대화가 없습니다. 첫 대화를 시작해 보세요!</div>';
                 return;
             }
 
-            const noteData = {
+            zoneEl.innerHTML = '';
+
+            totalChat.forEach(chat => {
+                const date = new Date(chat.timestamp);
+                const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column';
+                wrapper.style.width = '100%';
+
+                // 정제되지 않은 전송 양식 필터링
+                let rawMessage = chat.message || "";
+                if(rawMessage.startsWith("[답장완료] ")) {
+                    rawMessage = rawMessage.replace("[답장완료] ", "");
+                }
+
+                if (chat.origin === 'student') {
+                    wrapper.innerHTML = `
+                        <span class="admin-chat-meta"><span class="chat-sender-name">👤 ${currentSelectedStudentName}</span> (${timeStr})</span>
+                        <div class="admin-bubble student">${rawMessage}</div>
+                    `;
+                } else {
+                    wrapper.innerHTML = `
+                        <span class="admin-chat-meta teacher"><span class="chat-sender-name me">나 (${chat.teacher || '선생님'})</span> (${timeStr})</span>
+                        <div class="admin-bubble teacher">${rawMessage}</div>
+                    `;
+                }
+                zoneEl.appendChild(wrapper);
+            });
+
+            zoneEl.scrollTop = zoneEl.scrollHeight;
+        }
+
+        // 💬 [핵심 추가] 대화창 하단 입력창 발송 함수
+        function sendTeacherReply() {
+            const replyInput = document.getElementById('teacherReplyInput');
+            const text = replyInput.value.trim();
+            const teacherName = localStorage.getItem('admin_teacher') || "선생님";
+
+            if (!currentSelectedStudentUid) {
+                alert("대화방을 열기 위해 학생 목록에서 학생을 먼저 선택해 주세요.");
+                return;
+            }
+            if (!text) return;
+
+            const replyData = {
                 teacher: teacherName,
-                message: content,
+                message: `[답장완료] ${text}`,
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
                 read: false
             };
 
-            database.ref(`student_messages/${studentId}`).push(noteData)
+            database.ref(`student_messages/${currentSelectedStudentUid}`).push(replyData)
                 .then(() => {
-                    alert('학생에게 쪽지가 전송되었습니다.');
-                    closeNoteModal();
+                    replyInput.value = '';
                 })
-                .catch(err => alert('전송 실패: ' + err.message));
+                .catch(err => alert("전송 실패: " + err.message));
         }
 
-        // 실시간 학생 메시지 수신 리스너 + [↩️ 답장하기 컨트롤러 장착]
+        // 리스너 해제 유틸리티
+        function detachAdminChatListeners() {
+            adminChatListeners.forEach(item => item.ref.off(item.type));
+            adminChatListeners = [];
+        }
+
+        function resetChatRoomUI() {
+            currentSelectedStudentUid = null;
+            currentSelectedStudentName = "";
+            const nameEl = document.getElementById('selectedStudentName');
+            const zoneEl = document.getElementById('adminChatHistoryZone');
+            if(nameEl) nameEl.innerText = "없음";
+            if(zoneEl) zoneEl.innerHTML = '<div class="chat-no-data">위 학생 목록에서 [💬 대화방] 버튼을 누르면 대화 내역이 실시간 로드됩니다.</div>';
+        }
+
+        // 실시간 학생 메시지 수신 리스너 (기존 플로팅 모달용 수신함)
         function listenToIncomingMessages(teacherName) {
             messageListener = database.ref('messages').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -502,7 +659,6 @@
                             const date = new Date(msg.timestamp);
                             const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
                             
-                            // 🔍 학생 아이디 표출 보정 및 답장 고유 구조 결합
                             const msgStudentId = msg.u2mId ? msg.u2mId : '아이디 누락';
 
                             const item = document.createElement('div');
@@ -527,7 +683,6 @@
                             `;
                             listEl.appendChild(item);
                             
-                            // 이 메시지에 이미 달아둔 기존 내 답장 보관 내역 추적 시동
                             listenToExistingReplies(msg.id);
                         });
                     }
@@ -563,13 +718,12 @@
                 return;
             }
             if (!studentUid || studentUid === "undefined") {
-                alert("❌ 학생의 식별자(studentUid)를 찾을 수 없습니다. 학생 화면에서 메시지를 보낼 때 studentUid가 같이 전송되게끔 처리해야 합니다.");
+                alert("❌ 학생의 식별자(studentUid)를 찾을 수 없습니다.");
                 return;
             }
 
             const timestamp = firebase.database.ServerValue.TIMESTAMP;
 
-            // 1단계: 학생의 개인 쪽지 알림함(student_messages)으로 밀어넣기
             database.ref(`student_messages/${studentUid}`).push({
                 teacher: teacherName,
                 message: `[답장완료] ${text}`,
@@ -577,7 +731,6 @@
                 read: false
             })
             .then(() => {
-                // 2단계: 내 답장 보관 내역 저장을 위해 해당 메시지 아래(messages/메시지ID/replies)에 누적 기입
                 return database.ref(`messages/${msgId}/replies`).push({
                     teacher: teacherName,
                     message: text,
