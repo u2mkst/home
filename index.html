@@ -9,12 +9,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <style>
         @font-face {
-            font-family: 'Paperlogy';
+            font-family: 'Paperozi';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
             font-weight: 500; font-display: swap;
         }
         body {
-            font-family: 'Paperlogy', 'Noto Sans KR', sans-serif;
+            font-family: 'Paperozi', 'Noto Sans KR', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; margin: 0; padding: 0;
             display: flex; justify-content: center; align-items: center;
@@ -43,7 +43,7 @@
             text-decoration: none; padding: 18px 20px; margin-bottom: 16px; border-radius: 16px;
             font-size: 1.05rem; font-weight: 600; box-shadow: 0 8px 16px rgba(149, 157, 165, 0.1);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); border: 1px solid rgba(255, 255, 255, 0.6);
-            cursor: pointer; width: 100%; box-sizing: border-box; text-align: center; font-family: inherit;
+            cursor: pointer; box-sizing: border-box; width: 100%; text-align: center; font-family: inherit;
         }
         .link-button:hover { transform: translateY(-4px); background-color: #6c5ce7; color: #ffffff; border-color: #6c5ce7; }
         
@@ -88,6 +88,25 @@
         .btn-flex-group { display: flex; gap: 8px; }
         .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
+
+        /* 📱 매쓰플랫 전용 대형 Iframe 모달 창 디자인 */
+        .mathflat-modal-box {
+            background: #ffffff; width: 95%; max-width: 430px; height: 85vh;
+            border-radius: 24px; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative;
+        }
+        .mathflat-header {
+            padding: 14px 20px; background: #ffffff; border-bottom: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .mathflat-header-title { font-size: 1.05rem; font-weight: bold; color: #2c3e50; }
+        .mathflat-close-btn { 
+            background: #e2e8f0; border: none; color: #4a5568; font-size: 0.85rem; 
+            font-weight: bold; padding: 6px 14px; border-radius: 10px; cursor: pointer; 
+        }
+        .mathflat-close-btn:hover { background: #cbd5e1; }
+        .iframe-wrapper { flex: 1; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; }
+        .mathflat-iframe { width: 100%; height: 100%; border: none; }
 
         /* ✉️ 우측 하단 플로팅 버튼 세트 */
         .fab-group { position: fixed; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
@@ -139,14 +158,8 @@
             <div id="clock-time" class="clock-time">00:00:00</div>
         </div>
 
-        <form id="u2mAutoLoginForm" action="https://www.u2math.co.kr/Login/Login_Check" method="POST" target="_blank" style="display:none;">
-            <input type="text" name="strUserId" id="u2m_hid_id">
-            <input type="password" name="strUserPwd" id="u2m_hid_pw">
-            <input type="hidden" name="isApp" value="F">
-        </form>
-
-        <button onclick="loginToU2M()" class="link-button">유투엠 바로가기</button>
-        <a href="https://student.mathflat.com/login" class="link-button">매쓰플랫 바로가기</a>
+        <a href="https://www.u2math.co.kr/Login/Index" target="_blank" class="link-button">유투엠 바로가기</a>
+        <button onclick="openMathflatModal()" class="link-button">매쓰플랫 바로가기</button>
                     
         <div class="quote-box">
             💡 <b id="quote-header">오늘의 한마디:</b><br>
@@ -160,6 +173,18 @@
         <div class="bottom-menu">
             <button onclick="logoutUser()" class="bottom-link">로그아웃</button>
             <button onclick="deleteAccount()" class="bottom-link danger">계정삭제</button>
+        </div>
+    </div>
+
+    <div id="mathflatModal" class="modal-overlay">
+        <div class="mathflat-modal-box">
+            <div class="mathflat-header">
+                <span class="mathflat-header-title">📊 매쓰플랫 학습관</span>
+                <button class="mathflat-close-btn" onclick="closeMathflatModal()">닫기</button>
+            </div>
+            <div class="iframe-wrapper">
+                <iframe id="mathflatIframe" src="" class="mathflat-iframe"></iframe>
+            </div>
         </div>
     </div>
 
@@ -284,51 +309,29 @@
                             listenToTeacherNotes(user.uid);
                             startLiveChatHistory(user.uid); 
                         } else {
-                            handleForceLogout();
+                            console.warn("⚠️ 학생이 아닌 관리자/타계정 세션 감지: 자동 정리 후 로그인으로 이동합니다.");
+                            detachAllHistoryListeners();
+                            if (noteListener) {
+                                noteListener.off();
+                            }
+                            
+                            auth.signOut().then(() => {
+                                localStorage.removeItem('u2m_id');
+                                localStorage.removeItem('u2m_pw');
+                                window.location.replace('login.html');
+                            });
                         }
                     });
                 } else {
-                    const savedId = localStorage.getItem('u2m_id');
-                    if (savedId) {
-                        console.log("자동 로그인 정보 감지 - 로그인 페이지로 위임하여 처리");
-                    }
+                    console.log("비로그인 사용자 감지 - 로그인 페이지로 리다이렉트");
                     window.location.replace('login.html'); 
                     detachAllHistoryListeners();
                 }
             });
         }
 
-        // 🚀 유투엠 자동 로그인 구동 함수 추가
-        function loginToU2M() {
-            // 1순위: Firebase DB에서 가져온 정보 / 2순위: localStorage 백업 정보 확인
-            const u2mId = (currentStudentData && currentStudentData.u2mId) || localStorage.getItem('u2m_id');
-            const u2mPw = (currentStudentData && currentStudentData.u2mPw) || localStorage.getItem('u2m_pw');
-
-            if (!u2mId || !u2mPw) {
-                alert("🔒 연동된 유투엠 로그인 정보가 없습니다.\n로그인 화면에서 자동 로그인을 먼저 체크해 주세요.");
-                // 정보가 없으면 일반 로그인 페이지를 새 창으로 열어줌
-                window.open("https://www.u2math.co.kr/Login/Index", "_blank");
-                return;
-            }
-
-            // 히든 폼에 계정 바인딩
-            document.getElementById('u2m_hid_id').value = u2mId;
-            document.getElementById('u2m_hid_pw').value = u2mPw;
-
-            // 유투엠 처리 주소로 데이터 전송(제출)
-            document.getElementById('u2mAutoLoginForm').submit();
-        }
-
-        function handleForceLogout() {
-            detachAllHistoryListeners();
-            if (noteListener) noteListener.off();
-            auth.signOut().then(() => {
-                window.location.replace('login.html');
-            });
-        }
-
         function logoutUser() {
-            if (confirm("로그아웃 하시겠습니까?\n로그아웃 시 자동 로그인도 해제됩니다.")) {
+            if (confirm("로그아웃 하시겠습니까?")) {
                 auth.signOut().then(() => {
                     localStorage.removeItem('u2m_id');
                     localStorage.removeItem('u2m_pw');
@@ -339,6 +342,20 @@
             }
         }
 
+        /* 📱 매쓰플랫 iframe 제어 핸들러 추가 */
+        function openMathflatModal() {
+            const iframe = document.getElementById('mathflatIframe');
+            // 매쓰플랫 로그인 링크를 iframe에 바인딩
+            iframe.src = "https://student.mathflat.com/login";
+            document.getElementById('mathflatModal').style.display = 'flex';
+        }
+        function closeMathflatModal() {
+            document.getElementById('mathflatModal').style.display = 'none';
+            // 닫을 때 리소스 최적화 및 세션 오염 방지를 위해 iframe 소스 초기화
+            document.getElementById('mathflatIframe').src = "";
+        }
+
+        // 모달 제어 핸들러들
         function openSendMessageModal() {
             document.getElementById('studentMsgInput').value = '';
             document.getElementById('sendMsgModal').style.display = 'flex';
@@ -459,7 +476,7 @@
 
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) {
-                alert('❌ 세션이 종료되었습니다. 다시 로그인해 주세요.');
+                alert('❌ 세션이 종료되었습니다. 앱을 종료 후 다시 실행하거나 다시 로그인해 주세요.');
                 return;
             }
 
@@ -524,9 +541,9 @@
                         console.error("탈퇴 처리 중 오류 발생:", error);
                         if (error.code === 'auth/requires-recent-login') {
                             alert("🔒 보안을 위해 인증 세션이 만료되었습니다.\n\n안전한 탈퇴를 위해 [확인]을 누르시면 자동 로그아웃됩니다. '다시 로그인하자마자 곧바로' 탈퇴 버튼을 눌러주시면 정상 처리됩니다.");
-                            localStorage.removeItem('u2m_id');
-                            localStorage.removeItem('u2m_pw');
                             auth.signOut().then(() => {
+                                localStorage.removeItem('u2m_id');
+                                localStorage.removeItem('u2m_pw');
                                 window.location.href = 'login.html';
                             });
                         } else {
