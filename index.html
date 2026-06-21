@@ -338,22 +338,27 @@
         }
 
         /* 📱 [수정] 매쓰플랫 기기 전체화면 오버레이 구동 핸들러 */
-        function openMathflatFullScreen() {
-            const iframe = document.getElementById('mathflatIframe');
-            iframe.src = "https://student.mathflat.com/login";
-            document.getElementById('mathflatFullScreenModal').style.style.display = 'block';
-            
-            // 스마트폰/태블릿 스크롤 바운스 방지 보완
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function closeMathflatFullScreen() {
-            document.getElementById('mathflatFullScreenModal').style.style.display = 'none';
-            document.getElementById('mathflatIframe').src = "";
-            
-            // 메인 페이지 스크롤 복구
-            document.body.style.overflow = 'auto';
-        }
+        /* 📱 매쓰플랫 기기 전체화면 오버레이 구동 핸들러 (수정 완료) */
+function openMathflatFullScreen() {
+    const iframe = document.getElementById('mathflatIframe');
+    
+    // 401 에러 방지를 위해 메인 주소로 진입 유도
+    iframe.src = "https://student.mathflat.com/";
+    
+    // 오타 수정: .style.style.display -> .style.display
+    document.getElementById('mathflatFullScreenModal').style.display = 'block';
+    
+    // 스마트폰/태블릿 스크롤 바운스 방지
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMathflatFullScreen() {
+    document.getElementById('mathflatFullScreenModal').style.display = 'none';
+    document.getElementById('mathflatIframe').src = "";
+    
+    // 메인 페이지 스크롤 복구
+    document.body.style.overflow = 'auto';
+}
 
         // 모달 제어 핸들러들
         function openSendMessageModal() {
