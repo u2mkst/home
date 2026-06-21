@@ -9,12 +9,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <style>
         @font-face {
-            font-family: 'Paperozi';
+            font-family: 'Paperlogy';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
             font-weight: 500; font-display: swap;
         }
         body {
-            font-family: 'Paperozi', 'Noto Sans KR', sans-serif;
+            font-family: 'Paperlogy', 'Noto Sans KR', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; margin: 0; padding: 0;
             display: flex; justify-content: center; align-items: center;
@@ -174,7 +174,7 @@
         </div>
     </div>
 
-    <!-- 📬 [변경] 메시지 보관함(히스토리) 모달창 -->
+    <!-- 📬 메시지 보관함(히스토리) 모달창 -->
     <div id="historyModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 400px; padding: 24px 20px;">
             <div class="modal-title">📬 내 메시지 및 선생님 답장</div>
@@ -267,12 +267,11 @@
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    // 1. 먼저 Firebase DB의 'students' 노드에서 이 UID가 존재하는지 확인합니다.
+                    // 유저 인증 성공 시 DB 조회
                     database.ref(`students/${user.uid}`).once('value', (snapshot) => {
                         const data = snapshot.val();
                         
                         if (data) {
-                            // [정상 학생] 학생 데이터가 확인되면 정상적으로 UI를 활성화합니다.
                             currentStudentData = data;
                             document.getElementById('msgFabBtn').style.display = 'flex';
                             document.getElementById('historyFabBtn').style.display = 'flex'; 
@@ -280,40 +279,39 @@
                             const actualName = data.name || data.studentName || data.userName || user.displayName || "학생";
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                             
-                            // 실시간 리스너 가동
                             listenToTeacherNotes(user.uid);
                             startLiveChatHistory(user.uid); 
                         } else {
-                            // [세션 오염 방지] 로그인되어 있는 UID가 'students' 노드에 없다? 
-                            // -> 즉, 이전 사용자(선생님/관리자)의 로그아웃이 제대로 안 되어 세션이 꼬인 상태입니다.
-                            console.warn("⚠️ 학생이 아닌 관리자/타계정 세션 감지: 자동 정리 후 로그인으로 이동합니다.");
-                            
-                            // 리스너들을 안전하게 해제하고, 강제로 관리자 세션을 로그아웃 시킵니다.
-                            detachAllHistoryListeners();
-                            if (noteListener) {
-                                noteListener.off();
-                            }
-                            
-                            // 자동 로그아웃 후 학생 로그인 페이지로 강제 강등
-                            auth.signOut().then(() => {
-                                localStorage.removeItem('u2m_id');
-                                localStorage.removeItem('u2m_pw');
-                                window.location.replace('login.html');
-                            });
+                            // UID가 students 노드에 없는 예외 세션 발생 시 정리 후 이동
+                            handleForceLogout();
                         }
                     });
                 } else {
-                    // 로그인 세션이 완전히 없는 순수 비로그인 상태
-                    console.log("비로그인 사용자 감지 - 로그인 페이지로 리다이렉트");
+                    // Firebase 세션은 끊겼으나 localStorage에 자동 로그인 정보가 남아있는지 확인
+                    const savedId = localStorage.getItem('u2m_id');
+                    if (savedId) {
+                        console.log("자동 로그인 정보 감지 - 로그인 페이지로 위임하여 처리");
+                    }
+                    // 세션이 없으므로 안전하게 로그인 창으로 리다이렉트
                     window.location.replace('login.html'); 
                     detachAllHistoryListeners();
                 }
             });
         }
 
+        // 공통 강제 로그아웃 핸들러 (자동 로그인 정보 유지 상태로 이동)
+        function handleForceLogout() {
+            detachAllHistoryListeners();
+            if (noteListener) noteListener.off();
+            auth.signOut().then(() => {
+                window.location.replace('login.html');
+            });
+        }
+
         function logoutUser() {
-            if (confirm("로그아웃 하시겠습니까?")) {
+            if (confirm("로그아웃 하시겠습니까?\n로그아웃 시 자동 로그인도 해제됩니다.")) {
                 auth.signOut().then(() => {
+                    // 사용자가 '직접' 로그아웃 버튼을 누른 것이므로 자동 로그인 정보 파기
                     localStorage.removeItem('u2m_id');
                     localStorage.removeItem('u2m_pw');
                     window.location.href = 'login.html';
@@ -333,7 +331,6 @@
         }
         function openHistoryModal() {
             document.getElementById('historyModal').style.display = 'flex';
-            // 모달 열릴 때 항상 스크롤 맨 아래로 동기화
             const zoneEl = document.getElementById('messageHistoryZone');
             if(zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
         }
@@ -355,7 +352,6 @@
             });
         }
 
-        // 📥 내 메시지 및 선생님 쪽지 리얼타임 바인딩
         function startLiveChatHistory(studentUid) {
             detachAllHistoryListeners();
             let myQuestions = [];
@@ -386,7 +382,6 @@
             });
         }
 
-        // 🎨 메시지 렌더러 함수
         function renderCombinedChat(questions, notes) {
             const zoneEl = document.getElementById('messageHistoryZone');
             if (!zoneEl) return;
@@ -447,7 +442,7 @@
 
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) {
-                alert('❌ 세션이 종료되었습니다. 앱을 종료 후 다시 실행하거나 다시 로그인해 주세요.');
+                alert('❌ 세션이 종료되었습니다. 다시 로그인해 주세요.');
                 return;
             }
 
@@ -512,9 +507,9 @@
                         console.error("탈퇴 처리 중 오류 발생:", error);
                         if (error.code === 'auth/requires-recent-login') {
                             alert("🔒 보안을 위해 인증 세션이 만료되었습니다.\n\n안전한 탈퇴를 위해 [확인]을 누르시면 자동 로그아웃됩니다. '다시 로그인하자마자 곧바로' 탈퇴 버튼을 눌러주시면 정상 처리됩니다.");
+                            localStorage.removeItem('u2m_id');
+                            localStorage.removeItem('u2m_pw');
                             auth.signOut().then(() => {
-                                localStorage.removeItem('u2m_id');
-                                localStorage.removeItem('u2m_pw');
                                 window.location.href = 'login.html';
                             });
                         } else {
