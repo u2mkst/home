@@ -267,46 +267,44 @@
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    // 플로팅 버튼 활성화
-                    document.getElementById('msgFabBtn').style.display = 'flex';
-                    document.getElementById('historyFabBtn').style.display = 'flex'; 
-
-                    // 데이터베이스에서 실시간으로 학생 정보를 단 한 번 가져옵니다.
+                    // 1. 먼저 Firebase DB의 'students' 노드에서 이 UID가 존재하는지 확인합니다.
                     database.ref(`students/${user.uid}`).once('value', (snapshot) => {
                         const data = snapshot.val();
                         
                         if (data) {
-                            // 1. 학생 데이터가 정상적으로 존재하는 경우
+                            // [정상 학생] 학생 데이터가 확인되면 정상적으로 UI를 활성화합니다.
                             currentStudentData = data;
+                            document.getElementById('msgFabBtn').style.display = 'flex';
+                            document.getElementById('historyFabBtn').style.display = 'flex'; 
+
                             const actualName = data.name || data.studentName || data.userName || user.displayName || "학생";
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
+                            
+                            // 실시간 리스너 가동
+                            listenToTeacherNotes(user.uid);
+                            startLiveChatHistory(user.uid); 
                         } else {
-                            // 2. 학생 데이터가 없는데 로그인 세션이 유지된 경우 (관리자 페이지를 다녀왔을 때 주로 발생)
-                            console.log("학생 노드에 데이터가 없거나 관리자 계정 감지됨");
+                            // [세션 오염 방지] 로그인되어 있는 UID가 'students' 노드에 없다? 
+                            // -> 즉, 이전 사용자(선생님/관리자)의 로그아웃이 제대로 안 되어 세션이 꼬인 상태입니다.
+                            console.warn("⚠️ 학생이 아닌 관리자/타계정 세션 감지: 자동 정리 후 로그인으로 이동합니다.");
                             
-                            // Firebase 인증 프로필에 저장된 이름이나 이메일 앞자리를 활용해 가짜 '학생' 표기를 방지합니다.
-                            let backupName = user.displayName;
-                            
-                            if (!backupName && user.email) {
-                                // 이메일 주소에서 @ 앞부분을 이름 대신 추출 (예: admin@test.com -> admin)
-                                backupName = user.email.split('@')[0]; 
+                            // 리스너들을 안전하게 해제하고, 강제로 관리자 세션을 로그아웃 시킵니다.
+                            detachAllHistoryListeners();
+                            if (noteListener) {
+                                noteListener.off();
                             }
                             
-                            // 최종적으로 이름 구출에 성공하면 해당 이름 표시, 실패 시에만 '학생' 표시
-                            const finalDisplayName = backupName || "최고관리자";
-                            
-                            if(user.email && (user.email.includes('admin') || user.email === '학원관리자이메일@도메인.com')) {
-                                document.getElementById('welcome-message').innerText = `⚙️ ${finalDisplayName}(관리자)님 로그인 중`;
-                            } else {
-                                document.getElementById('welcome-message').innerText = `${finalDisplayName}님 반가워요!`;
-                            }
+                            // 자동 로그아웃 후 학생 로그인 페이지로 강제 강등
+                            auth.signOut().then(() => {
+                                localStorage.removeItem('u2m_id');
+                                localStorage.removeItem('u2m_pw');
+                                window.location.replace('login.html');
+                            });
                         }
                     });
-                    
-                    listenToTeacherNotes(user.uid);
-                    startLiveChatHistory(user.uid); 
                 } else {
-                    console.log("비로그인 사용자 감지 - 로그인 페이지로 강제 리다이렉트");
+                    // 로그인 세션이 완전히 없는 순수 비로그인 상태
+                    console.log("비로그인 사용자 감지 - 로그인 페이지로 리다이렉트");
                     window.location.replace('login.html'); 
                     detachAllHistoryListeners();
                 }
