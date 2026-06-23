@@ -117,7 +117,7 @@
             cursor: pointer; display: none; justify-content: center; align-items: center;
             font-size: 1.4rem; transition: all 0.2s ease;
         }
-        #msgFabBtn { background-color: #6c5ce7; }
+        .msg-fab { background-color: #6c5ce7; }
         #msgFabBtn:hover { transform: scale(1.08); background-color: #5b4cc4; }
         #historyFabBtn { background-color: #00b894; }
         #historyFabBtn:hover { transform: scale(1.08); background-color: #00a383; }
@@ -158,7 +158,7 @@
             <div id="clock-time" class="clock-time">00:00:00</div>
         </div>
 
-        <a href="https://www.u2math.co.kr/Login/Index" target="_blank" class="link-button">유투엠 바로가기</a>
+        <button onclick="goToU2MWithCredentials()" class="link-button">유투엠 바로가기</button>
         <button onclick="openMathflatFullScreen()" class="link-button">매쓰플랫 바로가기</button>
                     
         <div class="quote-box">
@@ -225,6 +225,20 @@
         let currentStudentData = null; 
         let noteListener = null;
         let historyListeners = []; 
+
+        // 🛠️ [추가 완료] 유투엠 버튼을 누르면 앱의 AndroidApp 인터페이스로 정보를 전송하고 화면을 이동시키는 연동 함수
+        function goToU2MWithCredentials() {
+            if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
+                // 앱 내부 자바 인터페이스가 열려있는지 최종 검증 후 안전하게 주사
+                if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
+                    window.AndroidApp.loginToU2M(currentStudentData.u2mId, currentStudentData.phone);
+                }
+            } else {
+                console.warn("⚠️ 자동로그인 데이터가 누락되었거나 로딩 중입니다.");
+            }
+            // 데이터를 앱 스레드에 보낸 직후 브라우저 화면을 유투엠 로그인 창으로 전송
+            window.location.href = "https://www.u2math.co.kr/Login/Index";
+        }
 
         function startClock() {
             const dateEl = document.getElementById('clock-date');
@@ -337,30 +351,19 @@
             }
         }
 
-        /* 📱 [수정] 매쓰플랫 기기 전체화면 오버레이 구동 핸들러 */
-        /* 📱 매쓰플랫 기기 전체화면 오버레이 구동 핸들러 (수정 완료) */
-function openMathflatFullScreen() {
-    const iframe = document.getElementById('mathflatIframe');
-    
-    // 401 에러 방지를 위해 메인 주소로 진입 유도
-    iframe.src = "https://student.mathflat.com/";
-    
-    // 오타 수정: .style.style.display -> .style.display
-    document.getElementById('mathflatFullScreenModal').style.display = 'block';
-    
-    // 스마트폰/태블릿 스크롤 바운스 방지
-    document.body.style.overflow = 'hidden';
-}
+        function openMathflatFullScreen() {
+            const iframe = document.getElementById('mathflatIframe');
+            iframe.src = "https://student.mathflat.com/";
+            document.getElementById('mathflatFullScreenModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
 
-function closeMathflatFullScreen() {
-    document.getElementById('mathflatFullScreenModal').style.display = 'none';
-    document.getElementById('mathflatIframe').src = "";
-    
-    // 메인 페이지 스크롤 복구
-    document.body.style.overflow = 'auto';
-}
+        function closeMathflatFullScreen() {
+            document.getElementById('mathflatFullScreenModal').style.display = 'none';
+            document.getElementById('mathflatIframe').src = "";
+            document.body.style.overflow = 'auto';
+        }
 
-        // 모달 제어 핸들러들
         function openSendMessageModal() {
             document.getElementById('studentMsgInput').value = '';
             document.getElementById('sendMsgModal').style.display = 'flex';
