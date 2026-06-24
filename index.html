@@ -310,32 +310,31 @@
         let noteListener = null;
         let historyListeners = []; 
 
+        // 🔒 login.html과 정확히 일치시킨 공통 비밀키
         const SECRET_KEY = "u2mkst!";
 
+        // 🛠️ 오류 발생 시 에러를 정확히 뱉어내도록 개선된 복호화 함수
         function decryptAES(cipherText) {
-    if (!cipherText) return "";
-    
-    // 복호화에 사용하는 키가 정확히 무엇인지 콘솔과 앱 알림으로 확인
-    const SECRET_KEY = "u2mkst!";
-    
-    try {
-        const cleanCipherText = cipherText.toString().trim();
-        const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
-        const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-        
-        // 만약 복호화 결과가 빈 값("")이면 키가 틀렸을 확률 100%입니다.
-        if (!decryptedText) {
-            console.error("❌ 복호화 실패: 결과가 빈 문자열입니다. 키(SECRET_KEY)를 확인하세요.");
-            return cipherText; 
+            if (!cipherText) return "";
+            try {
+                const cleanCipherText = cipherText.toString().trim();
+                // 만약 이미 평문(한글)이라면 암호문 형태가 아니므로 그대로 반환
+                if (!cleanCipherText.startsWith("U2FsdGVkX1")) {
+                    return cleanCipherText;
+                }
+                const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
+                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+                
+                if (!decryptedText) {
+                    console.error("❌ 복호화 실패: 결과가 빈 문자열입니다. 키가 일치하지 않을 수 있습니다.");
+                    return cipherText; // 실패 시 원본 표시
+                }
+                return decryptedText; 
+            } catch (e) {
+                console.error("🚨 복호화 크립토 에러:", e);
+                return cipherText; 
+            }
         }
-        
-        return decryptedText; 
-    } catch (e) {
-        // 복호화 과정 중 라이브러리 에러가 나면 팝업을 띄웁니다.
-        alert("🚨 크립토 에러 발생: " + e.message + "\n데이터: " + cipherText);
-        return cipherText; 
-    }
-}
 
         // 유투엠 자동 로그인 브릿지 탑재 기동
         function goToU2MWithCredentials() {
@@ -354,7 +353,7 @@
             window.location.href = "https://www.u2math.co.kr/Login/Index";
         }
 
-        // 🚀 매쓰플랫 다이렉트 브라우저 전환 이동 장치 (iframe 제거 패치)
+        // 🚀 매쓰플랫 다이렉트 브라우저 전환 이동 장치
         function goToMathflatDirect() {
             if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
                 try {
@@ -362,7 +361,6 @@
                     const finalPhoneData = decryptedPhone.replace(/[^0-9]/g, "");
 
                     if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                        // 내부 인젝션용 변수를 세팅하기 위해 Native 브릿지 호출을 유지합니다.
                         window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalPhoneData);
                     }
                 } catch (err) {
@@ -423,52 +421,46 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
+        // 🛠️ 인증 확인 및 정밀 복호화 처리부
         function checkUserAuth() {
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            database.ref(`students/${user.uid}`).once('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    currentStudentData = data;
-                    document.getElementById('msgFabBtn').style.display = 'flex';
-                    document.getElementById('historyFabBtn').style.display = 'flex'; 
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    database.ref(`students/${user.uid}`).once('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            currentStudentData = data;
+                            document.getElementById('msgFabBtn').style.display = 'flex';
+                            document.getElementById('historyFabBtn').style.display = 'flex'; 
 
-                    // 1. 학생 이름 데이터 추출 및 정밀 복호화 검사
-                    let rawName = data.name || data.studentName || data.userName || "";
-                    let actualName = "학생";
+                            let rawName = data.name || data.studentName || data.userName || "";
+                            let actualName = "학생";
 
-                    if (rawName) {
-                        // 🔒 이름이 암호화된 문자열(U2FsdGVkX1로 시작)인 경우 복호화 강제 수행
-                        if (rawName.toString().startsWith("U2FsdGVkX1")) {
-                            actualName = decryptAES(rawName);
+                            if (rawName) {
+                                actualName = decryptAES(rawName);
+                            } else if (user.displayName) {
+                                actualName = user.displayName;
+                            }
+
+                            document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
+                            
+                            listenToTeacherNotes(user.uid);
+                            startLiveChatHistory(user.uid); 
                         } else {
-                            actualName = rawName;
+                            detachAllHistoryListeners();
+                            if (noteListener) noteListener.off();
+                            auth.signOut().then(() => {
+                                localStorage.removeItem('u2m_id');
+                                localStorage.removeItem('u2m_pw');
+                                window.location.replace('login.html');
+                            });
                         }
-                    } else if (user.displayName) {
-                        actualName = user.displayName;
-                    }
-
-                    // 2. 화면에 정상적인 이름 출력
-                    document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
-                    
-                    listenToTeacherNotes(user.uid);
-                    startLiveChatHistory(user.uid); 
-                } else {
-                    detachAllHistoryListeners();
-                    if (noteListener) noteListener.off();
-                    auth.signOut().then(() => {
-                        localStorage.removeItem('u2m_id');
-                        localStorage.removeItem('u2m_pw');
-                        window.location.replace('login.html');
                     });
+                } else {
+                    window.location.replace('login.html'); 
+                    detachAllHistoryListeners();
                 }
             });
-        } else {
-            window.location.replace('login.html'); 
-            detachAllHistoryListeners();
         }
-    });
-}
 
         function logoutUser() {
             if (confirm("로그아웃 하시겠습니까?")) {
@@ -615,7 +607,7 @@
             }
 
             const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
-            const realName = rawName.length > 15 ? decryptAES(rawName) : rawName;
+            const realName = decryptAES(rawName);
 
             let encryptedMessage = text;
             if (typeof CryptoJS !== 'undefined' && CryptoJS.AES) {
@@ -726,6 +718,3 @@
             startClock();
             listenToFirebase();
         };
-    </script>
-</body>
-</html>
