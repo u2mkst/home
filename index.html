@@ -412,37 +412,51 @@
         const auth = firebase.auth();
 
         function checkUserAuth() {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    database.ref(`students/${user.uid}`).once('value', (snapshot) => {
-                        const data = snapshot.val();
-                        if (data) {
-                            currentStudentData = data;
-                            document.getElementById('msgFabBtn').style.display = 'flex';
-                            document.getElementById('historyFabBtn').style.display = 'flex'; 
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            database.ref(`students/${user.uid}`).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    currentStudentData = data;
+                    document.getElementById('msgFabBtn').style.display = 'flex';
+                    document.getElementById('historyFabBtn').style.display = 'flex'; 
 
-                            const rawName = data.name || data.studentName || data.userName || "";
-                            const actualName = rawName.length > 15 ? decryptAES(rawName) : (rawName || user.displayName || "학생");
-                            document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
-                            
-                            listenToTeacherNotes(user.uid);
-                            startLiveChatHistory(user.uid); 
+                    // 1. 학생 이름 데이터 추출 및 정밀 복호화 검사
+                    let rawName = data.name || data.studentName || data.userName || "";
+                    let actualName = "학생";
+
+                    if (rawName) {
+                        // 🔒 이름이 암호화된 문자열(U2FsdGVkX1로 시작)인 경우 복호화 강제 수행
+                        if (rawName.toString().startsWith("U2FsdGVkX1")) {
+                            actualName = decryptAES(rawName);
                         } else {
-                            detachAllHistoryListeners();
-                            if (noteListener) noteListener.off();
-                            auth.signOut().then(() => {
-                                localStorage.removeItem('u2m_id');
-                                localStorage.removeItem('u2m_pw');
-                                window.location.replace('login.html');
-                            });
+                            actualName = rawName;
                         }
-                    });
+                    } else if (user.displayName) {
+                        actualName = user.displayName;
+                    }
+
+                    // 2. 화면에 정상적인 이름 출력
+                    document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
+                    
+                    listenToTeacherNotes(user.uid);
+                    startLiveChatHistory(user.uid); 
                 } else {
-                    window.location.replace('login.html'); 
                     detachAllHistoryListeners();
+                    if (noteListener) noteListener.off();
+                    auth.signOut().then(() => {
+                        localStorage.removeItem('u2m_id');
+                        localStorage.removeItem('u2m_pw');
+                        window.location.replace('login.html');
+                    });
                 }
             });
+        } else {
+            window.location.replace('login.html'); 
+            detachAllHistoryListeners();
         }
+    });
+}
 
         function logoutUser() {
             if (confirm("로그아웃 하시겠습니까?")) {
