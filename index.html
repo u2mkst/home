@@ -339,39 +339,50 @@
         }
 
         // 유투엠 자동 로그인 브릿지 호출 및 사이트 이동
-        function goToU2MWithCredentials() {
-            if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
-                try {
-                    const decryptedPhone = decryptAES(currentStudentData.phone);
-                    const finalPhoneData = decryptedPhone.replace(/[^0-9]/g, "");
+        // 1. 유투엠 자동 로그인 이동 기능
+function goToU2MWithCredentials() {
+    if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
+        try {
+            // 🔒 암호화된 유투엠 비번(phone) 복호화 후 숫자 추출
+            const decryptedPhone = decryptAES(currentStudentData.phone);
+            const finalU2mPhone = decryptedPhone.replace(/[^0-9]/g, "");
 
-                    if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                        window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalPhoneData);
-                    }
-                } catch (err) {
-                    console.error("❌ 유투엠 브릿지 연동 실패:", err);
-                }
+            // 🔒 암호화된 매쓰플랫 비번(mathflatPw) 복호화
+            const decryptedMathflatPw = currentStudentData.mathflatPw ? decryptAES(currentStudentData.mathflatPw) : "";
+
+            if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
+                // 쏴줄 때 규칙에 맞춰서 인자 3개 정확히 일치 전송
+                window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalU2mPhone, decryptedMathflatPw);
             }
-            window.location.href = "https://www.u2math.co.kr/Login/Index";
+        } catch (err) {
+            console.error("❌ 유투엠 브릿지 연동 실패:", err);
         }
+    }
+    window.location.href = "https://www.u2math.co.kr/Login/Index";
+}
 
-        // 🚀 매쓰플랫 직접 전환 및 안드로이드 자동로그인 파라미터 세팅 브릿지
-        function goToMathflatDirect() {
-            if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
-                try {
-                    const decryptedPhone = decryptAES(currentStudentData.phone);
-                    const finalPhoneData = decryptedPhone.replace(/[^0-9]/g, "");
+// 2. 매쓰플랫 다이렉트 전환 이동 기능
+function goToMathflatDirect() {
+    if (currentStudentData && currentStudentData.u2mId) {
+        try {
+            // 🔒 암호화된 유투엠 비번(phone) 복호화
+            const decryptedPhone = currentStudentData.phone ? decryptAES(currentStudentData.phone) : "";
+            const finalU2mPhone = decryptedPhone.replace(/[^0-9]/g, "");
 
-                    if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                        window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalPhoneData);
-                    }
-                } catch (err) {
-                    console.error("❌ 매쓰플랫 브릿지 연동 실패:", err);
-                }
+            // 🔒 암호화된 매쓰플랫 비번(mathflatPw) 복호화
+            const decryptedMathflatPw = currentStudentData.mathflatPw ? decryptAES(currentStudentData.mathflatPw) : "";
+
+            if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
+                // 매쓰플랫 버튼을 눌러도 앱에 유투엠아이디, 유투엠폰번, 매쓰플랫비번 3개를 안전하게 공유 설정
+                window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalU2mPhone, decryptedMathflatPw);
             }
-            window.location.href = "https://student.mathflat.com/";
+        } catch (err) {
+            console.error("❌ 매쓰플랫 브릿지 연동 실패:", err);
         }
-
+    }
+    window.location.href = "https://student.mathflat.com/";
+}
+        
         function startClock() {
             const dateEl = document.getElementById('clock-date');
             const timeEl = document.getElementById('clock-time');
