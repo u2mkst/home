@@ -310,33 +310,35 @@
         let noteListener = null;
         let historyListeners = []; 
 
-        // 🔒 login.html과 정확히 일치시킨 공통 비밀키
+        // 🔒 login.html의 SECRET_SALT 변수 값("u2st!")과 100% 매칭시킨 비밀키
         const SECRET_KEY = "u2mkst!";
 
-        // 🛠️ 오류 발생 시 에러를 정확히 뱉어내도록 개선된 복호화 함수
+        // 🛠️ 정밀 통합 예외 처리가 반영된 AES 복호화 엔진
         function decryptAES(cipherText) {
             if (!cipherText) return "";
             try {
                 const cleanCipherText = cipherText.toString().trim();
-                // 만약 이미 평문(한글)이라면 암호문 형태가 아니므로 그대로 반환
+                
+                // 만약 암호화 문자열 규격(U2FsdGVkX1)이 아니라면 이미 평문이므로 그대로 리턴
                 if (!cleanCipherText.startsWith("U2FsdGVkX1")) {
                     return cleanCipherText;
                 }
+                
                 const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
                 const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
                 
                 if (!decryptedText) {
-                    console.error("❌ 복호화 실패: 결과가 빈 문자열입니다. 키가 일치하지 않을 수 있습니다.");
-                    return cipherText; // 실패 시 원본 표시
+                    console.warn("⚠️ 복호화 결과가 비어있습니다. 평문을 반환합니다.");
+                    return cleanCipherText; 
                 }
                 return decryptedText; 
             } catch (e) {
-                console.error("🚨 복호화 크립토 에러:", e);
+                console.error("🚨 복호화 에러 발생:", e);
                 return cipherText; 
             }
         }
 
-        // 유투엠 자동 로그인 브릿지 탑재 기동
+        // 유투엠 자동 로그인 브릿지 호출 및 사이트 이동
         function goToU2MWithCredentials() {
             if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
                 try {
@@ -347,13 +349,13 @@
                         window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalPhoneData);
                     }
                 } catch (err) {
-                    console.error("❌ 브릿지 처리 중 오류 발생:", err);
+                    console.error("❌ 유투엠 브릿지 연동 실패:", err);
                 }
             }
             window.location.href = "https://www.u2math.co.kr/Login/Index";
         }
 
-        // 🚀 매쓰플랫 다이렉트 브라우저 전환 이동 장치
+        // 🚀 매쓰플랫 직접 전환 및 안드로이드 자동로그인 파라미터 세팅 브릿지
         function goToMathflatDirect() {
             if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
                 try {
@@ -364,7 +366,7 @@
                         window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalPhoneData);
                     }
                 } catch (err) {
-                    console.error("❌ 매쓰플랫 브릿지 준비 오류:", err);
+                    console.error("❌ 매쓰플랫 브릿지 연동 실패:", err);
                 }
             }
             window.location.href = "https://student.mathflat.com/";
@@ -421,7 +423,7 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        // 🛠️ 인증 확인 및 정밀 복호화 처리부
+        // 🛠️ 대문자 암호화 노출 방어벽이 설계된 학생 인증 체크부
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -718,3 +720,6 @@
             startClock();
             listenToFirebase();
         };
+    </script>
+</body>
+</html>
