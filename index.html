@@ -309,11 +309,13 @@
         </div>
     </div>
 
-    <!-- 📱 매쓰플랫 전용 전체 화면 모달 창 -->
+    <!-- 📱 매쓰플랫 전용 전체 화면 모달 창 (iframe 요소를 제거하고 텍스트 레이아웃으로 보강) -->
     <div id="mathflatFullScreenModal" class="mathflat-fullscreen-overlay">
         <button class="home-fab" onclick="closeMathflatFullScreen()" title="홈 화면으로 돌아가기">🏠</button>
-        <div class="iframe-container">
-            <iframe id="mathflatIframe" src="" class="mathflat-iframe"></iframe>
+        <div class="iframe-container" style="display: flex; justify-content: center; align-items: center; flex-direction: column; height: 100%;">
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">매쓰플랫 학습실로 이동합니다.</h2>
+            <p style="color: #7f8c8d;">잠시 후 자동 이동하지 않으면 아래 버튼을 눌러주세요.</p>
+            <button onclick="location.href='https://student.mathflat.com/'" style="padding: 12px 24px; background: #6c5ce7; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: pointer; font-family: inherit;">매쓰플랫 직접 열기</button>
         </div>
     </div>
 
@@ -494,18 +496,24 @@
             }
         }
 
-        // 매쓰플랫 전용 모달 컨테이너 핸들러
+        // [수정] 매쓰플랫 전용 모달 컨테이너 핸들러 (iframe을 사용하지 않고 직접 링크 주소 이동)
         function openMathflatFullScreen() {
-            const iframe = document.getElementById('mathflatIframe');
-            iframe.src = "https://student.mathflat.com/";
-            document.getElementById('mathflatFullScreenModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
+            if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
+                if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
+                    // 안드로이드 앱 브릿지에 로그인에 필요한 데이터를 세팅합니다.
+                    window.AndroidApp.loginToU2M(currentStudentData.u2mId, currentStudentData.phone);
+                }
+            } else {
+                console.warn("⚠️ 자동로그인 데이터가 누락되었거나 로딩 중입니다.");
+            }
+            
+            // 현재 창(웹뷰)의 주소를 매쓰플랫 학생 페이지로 직접 바꿉니다.
+            window.location.href = "https://student.mathflat.com/";
         }
 
+        // 웹뷰 자체 주소가 바뀐 후 홈화면으로 회귀할 수 있도록 탈출 주소를 배치합니다.
         function closeMathflatFullScreen() {
-            document.getElementById('mathflatFullScreenModal').style.display = 'none';
-            document.getElementById('mathflatIframe').src = "";
-            document.body.style.overflow = 'auto';
+            window.location.href = "https://u2mkst.github.io/home/";
         }
 
         // 모달 윈도우 UI 오픈/클로즈 트리거 모음
