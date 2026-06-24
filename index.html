@@ -42,7 +42,6 @@
             box-sizing: border-box; 
         }
         
-        /* ✨ 환영 인사 */
         .welcome-text {
             font-size: 1.4rem; 
             font-weight: bold; 
@@ -54,7 +53,6 @@
             word-break: keep-all;
         }
 
-        /* 🕒 시계 컨테이너 */
         .clock-container {
             margin-bottom: 25px; 
             background: rgba(255, 255, 255, 0.4);
@@ -67,7 +65,6 @@
         .clock-date { font-size: 0.85rem; color: #6c5ce7; font-weight: 600; margin-bottom: 2px; }
         .clock-time { font-size: 2rem; font-weight: 700; color: #2c3e50; letter-spacing: -1px; }
 
-        /* 바로가기 버튼 스타일 */
         .link-button {
             display: block; 
             background-color: rgba(255, 255, 255, 0.9); 
@@ -94,7 +91,6 @@
             border-color: #6c5ce7; 
         }
         
-        /* 알림 및 명언 박스 */
         .quote-box {
             background: rgba(255, 255, 255, 0.5); 
             padding: 18px; 
@@ -112,7 +108,6 @@
         .more-links { display: inline-block; margin-top: 35px; font-size: 0.82rem; color: #6c5ce7; text-decoration: none; font-weight: 600; }
         .footer { margin-top: 15px; font-size: 0.85rem; color: #8892b0; }
         
-        /* 🔴 하단 메뉴 링크 그룹 */
         .bottom-menu { margin-top: 15px; display: flex; justify-content: center; gap: 15px; }
         .bottom-link {
             font-size: 0.8rem; 
@@ -127,7 +122,6 @@
         .bottom-link:hover { color: #6c5ce7; text-decoration: underline; }
         .bottom-link.danger:hover { color: #e74c3c; }
 
-        /* 🗂️ 모달 기본 디자인 */
         .modal-overlay {
             display: none; 
             position: fixed; 
@@ -152,7 +146,7 @@
             box-sizing: border-box;
         }
         .modal-title { font-size: 1.25rem; font-weight: 700; color: #6c5ce7; margin-bottom: 15px; text-align: center; }
-        .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; text-align: center; }
+        .modal-content { font-size: 1rem; color: #4a5568; line-6: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; text-align: center; }
         .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
         
         .modal-box textarea {
@@ -173,7 +167,6 @@
         .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
 
-        /* 📱 매쓰플랫 전용 기기 전체 화면 모달 디자인 */
         .mathflat-fullscreen-overlay {
             display: none; 
             position: fixed; 
@@ -188,7 +181,6 @@
         .iframe-container { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }
         .mathflat-iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* 🏠 매쓰플랫 전체화면 탈출용 플로팅 홈 버튼 스타일 */
         .home-fab {
             position: fixed; 
             bottom: 30px; 
@@ -211,7 +203,6 @@
         .home-fab:hover { transform: scale(1.1); background-color: #1a252f; }
         .home-fab:active { transform: scale(0.95); }
 
-        /* ✉️ 우측 하단 플로팅 버튼 세트 */
         .fab-group { position: fixed; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
         .msg-fab {
             width: 56px; 
@@ -233,7 +224,6 @@
         #historyFabBtn { background-color: #00b894; }
         #historyFabBtn:hover { transform: scale(1.08); background-color: #00a383; }
 
-        /* 📬 모달 전용 실시간 대화 피드 스타일 */
         .history-zone {
             max-height: 320px; 
             overflow-y: auto;
@@ -256,7 +246,6 @@
         .chat-meta.mine { text-align: right; }
         .teacher-name { font-weight: bold; color: #6c5ce7; }
 
-        /* 하단 자습실 전광판 알림 바 */
         .marquee-container {
             display: none; 
             position: fixed; 
@@ -355,27 +344,30 @@
         let noteListener = null;
         let historyListeners = []; 
 
-        // 🔒 [보안 중요] AES-256용 공통 비밀키 (회원가입 화면과 100% 동일해야 함)
-        const SECRET_SALT = "U2M_SECRET_KEY_AES256_KNP_MATH_ACADEMY_KEY_2026";
+        // 🔒 [보안 통일] admin.html과 100% 일치시킨 고유 비밀키 대칭키
+        const SECRET_KEY = "KpMathAcademySecretEncryptionKey2026!";
 
-        // 🔒 암호화된 데이터를 복호화(평문 변환)하는 보안 안전 장치 함수
-        function decryptData(encryptedData) {
-            if (!encryptedData) return "";
+        // 🔒 AES-256 데이터 암호화 함수
+        function encryptAES(text) {
+            if (!text) return "";
+            return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
+        }
+
+        // 🔒 AES-256 데이터 복호화 함수
+        function decryptAES(cipherText) {
+            if (!cipherText) return "";
             try {
-                // 데이터베이스에 저장된 암호문을 시크릿 키로 복호화
-                const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_SALT);
+                const bytes = CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
                 const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-                return decryptedText || encryptedData; // 실패 시 안전장치로 원본 유지
+                return decryptedText || cipherText; 
             } catch (e) {
-                return encryptedData; // 복호화 오류 발생 시 기존 문자열 반환
+                return cipherText; 
             }
         }
 
-        // 🛠️ 유투엠 하이브리드 앱 인터페이스 인증 데이터 전송 및 리다이렉트 함수
         function goToU2MWithCredentials() {
-            // 🔒 복호화된 부모님 전화번호(비밀번호 대용)를 연동하도록 수정
             if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
-                const realPhoneTail = decryptData(currentStudentData.phone);
+                const realPhoneTail = decryptAES(currentStudentData.phone);
                 if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
                     window.AndroidApp.loginToU2M(currentStudentData.u2mId, realPhoneTail);
                 }
@@ -385,7 +377,6 @@
             window.location.href = "https://www.u2math.co.kr/Login/Index";
         }
 
-        // 시계 위젯 시작 루틴
         function startClock() {
             const dateEl = document.getElementById('clock-date');
             const timeEl = document.getElementById('clock-time');
@@ -397,7 +388,6 @@
             }, 1000);
         }
 
-        // 기본 로컬 롤링 명언 리스트
         const advices = [
             { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
             { author: "아리스토텔레스", authorProfile: "철학자", message: "교육의 뿌리는 쓰지만 그 열매는 달다." },
@@ -421,7 +411,6 @@
             { author: "말콤 X", authorProfile: "인권운동가", message: "교육은 미래로 가는 여권이다." }
         ];
 
-        // 기본 지정 명언 노출 처리
         function displayDefaultAdvice() {
             if (advices.length === 0) return;
             const now = new Date();
@@ -435,7 +424,6 @@
             document.getElementById('quote-author').innerText = `- ${dailyData.author}${profileStr} -`;
         }
 
-        // Firebase 연동 인프라 초기화 설정
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
             authDomain: "ksthome-76889.firebaseapp.com",
@@ -450,7 +438,6 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        // 사용자 인증 상태 및 스키마 실시간 추적 제어문
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -462,16 +449,15 @@
                             document.getElementById('msgFabBtn').style.display = 'flex';
                             document.getElementById('historyFabBtn').style.display = 'flex'; 
 
-                            // 🔒 암호화되어 저장된 학생 이름을 대시보드 출력 전에 복호화 처리
+                            // 🔒 학생 대시보드 출력 전에 이름 복호화 처리
                             const encryptedName = data.name || data.studentName || data.userName || "";
-                            const actualName = encryptedName ? decryptData(encryptedName) : (user.displayName || "학생");
+                            const actualName = encryptedName ? decryptAES(encryptedName) : (user.displayName || "학생");
                             
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                             
                             listenToTeacherNotes(user.uid);
                             startLiveChatHistory(user.uid); 
                         } else {
-                            console.warn("⚠️ 학생이 아닌 관리자/타계정 세션 감지: 자동 정리 후 로그인으로 이동합니다.");
                             detachAllHistoryListeners();
                             if (noteListener) {
                                 noteListener.off();
@@ -485,14 +471,12 @@
                         }
                     });
                 } else {
-                    console.log("비로그인 사용자 감지 - 로그인 페이지로 리다이렉트");
                     window.location.replace('login.html'); 
                     detachAllHistoryListeners();
                 }
             });
         }
 
-        // 로그아웃 수행문
         function logoutUser() {
             if (confirm("로그아웃 하시겠습니까?")) {
                 auth.signOut().then(() => {
@@ -505,7 +489,6 @@
             }
         }
 
-        // 매쓰플랫 전용 모달 컨테이너 핸들러
         function openMathflatFullScreen() {
             const iframe = document.getElementById('mathflatIframe');
             iframe.src = "https://student.mathflat.com/";
@@ -519,7 +502,6 @@
             document.body.style.overflow = 'auto';
         }
 
-        // 모달 윈도우 UI 오픈/클로즈 트리거 모음
         function openSendMessageModal() {
             document.getElementById('studentMsgInput').value = '';
             document.getElementById('sendMsgModal').style.display = 'flex';
@@ -536,14 +518,19 @@
             document.getElementById('historyModal').style.display = 'none';
         }
 
-        // 선생님이 발송한 미열람 실시간 메시지 팝업 가로채기 스크립트
         function listenToTeacherNotes(uid) {
             noteListener = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false).limitToLast(1);
             noteListener.on('child_added', (snapshot) => {
                 const note = snapshot.val();
                 if (note) {
+                    // 🔒 선생님이 보낸 쪽지 팝업창 출력 시 복호화 적용
+                    let decryptedNote = decryptAES(note.message);
+                    if(decryptedNote.startsWith("[답장완료] ")) {
+                        decryptedNote = decryptedNote.replace("[답장완료] ", "");
+                    }
+
                     document.getElementById('modalTitle').innerText = "✉️ 선생님이 보낸 쪽지";
-                    document.getElementById('modalNoticeContent').innerText = `[${note.teacher} 선생님]\n\n${note.message}`;
+                    document.getElementById('modalNoticeContent').innerText = `[${note.teacher} 선생님]\n\n${decryptedNote}`;
                     document.getElementById('noticeModal').style.display = 'flex';
                     
                     database.ref(`student_messages/${uid}/${snapshot.key}/read`).set(true);
@@ -551,7 +538,6 @@
             });
         }
 
-        // 양방향 실시간 메시지 합산 피드 파이프라인 연동
         function startLiveChatHistory(studentUid) {
             detachAllHistoryListeners();
             let myQuestions = [];
@@ -563,7 +549,10 @@
                 myQuestions = [];
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
-                        myQuestions.push({ id: child.key, isMine: true, ...child.val() });
+                        const val = child.val();
+                        // 🔒 내 질문 불러올 때 복호화
+                        let decryptedMsg = decryptAES(val.message);
+                        myQuestions.push({ id: child.key, isMine: true, ...val, message: decryptedMsg });
                     });
                 }
                 renderCombinedChat(myQuestions, teacherNotes);
@@ -575,14 +564,16 @@
                 teacherNotes = [];
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
-                        teacherNotes.push({ id: child.key, isMine: false, ...child.val() });
+                        const val = child.val();
+                        // 🔒 선생님 답장 불러올 때 복호화
+                        let decryptedMsg = decryptAES(val.message);
+                        teacherNotes.push({ id: child.key, isMine: false, ...val, message: decryptedMsg });
                     });
                 }
                 renderCombinedChat(myQuestions, teacherNotes);
             });
         }
 
-        // 양방향 챗 타임라인 병합 및 웹 스크린 렌더링 가공 장치
         function renderCombinedChat(questions, notes) {
             const zoneEl = document.getElementById('messageHistoryZone');
             if (!zoneEl) return;
@@ -606,15 +597,20 @@
                 wrapper.style.flexDirection = 'column';
                 wrapper.style.width = '100%';
 
+                let rawMessage = chat.message || "";
+                if(rawMessage.startsWith("[답장완료] ")) {
+                    rawMessage = rawMessage.replace("[답장완료] ", "");
+                }
+
                 if (chat.isMine) {
                     wrapper.innerHTML = `
                         <span class="chat-meta mine">내가 보낸 질문 (${timeStr})</span>
-                        <div class="chat-bubble mine">${chat.message}</div>
+                        <div class="chat-bubble mine">${rawMessage}</div>
                     `;
                 } else {
                     wrapper.innerHTML = `
                         <span class="chat-meta"><span class="teacher-name">👤 ${chat.teacher || '선생님'}</span> (${timeStr})</span>
-                        <div class="chat-bubble teacher">${chat.message}</div>
+                        <div class="chat-bubble teacher">${rawMessage}</div>
                     `;
                 }
                 zoneEl.appendChild(wrapper);
@@ -623,13 +619,11 @@
             zoneEl.scrollTop = zoneEl.scrollHeight;
         }
 
-        // 실시간 소켓 디태치 및 메모리 클리어 장치
         function detachAllHistoryListeners() {
             historyListeners.forEach(item => item.ref.off(item.type));
             historyListeners = [];
         }
 
-        // 담당 교사 지정 타겟 실시간 메시지 발송 함수
         function sendMessageToTeacher() {
             const msgInput = document.getElementById('studentMsgInput'); 
             const text = msgInput.value.trim();
@@ -649,15 +643,18 @@
                 return;
             }
 
-            // 🔒 메시지 수신처(선생님단)에서 식별할 학생 이름 복호화 후 데이터 적재
-            const realName = decryptData(currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음');
+            // 🔒 학생 이름 복호화 후 데이터 전송 준비
+            const realName = decryptAES(currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음');
+            
+            // 🔒 [보안 추가] 학생이 보내는 질문 텍스트도 DB에 넣기 직전 AES-256 암호화
+            const encryptedMessage = encryptAES(text);
 
             const msgData = {
                 studentName: realName,
                 u2mId: currentStudentData.u2mId || '',       
                 studentUid: currentUser.uid,                 
                 teacher: currentStudentData.teacher,
-                message: text,
+                message: encryptedMessage, // 암호문 적재
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
                 read: false
             };
@@ -671,7 +668,6 @@
                 .catch(err => alert('전송 실패: ' + err.message));
         }
 
-        // 회원탈퇴 및 관련 스토리지 영구 삭제 트랜잭션 함수
         function deleteAccount() {
             const user = auth.currentUser;
             if (!user) {
@@ -688,9 +684,9 @@
                 return;
             }
 
-            // 🔒 대조 검증을 위해 DB 내 암호화된 핸드폰 번호 복호화 처리
+            // 🔒 대조 검증을 위해 핸드폰 번호 복호화 처리
             if (currentStudentData && currentStudentData.phone) {
-                const realPhoneTail = decryptData(currentStudentData.phone).toString();
+                const realPhoneTail = decryptAES(currentStudentData.phone).toString();
                 if (inputPhone !== realPhoneTail) {
                     alert("❌ 번호가 일치하지 않습니다. 다시 확인해 주세요.");
                     return;
@@ -726,7 +722,6 @@
             }
         }
 
-        // 글로벌 공지사항, 캘린더 전광판, 긴급 알림 바 리스너 바인딩
         function listenToFirebase() {
             database.ref('notice').on('value', (snapshot) => {
                 const text = snapshot.val() || "";
@@ -770,7 +765,6 @@
             });
         }
 
-        // Window 앱 로딩 시 초기 훅 핸들러
         window.onload = function() {
             checkUserAuth();
             startClock();
