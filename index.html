@@ -313,17 +313,29 @@
         const SECRET_KEY = "KpMathAcademySecretEncryptionKey2026!";
 
         function decryptAES(cipherText) {
-            if (!cipherText) return "";
-            try {
-                const cleanCipherText = cipherText.toString().trim();
-                const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
-                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-                if (!decryptedText) return cipherText;
-                return decryptedText; 
-            } catch (e) {
-                return cipherText; 
-            }
+    if (!cipherText) return "";
+    
+    // 복호화에 사용하는 키가 정확히 무엇인지 콘솔과 앱 알림으로 확인
+    const SECRET_KEY = "u2mkst!";
+    
+    try {
+        const cleanCipherText = cipherText.toString().trim();
+        const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
+        const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+        
+        // 만약 복호화 결과가 빈 값("")이면 키가 틀렸을 확률 100%입니다.
+        if (!decryptedText) {
+            console.error("❌ 복호화 실패: 결과가 빈 문자열입니다. 키(SECRET_KEY)를 확인하세요.");
+            return cipherText; 
         }
+        
+        return decryptedText; 
+    } catch (e) {
+        // 복호화 과정 중 라이브러리 에러가 나면 팝업을 띄웁니다.
+        alert("🚨 크립토 에러 발생: " + e.message + "\n데이터: " + cipherText);
+        return cipherText; 
+    }
+}
 
         // 유투엠 자동 로그인 브릿지 탑재 기동
         function goToU2MWithCredentials() {
