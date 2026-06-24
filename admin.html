@@ -9,6 +9,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- 🔑 AES-256 암호화를 위한 CryptoJS 라이브러리 추가 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
         @font-face {
@@ -384,6 +386,28 @@
     </div>
 
     <script>
+        // 🔑 AES-256 개인키 대칭키 설정 (※ 학생 기기용 소스코드에도 동일한 키를 입력해야 서로 해독이 가능합니다.)
+        const SECRET_KEY = "KpMathAcademySecretEncryptionKey2026!";
+
+        // AES-256 암호화 함수
+        function encryptAES(text) {
+            if (!text) return "";
+            return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
+        }
+
+        // AES-256 복호화 함수
+        function decryptAES(cipherText) {
+            if (!cipherText) return "";
+            try {
+                const bytes = CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
+                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+                // 복호화에 실패했거나 깨진 경우 원본 반환 (기존 비암호화 데이터 호환용)
+                return decryptedText || cipherText;
+            } catch (e) {
+                return cipherText;
+            }
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
             authDomain: "ksthome-76889.firebaseapp.com",
@@ -502,7 +526,7 @@
             });
         }
 
-        // 💬 [핵심 추가] 특정 학생 선택 시 대화방 데이터 실시간 바인딩
+        // 💬 특정 학생 선택 시 대화방 데이터 실시간 바인딩
         function loadStudentChatRoom(studentUid, studentName) {
             currentSelectedStudentUid = studentUid;
             currentSelectedStudentName = studentName;
@@ -521,7 +545,9 @@
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const val = child.val();
-                        studentQuestions.push({ id: child.key, origin: 'student', ...val });
+                        // 🔓 데이터 로드 시 AES 복호화 적용
+                        let decryptedMsg = decryptAES(val.message);
+                        studentQuestions.push({ id: child.key, origin: 'student', ...val, message: decryptedMsg });
                         if (val.read === false) {
                             database.ref(`messages/${child.key}/read`).set(true);
                         }
@@ -537,14 +563,17 @@
                 teacherReplies = [];
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
-                        teacherReplies.push({ id: child.key, origin: 'teacher', ...child.val() });
+                        const val = child.val();
+                        // 🔓 데이터 로드 시 AES 복호화 적용
+                        let decryptedMsg = decryptAES(val.message);
+                        teacherReplies.push({ id: child.key, origin: 'teacher', ...val, message: decryptedMsg });
                     });
                 }
                 renderAdminChatFeed(studentQuestions, teacherReplies);
             });
         }
 
-        // 💬 [핵심 추가] 카카오톡 스타일 빌드 및 렌더링 함수
+        // 💬 카카오톡 스타일 빌드 및 렌더링 함수
         function renderAdminChatFeed(questions, replies) {
             const zoneEl = document.getElementById('adminChatHistoryZone');
             if (!zoneEl) return;
@@ -591,7 +620,7 @@
             zoneEl.scrollTop = zoneEl.scrollHeight;
         }
 
-        // 💬 [핵심 추가] 대화창 하단 입력창 발송 함수
+        // 💬 대화창 하단 입력창 발송 함수
         function sendTeacherReply() {
             const replyInput = document.getElementById('teacherReplyInput');
             const text = replyInput.value.trim();
@@ -603,9 +632,12 @@
             }
             if (!text) return;
 
+            // 🔒 업로드 전 AES-256 암호화 적용
+            const encryptedMessage = encryptAES(`[답장완료] ${text}`);
+
             const replyData = {
                 teacher: teacherName,
-                message: `[답장완료] ${text}`,
+                message: encryptedMessage,
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
                 read: false
             };
@@ -660,6 +692,9 @@
                             const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
                             
                             const msgStudentId = msg.u2mId ? msg.u2mId : '아이디 누락';
+                            
+                            // 🔓 수신 리스트 렌더링 시 복호화
+                            let decryptedMsg = decryptAES(msg.message);
 
                             const item = document.createElement('div');
                             item.className = `msg-item ${!msg.read ? 'unread' : ''}`;
@@ -668,7 +703,7 @@
                                     <span class="msg-sender">👤 ${msg.studentName || '알수없음'} (${msgStudentId})</span>
                                     <span>${timeStr}</span>
                                 </div>
-                                <div class="msg-body">${msg.message || ''}</div>
+                                <div class="msg-body">${decryptedMsg || ''}</div>
                                 
                                 <div class="reply-box">
                                     <button class="reply-toggle-btn" onclick="toggleReplyZone('${msg.id}')">↩️ 답장하기</button>
@@ -723,17 +758,21 @@
             }
 
             const timestamp = firebase.database.ServerValue.TIMESTAMP;
+            
+            // 🔒 모달 창 답장 시에도 AES-256 암호화 적용
+            const encryptedMessage = encryptAES(`[답장완료] ${text}`);
+            const encryptedHistoryMessage = encryptAES(text);
 
             database.ref(`student_messages/${studentUid}`).push({
                 teacher: teacherName,
-                message: `[답장완료] ${text}`,
+                message: encryptedMessage,
                 timestamp: timestamp,
                 read: false
             })
             .then(() => {
                 return database.ref(`messages/${msgId}/replies`).push({
                     teacher: teacherName,
-                    message: text,
+                    message: encryptedHistoryMessage,
                     timestamp: timestamp
                 });
             })
@@ -763,9 +802,12 @@
                     const dateObj = new Date(data.timestamp);
                     const timeStr = `${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
                     
+                    // 🔓 히스토리 내역 복호화
+                    let decryptedReply = decryptAES(data.message);
+
                     const itemHtml = `
                         <div class="history-item">
-                            <span class="history-teacher">└ ↩️ 내 답장:</span> ${data.message} 
+                            <span class="history-teacher">└ ↩️ 내 답장:</span> ${decryptedReply} 
                             <span style="font-size:0.7rem; color:#aaa;">(${timeStr})</span>
                         </div>
                     `;
