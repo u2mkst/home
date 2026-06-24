@@ -167,7 +167,8 @@
         .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
 
-        /* ✉️ 플로팅 버튼 세트 */
+        /* 매쓰플랫 전용 모달 및 iframe 스타일 완전 제거 완료 (새 창 이동 방식으로 통일) */
+
         .fab-group { position: fixed; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
         .msg-fab {
             width: 56px; 
@@ -302,52 +303,50 @@
         let noteListener = null;
         let historyListeners = []; 
 
-        // 🔒 암호화/복호화용 대칭키 규격 (관리자 규격과 일치 시키세요)
+        // 🔒 관리자 페이지에서 사용하는 대칭키 키 규격과 반드시 일치해야 복호화가 진행됩니다.
         const SECRET_KEY = "KpMathAcademySecretEncryptionKey2026!";
 
-        function encryptAES(text) {
-            if (!text) return "";
-            return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
-        }
-
+        // 안전한 복호화 처리 유틸 함수
         function decryptAES(cipherText) {
             if (!cipherText) return "";
-            if (typeof CryptoJS === 'undefined' || !CryptoJS.AES) {
-                console.error("❌ CryptoJS 라이브러리가 로드되지 않았습니다.");
-                return cipherText;
-            }
             try {
+                // 평문일 경우(암호화문 형식이 아닐 때) 발생하는 에러 방지 및 예외처리
                 const cleanCipherText = cipherText.toString().trim();
                 const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
                 const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+                
+                // 복호화 결과가 비어있다면 원래 값이 암호화되지 않은 평문이므로 그대로 반환
                 if (!decryptedText) {
-                    console.warn("⚠️ 복호화 결과가 빈 문자열입니다. 평문일 수 있습니다:", cleanCipherText);
                     return cipherText;
                 }
                 return decryptedText; 
             } catch (e) {
-                console.error("❌ 복호화 오류 실패 (평문 데이터 유무 확인 필요):", e);
+                // 암호화되지 않은 텍스트일 때 예외 발생 시 원본 데이터 보존
                 return cipherText; 
             }
         }
 
-        // 🛠️ 유투엠 하이브리드 앱 인터페이스 인증 데이터 전송 및 리다이렉트 함수 수정
+        // 🛠️ 유투엠 하이브리드 앱 인터페이스 인증 데이터 전송 및 리다이렉트 함수 (에러 방지 강화)
         function goToU2MWithCredentials() {
             if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
-                // 1. 핸드폰 번호 복호화 처리
-                const decryptedPhone = decryptAES(currentStudentData.phone).toString();
-                // 2. 유투엠 자동 로그인 규격에 맞춰 가공 (전체 번호 또는 하위 4자리 중 하이브리드 인터페이스 스펙에 맞게 지정)
-                // 만약 유투엠 인터페이스가 '핸드폰 번호 뒷자리 4자리'만 원한다면 .slice(-4)를 붙이고, 전체 번호라면 decryptedPhone을 그대로 넘깁니다.
-                const finalPhoneData = decryptedPhone.replace(/[^0-9]/g, ""); // 숫자만 추출
+                try {
+                    // 1. 핸드폰 번호 복호화 수행
+                    const decryptedPhone = decryptAES(currentStudentData.phone);
+                    // 2. 특수문자나 하이픈 제외하고 숫자만 정제
+                    const finalPhoneData = decryptedPhone.replace(/[^0-9]/g, "");
 
-                if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                    console.log("🚀 하이브리드 인터페이스 전송:", currentStudentData.u2mId, finalPhoneData);
-                    window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalPhoneData);
+                    // Android 하이브리드 앱 브릿지 인터페이스 체크 후 데이터 바인딩
+                    if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
+                        console.log("🚀 유투엠 하이브리드 자동로그인 바인딩 호출:", currentStudentData.u2mId, finalPhoneData);
+                        window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalPhoneData);
+                    }
+                } catch (err) {
+                    console.error("❌ 자동 로그인 데이터 처리 에러 (무시하고 리다이렉트 진행):", err);
                 }
             } else {
                 console.warn("⚠️ 자동로그인 데이터가 누락되었거나 로딩 중입니다.");
             }
-            // 최종 유투엠 리다이렉트 이동
+            // 브릿지 호출 여부와 상관없이 무조건 유투엠 로그인 주소로 화면 이동 처리
             window.location.href = "https://www.u2math.co.kr/Login/Index";
         }
 
@@ -423,10 +422,9 @@
                             document.getElementById('msgFabBtn').style.display = 'flex';
                             document.getElementById('historyFabBtn').style.display = 'flex'; 
 
-                            // 이름 필드 복호화 가공 지원
                             const rawName = data.name || data.studentName || data.userName || "";
+                            // 이름 데이터가 15자를 넘어가면 암호문으로 간주하고 복호화 수행
                             const actualName = rawName.length > 15 ? decryptAES(rawName) : (rawName || user.displayName || "학생");
-                            
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                             
                             listenToTeacherNotes(user.uid);
@@ -594,7 +592,12 @@
 
             const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
             const realName = rawName.length > 15 ? decryptAES(rawName) : rawName;
-            const encryptedMessage = encryptAES(text);
+            
+            // 전송 시 메시지 암호화 기능 연결
+            let encryptedMessage = text;
+            if (typeof CryptoJS !== 'undefined' && CryptoJS.AES) {
+                encryptedMessage = CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
+            }
 
             const msgData = {
                 studentName: realName,
