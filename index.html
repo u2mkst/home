@@ -42,6 +42,7 @@
             box-sizing: border-box; 
         }
         
+        /* ✨ 환영 인사 */
         .welcome-text {
             font-size: 1.4rem; 
             font-weight: bold; 
@@ -53,6 +54,7 @@
             word-break: keep-all;
         }
 
+        /* 🕒 시계 컨테이너 */
         .clock-container {
             margin-bottom: 25px; 
             background: rgba(255, 255, 255, 0.4);
@@ -65,6 +67,7 @@
         .clock-date { font-size: 0.85rem; color: #6c5ce7; font-weight: 600; margin-bottom: 2px; }
         .clock-time { font-size: 2rem; font-weight: 700; color: #2c3e50; letter-spacing: -1px; }
 
+        /* 바로가기 버튼 스타일 */
         .link-button {
             display: block; 
             background-color: rgba(255, 255, 255, 0.9); 
@@ -91,6 +94,7 @@
             border-color: #6c5ce7; 
         }
         
+        /* 알림 및 명언 박스 */
         .quote-box {
             background: rgba(255, 255, 255, 0.5); 
             padding: 18px; 
@@ -108,6 +112,7 @@
         .more-links { display: inline-block; margin-top: 35px; font-size: 0.82rem; color: #6c5ce7; text-decoration: none; font-weight: 600; }
         .footer { margin-top: 15px; font-size: 0.85rem; color: #8892b0; }
         
+        /* 🔴 하단 메뉴 링크 그룹 */
         .bottom-menu { margin-top: 15px; display: flex; justify-content: center; gap: 15px; }
         .bottom-link {
             font-size: 0.8rem; 
@@ -122,6 +127,7 @@
         .bottom-link:hover { color: #6c5ce7; text-decoration: underline; }
         .bottom-link.danger:hover { color: #e74c3c; }
 
+        /* 🗂️ 모달 기본 디자인 */
         .modal-overlay {
             display: none; 
             position: fixed; 
@@ -167,8 +173,45 @@
         .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
 
-        /* 매쓰플랫 전용 모달 및 iframe 스타일 완전 제거 완료 (새 창 이동 방식으로 통일) */
+        /* 📱 매쓰플랫 전용 기기 전체 화면 모달 디자인 */
+        .mathflat-fullscreen-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: #ffffff; 
+            z-index: 2000; 
+            box-sizing: border-box;
+        }
+        .iframe-container { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }
+        .mathflat-iframe { width: 100%; height: 100%; border: none; display: block; }
 
+        /* 🏠 매쓰플랫 전체화면 탈출용 플로팅 홈 버튼 스타일 */
+        .home-fab {
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            width: 56px; 
+            height: 56px;
+            border-radius: 50%; 
+            background-color: #2c3e50; 
+            color: #ffffff; 
+            border: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); 
+            cursor: pointer;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            font-size: 1.5rem; 
+            transition: all 0.2s ease; 
+            z-index: 2100;
+        }
+        .home-fab:hover { transform: scale(1.1); background-color: #1a252f; }
+        .home-fab:active { transform: scale(0.95); }
+
+        /* ✉️ 우측 하단 플로팅 버튼 세트 */
         .fab-group { position: fixed; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
         .msg-fab {
             width: 56px; 
@@ -190,6 +233,7 @@
         #historyFabBtn { background-color: #00b894; }
         #historyFabBtn:hover { transform: scale(1.08); background-color: #00a383; }
 
+        /* 📬 모달 전용 실시간 대화 피드 스타일 */
         .history-zone {
             max-height: 320px; 
             overflow-y: auto;
@@ -212,6 +256,7 @@
         .chat-meta.mine { text-align: right; }
         .teacher-name { font-weight: bold; color: #6c5ce7; }
 
+        /* 하단 자습실 전광판 알림 바 */
         .marquee-container {
             display: none; 
             position: fixed; 
@@ -243,7 +288,7 @@
         </div>
 
         <button onclick="goToU2MWithCredentials()" class="link-button">유투엠 바로가기</button>
-        <button onclick="window.open('https://student.mathflat.com/', '_blank')" class="link-button">매쓰플랫 바로가기</button>
+        <button onclick="openMathflatFullScreen()" class="link-button">매쓰플랫 바로가기</button>
                     
         <div class="quote-box">
             💡 <b id="quote-header">오늘의 한마디:</b><br>
@@ -257,6 +302,13 @@
         <div class="bottom-menu">
             <button onclick="logoutUser()" class="bottom-link">로그아웃</button>
             <button onclick="deleteAccount()" class="bottom-link danger">계정삭제</button>
+        </div>
+    </div>
+
+    <div id="mathflatFullScreenModal" class="mathflat-fullscreen-overlay">
+        <button class="home-fab" onclick="closeMathflatFullScreen()" title="홈 화면으로 돌아가기">🏠</button>
+        <div class="iframe-container">
+            <iframe id="mathflatIframe" src="" class="mathflat-iframe"></iframe>
         </div>
     </div>
 
@@ -303,53 +355,50 @@
         let noteListener = null;
         let historyListeners = []; 
 
-        // 🔒 관리자 페이지에서 사용하는 대칭키 키 규격과 반드시 일치해야 복호화가 진행됩니다.
+        // 🔒 관리자 페이지의 암호화 키 규격과 일치해야 정상 복호화됩니다.
         const SECRET_KEY = "KpMathAcademySecretEncryptionKey2026!";
 
-        // 안전한 복호화 처리 유틸 함수
+        // 안전한 복호화 처리 함수 (평문 데이터 유입 시에도 안전하게 우회)
         function decryptAES(cipherText) {
             if (!cipherText) return "";
             try {
-                // 평문일 경우(암호화문 형식이 아닐 때) 발생하는 에러 방지 및 예외처리
                 const cleanCipherText = cipherText.toString().trim();
                 const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
                 const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
                 
-                // 복호화 결과가 비어있다면 원래 값이 암호화되지 않은 평문이므로 그대로 반환
-                if (!decryptedText) {
-                    return cipherText;
-                }
+                // 복호화 결과가 없으면 원본이 암호화되지 않은 평문이므로 그대로 반환
+                if (!decryptedText) return cipherText;
                 return decryptedText; 
             } catch (e) {
-                // 암호화되지 않은 텍스트일 때 예외 발생 시 원본 데이터 보존
                 return cipherText; 
             }
         }
 
-        // 🛠️ 유투엠 하이브리드 앱 인터페이스 인증 데이터 전송 및 리다이렉트 함수 (에러 방지 강화)
+        // 🛠️ 유투엠 하이브리드 앱 인터페이스 인증 데이터 전송 및 리다이렉트 함수 (안정성 극대화)
         function goToU2MWithCredentials() {
             if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
                 try {
-                    // 1. 핸드폰 번호 복호화 수행
+                    // 1. 핸드폰 번호 복호화
                     const decryptedPhone = decryptAES(currentStudentData.phone);
-                    // 2. 특수문자나 하이픈 제외하고 숫자만 정제
+                    // 2. 숫자가 아닌 하이픈(-)이나 공백 등 특수문자 제거
                     const finalPhoneData = decryptedPhone.replace(/[^0-9]/g, "");
 
-                    // Android 하이브리드 앱 브릿지 인터페이스 체크 후 데이터 바인딩
+                    // Android 앱 브릿지 존재 및 함수 유효성 체크 후 전달
                     if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                        console.log("🚀 유투엠 하이브리드 자동로그인 바인딩 호출:", currentStudentData.u2mId, finalPhoneData);
+                        console.log("🚀 유투엠 앱 자동로그인 브릿지 호출:", currentStudentData.u2mId, finalPhoneData);
                         window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalPhoneData);
                     }
                 } catch (err) {
-                    console.error("❌ 자동 로그인 데이터 처리 에러 (무시하고 리다이렉트 진행):", err);
+                    console.error("❌ 자동 로그인 데이터 복호화/전송 중 에러 (이동은 계속 진행):", err);
                 }
             } else {
                 console.warn("⚠️ 자동로그인 데이터가 누락되었거나 로딩 중입니다.");
             }
-            // 브릿지 호출 여부와 상관없이 무조건 유투엠 로그인 주소로 화면 이동 처리
+            // 브릿지 호출 도중 예외가 터지더라도 화면 이동은 독립적으로 무조건 실행 보장
             window.location.href = "https://www.u2math.co.kr/Login/Index";
         }
 
+        // 시계 위젯 시작 루틴
         function startClock() {
             const dateEl = document.getElementById('clock-date');
             const timeEl = document.getElementById('clock-time');
@@ -361,6 +410,7 @@
             }, 1000);
         }
 
+        // 기본 로컬 롤링 명언 리스트
         const advices = [
             { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
             { author: "아리스토텔레스", authorProfile: "철학자", message: "교육의 뿌리는 쓰지만 그 열매는 달다." },
@@ -384,6 +434,7 @@
             { author: "말콤 X", authorProfile: "인권운동가", message: "교육은 미래로 가는 여권이다." }
         ];
 
+        // 기본 지정 명언 노출 처리
         function displayDefaultAdvice() {
             if (advices.length === 0) return;
             const now = new Date();
@@ -397,6 +448,7 @@
             document.getElementById('quote-author').innerText = `- ${dailyData.author}${profileStr} -`;
         }
 
+        // Firebase 연동 인프라 초기화 설정
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
             authDomain: "ksthome-76889.firebaseapp.com",
@@ -411,6 +463,7 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
+        // 사용자 인증 상태 및 스키마 실시간 추적 제어문
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -423,15 +476,19 @@
                             document.getElementById('historyFabBtn').style.display = 'flex'; 
 
                             const rawName = data.name || data.studentName || data.userName || "";
-                            // 이름 데이터가 15자를 넘어가면 암호문으로 간주하고 복호화 수행
+                            // 이름이 암호화 기법(15자 이상)으로 저장된 경우 복호화 진행
                             const actualName = rawName.length > 15 ? decryptAES(rawName) : (rawName || user.displayName || "학생");
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                             
                             listenToTeacherNotes(user.uid);
                             startLiveChatHistory(user.uid); 
                         } else {
+                            console.warn("⚠️ 학생이 아닌 관리자/타계정 세션 감지: 자동 정리 후 로그인으로 이동합니다.");
                             detachAllHistoryListeners();
-                            if (noteListener) noteListener.off();
+                            if (noteListener) {
+                                noteListener.off();
+                            }
+                            
                             auth.signOut().then(() => {
                                 localStorage.removeItem('u2m_id');
                                 localStorage.removeItem('u2m_pw');
@@ -440,12 +497,14 @@
                         }
                     });
                 } else {
+                    console.log("비로그인 사용자 감지 - 로그인 페이지로 리다이렉트");
                     window.location.replace('login.html'); 
                     detachAllHistoryListeners();
                 }
             });
         }
 
+        // 로그아웃 수행문
         function logoutUser() {
             if (confirm("로그아웃 하시겠습니까?")) {
                 auth.signOut().then(() => {
@@ -458,6 +517,21 @@
             }
         }
 
+        // 매쓰플랫 전용 모달 컨테이너 핸들러
+        function openMathflatFullScreen() {
+            const iframe = document.getElementById('mathflatIframe');
+            iframe.src = "https://student.mathflat.com/";
+            document.getElementById('mathflatFullScreenModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMathflatFullScreen() {
+            document.getElementById('mathflatFullScreenModal').style.display = 'none';
+            document.getElementById('mathflatIframe').src = "";
+            document.body.style.overflow = 'auto';
+        }
+
+        // 모달 윈도우 UI 오픈/클로즈 트리거 모음
         function openSendMessageModal() {
             document.getElementById('studentMsgInput').value = '';
             document.getElementById('sendMsgModal').style.display = 'flex';
@@ -474,6 +548,7 @@
             document.getElementById('historyModal').style.display = 'none';
         }
 
+        // 선생님이 발송한 미열람 실시간 메시지 팝업 가로채기 스크립트
         function listenToTeacherNotes(uid) {
             noteListener = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false).limitToLast(1);
             noteListener.on('child_added', (snapshot) => {
@@ -493,6 +568,7 @@
             });
         }
 
+        // 양방향 실시간 메시지 합산 피드 파이프라인 연동
         function startLiveChatHistory(studentUid) {
             detachAllHistoryListeners();
             let myQuestions = [];
@@ -527,6 +603,7 @@
             });
         }
 
+        // 양방향 챗 타임라인 병합 및 웹 스크린 렌더링 가공 장치
         function renderCombinedChat(questions, notes) {
             const zoneEl = document.getElementById('messageHistoryZone');
             if (!zoneEl) return;
@@ -572,28 +649,30 @@
             zoneEl.scrollTop = zoneEl.scrollHeight;
         }
 
+        // 실시간 소켓 디태치 및 메모리 클리어 장치
         function detachAllHistoryListeners() {
             historyListeners.forEach(item => item.ref.off(item.type));
             historyListeners = [];
         }
 
+        // 담당 교사 지정 타겟 실시간 메시지 발송 함수 (암호화 적용)
         function sendMessageToTeacher() {
             const msgInput = document.getElementById('studentMsgInput'); 
             const text = msgInput.value.trim();
 
             if (!text) { alert('보낼 내용을 입력해 주세요.'); return; }
-            if (!currentStudentData || !currentStudentData.teacher) { alert('선생님 정보가 없습니다.'); return; }
+            if (!currentStudentData || !currentStudentData.teacher) { alert('선생님 정보가 없습니다. 다시 로그인해 주세요.'); return; }
 
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) {
-                alert('❌ 세션이 종료되었습니다.');
+                alert('❌ 세션이 종료되었습니다. 앱을 종료 후 다시 실행하거나 다시 로그인해 주세요.');
                 return;
             }
 
             const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
             const realName = rawName.length > 15 ? decryptAES(rawName) : rawName;
-            
-            // 전송 시 메시지 암호화 기능 연결
+
+            // 전송 전 보안 처리를 위한 메시지 암호화
             let encryptedMessage = text;
             if (typeof CryptoJS !== 'undefined' && CryptoJS.AES) {
                 encryptedMessage = CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
@@ -618,9 +697,11 @@
                 .catch(err => alert('전송 실패: ' + err.message));
         }
 
+        // 회원탈퇴 및 관련 스토리지 영구 삭제 트랜잭션 함수
         function deleteAccount() {
             const user = auth.currentUser;
             if (!user) {
+                alert("로그인된 정보가 없습니다. 다시 로그인해 주세요.");
                 window.location.href = 'login.html';
                 return;
             }
@@ -634,15 +715,15 @@
             }
 
             if (currentStudentData && currentStudentData.phone) {
-                const realPhone = decryptAES(currentStudentData.phone).toString();
-                const lastFourDigits = realPhone.slice(-4);
+                const registeredPhone = decryptAES(currentStudentData.phone).toString();
+                const lastFourDigits = registeredPhone.slice(-4);
                 if (inputPhone !== lastFourDigits) {
-                    alert("❌ 번호가 일치하지 않습니다.");
+                    alert("❌ 번호가 일치하지 않습니다. 다시 확인해 주세요.");
                     return;
                 }
             }
 
-            if (confirm("정말로 회원탈퇴를 진행하시겠습니까?")) {
+            if (confirm("정말로 회원탈퇴를 진행하시겠습니까?\n탈퇴 시 데이터베이스와 로그인 계정이 복구 불가능하게 영구 소멸합니다.")) {
                 const uid = user.uid;
                 user.delete()
                     .then(() => {
@@ -652,24 +733,26 @@
                     .then(() => {
                         localStorage.removeItem('u2m_id');
                         localStorage.removeItem('u2m_pw');
-                        alert("회원탈퇴 완료");
+                        alert("회원탈퇴가 정상적으로 완료되었습니다. 이용해 주셔서 감사합니다.");
                         window.location.href = 'login.html';
                     })
                     .catch((error) => {
+                        console.error("탈퇴 처리 중 오류 발생:", error);
                         if (error.code === 'auth/requires-recent-login') {
-                            alert("인증 만료로 재로그인 후 시도해 주세요.");
+                            alert("🔒 보안을 위해 인증 세션이 만료되었습니다.\n\n안전한 탈퇴를 위해 [확인]을 누르시면 자동 로그아웃됩니다. '다시 로그인하자마자 곧바로' 탈퇴 버튼을 눌러주시면 정상 처리됩니다.");
                             auth.signOut().then(() => {
                                 localStorage.removeItem('u2m_id');
                                 localStorage.removeItem('u2m_pw');
                                 window.location.href = 'login.html';
                             });
                         } else {
-                            alert("탈퇴 오류: " + error.message);
+                            alert("탈퇴 처리 중 오류가 발생했습니다: " + error.message);
                         }
                     });
             }
         }
 
+        // 글로벌 공지사항, 캘린더 전광판, 긴급 알림 바 리스너 바인딩
         function listenToFirebase() {
             database.ref('notice').on('value', (snapshot) => {
                 const text = snapshot.val() || "";
@@ -713,6 +796,7 @@
             });
         }
 
+        // 앱 로딩 시 초기 실행 루틴
         window.onload = function() {
             checkUserAuth();
             startClock();
