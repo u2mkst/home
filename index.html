@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>K&P 수학입시학원</title>
-    <!-- Firebase SDK (v8 라이브러리) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
         @font-face {
@@ -279,20 +280,16 @@
 <body>
 
     <div class="container">
-        <!-- 학생 인사 메세지 -->
         <div id="welcome-message" class="welcome-text">학생 정보를 불러오는 중...</div>
 
-        <!-- 실시간 타이머 시계 -->
         <div class="clock-container">
             <div id="clock-date" class="clock-date">0월 0일 0요일</div>
             <div id="clock-time" class="clock-time">00:00:00</div>
         </div>
 
-        <!-- 메인 링크 버튼 그룹 -->
         <button onclick="goToU2MWithCredentials()" class="link-button">유투엠 바로가기</button>
         <button onclick="openMathflatFullScreen()" class="link-button">매쓰플랫 바로가기</button>
                     
-        <!-- 명언 및 안내 컴포넌트 -->
         <div class="quote-box">
             💡 <b id="quote-header">오늘의 한마디:</b><br>
             <span id="quote-text">문구를 불러오는 중...</span>
@@ -302,30 +299,24 @@
         <a href="https://litt.ly/theu2m" target="_blank" class="more-links">KST가 만든 더 많은 것들</a>
         <div class="footer">© 2026 KST</div>
         
-        <!-- 하단 계정 관리 메뉴 -->
         <div class="bottom-menu">
             <button onclick="logoutUser()" class="bottom-link">로그아웃</button>
             <button onclick="deleteAccount()" class="bottom-link danger">계정삭제</button>
         </div>
     </div>
 
-    <!-- 📱 매쓰플랫 전용 전체 화면 모달 창 (iframe 요소를 제거하고 텍스트 레이아웃으로 보강) -->
     <div id="mathflatFullScreenModal" class="mathflat-fullscreen-overlay">
         <button class="home-fab" onclick="closeMathflatFullScreen()" title="홈 화면으로 돌아가기">🏠</button>
-        <div class="iframe-container" style="display: flex; justify-content: center; align-items: center; flex-direction: column; height: 100%;">
-            <h2 style="color: #2c3e50; margin-bottom: 20px;">매쓰플랫 학습실로 이동합니다.</h2>
-            <p style="color: #7f8c8d;">잠시 후 자동 이동하지 않으면 아래 버튼을 눌러주세요.</p>
-            <button onclick="location.href='https://student.mathflat.com/'" style="padding: 12px 24px; background: #6c5ce7; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: pointer; font-family: inherit;">매쓰플랫 직접 열기</button>
+        <div class="iframe-container">
+            <iframe id="mathflatIframe" src="" class="mathflat-iframe"></iframe>
         </div>
     </div>
 
-    <!-- ✉️ 플로팅 메시지 컨트롤 버튼 셋 -->
     <div class="fab-group">
         <button id="historyFabBtn" class="msg-fab" onclick="openHistoryModal()">📂</button>
         <button id="msgFabBtn" class="msg-fab" onclick="openSendMessageModal()">✉️</button>
     </div>
 
-    <!-- ✉️ 선생님께 질문전송 모달 팝업 -->
     <div id="sendMsgModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title">✉️ 선생님께 메시지 전송</div>
@@ -337,7 +328,6 @@
         </div>
     </div>
 
-    <!-- 📬 메시지 히스토리(대화 피드) 모달 팝업 -->
     <div id="historyModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 400px; padding: 24px 20px;">
             <div class="modal-title">📬 내 메시지 및 선생님 답장</div>
@@ -348,7 +338,6 @@
         </div>
     </div>
 
-    <!-- 📢 실시간 공지사항 모달 팝업 -->
     <div id="noticeModal" class="modal-overlay">
         <div class="modal-box">
             <div id="modalTitle" class="modal-title">📢 안내 말씀 드립니다</div>
@@ -357,7 +346,6 @@
         </div>
     </div>
 
-    <!-- ⚠️ 흐르는 전광판 스타일 하단 알림 바 -->
     <div id="reminderBar" class="marquee-container">
         <div id="reminderText" class="marquee-text"></div>
     </div>
@@ -367,11 +355,29 @@
         let noteListener = null;
         let historyListeners = []; 
 
+        // 🔒 [보안 중요] AES-256용 공통 비밀키 (회원가입 화면과 100% 동일해야 함)
+        const SECRET_SALT = "U2M_SECRET_KEY_AES256_KNP_MATH_ACADEMY_KEY_2026";
+
+        // 🔒 암호화된 데이터를 복호화(평문 변환)하는 보안 안전 장치 함수
+        function decryptData(encryptedData) {
+            if (!encryptedData) return "";
+            try {
+                // 데이터베이스에 저장된 암호문을 시크릿 키로 복호화
+                const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_SALT);
+                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+                return decryptedText || encryptedData; // 실패 시 안전장치로 원본 유지
+            } catch (e) {
+                return encryptedData; // 복호화 오류 발생 시 기존 문자열 반환
+            }
+        }
+
         // 🛠️ 유투엠 하이브리드 앱 인터페이스 인증 데이터 전송 및 리다이렉트 함수
         function goToU2MWithCredentials() {
+            // 🔒 복호화된 부모님 전화번호(비밀번호 대용)를 연동하도록 수정
             if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
+                const realPhoneTail = decryptData(currentStudentData.phone);
                 if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                    window.AndroidApp.loginToU2M(currentStudentData.u2mId, currentStudentData.phone);
+                    window.AndroidApp.loginToU2M(currentStudentData.u2mId, realPhoneTail);
                 }
             } else {
                 console.warn("⚠️ 자동로그인 데이터가 누락되었거나 로딩 중입니다.");
@@ -456,7 +462,10 @@
                             document.getElementById('msgFabBtn').style.display = 'flex';
                             document.getElementById('historyFabBtn').style.display = 'flex'; 
 
-                            const actualName = data.name || data.studentName || data.userName || user.displayName || "학생";
+                            // 🔒 암호화되어 저장된 학생 이름을 대시보드 출력 전에 복호화 처리
+                            const encryptedName = data.name || data.studentName || data.userName || "";
+                            const actualName = encryptedName ? decryptData(encryptedName) : (user.displayName || "학생");
+                            
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                             
                             listenToTeacherNotes(user.uid);
@@ -496,24 +505,18 @@
             }
         }
 
-        // [수정] 매쓰플랫 전용 모달 컨테이너 핸들러 (iframe을 사용하지 않고 직접 링크 주소 이동)
+        // 매쓰플랫 전용 모달 컨테이너 핸들러
         function openMathflatFullScreen() {
-            if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
-                if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                    // 안드로이드 앱 브릿지에 로그인에 필요한 데이터를 세팅합니다.
-                    window.AndroidApp.loginToU2M(currentStudentData.u2mId, currentStudentData.phone);
-                }
-            } else {
-                console.warn("⚠️ 자동로그인 데이터가 누락되었거나 로딩 중입니다.");
-            }
-            
-            // 현재 창(웹뷰)의 주소를 매쓰플랫 학생 페이지로 직접 바꿉니다.
-            window.location.href = "https://student.mathflat.com/";
+            const iframe = document.getElementById('mathflatIframe');
+            iframe.src = "https://student.mathflat.com/";
+            document.getElementById('mathflatFullScreenModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
 
-        // 웹뷰 자체 주소가 바뀐 후 홈화면으로 회귀할 수 있도록 탈출 주소를 배치합니다.
         function closeMathflatFullScreen() {
-            window.location.href = "https://u2mkst.github.io/home/";
+            document.getElementById('mathflatFullScreenModal').style.display = 'none';
+            document.getElementById('mathflatIframe').src = "";
+            document.body.style.overflow = 'auto';
         }
 
         // 모달 윈도우 UI 오픈/클로즈 트리거 모음
@@ -646,8 +649,11 @@
                 return;
             }
 
+            // 🔒 메시지 수신처(선생님단)에서 식별할 학생 이름 복호화 후 데이터 적재
+            const realName = decryptData(currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음');
+
             const msgData = {
-                studentName: currentStudentData.name || '이름없음',
+                studentName: realName,
                 u2mId: currentStudentData.u2mId || '',       
                 studentUid: currentUser.uid,                 
                 teacher: currentStudentData.teacher,
@@ -682,10 +688,10 @@
                 return;
             }
 
+            // 🔒 대조 검증을 위해 DB 내 암호화된 핸드폰 번호 복호화 처리
             if (currentStudentData && currentStudentData.phone) {
-                const registeredPhone = currentStudentData.phone.toString();
-                const lastFourDigits = registeredPhone.slice(-4);
-                if (inputPhone !== lastFourDigits) {
+                const realPhoneTail = decryptData(currentStudentData.phone).toString();
+                if (inputPhone !== realPhoneTail) {
                     alert("❌ 번호가 일치하지 않습니다. 다시 확인해 주세요.");
                     return;
                 }
