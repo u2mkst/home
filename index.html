@@ -155,7 +155,7 @@
         .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; text-align: center; }
         .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
         
-        .modal-box textarea {
+        .modal-box textarea, .modal-box input[type="text"] {
             width: 100%; 
             padding: 14px; 
             border: 1px solid #ddd; 
@@ -164,11 +164,10 @@
             margin-bottom: 15px; 
             font-size: 0.95rem; 
             font-family: inherit;
-            resize: none; 
             background: #f8f9fa; 
-            text-align: left;
         }
-        .modal-box textarea:focus { outline: none; border-color: #6c5ce7; background: #fff; }
+        .modal-box textarea { resize: none; text-align: left; }
+        .modal-box textarea:focus, .modal-box input[type="text"]:focus { outline: none; border-color: #6c5ce7; background: #fff; }
         .btn-flex-group { display: flex; gap: 8px; }
         .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
@@ -301,6 +300,37 @@
         </div>
     </div>
 
+    <div id="logoutCheckModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" style="color: #6c5ce7;">🔓 로그아웃</div>
+            <div class="modal-content">정말로 안전하게 로그아웃 하시겠습니까?</div>
+            <div class="btn-flex-group">
+                <button class="btn-cancel" onclick="closeModal('logoutCheckModal')">취소</button>
+                <button class="modal-btn" onclick="confirmLogoutAction()">로그아웃</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteAccountModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" style="color: #e74c3c;">⚠️ 회원탈퇴 신청</div>
+            <div class="modal-content">정말로 회원탈퇴를 진행하시겠습니까?<br><br>안전을 위해 등록된 핸드폰 번호<br><b>뒷자리 4글자</b>를 입력해 주세요.</div>
+            <input type="text" id="deletePhoneInput" placeholder="4자리 숫자 입력" maxlength="4" style="text-align: center; font-size: 1.1rem; letter-spacing: 2px;">
+            <div class="btn-flex-group">
+                <button class="btn-cancel" onclick="closeModal('deleteAccountModal')">취소</button>
+                <button class="modal-btn" onclick="confirmDeleteAccountAction()" style="background-color: #e74c3c;">탈퇴하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customAlertModal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="customAlertTitle" class="modal-title">💡 알림</div>
+            <div id="customAlertContent" class="modal-content">내용</div>
+            <button class="modal-btn" onclick="closeCustomAlert()">확인</button>
+        </div>
+    </div>
+
     <div id="reminderBar" class="marquee-container">
         <div id="reminderText" class="marquee-text"></div>
     </div>
@@ -309,8 +339,34 @@
         let currentStudentData = null; 
         let noteListener = null;
         let historyListeners = []; 
+        let customAlertCallback = null; // 알림창 닫힌 후 실행할 콜백 저장용
 
         const SECRET_KEY = "u2mkst!";
+
+        // 🛠️ 모달 공통 제어 유틸리티
+        function showModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // 💡 기존 alert() 대체용 고급 모달 엔진
+        function showCustomAlert(content, title = "💡 알림", callback = null) {
+            document.getElementById('customAlertTitle').innerText = title;
+            document.getElementById('customAlertContent').innerText = content;
+            customAlertCallback = callback;
+            showModal('customAlertModal');
+        }
+
+        function closeCustomAlert() {
+            closeModal('customAlertModal');
+            if (customAlertCallback && typeof customAlertCallback === 'function') {
+                customAlertCallback();
+                customAlertCallback = null;
+            }
+        }
 
         // 🛠️ 정밀 통합 예외 처리가 반영된 AES 복호화 엔진
         function decryptAES(cipherText) {
@@ -481,7 +537,7 @@
             { author: "익명", authorProfile: "시험 감독관", message: "시험 시간은 평소보다 3배 빠르게 흐른다." },
             { author: "익명", authorProfile: "알람 시계", message: "공부할 때 10분은 1시간 같고, 쉬는 시간 10분은 1분 같다." },
             { author: "익명", authorProfile: "교과서", message: "나를 펼치면 졸리고 덮으면 불안하다." },
-            { author: "익명", authorProfile: "학생 공통", message: "공부 계획표는 세울 때가 가장 완벽하다." },
+            { author: "익명", authorProfile: "공부 계획표는 세울 때가 가장 완벽하다." },
             { author: "익명", authorProfile: "시험지", message: "나는 항상 학생보다 문제를 더 잘 안다." },
             { author: "익명", authorProfile: "연필", message: "네가 포기해도 나는 끝까지 닳는다." },
             { author: "익명", authorProfile: "지우개", message: "실수는 지울 수 있지만 점수는 안 지워진다." },
@@ -583,16 +639,21 @@
             });
         }
 
+        // 🔓 로그아웃 확인 모달 열기
         function logoutUser() {
-            if (confirm("로그아웃 하시겠습니까?")) {
-                auth.signOut().then(() => {
-                    localStorage.removeItem('u2m_id');
-                    localStorage.removeItem('u2m_pw');
-                    window.location.href = 'login.html';
-                }).catch((error) => {
-                    alert("로그아웃 중 오류가 발생했습니다: " + error.message);
-                });
-            }
+            showModal('logoutCheckModal');
+        }
+
+        // 🔓 실제 로그아웃 핵심 로직 실행
+        function confirmLogoutAction() {
+            closeModal('logoutCheckModal');
+            auth.signOut().then(() => {
+                localStorage.removeItem('u2m_id');
+                localStorage.removeItem('u2m_pw');
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                showCustomAlert("로그아웃 중 오류가 발생했습니다: " + error.message, "❌ 에러");
+            });
         }
 
         function openSendMessageModal() {
@@ -715,11 +776,11 @@
             const msgInput = document.getElementById('studentMsgInput'); 
             const text = msgInput.value.trim();
 
-            if (!text) { alert('보낼 내용을 입력해 주세요.'); return; }
-            if (!currentStudentData || !currentStudentData.teacher) { alert('선생님 정보가 없습니다. 다시 로그인해 주세요.'); return; }
+            if (!text) { showCustomAlert('보낼 내용을 입력해 주세요.'); return; }
+            if (!currentStudentData || !currentStudentData.teacher) { showCustomAlert('선생님 정보가 없습니다. 다시 로그인해 주세요.'); return; }
 
             const currentUser = auth.currentUser;
-            if (!currentUser) { alert('❌ 세션이 종료되었습니다. 다시 로그인해 주세요.'); return; }
+            if (!currentUser) { showCustomAlert('❌ 세션이 종료되었습니다. 다시 로그인해 주세요.'); return; }
 
             const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
             const realName = decryptAES(rawName);
@@ -741,48 +802,65 @@
 
             database.ref('messages').push(msgData)
                 .then(() => {
-                    alert(`${currentStudentData.teacher} 선생님께 메시지가 전송되었습니다.`);
+                    showCustomAlert(`${currentStudentData.teacher} 선생님께 메시지가 전송되었습니다.`, "✉️ 전송 완료");
                     msgInput.value = ''; 
                     closeSendMessageModal(); 
                 })
-                .catch(err => alert('전송 실패: ' + err.message));
+                .catch(err => showCustomAlert('전송 실패: ' + err.message, "❌ 에러"));
         }
 
+        // ⚠️ 회원탈퇴 인증 모달 열기
         function deleteAccount() {
             const user = auth.currentUser;
             if (!user) { window.location.href = 'login.html'; return; }
 
-            const inputPhone = prompt("회원탈퇴를 위해 등록된 핸드폰 번호 뒷자리 4글자를 입력해 주세요.");
-            if (!inputPhone) return;
+            document.getElementById('deletePhoneInput').value = ''; // 입력값 초기화
+            showModal('deleteAccountModal');
+        }
+
+        // ⚠️ 실제 회원탈퇴 핵심 처리 내부 검증 함수
+        function confirmDeleteAccountAction() {
+            const user = auth.currentUser;
+            if (!user) { window.location.href = 'login.html'; return; }
+
+            const inputPhone = document.getElementById('deletePhoneInput').value.trim();
+            if (!inputPhone) {
+                showCustomAlert("번호 뒷자리 4글자를 기입해 주세요.");
+                return;
+            }
 
             if (currentStudentData && currentStudentData.phone) {
                 const registeredPhone = decryptAES(currentStudentData.phone).toString();
                 if (inputPhone !== registeredPhone.slice(-4)) {
-                    alert("❌ 번호가 일치하지 않습니다.");
+                    showCustomAlert("❌ 번호가 일치하지 않습니다. 다시 확인해 주세요.");
                     return;
                 }
             }
 
-            if (confirm("정말로 회원탈퇴를 진행하시겠습니까?")) {
-                const uid = user.uid;
-                user.delete()
-                    .then(() => {
-                        return database.ref(`students/${uid}`).remove()
-                            .then(() => database.ref(`student_messages/${uid}`).remove());
-                    })
-                    .then(() => {
-                        localStorage.removeItem('u2m_id');
-                        localStorage.removeItem('u2m_pw');
-                        alert("회원탈퇴가 완료되었습니다.");
+            closeModal('deleteAccountModal');
+
+            const uid = user.uid;
+            user.delete()
+                .then(() => {
+                    return database.ref(`students/${uid}`).remove()
+                        .then(() => database.ref(`student_messages/${uid}`).remove());
+                })
+                .then(() => {
+                    localStorage.removeItem('u2m_id');
+                    localStorage.removeItem('u2m_pw');
+                    showCustomAlert("회원탈퇴가 안전하게 처리되었습니다. 이용해 주셔서 감사합니다.", "회원탈퇴 완료", () => {
                         window.location.href = 'login.html';
-                    })
-                    .catch((error) => {
-                        if (error.code === 'auth/requires-recent-login') {
-                            alert("🔒 재인증이 필요합니다. 로그아웃 후 다시 로그인하여 진행해 주세요.");
-                            auth.signOut().then(() => { window.location.href = 'login.html'; });
-                        }
                     });
-            }
+                })
+                .catch((error) => {
+                    if (error.code === 'auth/requires-recent-login') {
+                        showCustomAlert("🔒 보안 재인증이 필요합니다. 안전을 위해 로그아웃 후 다시 로그인하여 진행해 주세요.", "인증 만료", () => {
+                            auth.signOut().then(() => { window.location.href = 'login.html'; });
+                        });
+                    } else {
+                        showCustomAlert("탈퇴 처리 중 오류가 발생했습니다: " + error.message, "❌ 오류");
+                    }
+                });
         }
 
         function listenToFirebase() {
