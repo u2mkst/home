@@ -385,7 +385,7 @@
     </div>
 
     <script>
-        // 🔑 AES-256 개인키 대칭키 설정 (※ 학생 기기용 소스코드에도 동일한 키를 입력해야 서로 해독이 가능합니다.)
+        // 🔑 AES-256 개인키 대칭키 설정
         const SECRET_KEY = "u2mkst!";
 
         // AES-256 암호화 함수
@@ -394,35 +394,29 @@
             return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
         }
 
-        // AES-256 복호화 함수
         // 🔓 개선된 AES-256 복호화 함수 (웹 환경의 변형 요인 자동 보정)
-function decryptAES(cipherText) {
-    if (!cipherText) return "";
-    try {
-        // 1. 문자열 타입 보장 및 앞뒤 공백/줄바꿈 완벽 제거
-        let cleanText = String(cipherText).trim();
-        
-        // 2. 데이터가 따옴표로 중복 감싸진 경우 제거 (Double Quoting 방지)
-        if (cleanText.startsWith('"') && cleanText.endsWith('"')) {
-            cleanText = cleanText.slice(1, -1);
-        } else if (cleanText.startsWith("'") && cleanText.endsWith("'")) {
-            cleanText = cleanText.slice(1, -1);
-        }
-        
-        // 3. 웹 전송 중 '+' 기호가 공백(' ')으로 치환된 치명적 오류 원상복구
-        cleanText = cleanText.replace(/ /g, '+');
+        function decryptAES(cipherText) {
+            if (!cipherText) return "";
+            try {
+                let cleanText = String(cipherText).trim();
+                
+                if (cleanText.startsWith('"') && cleanText.endsWith('"')) {
+                    cleanText = cleanText.slice(1, -1);
+                } else if (cleanText.startsWith("'") && cleanText.endsWith("'")) {
+                    cleanText = cleanText.slice(1, -1);
+                }
+                
+                cleanText = cleanText.replace(/ /g, '+');
 
-        // 4. 복호화 실행
-        const bytes = CryptoJS.AES.decrypt(cleanText, SECRET_KEY);
-        const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-        
-        // 복호화 성공 시 번역된 텍스트 반환, 실패 시 안전하게 원본 반환
-        return decryptedText || cipherText;
-    } catch (e) {
-        console.error("복호화 진행 중 예외 발생:", e);
-        return cipherText;
-    }
-}
+                const bytes = CryptoJS.AES.decrypt(cleanText, SECRET_KEY);
+                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+                
+                return decryptedText || cipherText;
+            } catch (e) {
+                console.error("복호화 진행 중 예외 발생:", e);
+                return cipherText;
+            }
+        }
 
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
@@ -487,13 +481,21 @@ function decryptAES(cipherText) {
             }
         });
 
+        // 🛠️ 복호화 패치가 완료된 학생 목록 로드 함수
         function fetchTeacherStudents(teacherName) {
             database.ref('students').orderByChild('teacher').equalTo(teacherName).on('value', (snapshot) => {
                 allStudents = [];
                 const data = snapshot.val();
                 if (data) {
                     for (let id in data) {
-                        allStudents.push({ id, ...data[id] });
+                        const studentData = data[id];
+                        // 암호화되어 들어오는 이름을 실시간으로 디코딩 처리
+                        const decryptedName = decryptAES(studentData.name);
+                        allStudents.push({ 
+                            id, 
+                            ...studentData, 
+                            name: decryptedName 
+                        });
                     }
                 }
                 filterStudents(); 
@@ -538,6 +540,7 @@ function decryptAES(cipherText) {
             });
         }
 
+        // 🛠️ 무한 렌더링 루프 방지 및 일괄 처리 로직이 적용된 대화방 로드 함수
         function loadStudentChatRoom(studentUid, studentName) {
             currentSelectedStudentUid = studentUid;
             currentSelectedStudentName = studentName;
@@ -552,16 +555,24 @@ function decryptAES(cipherText) {
             adminChatListeners.push({ ref: qRef, type: 'value' });
             qRef.on('value', (snapshot) => {
                 studentQuestions = [];
+                const updates = {};
+                
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const val = child.val();
-                        let decryptedMsg = decryptAES(val.message); // 🔓 복호화 반영
+                        let decryptedMsg = decryptAES(val.message); 
                         studentQuestions.push({ id: child.key, origin: 'student', ...val, message: decryptedMsg });
+                        
                         if (val.read === false) {
-                            database.ref(`messages/${child.key}/read`).set(true);
+                            updates[`/messages/${child.key}/read`] = true;
                         }
                     });
                 }
+                
+                if (Object.keys(updates).length > 0) {
+                    database.ref().update(updates);
+                }
+                
                 renderAdminChatFeed(studentQuestions, teacherReplies);
             });
 
@@ -572,7 +583,7 @@ function decryptAES(cipherText) {
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const val = child.val();
-                        let decryptedMsg = decryptAES(val.message); // 🔓 복호화 반영
+                        let decryptedMsg = decryptAES(val.message); 
                         teacherReplies.push({ id: child.key, origin: 'teacher', ...val, message: decryptedMsg });
                     });
                 }
@@ -580,12 +591,18 @@ function decryptAES(cipherText) {
             });
         }
 
+        // 🛠️ 캐시 타임스탬프 오류 방어 코드가 적용된 렌더러 함수
         function renderAdminChatFeed(questions, replies) {
             const zoneEl = document.getElementById('adminChatHistoryZone');
             if (!zoneEl) return;
 
             const totalChat = [...questions, ...replies];
-            totalChat.sort((a, b) => a.timestamp - b.timestamp);
+            
+            totalChat.sort((a, b) => {
+                const tA = (typeof a.timestamp === 'number') ? a.timestamp : Date.now();
+                const tB = (typeof b.timestamp === 'number') ? b.timestamp : Date.now();
+                return tA - tB;
+            });
 
             if (totalChat.length === 0) {
                 zoneEl.innerHTML = '<div class="chat-no-data"> 주고받은 대화가 없습니다. 첫 대화를 시작해 보세요!</div>';
@@ -595,7 +612,8 @@ function decryptAES(cipherText) {
             zoneEl.innerHTML = '';
 
             totalChat.forEach(chat => {
-                const date = new Date(chat.timestamp);
+                const ts = (typeof chat.timestamp === 'number') ? chat.timestamp : Date.now();
+                const date = new Date(ts);
                 const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
 
                 const wrapper = document.createElement('div');
@@ -636,7 +654,7 @@ function decryptAES(cipherText) {
             }
             if (!text) return;
 
-            const encryptedMessage = encryptAES(`[답장완료] ${text}`); // 🔒 암호화 전송
+            const encryptedMessage = encryptAES(`[답장완료] ${text}`); 
 
             const replyData = {
                 teacher: teacherName,
@@ -666,60 +684,60 @@ function decryptAES(cipherText) {
             if(zoneEl) zoneEl.innerHTML = '<div class="chat-no-data">위 학생 목록에서 [💬 대화방] 버튼을 누르면 대화 내역이 실시간 로드됩니다.</div>';
         }
 
+        // 🛠️ 서버 트래픽 비용 폭탄 방지 필터가 탑재된 메시지 리스너 함수
         function listenToIncomingMessages(teacherName) {
-            messageListener = database.ref('messages').on('value', (snapshot) => {
-                const data = snapshot.val();
-                let unreadCount = 0;
+            messageListener = database.ref('messages').orderByChild('teacher').equalTo(teacherName).on('value', (snapshot) => {
                 const listEl = document.getElementById('modalMsgList');
                 if (!listEl) return;
                 listEl.innerHTML = '';
+                let unreadCount = 0;
 
-                if (data) {
+                if (snapshot.exists()) {
                     const msgArray = [];
-                    for (let id in data) {
-                        if (data[id].teacher === teacherName) {
-                            msgArray.push({ id, ...data[id] });
-                        }
-                    }
-                    msgArray.sort((a, b) => b.timestamp - a.timestamp);
+                    snapshot.forEach(child => {
+                        msgArray.push({ id: child.key, ...child.val() });
+                    });
+                    
+                    msgArray.sort((a, b) => {
+                        const tA = (typeof a.timestamp === 'number') ? a.timestamp : Date.now();
+                        const tB = (typeof b.timestamp === 'number') ? b.timestamp : Date.now();
+                        return tB - tA;
+                    });
 
-                    if(msgArray.length === 0) {
-                        listEl.innerHTML = '<div class="no-msg">받은 메시지가 없습니다.</div>';
-                    } else {
-                        msgArray.forEach(msg => {
-                            if (!msg.read) unreadCount++;
+                    msgArray.forEach(msg => {
+                        if (!msg.read) unreadCount++;
 
-                            const date = new Date(msg.timestamp);
-                            const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                        const ts = (typeof msg.timestamp === 'number') ? msg.timestamp : Date.now();
+                        const date = new Date(ts);
+                        const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                        
+                        const msgStudentId = msg.u2mId ? msg.u2mId : '아이디 누락';
+                        let decryptedMsg = decryptAES(msg.message); 
+
+                        const item = document.createElement('div');
+                        item.className = `msg-item ${!msg.read ? 'unread' : ''}`;
+                        item.innerHTML = `
+                            <div class="msg-meta">
+                                <span class="msg-sender">👤 ${msg.studentName || '알수없음'} (${msgStudentId})</span>
+                                <span>${timeStr}</span>
+                            </div>
+                            <div class="msg-body">${decryptedMsg || ''}</div>
                             
-                            const msgStudentId = msg.u2mId ? msg.u2mId : '아이디 누락';
-                            let decryptedMsg = decryptAES(msg.message); // 🔓 복호화 반영
-
-                            const item = document.createElement('div');
-                            item.className = `msg-item ${!msg.read ? 'unread' : ''}`;
-                            item.innerHTML = `
-                                <div class="msg-meta">
-                                    <span class="msg-sender">👤 ${msg.studentName || '알수없음'} (${msgStudentId})</span>
-                                    <span>${timeStr}</span>
-                                </div>
-                                <div class="msg-body">${decryptedMsg || ''}</div>
+                            <div class="reply-box">
+                                <button class="reply-toggle-btn" onclick="toggleReplyZone('${msg.id}')">↩️ 답장하기</button>
                                 
-                                <div class="reply-box">
-                                    <button class="reply-toggle-btn" onclick="toggleReplyZone('${msg.id}')">↩️ 답장하기</button>
-                                    
-                                    <div class="reply-input-zone" id="replyZone-${msg.id}">
-                                        <textarea class="reply-mini-textarea" id="replyInput-${msg.id}" rows="2" placeholder="학생에게 보낼 답장을 기입하세요."></textarea>
-                                        <button class="reply-send-btn" onclick="sendReplyFromModal('${msg.id}', '${msg.studentUid}', '${msg.teacher}')">전송 및 저장</button>
-                                    </div>
-                                    
-                                    <div class="history-list" id="history-${msg.id}" style="display:none;"></div>
+                                <div class="reply-input-zone" id="replyZone-${msg.id}">
+                                    <textarea class="reply-mini-textarea" id="replyInput-${msg.id}" rows="2" placeholder="학생에게 보낼 답장을 기입하세요."></textarea>
+                                    <button class="reply-send-btn" onclick="sendReplyFromModal('${msg.id}', '${msg.studentUid}', '${msg.teacher}')">전송 및 저장</button>
                                 </div>
-                            `;
-                            listEl.appendChild(item);
-                            
-                            listenToExistingReplies(msg.id);
-                        });
-                    }
+                                
+                                <div class="history-list" id="history-${msg.id}" style="display:none;"></div>
+                            </div>
+                        `;
+                        listEl.appendChild(item);
+                        
+                        listenToExistingReplies(msg.id);
+                    });
                 } else {
                     listEl.innerHTML = '<div class="no-msg">받은 메시지가 없습니다.</div>';
                 }
@@ -755,7 +773,7 @@ function decryptAES(cipherText) {
             }
 
             const timestamp = firebase.database.ServerValue.TIMESTAMP;
-            const encryptedMessage = encryptAES(`[답장완료] ${text}`); // 🔒 암호화 전송
+            const encryptedMessage = encryptAES(`[답장완료] ${text}`); 
             const encryptedHistoryMessage = encryptAES(text);
 
             database.ref(`student_messages/${studentUid}`).push({
@@ -779,6 +797,7 @@ function decryptAES(cipherText) {
             .catch(err => alert("전송 실패: " + err.message));
         }
 
+        // 🛠️ 타임스탬프 오류 방어 처리가 적용된 모달 내 누적 답변 로드 함수
         function listenToExistingReplies(msgId) {
             database.ref(`messages/${msgId}/replies`).on('value', (snapshot) => {
                 const historyContainer = document.getElementById(`history-${msgId}`);
@@ -793,10 +812,11 @@ function decryptAES(cipherText) {
                 historyContainer.style.display = 'block';
                 snapshot.forEach((child) => {
                     const data = child.val();
-                    const dateObj = new Date(data.timestamp);
+                    const ts = (typeof data.timestamp === 'number') ? data.timestamp : Date.now();
+                    const dateObj = new Date(ts);
                     const timeStr = `${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
                     
-                    let decryptedReply = decryptAES(data.message); // 🔓 복호화 반영
+                    let decryptedReply = decryptAES(data.message); 
 
                     const itemHtml = `
                         <div class="history-item">
@@ -809,17 +829,22 @@ function decryptAES(cipherText) {
             });
         }
 
+        // 🛠️ 성능 최적화가 적용된 모달 열기 및 일괄 읽음 처리 함수
         function openMessageModal() {
             document.getElementById('messageModal').style.display = 'flex';
             const currentTeacher = localStorage.getItem('admin_teacher');
             
-            database.ref('messages').once('value', (snapshot) => {
-                const data = snapshot.val();
-                if(data) {
-                    for(let id in data) {
-                        if(data[id].teacher === currentTeacher && !data[id].read) {
-                            database.ref(`messages/${id}/read`).set(true);
+            database.ref('messages').orderByChild('teacher').equalTo(currentTeacher).once('value', (snapshot) => {
+                if(snapshot.exists()) {
+                    const updates = {};
+                    snapshot.forEach(child => {
+                        const msg = child.val();
+                        if (!msg.read) {
+                            updates[`/messages/${child.key}/read`] = true;
                         }
+                    });
+                    if (Object.keys(updates).length > 0) {
+                        database.ref().update(updates);
                     }
                 }
             });
@@ -883,7 +908,7 @@ function decryptAES(cipherText) {
         function publishData(path, inputId) {
             let val = document.getElementById(inputId).value;
             if (path === 'notice') {
-                val = encryptAES(val); // 🔒 공지사항 발송 시 자동으로 암호화 처리 적용
+                val = encryptAES(val); 
             }
             database.ref(path).set(val);
             alert("전송 완료! 모든 태블릿에 실시간 반영되었습니다.");
@@ -895,10 +920,9 @@ function decryptAES(cipherText) {
             alert("원격 전송을 중단했습니다.");
         }
 
-        // 페이지 로드 시 기존 데이터를 정상적으로 복호화하여 매핑
         function loadCurrentStatus() {
             database.ref('notice').once('value', s => { 
-                if(s.val()) document.getElementById('noticeInput').value = decryptAES(s.val()); // 🔓 공지사항 원본 복호화 로드
+                if(s.val()) document.getElementById('noticeInput').value = decryptAES(s.val()); 
             });
             database.ref('reminder').once('value', s => { 
                 if(s.val()) document.getElementById('reminderInput').value = s.val(); 
