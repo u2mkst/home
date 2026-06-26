@@ -189,8 +189,8 @@
             align-items: center;
             font-size: 1.4rem; 
             transition: all 0.2s ease;
+            background-color: #6c5ce7;
         }
-        .msg-fab { background-color: #6c5ce7; }
         #msgFabBtn:hover { transform: scale(1.08); background-color: #5b4cc4; }
         #historyFabBtn { background-color: #00b894; }
         #historyFabBtn:hover { transform: scale(1.08); background-color: #00a383; }
@@ -310,7 +310,6 @@
         let noteListener = null;
         let historyListeners = []; 
 
-        // 🔒 login.html의 SECRET_SALT 변수 값("u2st!")과 100% 매칭시킨 비밀키
         const SECRET_KEY = "u2mkst!";
 
         // 🛠️ 정밀 통합 예외 처리가 반영된 AES 복호화 엔진
@@ -318,80 +317,43 @@
             if (!cipherText) return "";
             try {
                 const cleanCipherText = cipherText.toString().trim();
-                
-                // 만약 암호화 문자열 규격(U2FsdGVkX1)이 아니라면 이미 평문이므로 그대로 리턴
                 if (!cleanCipherText.startsWith("U2FsdGVkX1")) {
                     return cleanCipherText;
                 }
-                
                 const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
                 const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-                
-                if (!decryptedText) {
-                    console.warn("⚠️ 복호화 결과가 비어있습니다. 평문을 반환합니다.");
-                    return cleanCipherText; 
-                }
-                return decryptedText; 
+                return decryptedText || cleanCipherText; 
             } catch (e) {
                 console.error("🚨 복호화 에러 발생:", e);
                 return cipherText; 
             }
         }
 
-        // 유투엠 자동 로그인 브릿지 호출 및 사이트 이동
-        // 1. 유투엠 자동 로그인 이동 기능
-        function goToU2MWithCredentials() {
-            if (currentStudentData && currentStudentData.u2mId && currentStudentData.phone) {
-                try {
-                    // 🔒 암호화된 유투엠 비번(phone) 복호화 후 숫자 추출
-                    const decryptedPhone = decryptAES(currentStudentData.phone);
-                    const finalU2mPhone = decryptedPhone.replace(/[^0-9]/g, "");
+        // 📱 앱 브릿지 인증정보 전송 공통 처리 함수
+        function transmitBridgeCredentials() {
+            if (!currentStudentData) return;
+            try {
+                const finalU2mPhone = decryptAES(currentStudentData.phone).replace(/[^0-9]/g, "");
+                const decryptedMathflatPw = decryptAES(currentStudentData.mathflatPw);
+                const finalStudentPhone = decryptAES(currentStudentData.studentPhone).replace(/[^0-9]/g, "");
 
-                    // 🔒 암호화된 매쓰플랫 비번(mathflatPw) 복호화
-                    const decryptedMathflatPw = currentStudentData.mathflatPw ? decryptAES(currentStudentData.mathflatPw) : "";
-
-                    // ✨ [추가] 학생 휴대폰 번호 복호화 로직 (매쓰플랫 아이디용)
-                    const decryptedStudentPhone = currentStudentData.studentPhone ? decryptAES(currentStudentData.studentPhone) : "";
-                    const finalStudentPhone = decryptedStudentPhone.replace(/[^0-9]/g, "");
-
-                    if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                        // 🎯 확장된 규격에 맞게 4개의 인자를 정확한 순서로 전송
-                        window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalU2mPhone, decryptedMathflatPw, finalStudentPhone);
-                    }
-                } catch (err) {
-                    console.error("❌ 유투엠 브릿지 연동 실패:", err);
+                if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
+                    window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalU2mPhone, decryptedMathflatPw, finalStudentPhone);
                 }
+            } catch (err) {
+                console.error("❌ 브릿지 연동 실패:", err);
             }
-            // 🚀 데이터가 앱에 온전히 저장될 수 있도록 0.15초 뒤에 주소 이동 수행
+        }
+
+        function goToU2MWithCredentials() {
+            transmitBridgeCredentials();
             setTimeout(function() {
                 window.location.href = "https://www.u2math.co.kr/Login/Index";
             }, 150);
         }
 
-        // 2. 매쓰플랫 다이렉트 전환 이동 기능
         function goToMathflatDirect() {
-            if (currentStudentData && currentStudentData.u2mId) {
-                try {
-                    // 🔒 암호화된 유투엠 비번(phone) 복호화
-                    const decryptedPhone = currentStudentData.phone ? decryptAES(currentStudentData.phone) : "";
-                    const finalU2mPhone = decryptedPhone.replace(/[^0-9]/g, "");
-
-                    // 🔒 암호화된 매쓰플랫 비번(mathflatPw) 복호화
-                    const decryptedMathflatPw = currentStudentData.mathflatPw ? decryptAES(currentStudentData.mathflatPw) : "";
-
-                    // ✨ [추가] 학생 휴대폰 번호 복호화 로직 (매쓰플랫 아이디용)
-                    const decryptedStudentPhone = currentStudentData.studentPhone ? decryptAES(currentStudentData.studentPhone) : "";
-                    const finalStudentPhone = decryptedStudentPhone.replace(/[^0-9]/g, "");
-
-                    if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                        // 🎯 확장된 규격에 맞게 4개의 인자를 정확한 순서로 전송
-                        window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalU2mPhone, decryptedMathflatPw, finalStudentPhone);
-                    }
-                } catch (err) {
-                    console.error("❌ 매쓰플랫 브릿지 연동 실패:", err);
-                }
-            }
-            // 🚀 데이터가 앱에 온전히 저장될 수 있도록 0.15초 뒤에 주소 이동 수행
+            transmitBridgeCredentials();
             setTimeout(function() {
                 window.location.href = "https://student.mathflat.com/";
             }, 150);
@@ -565,8 +527,7 @@
             if (advices.length === 0) return;
             const now = new Date();
             const dateValue = now.getFullYear() + (now.getMonth() + 1) + now.getDate();
-            const fixedIndex = dateValue % advices.length;
-            const dailyData = advices[fixedIndex];
+            const dailyData = advices[dateValue % advices.length];
             
             document.getElementById('quote-header').innerText = "오늘의 한마디:";
             document.getElementById('quote-text').innerText = `"${dailyData.message}"`;
@@ -588,7 +549,6 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        // 🛠️ 대문자 암호화 노출 방어벽이 설계된 학생 인증 체크부
         function checkUserAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -599,14 +559,8 @@
                             document.getElementById('msgFabBtn').style.display = 'flex';
                             document.getElementById('historyFabBtn').style.display = 'flex'; 
 
-                            let rawName = data.name || data.studentName || data.userName || "";
-                            let actualName = "학생";
-
-                            if (rawName) {
-                                actualName = decryptAES(rawName);
-                            } else if (user.displayName) {
-                                actualName = user.displayName;
-                            }
+                            const rawName = data.name || data.studentName || data.userName;
+                            const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
 
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                             
@@ -688,8 +642,7 @@
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const val = child.val();
-                        let decryptedMsg = decryptAES(val.message);
-                        myQuestions.push({ id: child.key, isMine: true, ...val, message: decryptedMsg });
+                        myQuestions.push({ id: child.key, isMine: true, ...val, message: decryptAES(val.message) });
                     });
                 }
                 renderCombinedChat(myQuestions, teacherNotes);
@@ -702,8 +655,7 @@
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const val = child.val();
-                        let decryptedMsg = decryptAES(val.message);
-                        teacherNotes.push({ id: child.key, isMine: false, ...val, message: decryptedMsg });
+                        teacherNotes.push({ id: child.key, isMine: false, ...val, message: decryptAES(val.message) });
                     });
                 }
                 renderCombinedChat(myQuestions, teacherNotes);
@@ -714,8 +666,7 @@
             const zoneEl = document.getElementById('messageHistoryZone');
             if (!zoneEl) return;
 
-            const combined = [...questions, ...notes];
-            combined.sort((a, b) => a.timestamp - b.timestamp);
+            const combined = [...questions, ...notes].sort((a, b) => a.timestamp - b.timestamp);
 
             if (combined.length === 0) {
                 zoneEl.innerHTML = '<div class="no-data">최근 주고받은 메시지가 없습니다.</div>';
@@ -767,11 +718,8 @@
             if (!text) { alert('보낼 내용을 입력해 주세요.'); return; }
             if (!currentStudentData || !currentStudentData.teacher) { alert('선생님 정보가 없습니다. 다시 로그인해 주세요.'); return; }
 
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) {
-                alert('❌ 세션이 종료되었습니다. 다시 로그인해 주세요.');
-                return;
-            }
+            const currentUser = auth.currentUser;
+            if (!currentUser) { alert('❌ 세션이 종료되었습니다. 다시 로그인해 주세요.'); return; }
 
             const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
             const realName = decryptAES(rawName);
@@ -791,7 +739,7 @@
                 read: false
             };
 
-            firebase.database().ref('messages').push(msgData)
+            database.ref('messages').push(msgData)
                 .then(() => {
                     alert(`${currentStudentData.teacher} 선생님께 메시지가 전송되었습니다.`);
                     msgInput.value = ''; 
