@@ -123,27 +123,6 @@
             word-break: keep-all;
         }
         .quote-author { display: block; margin-top: 8px; font-size: 0.85rem; color: #718096; font-weight: bold; }
-        
-        /* 글씨 형태의 제안하기/문의하기 링크 스타일 */
-        .suggest-link {
-            display: block;
-            margin-top: 20px;
-            font-size: 0.85rem;
-            color: #6c5ce7;
-            font-weight: 600;
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            font-family: inherit;
-            width: 100%;
-            text-align: center;
-            text-decoration: none;
-        }
-        .suggest-link:hover {
-            color: #00b894;
-            text-decoration: underline;
-        }
 
         .more-links { 
             display: block; 
@@ -227,18 +206,20 @@
             color: white; 
             border: none; 
             font-weight: bold;
-            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.35);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
             cursor: pointer; 
             display: none; 
             justify-content: center; 
             align-items: center;
             font-size: 1.4rem; 
             transition: all 0.2s ease;
-            background-color: #6c5ce7;
         }
-        #msgFabBtn:hover { transform: scale(1.08); background-color: #5b4cc4; }
-        #historyFabBtn { background-color: #00b894; }
+        #historyFabBtn { background-color: #00b894; box-shadow: 0 8px 20px rgba(0, 184, 148, 0.3); }
         #historyFabBtn:hover { transform: scale(1.08); background-color: #00a383; }
+        #msgFabBtn { background-color: #6c5ce7; box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3); }
+        #msgFabBtn:hover { transform: scale(1.08); background-color: #5b4cc4; }
+        #inquiryFabBtn { background-color: #ff9f43; box-shadow: 0 8px 20px rgba(255, 159, 67, 0.35); }
+        #inquiryFabBtn:hover { transform: scale(1.08); background-color: #ee8f32; }
 
         /* 메시지 히스토리 피드 */
         .history-zone {
@@ -303,10 +284,6 @@
             <span id="quote-text">문구를 불러오는 중...</span>
             <span id="quote-author" class="quote-author"></span>
         </div>
-
-        <!-- 하단 제안 및 문의 버튼 배치 -->
-        <button onclick="openSuggestionModal()" class="suggest-link">💡 오늘의 한마디 제안하기</button>
-        <button onclick="openAcademyInquiryModal()" class="suggest-link" style="margin-top: 10px;">🏫 학원에 문의하기</button>
         
         <a href="https://litt.ly/theu2m" target="_blank" class="more-links">KST가 만든 것들</a>
         <div class="footer">© 2026 KST</div>
@@ -317,13 +294,22 @@
         </div>
     </div>
 
-    <!-- 모달창 영역 -->
     <div class="fab-group">
-        <button id="historyFabBtn" class="msg-fab" onclick="openHistoryModal()">📂</button>
-        <button id="msgFabBtn" class="msg-fab" onclick="openSendMessageModal()">✉️</button>
+        <button id="historyFabBtn" class="msg-fab" onclick="openHistoryModal()" title="메시지 내역">📂</button>
+        <button id="msgFabBtn" class="msg-fab" onclick="openSendMessageModal()" title="선생님께 메시지">✉️</button>
+        <button id="inquiryFabBtn" class="msg-fab" onclick="openUnifiedInquiryModal()" title="문의 및 제안">📝</button>
     </div>
 
-    <!-- 💡 오늘의 한마디 분할 입력 팝업 모달 -->
+    <div id="unifiedInquiryModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 340px; padding: 24px 20px;">
+            <div class="modal-title">📝 문의 및 제안 선택</div>
+            <div class="modal-content" style="margin-bottom: 20px; font-size: 0.95rem;">원하시는 항목을 선택해 주세요.</div>
+            <button class="link-button" style="background-color: #00b894; color: white; margin-bottom: 12px; border: none; padding: 14px;" onclick="triggerSuggestionFromUnified()">💡 오늘의 한마디 제안하기</button>
+            <button class="link-button" style="background-color: #6c5ce7; color: white; margin-bottom: 20px; border: none; padding: 14px;" onclick="triggerInquiryFromUnified()">🏫 학원에 문의하기</button>
+            <button class="btn-cancel" onclick="closeUnifiedInquiryModal()">닫기</button>
+        </div>
+    </div>
+
     <div id="suggestionModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title">💡 오늘의 한마디 제안</div>
@@ -337,7 +323,6 @@
         </div>
     </div>
 
-    <!-- 🏫 [복구 및 개선] 학원에 문의하기 전용 팝업 모달 -->
     <div id="academyInquiryModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title">🏫 학원에 문의하기</div>
@@ -458,14 +443,28 @@
             }
         }
 
+        // 통합 문의/제안 핸들러
+        function openUnifiedInquiryModal() { showModal('unifiedInquiryModal'); }
+        function closeUnifiedInquiryModal() { closeModal('unifiedInquiryModal'); }
+        
+        function triggerSuggestionFromUnified() {
+            closeUnifiedInquiryModal();
+            openSuggestionModal();
+        }
+        
+        function triggerInquiryFromUnified() {
+            closeUnifiedInquiryModal();
+            openAcademyInquiryModal();
+        }
+
         // 오늘의 한마디 핸들러
         function openSuggestionModal() {
             document.getElementById('suggestContent').value = '';
             document.getElementById('suggestAuthor').value = '';
             document.getElementById('suggestProfile').value = '';
-            document.getElementById('suggestionModal').style.display = 'flex';
+            showModal('suggestionModal');
         }
-        function closeSuggestionModal() { document.getElementById('suggestionModal').style.display = 'none'; }
+        function closeSuggestionModal() { closeModal('suggestionModal'); }
 
         function submitSuggestion() {
             const contentText = document.getElementById('suggestContent').value.trim();
@@ -521,9 +520,9 @@
         // 학원에 문의하기 핸들러
         function openAcademyInquiryModal() {
             document.getElementById('inquiryContent').value = '';
-            document.getElementById('academyInquiryModal').style.display = 'flex';
+            showModal('academyInquiryModal');
         }
-        function closeAcademyInquiryModal() { document.getElementById('academyInquiryModal').style.display = 'none'; }
+        function closeAcademyInquiryModal() { closeModal('academyInquiryModal'); }
 
         function submitAcademyInquiry() {
             const contentText = document.getElementById('inquiryContent').value.trim();
@@ -791,6 +790,7 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
+        // 🏫 나이스 학사일정 연동 및 디데이 계산 ([수정] 시험, 정규 키워드 추가 반영)
         function fetchExamDateFromNeis(schoolName) {
             if (!schoolName) { renderDDayBadge(null); return; }
             const schoolInfoUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
@@ -821,7 +821,9 @@
                         const eventName = item.EVENT_NM || "";
                         const eventDate = item.AA_YMD; 
                         if (eventDate >= todayStr) {
-                            if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") || eventName.includes("지필")) {
+                            // [요청 반영] 시험과 정규 키워드를 추가 필터링 조건에 결합
+                            if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") || 
+                                eventName.includes("지필") || eventName.includes("시험") || eventName.includes("정규")) {
                                 upcomingExamDates.push(eventDate);
                             }
                         }
@@ -884,8 +886,10 @@
                         const data = snapshot.val();
                         if (data) {
                             currentStudentData = data;
+                            // 모든 플로팅 버튼 활성화 노출
                             document.getElementById('msgFabBtn').style.display = 'flex';
                             document.getElementById('historyFabBtn').style.display = 'flex'; 
+                            document.getElementById('inquiryFabBtn').style.display = 'flex'; 
 
                             const rawName = data.name || data.studentName || data.userName;
                             const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
@@ -929,15 +933,15 @@
 
         function openSendMessageModal() {
             document.getElementById('studentMsgInput').value = '';
-            document.getElementById('sendMsgModal').style.display = 'flex';
+            showModal('sendMsgModal');
         }
-        function closeSendMessageModal() { document.getElementById('sendMsgModal').style.display = 'none'; }
+        function closeSendMessageModal() { closeModal('sendMsgModal'); }
         function openHistoryModal() {
-            document.getElementById('historyModal').style.display = 'flex';
+            showModal('historyModal');
             const zoneEl = document.getElementById('messageHistoryZone');
             if(zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
         }
-        function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
+        function closeHistoryModal() { closeModal('historyModal'); }
 
         function listenToTeacherNotes(uid) {
             noteListener = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false).limitToLast(1);
