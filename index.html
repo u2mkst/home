@@ -124,10 +124,10 @@
         }
         .quote-author { display: block; margin-top: 8px; font-size: 0.85rem; color: #718096; font-weight: bold; }
         
-        /* 💡 [추가] 글씨 형태의 제안하기 링크 스타일 */
+        /* 글씨 형태의 제안하기/문의하기 링크 스타일 */
         .suggest-link {
             display: block;
-            margin-top: 30px;
+            margin-top: 20px;
             font-size: 0.85rem;
             color: #6c5ce7;
             font-weight: 600;
@@ -147,7 +147,7 @@
 
         .more-links { 
             display: block; 
-            margin-top: 10px; 
+            margin-top: 25px; 
             font-size: 0.82rem; 
             color: #718096; 
             text-decoration: none; 
@@ -201,26 +201,6 @@
         .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; text-align: center; }
         .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
         
-        /* 라디오 그룹 스타일 */
-        .radio-group {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 15px;
-            font-weight: 600;
-            color: #4a5568;
-        }
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-        }
-        .radio-group input[type="radio"] {
-            accent-color: #6c5ce7;
-            transform: scale(1.1);
-        }
-
         .modal-box textarea, .modal-box input[type="text"] {
             width: 100%; 
             padding: 14px; 
@@ -324,8 +304,9 @@
             <span id="quote-author" class="quote-author"></span>
         </div>
 
-        <!-- 💡 [위치 변경] 글씨 링크 형태로 'KST가 만든 것들' 바로 위에 배치 -->
-        <button onclick="openSuggestionModal()" class="suggest-link">💡 학원에 제안하기</button>
+        <!-- 하단 제안 및 문의 버튼 배치 -->
+        <button onclick="openSuggestionModal()" class="suggest-link">💡 오늘의 한마디 제안하기</button>
+        <button onclick="openAcademyInquiryModal()" class="suggest-link" style="margin-top: 10px;">🏫 학원에 문의하기</button>
         
         <a href="https://litt.ly/theu2m" target="_blank" class="more-links">KST가 만든 것들</a>
         <div class="footer">© 2026 KST</div>
@@ -342,18 +323,28 @@
         <button id="msgFabBtn" class="msg-fab" onclick="openSendMessageModal()">✉️</button>
     </div>
 
-    <!-- 제안하기 작성 팝업 모달 -->
+    <!-- 💡 오늘의 한마디 분할 입력 팝업 모달 -->
     <div id="suggestionModal" class="modal-overlay">
         <div class="modal-box">
-            <div class="modal-title">💡 학원에 제안하기</div>
-            <div class="radio-group">
-                <label><input type="radio" name="suggestCategory" value="기능 제안" checked> 기능 제안</label>
-                <label><input type="radio" name="suggestCategory" value="명언 제안"> 명언 제안</label>
-            </div>
-            <textarea id="suggestInput" rows="4" placeholder="학원 홈페이지에 추가되었으면 하는 기능이나, 같이 공유하고 싶은 명언을 자유롭게 제안해 주세요!"></textarea>
+            <div class="modal-title">💡 오늘의 한마디 제안</div>
+            <textarea id="suggestContent" rows="3" placeholder="기억에 남는 명언이나 하고 싶은 말(내용)을 입력해 주세요."></textarea>
+            <input type="text" id="suggestAuthor" placeholder="말한 사람 (닉네임)">
+            <input type="text" id="suggestProfile" placeholder="그 사람 설명 (예: 3학년, 과학자, 소설가 등)"></input>
             <div class="btn-flex-group">
                 <button class="btn-cancel" onclick="closeSuggestionModal()">취소</button>
                 <button class="modal-btn" onclick="submitSuggestion()" style="background-color: #00b894;">제안하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏫 [복구 및 개선] 학원에 문의하기 전용 팝업 모달 -->
+    <div id="academyInquiryModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">🏫 학원에 문의하기</div>
+            <textarea id="inquiryContent" rows="5" placeholder="학원에 궁금한 점이나 건의사항을 자유롭게 적어주세요. 원장님께 직접 전달됩니다."></textarea>
+            <div class="btn-flex-group">
+                <button class="btn-cancel" onclick="closeAcademyInquiryModal()">취소</button>
+                <button class="modal-btn" onclick="submitAcademyInquiry()" style="background-color: #6c5ce7;">문의하기</button>
             </div>
         </div>
     </div>
@@ -467,21 +458,26 @@
             }
         }
 
+        // 오늘의 한마디 핸들러
         function openSuggestionModal() {
-            document.getElementById('suggestInput').value = '';
+            document.getElementById('suggestContent').value = '';
+            document.getElementById('suggestAuthor').value = '';
+            document.getElementById('suggestProfile').value = '';
             document.getElementById('suggestionModal').style.display = 'flex';
         }
         function closeSuggestionModal() { document.getElementById('suggestionModal').style.display = 'none'; }
 
         function submitSuggestion() {
-            const suggestInput = document.getElementById('suggestInput');
-            const contentText = suggestInput.value.trim();
-            const category = document.querySelector('input[name="suggestCategory"]:checked').value;
+            const contentText = document.getElementById('suggestContent').value.trim();
+            const authorText = document.getElementById('suggestAuthor').value.trim();
+            const profileText = document.getElementById('suggestProfile').value.trim();
 
-            if (!contentText) { showCustomAlert("제안 내용을 입력해 주세요."); return; }
+            if (!contentText) { showCustomAlert("명언 내용을 입력해 주세요."); return; }
+            if (!authorText) { showCustomAlert("말한 사람(닉네임)을 입력해 주세요."); return; }
             if (!currentStudentData) { showCustomAlert("학생 정보 로딩 중입니다. 잠시 후 다시 시도해 주세요."); return; }
             
-            const cleanText = contentText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
+            const combinedText = contentText + authorText + profileText;
+            const cleanText = combinedText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
             const hasBadWord = BANNED_KEYWORDS.some(word => cleanText.includes(word));
             
             if (hasBadWord) {
@@ -494,23 +490,79 @@
             const realName = decryptAES(rawName);
 
             let encryptedContent = contentText;
+            let encryptedAuthor = authorText;
+            let encryptedProfile = profileText;
+            
             if (typeof CryptoJS !== 'undefined' && CryptoJS.AES) { 
                 encryptedContent = CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString(); 
+                encryptedAuthor = CryptoJS.AES.encrypt(authorText, SECRET_KEY).toString(); 
+                encryptedProfile = CryptoJS.AES.encrypt(profileText, SECRET_KEY).toString(); 
             }
 
             const suggestData = {
                 studentName: realName,
                 studentUid: currentUser ? currentUser.uid : "익명",
                 schoolName: currentStudentData.schoolName || "미지정",
-                category: category,
+                category: "오늘의 한마디 제안",
                 content: encryptedContent,
+                author: encryptedAuthor,
+                authorProfile: encryptedProfile,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
             database.ref('suggestions').push(suggestData)
                 .then(() => {
-                    showCustomAlert(`원장님께 ${category}이 안전하게 전달되었습니다. 소중한 의견 감사합니다!`, "💡 제안 접수 완료");
+                    showCustomAlert(`원장님께 오늘의 한마디가 안전하게 전달되었습니다. 소중한 의견 감사합니다!`, "💡 제안 접수 완료");
                     closeSuggestionModal();
+                })
+                .catch(err => showCustomAlert('전송 실패: ' + err.message, "❌ 에러"));
+        }
+
+        // 학원에 문의하기 핸들러
+        function openAcademyInquiryModal() {
+            document.getElementById('inquiryContent').value = '';
+            document.getElementById('academyInquiryModal').style.display = 'flex';
+        }
+        function closeAcademyInquiryModal() { document.getElementById('academyInquiryModal').style.display = 'none'; }
+
+        function submitAcademyInquiry() {
+            const contentText = document.getElementById('inquiryContent').value.trim();
+
+            if (!contentText) { showCustomAlert("문의사항 내용을 적어주세요."); return; }
+            if (!currentStudentData) { showCustomAlert("학생 정보 로딩 중입니다. 잠시 후 다시 시도해 주세요."); return; }
+
+            const cleanText = contentText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
+            const hasBadWord = BANNED_KEYWORDS.some(word => cleanText.includes(word));
+
+            if (hasBadWord) {
+                showCustomAlert("⚠️ 작성하신 내용에 부적절한 표현(비속어/욕설)이 포함되어 있어 문의를 등록할 수 없습니다.", "🚨 경고");
+                return;
+            }
+
+            const currentUser = auth.currentUser;
+            const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
+            const realName = decryptAES(rawName);
+
+            let encryptedContent = contentText;
+            if (typeof CryptoJS !== 'undefined' && CryptoJS.AES) {
+                encryptedContent = CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString();
+            }
+
+            const inquiryData = {
+                studentName: realName,
+                studentUid: currentUser ? currentUser.uid : "익명",
+                schoolName: currentStudentData.schoolName || "미지정",
+                category: "학원에 문의하기",
+                content: encryptedContent,
+                author: "",
+                authorProfile: "",
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            database.ref('suggestions').push(inquiryData)
+                .then(() => {
+                    showCustomAlert(`원장님께 문의 및 건의사항이 안전하게 전달되었습니다.`, "🏫 문의 접수 완료");
+                    closeAcademyInquiryModal();
                 })
                 .catch(err => showCustomAlert('전송 실패: ' + err.message, "❌ 에러"));
         }
@@ -1054,7 +1106,6 @@
             const now = new Date();
             const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-            // 💡 [이전 연동 유지] Firebase에 등록한 날짜별 명언을 실시간으로 가져옵니다.
             database.ref('dailyQuotes/' + todayKey).on('value', (snapshot) => {
                 if (snapshot.exists()) {
                     const quoteData = snapshot.val();
