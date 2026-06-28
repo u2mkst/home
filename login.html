@@ -84,6 +84,26 @@
         }
         input:focus, select:focus { outline: none; border-color: #6c5ce7; background-color: #fff; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); }
 
+        /* 🏫 나이스 학교 검색 자동완성 전용 스타일 추가 */
+        .autocomplete-wrapper { position: relative; }
+        .autocomplete-list {
+            position: absolute; top: calc(100% - 14px); left: 0; right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 14px; max-height: 180px; overflow-y: auto;
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            z-index: 1000; margin-bottom: 18px;
+            backdrop-filter: blur(10px);
+        }
+        .autocomplete-item {
+            padding: 12px 16px; cursor: pointer; font-size: 0.9rem;
+            color: #333; border-bottom: 1px solid rgba(0,0,0,0.03);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: rgba(108, 92, 231, 0.08); color: #6c5ce7; font-weight: 600; }
+        .autocomplete-item .school-region { font-size: 0.75rem; color: #7f8c8d; font-weight: normal; }
+
         .info-text { font-size: 0.8rem; color: #7f8c8d; margin-top: -12px; margin-bottom: 16px; padding-left: 4px; }
         .warning-text { font-size: 0.8rem; color: #e74c3c; margin-top: -12px; margin-bottom: 16px; padding-left: 4px; font-weight: 600; }
 
@@ -180,6 +200,14 @@
                 <input type="text" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="numeric" required>
                 <div class="info-text">※ 이 번호가 앞으로 로그인할 때 비밀번호가 됩니다.</div>
                 
+                <!-- 🏫 학교 입력 필드 및 자동완성 영역 추가 -->
+                <label>소속 학교</label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="registerSchool" placeholder="예: 대치중" autocomplete="off" required>
+                    <div id="schoolList" class="autocomplete-list hidden"></div>
+                </div>
+                <input type="hidden" id="registerSchoolCode"> <!-- 나이스 학교코드 저장용 히든태그 -->
+
                 <label>담당 선생님 선택</label>
                 <select id="registerTeacher" required>
                     <option value="" disabled selected>담당 선생님을 선택해 주세요</option>
@@ -278,6 +306,68 @@
 
         // 🔒 [보안 중요] AES-256용 공통 비밀키 (외부 유출 주의)
         const SECRET_SALT = "u2mkst!";
+        
+        // 🔑 나이스 오픈 API 인증 키
+        const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
+
+        // 🏫 나이스 API 연동: 실시간 학교 실시간 검색 및 자동완성 엔진
+        const schoolInput = document.getElementById('registerSchool');
+        const schoolList = document.getElementById('schoolList');
+        const schoolCodeInput = document.getElementById('registerSchoolCode');
+
+        schoolInput.addEventListener('input', function() {
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        schoolList.innerHTML = '';
+        schoolList.classList.add('hidden');
+        schoolCodeInput.value = '';
+        return;
+    }
+
+    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            schoolList.innerHTML = '';
+
+            if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                const rows = data.schoolInfo[1].row;
+                schoolList.classList.remove('hidden');
+
+                rows.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-item';
+                    
+                    // 🌟 item.LCTN_NM 대신 item.ATPT_OFCDC_SC_NM 으로 변경하여 교육청 명칭이 정확히 뜹니다.
+                    div.innerHTML = `${item.SCHUL_NM} <span class="school-region">${item.ATPT_OFCDC_SC_NM}</span>`;
+                    
+                    div.addEventListener('click', () => {
+                        schoolInput.value = item.SCHUL_NM;
+                        schoolCodeInput.value = item.SD_SCHUL_CODE;
+                        schoolList.innerHTML = '';
+                        schoolList.classList.add('hidden');
+                    });
+                    schoolList.appendChild(div);
+                });
+            } else {
+                schoolList.classList.add('hidden');
+            }
+        })
+        .catch(err => {
+            console.error("나이스 API 로딩 오류:", err);
+        });
+});
+
+        // 자동완성 켜진 상태에서 바깥 공간 터치/클릭 시 닫히도록 예외 처리
+        document.addEventListener('click', function(e) {
+            if (e.target !== schoolInput && e.target !== schoolList) {
+                schoolList.innerHTML = '';
+                schoolList.classList.add('hidden');
+            }
+        });
+
 
         function toggleMode(mode) {
             if(mode === 'register') {
@@ -294,6 +384,8 @@
             const studentName = document.getElementById('registerName').value.trim();
             const u2mId = document.getElementById('registerId').value.trim().toLowerCase();
             const phoneTail = document.getElementById('registerParentPhone').value.trim();
+            const schoolName = schoolInput.value.trim();
+            const schoolCode = schoolCodeInput.value.trim();
             const selectedTeacher = document.getElementById('registerTeacher').value;
             const isAgreed = document.getElementById('registerAgreement').checked;
 
@@ -304,6 +396,12 @@
 
             if (!/^\d{4}$/.test(phoneTail)) {
                 alert('부모님 전화번호 뒷자리는 숫자 4자리로 입력해주세요.');
+                return;
+            }
+
+            // 🏫 검색창에 타이핑만 하고 리스트에서 정확히 선택하지 않은 경우 방어코드
+            if (!schoolName || !schoolCode) {
+                alert('⚠️ 소속 학교를 입력한 후, 반드시 자동완성 리스트에서 우리 학교를 터치(선택)해 주세요.');
                 return;
             }
 
@@ -331,10 +429,12 @@
                     return user.updateProfile({
                         displayName: studentName 
                     }).then(() => {
-                        // Realtime Database에는 축소된 데이터 스키마만 전송하여 저장합니다.
+                        // Realtime Database에 학교 이름과 나이스 학교 코드를 함께 규격 전송합니다.
                         return database.ref('students/' + user.uid).set({
                             name: encryptedName,                  // 🔒 암호화
                             u2mId: u2mId,                         // 식별 및 대조용 ID
+                            schoolName: schoolName,               // 🏫 나이스 공식 학교명
+                            schoolCode: schoolCode,               // 🧬 표준 학교 고유 코드 (D-day 계산기 등에 활용)
                             teacher: selectedTeacher,             // 배정용 선생님 명
                             phone: encryptedPhoneTail,            // 🔒 암호화
                             joinedAt: firebase.database.ServerValue.TIMESTAMP
