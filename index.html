@@ -12,14 +12,14 @@
     
     <style>
         @font-face {
-            font-family: 'Paperozi';
+            font-family: 'Paperlogy';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
             font-weight: 500; 
             font-display: swap;
         }
         
         body {
-            font-family: 'Paperozi', 'Noto Sans KR', sans-serif;
+            font-family: 'Paperlogy', 'Noto Sans KR', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
                         linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; 
@@ -43,7 +43,7 @@
             box-sizing: border-box; 
         }
         
-        /* ✨ 환영 인사 */
+        /* 환영 인사 */
         .welcome-text {
             font-size: 1.4rem; 
             font-weight: bold; 
@@ -55,7 +55,7 @@
             word-break: keep-all;
         }
 
-        /* 🕒 시계 컨테이너 */
+        /* 시계 컨테이너 */
         .clock-container {
             margin-bottom: 25px; 
             background: rgba(255, 255, 255, 0.4);
@@ -68,7 +68,7 @@
         .clock-date { font-size: 0.85rem; color: #6c5ce7; font-weight: 600; margin-bottom: 2px; }
         .clock-time { font-size: 2rem; font-weight: 700; color: #2c3e50; letter-spacing: -1px; }
 
-        /* 📅 나이스 연동 D-Day 배지 스타일 */
+        /* 나이스 연동 D-Day 배지 스타일 */
         .dday-text {
             font-size: 0.95rem;
             font-weight: 700;
@@ -106,6 +106,17 @@
             background-color: #6c5ce7; 
             color: #ffffff; 
             border-color: #6c5ce7; 
+        }
+
+        /* 제안 버튼 전용 커스텀 스타일 */
+        .suggest-btn {
+            background-color: rgba(108, 92, 231, 0.08); 
+            color: #6c5ce7; 
+            border: 1px dashed rgba(108, 92, 231, 0.4);
+        }
+        .suggest-btn:hover {
+            background-color: #00b894;
+            border-color: #00b894;
         }
         
         /* 알림 및 명언 박스 */
@@ -169,6 +180,26 @@
         .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; text-align: center; }
         .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
         
+        /* 라디오 그룹 스타일 */
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .radio-group input[type="radio"] {
+            accent-color: #6c5ce7;
+            transform: scale(1.1);
+        }
+
         .modal-box textarea, .modal-box input[type="text"] {
             width: 100%; 
             padding: 14px; 
@@ -265,6 +296,9 @@
 
         <button onclick="goToU2MWithCredentials()" class="link-button">유투엠 바로가기</button>
         <button onclick="goToMathflatDirect()" class="link-button">매쓰플랫 바로가기</button>
+        
+        <!-- 💡 [추가] 학원에 제안하기 연동 버튼 -->
+        <button onclick="openSuggestionModal()" class="link-button suggest-btn">💡 학원에 제안하기</button>
                     
         <div class="quote-box">
             💡 <b id="quote-header">오늘의 한마디:</b><br>
@@ -281,9 +315,26 @@
         </div>
     </div>
 
+    <!-- 모달창 영역 -->
     <div class="fab-group">
         <button id="historyFabBtn" class="msg-fab" onclick="openHistoryModal()">📂</button>
         <button id="msgFabBtn" class="msg-fab" onclick="openSendMessageModal()">✉️</button>
+    </div>
+
+    <!-- 💡 [추가] 제안하기 작성 팝업 모달 -->
+    <div id="suggestionModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">💡 학원에 제안하기</div>
+            <div class="radio-group">
+                <label><input type="radio" name="suggestCategory" value="기능 제안" checked> 기능 제안</label>
+                <label><input type="radio" name="suggestCategory" value="명언 제안"> 명언 제안</label>
+            </div>
+            <textarea id="suggestInput" rows="4" placeholder="학원 홈페이지에 추가되었으면 하는 기능이나, 같이 공유하고 싶은 명언을 자유롭게 제안해 주세요!"></textarea>
+            <div class="btn-flex-group">
+                <button class="btn-cancel" onclick="closeSuggestionModal()">취소</button>
+                <button class="modal-btn" onclick="submitSuggestion()" style="background-color: #00b894;">제안하기</button>
+            </div>
+        </div>
     </div>
 
     <div id="sendMsgModal" class="modal-overlay">
@@ -357,7 +408,13 @@
         let customAlertCallback = null;
 
         const SECRET_KEY = "u2mkst!";
-        const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc"; // 🚀 보내주신 나이스 인증키 탑재
+        const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
+
+        // 🛑 [추가] 금지 욕설 필터링 리스트 (정규식 기준)
+        const BANNED_KEYWORDS = [
+            "시발", "씨발", "개새끼", "새끼", "존나", "좆", "지랄", "병신", "개세끼", "썅", "미친놈", "미친년", 
+            "새키", "뒤져", "닥쳐", "쓰벌", "씨벌", "엠창", "凸", "fuck", "shibal", "ssibal", "bbyungshin"
+        ];
 
         function showModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -388,6 +445,58 @@
                 console.error("🚨 복호화 에러:", e);
                 return cipherText; 
             }
+        }
+
+        // 💡 [추가] 제안창 띄우기 / 닫기 함수
+        function openSuggestionModal() {
+            document.getElementById('suggestInput').value = '';
+            document.getElementById('suggestionModal').style.display = 'flex';
+        }
+        function closeSuggestionModal() { document.getElementById('suggestionModal').style.display = 'none'; }
+
+        // 💡 [추가] 제안 데이터 욕설 검증 및 파이어베이스 전송 장치
+        function submitSuggestion() {
+            const suggestInput = document.getElementById('suggestInput');
+            const contentText = suggestInput.value.trim();
+            const category = document.querySelector('input[name="suggestCategory"]:checked').value;
+
+            if (!contentText) { showCustomAlert("제안 내용을 입력해 주세요."); return; }
+            if (!currentStudentData) { showCustomAlert("학생 정보 로딩 중입니다. 잠시 후 다시 시도해 주세요."); return; }
+            
+            // 🛑 초강력 욕설 필터링 (공백 및 특수문자 제거 후 검사)
+            const cleanText = contentText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
+            const hasBadWord = BANNED_KEYWORDS.some(word => cleanText.includes(word));
+            
+            if (hasBadWord) {
+                showCustomAlert("⚠️ 작성하신 내용에 부적절한 표현(비속어/욕설)이 포함되어 있어 제안을 등록할 수 없습니다.", "🚨 경고");
+                return;
+            }
+
+            const currentUser = auth.currentUser;
+            const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
+            const realName = decryptAES(rawName);
+
+            // 내용 암호화 후 파이어베이스 전송
+            let encryptedContent = contentText;
+            if (typeof CryptoJS !== 'undefined' && CryptoJS.AES) { 
+                encryptedContent = CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString(); 
+            }
+
+            const suggestData = {
+                studentName: realName,
+                studentUid: currentUser ? currentUser.uid : "익명",
+                schoolName: currentStudentData.schoolName || "미지정",
+                category: category,
+                content: encryptedContent,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            database.ref('suggestions').push(suggestData)
+                .then(() => {
+                    showCustomAlert(`관리자에게 ${category}이 안전하게 전달되었습니다. 소중한 의견 감사합니다!`, "💡 제안 접수 완료");
+                    closeSuggestionModal();
+                })
+                .catch(err => showCustomAlert('전송 실패: ' + err.message, "❌ 에러"));
         }
 
         function transmitBridgeCredentials() {
@@ -423,7 +532,6 @@
             }, 1000);
         }
 
-        // 명언 셔플 기기 (데이터 생략 - 기존 유지)
         const advices = [
             { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
             { author: "에디슨", authorProfile: "발명가", message: "천재는 1%의 영감과 99%의 노력이다." }
@@ -455,67 +563,48 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        // 🚀 [추가] 나이스 Open API 서버에서 자동으로 학교 시험일정 긁어오는 엔진
         function fetchExamDateFromNeis(schoolName) {
-            if (!schoolName) {
-                renderDDayBadge(null);
-                return;
-            }
-
-            // 1단계: 학교 기본정보 API 호출하여 교육청코드 및 학교코드 추출
+            if (!schoolName) { renderDDayBadge(null); return; }
             const schoolInfoUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
             
             fetch(schoolInfoUrl)
                 .then(res => res.json())
                 .then(data => {
                     if (!data.schoolInfo) { renderDDayBadge(null); return; }
-                    
                     const row = data.schoolInfo[1].row[0];
-                    const officeCode = row.ATPT_OFCDC_SC_CODE; // 교육청코드
-                    const schoolCode = row.SD_SCHUL_CODE;       // 학교코드
+                    const officeCode = row.ATPT_OFCDC_SC_CODE; 
+                    const schoolCode = row.SD_SCHUL_CODE;       
                     
-                    // 2단계: 학사일정 조회 API 호출 (금년도 전체 분량)
                     const currentYear = new Date().getFullYear();
                     const fromYmd = `${currentYear}0301`;
                     const toYmd = `${currentYear + 1}0228`;
-                    
                     const scheduleUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=800`;
-                    
                     return fetch(scheduleUrl);
                 })
                 .then(res => res ? res.json() : null)
                 .then(data => {
                     if (!data || !data.SchoolSchedule) { renderDDayBadge(null); return; }
-                    
                     const rows = data.SchoolSchedule[1].row;
-                    
-                    // 오늘 날짜 구하기 (YYYYMMDD 포맷)
                     const now = new Date();
                     const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-                    
                     let upcomingExamDates = [];
                     
-                    // 지필평가, 중간고사, 기말고사 키워드가 걸려있는 미래의 일정을 취합
                     rows.forEach(item => {
                         const eventName = item.EVENT_NM || "";
                         const eventDate = item.AA_YMD; 
-                        
                         if (eventDate >= todayStr) {
-                            if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("시험") || eventName.includes("정기") || eventName.includes("기말") || eventName.includes("지필")) {
+                            if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") || eventName.includes("지필")) {
                                 upcomingExamDates.push(eventDate);
                             }
                         }
                     });
                     
                     if (upcomingExamDates.length > 0) {
-                        upcomingExamDates.sort(); // 가장 빠른 날짜순 정렬
-                        const closestDate = upcomingExamDates[0]; // YYYYMMDD
-                        // YYYY-MM-DD 포맷 변환
+                        upcomingExamDates.sort(); 
+                        const closestDate = upcomingExamDates[0]; 
                         const finalDateForm = `${closestDate.substring(0,4)}-${closestDate.substring(4,6)}-${closestDate.substring(6,8)}`;
                         renderDDayBadge(finalDateForm);
-                    } else {
-                        renderDDayBadge(null);
-                    }
+                    } else { renderDDayBadge(null); }
                 })
                 .catch(err => {
                     console.error("나이스 로딩 실패:", err);
@@ -523,17 +612,13 @@
                 });
         }
 
-        // 📅 D-Day 화면 렌더링 함수
         function renderDDayBadge(examDate) {
             const ddayZone = document.getElementById('dday-zone');
             if (!ddayZone) return;
-
-            // 초등학생은 원천 차단
             if (currentStudentData && currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) {
                 ddayZone.style.display = 'none';
                 return;
             }
-
             if (!examDate) {
                 ddayZone.innerText = "해당없음";
                 ddayZone.style.color = "#7f8c8d";
@@ -578,12 +663,9 @@
                             const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                             
-                            // 🚀 [연동 연계] 초등학생 검사 후 나이스 자동 추적기 구동
                             if (data.schoolName && !data.schoolName.includes('초등')) {
                                 fetchExamDateFromNeis(data.schoolName);
-                            } else {
-                                renderDDayBadge(null);
-                            }
+                            } else { renderDDayBadge(null); }
                             
                             listenToTeacherNotes(user.uid);
                             startLiveChatHistory(user.uid); 
@@ -796,14 +878,19 @@
             const now = new Date();
             const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-            database.ref('calendarQuotes/' + todayKey).on('value', (snapshot) => {
-                const reservedText = snapshot.val();
-                if (reservedText && reservedText.trim() !== "") {
-                    document.getElementById('quote-header').innerText = "📌 오늘 자습실 알림:";
-                    document.getElementById('quote-text').innerText = reservedText;
-                    document.getElementById('quote-author').innerText = ""; 
-                } else { displayDefaultAdvice(); }
-            });
+            // Firebase에 등록한 날짜별 명언을 실시간으로 가져옵니다.
+database.ref('dailyQuotes/' + todayKey).on('value', (snapshot) => {
+    if (snapshot.exists()) {
+        // 해당 날짜에 지정된 명언이 서버에 있으면 출력
+        const quoteData = snapshot.val();
+        document.getElementById('quote-header').innerText = "오늘의 명언:";
+        document.getElementById('quote-text').innerText = `"${quoteData.message}"`;
+        document.getElementById('quote-author').innerText = quoteData.author ? `- ${quoteData.author} -` : "";
+    } else {
+        // 지정된 날짜 명언이 없으면 기존 150개 배열에서 랜덤(일별 변동) 출력
+        displayDefaultAdvice();
+    }
+});
 
             database.ref('reminder').on('value', (snapshot) => {
                 const text = snapshot.val() || "";
