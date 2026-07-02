@@ -410,18 +410,18 @@
 
     <script>
     // =======================================================
-    // 1. 전역 변수 및 상수 선언 (가장 먼저 위치해야 함)
+    // 1. 전역 변수 및 상수 선언
     // =======================================================
     let currentStudentData = null; 
     let noteListener = null;
     let historyListeners = []; 
     let customAlertCallback = null;
 
-    let idleTimer;       // 30분 미사용 체크용 타이머
-    let countdownTimer;  // 팝업이 뜬 뒤 60초 카운트다운용 타이머
+    let idleTimer;       
+    let countdownTimer;  
     let remainingSeconds = 60;
 
-    const THIRTY_MINUTES = 30 * 60 * 1000; // 30분을 밀리초로 계산
+    const THIRTY_MINUTES = 30 * 60 * 1000; 
     const SECRET_KEY = "u2mkst!";
     const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
 
@@ -596,7 +596,7 @@
     ];
 
     // =======================================================
-    // 2. 파이어베이스 설정 및 객체 초기화 (변수 에러 원천 차단)
+    // 2. 파이어베이스 설정 및 객체 초기화
     // =======================================================
     const firebaseConfig = {
         apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
@@ -609,13 +609,77 @@
         measurementId: "G-72TJ0364MJ"
     };
     
-    // 파이어베이스 라이브러리 가동
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     const auth = firebase.auth();
 
     // =======================================================
-    // 3. 공통 UI 모달 및 알림 함수
+    // 3. 인증 및 로그아웃 관련 함수
+    // =======================================================
+    function logoutUser() { 
+        showModal('logoutCheckModal'); 
+    }
+
+    function confirmLogoutAction() {
+        closeModal('logoutCheckModal');
+        auth.signOut().then(() => {
+            localStorage.removeItem('u2m_id');
+            localStorage.removeItem('u2m_pw');
+            window.location.href = 'login.html';
+        }).catch((error) => {
+            showCustomAlert("로그아웃 중 오류가 발생했습니다: " + error.message, "❌ 에러");
+        });
+    }
+
+    function checkUserAuth() {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                startIdleTracking();
+                database.ref(`students/${user.uid}`).once('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        currentStudentData = data;
+                        document.getElementById('msgFabBtn').style.display = 'flex';
+                        document.getElementById('historyFabBtn').style.display = 'flex'; 
+                        document.getElementById('inquiryFabBtn').style.display = 'flex'; 
+
+                        const rawName = data.name || data.studentName || data.userName;
+                        const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
+                        document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
+                        
+                        if (!data.mathflatId && !data.studentPhone) {
+                            setTimeout(() => { 
+                                showCustomAlert("로그인 정보 설정이 필요합니다. 마이페이지로 이동합니다.", "⚙️ 알림", () => {
+                                    goToMyPage();
+                                });
+                            }, 600);
+                        }
+
+                        if (data.schoolName && !data.schoolName.includes('초등')) {
+                            fetchExamDateFromNeis(data.schoolName);
+                        } else { renderDDayBadge(null); }
+                        
+                        listenToTeacherNotes(user.uid);
+                        startLiveChatHistory(user.uid); 
+                    } else {
+                        detachAllHistoryListeners();
+                        if (noteListener) noteListener.off();
+                        auth.signOut().then(() => {
+                            localStorage.removeItem('u2m_id');
+                            localStorage.removeItem('u2m_pw');
+                            window.location.replace('login.html');
+                        });
+                    }
+                });
+            } else {
+                detachAllHistoryListeners();
+                window.location.replace('login.html'); 
+            }
+        });
+    }
+
+    // =======================================================
+    // 4. 공통 UI 모달 및 알림 함수
     // =======================================================
     function showModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -636,7 +700,7 @@
     }
 
     // =======================================================
-    // 4. 암호화 / 복호화 및 유틸리티
+    // 5. 암호화 / 복호화 및 유틸리티
     // =======================================================
     function decryptAES(cipherText) {
         if (!cipherText) return "";
@@ -655,31 +719,8 @@
         window.location.href = 'mypage.html';
     }
 
-    function startClock() {
-        const dateEl = document.getElementById('clock-date');
-        const timeEl = document.getElementById('clock-time');
-        const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-        setInterval(() => {
-            const now = new Date();
-            if(dateEl) dateEl.innerText = `${now.getMonth() + 1}월 ${now.getDate()}일 ${weekDays[now.getDay()]}`;
-            if(timeEl) timeEl.innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-        }, 1000);
-    }
-
-    function displayDefaultAdvice() {
-        if (advices.length === 0) return;
-        const now = new Date();
-        const dateValue = now.getFullYear() + (now.getMonth() + 1) + now.getDate();
-        const dailyData = advices[dateValue % advices.length];
-        
-        document.getElementById('quote-header').innerText = "오늘의 한마디:";
-        document.getElementById('quote-text').innerText = `"${dailyData.message}"`;
-        const profileStr = dailyData.authorProfile && dailyData.authorProfile !== "-" ? ` (${dailyData.authorProfile})` : "";
-        document.getElementById('quote-author').innerText = `- ${dailyData.author}${profileStr} -`;
-    }
-
     // =======================================================
-    // 5. 30분 미사용 타이머 (자동 로그아웃 시스템)
+    // 6. 30분 미사용 타이머 (자동 로그아웃 시스템)
     // =======================================================
     function startIdleTracking() {
         const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
@@ -744,10 +785,10 @@
     }
 
     // =======================================================
-    // 6. 건의사항 및 학원 문의 기능
+    // 7. 건의사항 및 학원 문의 기능
     // =======================================================
     function openUnifiedInquiryModal() { showModal('unifiedInquiryModal'); }
-    function closeUnifiedInquiryModal() { closeModal('unifiedInquiryModal'); }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     
     function triggerSuggestionFromUnified() {
         closeUnifiedInquiryModal();
@@ -867,23 +908,28 @@
     }
 
     // =======================================================
-    // 7. 안드로이드 연동 및 외부 학습 사이트 로그인 연동 브릿지
+    // 8. 안드로이드 연동 브릿지 (전달 매개변수 구조 전면 매칭 수정)
     // =======================================================
     function transmitBridgeCredentials() {
         if (!currentStudentData) return;
         try {
-            const finalU2mPhone = decryptAES(currentStudentData.phone).replace(/[^0-9]/g, "");
-            const finalStudentPhone = decryptAES(currentStudentData.studentPhone).replace(/[^0-9]/g, "");
-            const u2mId = currentStudentData.u2mId || '';
+            // 1. 유투엠 자동로그인용 변수 설정
+            // 로컬 스토리지에 보관된 학생 본래 로그인 ID와 비밀번호를 획득하여 주입합니다.
+            const u2mId = localStorage.getItem('u2m_id') || currentStudentData.u2mId || '';
+            const u2mPw = localStorage.getItem('u2m_pw') || '';
 
+            // 2. 매쓰플랫 자동로그인용 변수 설정
+            // [수정] 매쓰플랫 ID = 학생 전화번호(studentPhone), 매쓰플랫 PW = mathflatPw
+            const mathflatId = decryptAES(currentStudentData.studentPhone || currentStudentData.phone).trim();
             const rawMathflatPw = currentStudentData.mathflatPw || '';
             const decryptedMathflatPw = decryptAES(rawMathflatPw).trim();
-            const mathflatId = currentStudentData.mathflatId || '';
             
             if (window.AndroidApp) {
+                // 유투엠 브릿지 호출 (아이디, 패스워드 순서 매칭 보완)
                 if (typeof window.AndroidApp.loginToU2M === 'function') {
-                    window.AndroidApp.loginToU2M(u2mId, finalU2mPhone, decryptedMathflatPw, finalStudentPhone);
+                    window.AndroidApp.loginToU2M(u2mId, u2mPw, "", "");
                 }
+                // 매쓰플랫 브릿지 호출 (전화번호가 ID 파라미터로 전송됨)
                 if (typeof window.AndroidApp.loginToMathflat === 'function') {
                     window.AndroidApp.loginToMathflat(mathflatId, decryptedMathflatPw);
                 }
@@ -893,17 +939,28 @@
 
     function goToU2MWithCredentials() {
         transmitBridgeCredentials();
-        setTimeout(() => { window.location.href = "https://www.u2math.co.kr/Login/Index"; }, 500);
+        setTimeout(() => { window.location.href = "https://www.u2math.co.kr/Login/Index"; }, 1000);
     }
 
     function goToMathflatDirect() {
         transmitBridgeCredentials();
-        setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 500);
+        setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 1500);
     }
 
     // =======================================================
-    // 8. NEIS Open API 연동 (학교 시험 디데이 자동 계산)
+    // 9. NEIS Open API 연동 및 시계 기능 등 기존 스크립트 유지
     // =======================================================
+    function startClock() {
+        const dateEl = document.getElementById('clock-date');
+        const timeEl = document.getElementById('clock-time');
+        const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+        setInterval(() => {
+            const now = new Date();
+            if(dateEl) dateEl.innerText = `${now.getMonth() + 1}월 ${now.getDate()}일 ${weekDays[now.getDay()]}`;
+            if(timeEl) timeEl.innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        }, 1000);
+    }
+
     function fetchExamDateFromNeis(schoolName) {
         if (!schoolName) { renderDDayBadge(null); return; }
         const schoolInfoUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
@@ -915,7 +972,6 @@
                 const row = data.schoolInfo[1].row[0];
                 const officeCode = row.ATPT_OFCDC_SC_CODE; 
                 const schoolCode = row.SD_SCHUL_CODE;       
-                
                 const currentYear = new Date().getFullYear();
                 const fromYmd = `${currentYear}0301`;
                 const toYmd = `${currentYear + 1}0228`;
@@ -991,8 +1047,19 @@
         }
     }
 
+    function displayDefaultAdvice() {
+        if (advices.length === 0) return;
+        const now = new Date();
+        const dateValue = now.getFullYear() + (now.getMonth() + 1) + now.getDate();
+        const dailyData = advices[dateValue % advices.length];
+        document.getElementById('quote-header').innerText = "오늘의 한마디:";
+        document.getElementById('quote-text').innerText = `"${dailyData.message}"`;
+        const profileStr = dailyData.authorProfile && dailyData.authorProfile !== "-" ? ` (${dailyData.authorProfile})` : "";
+        document.getElementById('quote-author').innerText = `- ${dailyData.author}${profileStr} -`;
+    }
+
     // =======================================================
-    // 9. 실시간 질문 및 쪽지 주고받기 기능 (채팅 히스토리)
+    // 10. 실시간 질문 및 채팅 기능
     // =======================================================
     function openSendMessageModal() {
         document.getElementById('studentMsgInput').value = '';
@@ -1122,7 +1189,7 @@
     }
 
     // =======================================================
-    // 10. 파이어베이스 메인 리스너 (공지사항, 명언, 전광판)
+    // 11. 파이어베이스 메인 리스너 (공지사항, 명언, 전광판)
     // =======================================================
     function listenToFirebase() {
         database.ref('notice').on('value', (snapshot) => {
@@ -1153,7 +1220,7 @@
             const bar = document.getElementById('reminderBar');
             const txtEl = document.getElementById('reminderText');
             if (text.trim() !== "") {
-                txtEl.innerText = `⚠️ ${text} ⚠️\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0`;
+                if(txtEl) txtEl.innerText = `⚠️ ${text} ⚠️\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0`;
                 if(bar) bar.style.display = 'block';
                 const duration = Math.max(14, text.length * 0.45);
                 if(txtEl) txtEl.style.animationDuration = `${duration}s`;
@@ -1161,72 +1228,6 @@
                 if(bar) bar.style.display = 'none';
                 if(txtEl) txtEl.innerText = "";
             }
-        });
-    }
-
-    // =======================================================
-    // 11. 메인 인증 확인 핵심 컨트롤러
-    // =======================================================
-    function checkUserAuth() {
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // 로그인 성공 확인 직후 미사용 감지 트래킹 시작 추가 연동!
-                startIdleTracking();
-
-                database.ref(`students/${user.uid}`).once('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        currentStudentData = data;
-                        document.getElementById('msgFabBtn').style.display = 'flex';
-                        document.getElementById('historyFabBtn').style.display = 'flex'; 
-                        document.getElementById('inquiryFabBtn').style.display = 'flex'; 
-
-                        const rawName = data.name || data.studentName || data.userName;
-                        const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
-                        document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
-                        
-                        if (!data.mathflatId || !data.mathflatPw) {
-                            setTimeout(() => { 
-                                showCustomAlert("매쓰플랫 아이디/비밀번호 설정이 필요합니다. 마이페이지로 이동합니다.", "⚙️ 알림", () => {
-                                    goToMyPage();
-                                });
-                            }, 600);
-                        }
-
-                        if (data.schoolName && !data.schoolName.includes('초등')) {
-                            fetchExamDateFromNeis(data.schoolName);
-                        } else { renderDDayBadge(null); }
-                        
-                        listenToTeacherNotes(user.uid);
-                        startLiveChatHistory(user.uid); 
-                    } else {
-                        // 학생 데이터가 DB에 없으면 강제 언마운트 및 로그아웃
-                        detachAllHistoryListeners();
-                        if (noteListener) noteListener.off();
-                        auth.signOut().then(() => {
-                            localStorage.removeItem('u2m_id');
-                            localStorage.removeItem('u2m_pw');
-                            window.location.replace('login.html');
-                        });
-                    }
-                });
-            } else {
-                detachAllHistoryListeners();
-                window.location.replace('login.html'); 
-            }
-        });
-    }
-
-    function logoutUser() { showModal('logoutCheckModal'); }
-
-    function confirmLogoutAction() {
-        closeModal('logoutCheckModal');
-        auth.signOut().then(() => {
-            localStorage.removeItem('u2m_id');
-            localStorage.removeItem('u2m_pw');
-            window.location.href = 'login.html';
-        }).catch((error) => {
-            showCustomAlert("로그아웃 중 오류가 발생했습니다: " + error.message, "❌ 에러");
         });
     }
 
