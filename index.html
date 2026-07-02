@@ -138,7 +138,7 @@
         .footer { margin-top: 15px; font-size: 0.85rem; color: #8892b0; }
         
         /* 하단 메뉴 링크 그룹 */
-        .bottom-menu { margin-top: 15px; display: flex; justify-content: center; gap: 15px; }
+        .bottom-menu { margin-top: 15px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
         .bottom-link {
             font-size: 0.8rem; 
             color: #b2bec3; 
@@ -180,7 +180,7 @@
         .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; text-align: center; }
         .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
         
-        .modal-box textarea, .modal-box input[type="text"] {
+        .modal-box textarea, .modal-box input[type="text"], .modal-box input[type="password"] {
             width: 100%; 
             padding: 14px; 
             border: 1px solid #ddd; 
@@ -192,7 +192,7 @@
             background: #f8f9fa; 
         }
         .modal-box textarea { resize: none; text-align: left; }
-        .modal-box textarea:focus, .modal-box input[type="text"]:focus { outline: none; border-color: #6c5ce7; background: #fff; }
+        .modal-box textarea:focus, .modal-box input[type="text"]:focus, .modal-box input[type="password"]:focus { outline: none; border-color: #6c5ce7; background: #fff; }
         .btn-flex-group { display: flex; gap: 8px; }
         .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
@@ -289,8 +289,35 @@
         <div class="footer">© 2026 KST</div>
         
         <div class="bottom-menu">
+            <button onclick="openExistingUserModal()" class="bottom-link" style="color: #6c5ce7; font-weight: bold;">기존 회원 계정 설정</button>
             <button onclick="logoutUser()" class="bottom-link">로그아웃</button>
             <button onclick="deleteAccount()" class="bottom-link danger">계정삭제</button>
+        </div>
+    </div>
+
+    <!-- 기존 회원 안내 및 매쓰플랫 계정 직접 설정 모달 -->
+    <div id="existingUserNoticeModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 400px; padding: 24px 20px;">
+            <div class="modal-title" style="color: #6c5ce7; font-size: 1.25rem;">⚙️ 기존 회원 연동 & 계정 설정</div>
+            <div class="modal-content" style="text-align: left; font-size: 0.9rem; max-height: 200px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; background: #f8fafc; padding: 10px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <b>[안내사항]</b><br>
+                기존 연동 회원이거나 자동 로그인이 올바르게 작동하지 않는 경우, 아래에 본인의 <b>매쓰플랫 로그인 정보</b>를 직접 입력하여 저장할 수 있습니다.<br>
+                저장 시 즉시 암호화되어 안전하게 학원 시스템과 연동됩니다.
+            </div>
+            
+            <!-- 매쓰플랫 계정 설정 입력 폼 -->
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-size: 0.85rem; font-weight: bold; color: #4a5568; display: block; margin-bottom: 5px; padding-left: 4px;">매쓰플랫 아이디</label>
+                <input type="text" id="setupMathflatId" placeholder="매쓰플랫 ID 입력" style="margin-bottom: 12px;">
+                
+                <label style="font-size: 0.85rem; font-weight: bold; color: #4a5568; display: block; margin-bottom: 5px; padding-left: 4px;">매쓰플랫 비밀번호</label>
+                <input type="password" id="setupMathflatPw" placeholder="매쓰플랫 패스워드 입력" style="margin-bottom: 15px;">
+            </div>
+
+            <div class="btn-flex-group">
+                <button class="btn-cancel" onclick="closeModal('existingUserNoticeModal')">닫기</button>
+                <button class="modal-btn" onclick="saveMathflatAccount()" style="background-color: #6c5ce7;">설정 저장하기</button>
+            </div>
         </div>
     </div>
 
@@ -416,8 +443,8 @@
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function showCustomAlert(content, title = "💡 알림", callback = null) {
-            document.getElementById('customAlertTitle').innerText = title;
-            document.getElementById('customAlertContent').innerText = content;
+            document.getElementById('customAlertTitle').innerText = content;
+            document.getElementById('customAlertContent').innerText = title;
             customAlertCallback = callback;
             showModal('customAlertModal');
         }
@@ -441,6 +468,48 @@
                 console.error("🚨 복호화 에러:", e);
                 return cipherText; 
             }
+        }
+
+        // 기존 회원 설정 모달 열기 및 기존 데이터 세팅
+        function openExistingUserModal() {
+            if (currentStudentData) {
+                document.getElementById('setupMathflatId').value = currentStudentData.mathflatId || '';
+                document.getElementById('setupMathflatPw').value = currentStudentData.mathflatPw ? decryptAES(currentStudentData.mathflatPw) : '';
+            }
+            showModal('existingUserNoticeModal');
+        }
+
+        // 새롭게 입력된 매쓰플랫 계정 정보를 파이어베이스에 직접 저장
+        function saveMathflatAccount() {
+            const user = auth.currentUser;
+            if (!user) { showCustomAlert("인증이 만료되었습니다. 다시 로그인해 주세요."); return; }
+            
+            const mathflatId = document.getElementById('setupMathflatId').value.trim();
+            const mathflatPw = document.getElementById('setupMathflatPw').value.trim();
+
+            if (!mathflatId || !mathflatPw) {
+                showCustomAlert("아이디와 비밀번호를 모두 입력해 주세요.");
+                return;
+            }
+
+            // 비밀번호 암호화
+            const encryptedPw = CryptoJS.AES.encrypt(mathflatPw, SECRET_KEY).toString();
+
+            // 파이어베이스 갱신 업데이트
+            database.ref(`students/${user.uid}`).update({
+                mathflatId: mathflatId,
+                mathflatPw: encryptedPw
+            }).then(() => {
+                // 내부 로컬 캐시 데이터 최신화
+                if (currentStudentData) {
+                    currentStudentData.mathflatId = mathflatId;
+                    currentStudentData.mathflatPw = encryptedPw;
+                }
+                showCustomAlert("매쓰플랫 로그인 설정이 성공적으로 저장되었습니다!", "⚙️ 설정 완료");
+                closeModal('existingUserNoticeModal');
+            }).catch(err => {
+                showCustomAlert("저장 실패: " + err.message, "❌ 에러");
+            });
         }
 
         // 통합 문의/제안 핸들러
@@ -572,8 +641,15 @@
                 const finalU2mPhone = decryptAES(currentStudentData.phone).replace(/[^0-9]/g, "");
                 const decryptedMathflatPw = decryptAES(currentStudentData.mathflatPw);
                 const finalStudentPhone = decryptAES(currentStudentData.studentPhone).replace(/[^0-9]/g, "");
+                
+                // 유투엠 웹 앱 브릿지 호출
                 if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
                     window.AndroidApp.loginToU2M(currentStudentData.u2mId, finalU2mPhone, decryptedMathflatPw, finalStudentPhone);
+                }
+                
+                // 매쓰플랫 웹 앱 브릿지 데이터 전달
+                if (window.AndroidApp && typeof window.AndroidApp.loginToMathflat === 'function') {
+                    window.AndroidApp.loginToMathflat(currentStudentData.mathflatId || '', decryptedMathflatPw);
                 }
             } catch (err) { console.error("❌ 브릿지 연동 실패:", err); }
         }
@@ -600,7 +676,61 @@
         }
 
         const advices = [
-            { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
+            { author: "익명", authorProfile: "학생들의 현실", message: "내일의 나는 오늘의 나보다 공부를 잘할 거라 믿었다. 그리고 내일도 그렇게 믿었다." },
+{ author: "익명", authorProfile: "시험 전날", message: "공부는 미리 하는 것이다. 나는 늘 그 사실을 시험 전날 깨닫는다." },
+{ author: "익명", authorProfile: "수학 문제집", message: "답지를 보면 이해가 된다. 덮는 순간 다시 모른다." },
+{ author: "익명", authorProfile: "숙제 전문가", message: "숙제는 빨리 시작할수록 일찍 끝난다. 문제는 시작이다." },
+{ author: "익명", authorProfile: "벼락치기 협회", message: "벼락치기도 꾸준히 하면 습관이 된다." },
+{ author: "익명", authorProfile: "국어 시간", message: "지문은 읽었는데 내용은 지문만 안다." },
+{ author: "익명", authorProfile: "수학 시간", message: "분명 배웠는데 처음 보는 문제처럼 생겼다." },
+{ author: "익명", authorProfile: "시험 감독관", message: "시험 시간은 평소보다 3배 빠르게 흐른다." },
+{ author: "익명", authorProfile: "알람 시계", message: "공부할 때 10분은 1시간 같고, 쉬는 시간 10분은 1분 같다." },
+{ author: "익명", authorProfile: "교과서", message: "나를 펼치면 졸리고 덮으면 불안하다." },
+
+{ author: "익명", authorProfile: "학생 공통", message: "공부 계획표는 세울 때가 가장 완벽하다." },
+{ author: "익명", authorProfile: "시험지", message: "나는 항상 학생보다 문제를 더 잘 안다." },
+{ author: "익명", authorProfile: "연필", message: "네가 포기해도 나는 끝까지 닳는다." },
+{ author: "익명", authorProfile: "지우개", message: "실수는 지울 수 있지만 점수는 안 지워진다." },
+{ author: "익명", authorProfile: "학원 가방", message: "지식보다 문제집이 더 무겁다." },
+{ author: "익명", authorProfile: "학생의 다짐", message: "오늘은 진짜 공부한다. 이 말은 어제도 했다." },
+{ author: "익명", authorProfile: "독서실", message: "들어올 때는 의욕이 넘치고 나갈 때는 배가 고프다." },
+{ author: "익명", authorProfile: "수면 연구소", message: "교과서는 최고의 수면 유도 장치다." },
+{ author: "익명", authorProfile: "영어 단어장", message: "외운 단어는 시험날 잠시 여행을 떠난다." },
+{ author: "익명", authorProfile: "수학 공식", message: "나를 외우지 말고 이해하라. 물론 이해도 어렵다." },
+
+{ author: "익명", authorProfile: "시험 결과", message: "공부를 안 하면 후회하고, 공부를 해도 더 할걸 후회한다." },
+{ author: "익명", authorProfile: "문제집", message: "한 권 끝내면 자신감이 생기고, 다음 권이 나타난다." },
+{ author: "익명", authorProfile: "방학 계획", message: "계획은 7월에 세우고 실천은 언젠가 한다." },
+{ author: "익명", authorProfile: "공부 명언 제조기", message: "집중은 5분, 휴식은 50분이면 균형 잡힌 삶이다." },
+{ author: "익명", authorProfile: "수학 선생님", message: "쉽죠? 라는 말은 보통 쉽지 않다는 뜻이다." },
+{ author: "익명", authorProfile: "과학 시간", message: "실험은 재밌고 보고서는 과학적으로 싫다." },
+{ author: "익명", authorProfile: "역사 시간", message: "연도는 외웠는데 어느 사건인지 모르겠다." },
+{ author: "익명", authorProfile: "학생 정신", message: "모르는 문제를 오래 보면 아는 척하게 된다." },
+{ author: "익명", authorProfile: "교실 시계", message: "쉬는 시간에는 달리고 수업 시간에는 걷는다." },
+{ author: "익명", authorProfile: "점수", message: "나는 노력의 결과지만 가끔 노력과 안 친하다." },
+
+{ author: "익명", authorProfile: "공부의 진실", message: "한 문제를 맞히면 자신감이 생기고, 다음 문제는 겸손을 가르친다." },
+{ author: "익명", authorProfile: "학생의 눈물", message: "답을 보면 왜 틀렸는지 안다. 시험 중엔 몰랐다." },
+{ author: "익명", authorProfile: "야식", message: "공부할 때 가장 열심히 생각나는 친구다." },
+{ author: "익명", authorProfile: "시험기간", message: "갑자기 방 청소가 하고 싶어진다." },
+{ author: "익명", authorProfile: "휴대폰", message: "공부 시작 3분 만에 가장 매력적인 물건이 된다." },
+{ author: "익명", authorProfile: "책상", message: "네 꿈과 간식이 함께 올라오는 곳." },
+{ author: "익명", authorProfile: "필통", message: "시험날 펜은 항상 한 개가 안 나온다." },
+{ author: "익명", authorProfile: "공부 고수", message: "천재는 노력한다. 나는 계획한다." },
+{ author: "익명", authorProfile: "수학 오답노트", message: "틀린 문제는 다시 만난다." },
+{ author: "익명", authorProfile: "국어 문제", message: "출제자의 마음을 맞히는 심리 게임." },
+
+{ author: "익명", authorProfile: "시험 직전", message: "지금 보면 나올 것 같고, 안 보면 나올 것 같다." },
+{ author: "익명", authorProfile: "학생 생태계", message: "공부는 하기 싫지만 성적은 갖고 싶다." },
+{ author: "익명", authorProfile: "벼락치기 장인", message: "시간은 없지만 희망은 있다." },
+{ author: "익명", authorProfile: "학습 통계", message: "공부 시간보다 공부할 생각한 시간이 더 길다." },
+{ author: "익명", authorProfile: "수업 시작 5분 전", message: "모든 숙제는 이때 떠오른다." },
+{ author: "익명", authorProfile: "영어 시험", message: "아는 단어보다 모르는 단어가 더 반갑다." },
+{ author: "익명", authorProfile: "모의고사", message: "현실을 알려주는 친절하지 않은 친구." },
+{ author: "익명", authorProfile: "공부 습관", message: "매일 조금씩 하면 된다. 그 조금씩이 어렵다." },
+{ author: "익명", authorProfile: "학생의 희망", message: "이번 시험은 다르다. 매 시험마다 다르다." },
+{ author: "익명", authorProfile: "학습의 결론", message: "포기하지 않으면 언젠가 맞힌다. 찍어서라도." },
+{ author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
 { author: "아리스토텔레스", authorProfile: "철학자", message: "교육의 뿌리는 쓰지만 그 열매는 달다." },
 { author: "알베르트 아인슈타인", authorProfile: "물리학자", message: "배움을 멈추는 순간 늙기 시작한다." },
 { author: "넬슨 만델라", authorProfile: "전 남아프리카공화국 대통령", message: "교육은 세상을 바꿀 가장 강력한 무기다." },
@@ -707,61 +837,7 @@
 { author: "박웅현", authorProfile: "광고인", message: "생각의 깊이가 인생의 깊이다." },
 { author: "도종환", authorProfile: "시인", message: "천천히 가더라도 멈추지 마라." },
 { author: "이국종", authorProfile: "의사", message: "실력을 쌓는 데는 지름길이 없다." },
-{ author: "백종원", authorProfile: "기업인", message: "기본을 제대로 익히는 것이 가장 중요하다." },
-{ author: "익명", authorProfile: "학생들의 현실", message: "내일의 나는 오늘의 나보다 공부를 잘할 거라 믿었다. 그리고 내일도 그렇게 믿었다." },
-{ author: "익명", authorProfile: "시험 전날", message: "공부는 미리 하는 것이다. 나는 늘 그 사실을 시험 전날 깨닫는다." },
-{ author: "익명", authorProfile: "수학 문제집", message: "답지를 보면 이해가 된다. 덮는 순간 다시 모른다." },
-{ author: "익명", authorProfile: "숙제 전문가", message: "숙제는 빨리 시작할수록 일찍 끝난다. 문제는 시작이다." },
-{ author: "익명", authorProfile: "벼락치기 협회", message: "벼락치기도 꾸준히 하면 습관이 된다." },
-{ author: "익명", authorProfile: "국어 시간", message: "지문은 읽었는데 내용은 지문만 안다." },
-{ author: "익명", authorProfile: "수학 시간", message: "분명 배웠는데 처음 보는 문제처럼 생겼다." },
-{ author: "익명", authorProfile: "시험 감독관", message: "시험 시간은 평소보다 3배 빠르게 흐른다." },
-{ author: "익명", authorProfile: "알람 시계", message: "공부할 때 10분은 1시간 같고, 쉬는 시간 10분은 1분 같다." },
-{ author: "익명", authorProfile: "교과서", message: "나를 펼치면 졸리고 덮으면 불안하다." },
-
-{ author: "익명", authorProfile: "학생 공통", message: "공부 계획표는 세울 때가 가장 완벽하다." },
-{ author: "익명", authorProfile: "시험지", message: "나는 항상 학생보다 문제를 더 잘 안다." },
-{ author: "익명", authorProfile: "연필", message: "네가 포기해도 나는 끝까지 닳는다." },
-{ author: "익명", authorProfile: "지우개", message: "실수는 지울 수 있지만 점수는 안 지워진다." },
-{ author: "익명", authorProfile: "학원 가방", message: "지식보다 문제집이 더 무겁다." },
-{ author: "익명", authorProfile: "학생의 다짐", message: "오늘은 진짜 공부한다. 이 말은 어제도 했다." },
-{ author: "익명", authorProfile: "독서실", message: "들어올 때는 의욕이 넘치고 나갈 때는 배가 고프다." },
-{ author: "익명", authorProfile: "수면 연구소", message: "교과서는 최고의 수면 유도 장치다." },
-{ author: "익명", authorProfile: "영어 단어장", message: "외운 단어는 시험날 잠시 여행을 떠난다." },
-{ author: "익명", authorProfile: "수학 공식", message: "나를 외우지 말고 이해하라. 물론 이해도 어렵다." },
-
-{ author: "익명", authorProfile: "시험 결과", message: "공부를 안 하면 후회하고, 공부를 해도 더 할걸 후회한다." },
-{ author: "익명", authorProfile: "문제집", message: "한 권 끝내면 자신감이 생기고, 다음 권이 나타난다." },
-{ author: "익명", authorProfile: "방학 계획", message: "계획은 7월에 세우고 실천은 언젠가 한다." },
-{ author: "익명", authorProfile: "공부 명언 제조기", message: "집중은 5분, 휴식은 50분이면 균형 잡힌 삶이다." },
-{ author: "익명", authorProfile: "수학 선생님", message: "쉽죠? 라는 말은 보통 쉽지 않다는 뜻이다." },
-{ author: "익명", authorProfile: "과학 시간", message: "실험은 재밌고 보고서는 과학적으로 싫다." },
-{ author: "익명", authorProfile: "역사 시간", message: "연도는 외웠는데 어느 사건인지 모르겠다." },
-{ author: "익명", authorProfile: "학생 정신", message: "모르는 문제를 오래 보면 아는 척하게 된다." },
-{ author: "익명", authorProfile: "교실 시계", message: "쉬는 시간에는 달리고 수업 시간에는 걷는다." },
-{ author: "익명", authorProfile: "점수", message: "나는 노력의 결과지만 가끔 노력과 안 친하다." },
-
-{ author: "익명", authorProfile: "공부의 진실", message: "한 문제를 맞히면 자신감이 생기고, 다음 문제는 겸손을 가르친다." },
-{ author: "익명", authorProfile: "학생의 눈물", message: "답을 보면 왜 틀렸는지 안다. 시험 중엔 몰랐다." },
-{ author: "익명", authorProfile: "야식", message: "공부할 때 가장 열심히 생각나는 친구다." },
-{ author: "익명", authorProfile: "시험기간", message: "갑자기 방 청소가 하고 싶어진다." },
-{ author: "익명", authorProfile: "휴대폰", message: "공부 시작 3분 만에 가장 매력적인 물건이 된다." },
-{ author: "익명", authorProfile: "책상", message: "네 꿈과 간식이 함께 올라오는 곳." },
-{ author: "익명", authorProfile: "필통", message: "시험날 펜은 항상 한 개가 안 나온다." },
-{ author: "익명", authorProfile: "공부 고수", message: "천재는 노력한다. 나는 계획한다." },
-{ author: "익명", authorProfile: "수학 오답노트", message: "틀린 문제는 다시 만난다." },
-{ author: "익명", authorProfile: "국어 문제", message: "출제자의 마음을 맞히는 심리 게임." },
-
-{ author: "익명", authorProfile: "시험 직전", message: "지금 보면 나올 것 같고, 안 보면 나올 것 같다." },
-{ author: "익명", authorProfile: "학생 생태계", message: "공부는 하기 싫지만 성적은 갖고 싶다." },
-{ author: "익명", authorProfile: "벼락치기 장인", message: "시간은 없지만 희망은 있다." },
-{ author: "익명", authorProfile: "학습 통계", message: "공부 시간보다 공부할 생각한 시간이 더 길다." },
-{ author: "익명", authorProfile: "수업 시작 5분 전", message: "모든 숙제는 이때 떠오른다." },
-{ author: "익명", authorProfile: "영어 시험", message: "아는 단어보다 모르는 단어가 더 반갑다." },
-{ author: "익명", authorProfile: "모의고사", message: "현실을 알려주는 친절하지 않은 친구." },
-{ author: "익명", authorProfile: "공부 습관", message: "매일 조금씩 하면 된다. 그 조금씩이 어렵다." },
-{ author: "익명", authorProfile: "학생의 희망", message: "이번 시험은 다르다. 매 시험마다 다르다." },
-{ author: "익명", authorProfile: "학습의 결론", message: "포기하지 않으면 언젠가 맞힌다. 찍어서라도." }
+{ author: "백종원", authorProfile: "기업인", message: "기본을 제대로 익히는 것이 가장 중요하다." }
         ];
 
         function displayDefaultAdvice() {
@@ -790,7 +866,6 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        // 🏫 나이스 학사일정 연동 및 디데이 계산 ([수정] 시험, 정규 키워드 추가 반영)
         function fetchExamDateFromNeis(schoolName) {
             if (!schoolName) { renderDDayBadge(null); return; }
             const schoolInfoUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
@@ -821,7 +896,6 @@
                         const eventName = item.EVENT_NM || "";
                         const eventDate = item.AA_YMD; 
                         if (eventDate >= todayStr) {
-                            // [요청 반영] 시험과 정규 키워드를 추가 필터링 조건에 결합
                             if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") || 
                                 eventName.includes("지필") || eventName.includes("시험") || eventName.includes("정규")) {
                                 upcomingExamDates.push(eventDate);
@@ -886,7 +960,6 @@
                         const data = snapshot.val();
                         if (data) {
                             currentStudentData = data;
-                            // 모든 플로팅 버튼 활성화 노출
                             document.getElementById('msgFabBtn').style.display = 'flex';
                             document.getElementById('historyFabBtn').style.display = 'flex'; 
                             document.getElementById('inquiryFabBtn').style.display = 'flex'; 
@@ -895,6 +968,11 @@
                             const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
                             document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
                             
+                            // 매쓰플랫 정보가 아직 설정되지 않은 기존 회원용 자동 모달 유도
+                            if (!data.mathflatId || !data.mathflatPw) {
+                                setTimeout(() => { openExistingUserModal(); }, 600);
+                            }
+
                             if (data.schoolName && !data.schoolName.includes('초등')) {
                                 fetchExamDateFromNeis(data.schoolName);
                             } else { renderDDayBadge(null); }
