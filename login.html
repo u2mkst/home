@@ -84,7 +84,6 @@
         }
         input:focus, select:focus { outline: none; border-color: #6c5ce7; background-color: #fff; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); }
 
-        /* 🏫 나이스 학교 검색 자동완성 전용 스타일 추가 */
         .autocomplete-wrapper { position: relative; }
         .autocomplete-list {
             position: absolute; top: calc(100% - 14px); left: 0; right: 0;
@@ -106,6 +105,18 @@
 
         .info-text { font-size: 0.8rem; color: #7f8c8d; margin-top: -12px; margin-bottom: 16px; padding-left: 4px; }
         .warning-text { font-size: 0.8rem; color: #e74c3c; margin-top: -12px; margin-bottom: 16px; padding-left: 4px; font-weight: 600; }
+        
+        /* 🌟 부서 및 그룹 구분을 위한 스타일 단락 추가 */
+        .section-divider {
+            border-top: 1px dashed rgba(108, 92, 231, 0.3);
+            margin: 24px 0 20px 0;
+            position: relative;
+        }
+        .section-title {
+            font-size: 0.8rem; color: #6c5ce7; font-weight: bold;
+            background: #f0eefc; padding: 4px 10px; border-radius: 20px;
+            position: absolute; top: -12px; left: 10px;
+        }
 
         .agree-container {
             display: flex;
@@ -130,7 +141,7 @@
         }
         .policy-text-box {
             width: 100%;
-            height: 80px;
+            height: 90px;
             padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.8);
             border-radius: 14px;
@@ -200,13 +211,13 @@
                 <input type="text" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="numeric" required>
                 <div class="info-text">※ 이 번호가 앞으로 로그인할 때 비밀번호가 됩니다.</div>
                 
-                <!-- 🏫 학교 입력 필드 및 자동완성 영역 추가 -->
+                <!-- 🏫 학교 입력 필드 및 자동완성 영역 -->
                 <label>소속 학교</label>
                 <div class="autocomplete-wrapper">
                     <input type="text" id="registerSchool" placeholder="예: 대치중" autocomplete="off" required>
                     <div id="schoolList" class="autocomplete-list hidden"></div>
                 </div>
-                <input type="hidden" id="registerSchoolCode"> <!-- 나이스 학교코드 저장용 히든태그 -->
+                <input type="hidden" id="registerSchoolCode"> 
 
                 <label>담당 선생님 선택</label>
                 <select id="registerTeacher" required>
@@ -219,19 +230,30 @@
                     <option value="정찬호">정찬호 선생님</option>
                     <option value="김영호">김영호 선생님</option>
                 </select>
+
+                <!-- 🌟 [추가 항목] 매쓰플랫 자동 연동 기입 구역 -->
+                <div class="section-divider">
+                    <span class="section-title">매쓰플랫 연동 정보</span>
+                </div>
+
+                <label>매쓰플랫 아이디 (학생 전화번호)</label>
+                <input type="text" id="registerMathflatPhone" placeholder="하이픈(-) 없이 숫자만 입력 (예: 01012345678)" inputmode="numeric" required>
+                
+                <label>매쓰플랫 비밀번호</label>
+                <input type="password" id="registerMathflatPw" placeholder="매쓰플랫 접속 비밀번호 입력" required>
                 
                 <label>이용약관 및 개인정보처리방침</label>
                 <textarea class="policy-text-box" readonly>
-                    [데이터 처리 방침 요약] 본 서비스는 회원가입 시 수집하는 모든 개인 식별 정보(이름, 연락처, 연동 패스워드 등)를 군사 통신 표준 규격인 AES-256 알고리즘으로 강력하게 암호화하여 저장하며, 암호화된 데이터는 승인된 관리 시스템 외에는 복호화가 불가능합니다.
-                 K&P 수학입시학원 학생 관리 서비스(이하 '서비스')는 이용자의 개인정보를 중요하게 생각하며, 「개인정보 보호법」 등 관련 법령을 준수합니다. 본 서비스는 회원가입 시 아래와 같이 최소한의 개인정보를 수집하며, 수집된 정보는 명시된 목적 외의 용도로는 절대 사용되지 않습니다.
+[데이터 처리 방침 요약] 본 서비스는 회원가입 시 수집하는 모든 개인 식별 정보(이름, 연락처, 연동 패스워드 등)를 군사 통신 표준 규격인 AES-256 알고리즘으로 강력하게 암호화하여 저장하며, 암호화된 데이터는 승인된 관리 시스템 외에는 복호화가 불가능합니다.
+K&P 수학입시학원 학생 관리 서비스(이하 '서비스')는 이용자의 개인정보를 중요하게 생각하며, 「개인정보 보호법」 등 관련 법령을 준수합니다. 본 서비스는 회원가입 시 아래와 같이 최소한의 개인정보를 수집하며, 수집된 정보는 명시된 목적 외의 용도로는 절대 사용되지 않습니다.
 
 1. 수집하는 개인정보의 항목
-- 필수 항목: 학생 이름, 유투엠 ID, 부모님 전화번호 뒷자리(4자리), 담당 선생님 이름
+- 필수 항목: 학생 이름, 유투엠 ID, 부모님 전화번호 뒷자리(4자리), 담당 선생님 이름, 매쓰플랫 아이디(학생 전화번호), 매쓰플랫 비밀번호
 - 자동 수집 항목: 서비스 이용 기록, 접속 로그, 쿠키, 접속 IP 정보
 
 2. 개인정보의 수집 및 이용 목적
 - 회원 가입 및 본인 확인, 부정이용 방지
-- 학원 학습 사이트(유투엠, 매쓰플랫 등) 연동 지원 및 학생 맞춤형 학습 관리 서비스 제공
+- 학원 학습 사이트(유투엠, 매쓰플랫 등)의 키오스크 하드웨어 기반 자동 로그인 연동 및 맞춤형 진도 관리 서비스 제공
 - 학원-학생 간의 실시간 대화 및 공지사항 전달
 
 3. 개인정보의 보유 및 이용 기간
@@ -254,15 +276,15 @@
 
 제2조 (용어의 정의)
 1. '회원'이란 본 약관에 동의하고 서비스에 가입하여 학원이 제공하는 서비스를 이용하는 학생 사용자를 말합니다.
-2. '유투엠 ID'란 서비스 연동 및 본인 식별을 위해 회원이 입력한 고유 정보입니다.
+2. '유투엠 ID' 및 '매쓰플랫 정보'란 서비스 연동 및 통합 로그인 구현을 위해 회원이 입력한 계정 정보입니다.
 
 제3조 (약관의 효력 및 변경)
 1. 본 약관은 서비스 화면에 게시하거나 기타의 방법으로 회원에게 공지함으로써 효력이 발생합니다.
 2. 학원은 필요하다고 인정되는 경우 관계 법령을 위배하지 않는 범위 내에서 약관을 변경할 수 있으며, 변경된 약관은 서비스 내에 공지합니다.
 
 제4조 (회원의 의무)
-1. 회원은 가입 신청 시 실명으로 정확한 정보를 입력해야 하며, 타인의 정보(유투엠 ID 등)를 도용해서는 안 됩니다.
-2. 회원은 본인의 계정 및 비밀번호(부모님 번호 뒷자리 등)를 안전하게 관리해야 하며, 제3자에게 대여하거나 유출해서는 안 됩니다.
+1. 회원은 가입 신청 시 실명으로 정확한 정보를 입력해야 하며, 타인의 정보(유투엠 ID, 타인 연락처 등)를 도용해서는 안 됩니다.
+2. 회원은 본인의 계정 및 통합 비밀번호를 안전하게 관리해야 하며, 제3자에게 대여하거나 유출해서는 안 됩니다.
 3. 서비스 이용 중 알게 된 학원의 교육 콘텐츠 및 타인의 개인정보를 외부로 무단 유출하거나 악용해서는 안 됩니다.
 
 제5조 (서비스의 제공 및 제한)
@@ -271,10 +293,11 @@
 
 제6조 (면책 조항)
 1. 학원은 천재지변, 디도스(DDoS) 공격, 통신사 장애 등 불가항력적인 사유로 서비스를 제공할 수 없는 경우 책임이 면제됩니다.
-2. 회원의 귀책사유로 인한 서비스 이용 장애나 계정 유출에 대해서는 학원이 책임을 지지 않습니다.
+2. 연동 플랫폼(유투엠, 매쓰플랫 등) 고유의 서버 점검이나 패치로 인해 일시적으로 자동 로그인이 비정상 작동하는 경우, 과실이 없는 한 학원의 보상 책임은 제외됩니다.
+3. 회원의 귀책사유로 인한 서비스 이용 장애나 계정 유출에 대해서는 학원이 책임을 지지 않습니다.
 
 제7조 (관할 법원)
-서비스 이용과 관련하여 학원과 회원 간에 발생한 분쟁에 대해서는 학원 소재지를 관할하는 법원을 합의 관할 법원으로 합니다. </textarea>
+서비스 이용과 관련하여 학원과 회원 간에 발생한 분쟁에 대해서는 학원 소재지를 관할하는 법원을 합의 관할 법원으로 합니다.</textarea>
 
                 <label class="agree-container">
                     <input type="checkbox" id="registerAgreement">
@@ -304,70 +327,58 @@
         const auth = firebase.auth();
         const database = firebase.database();
 
-        // 🔒 [보안 중요] AES-256용 공통 비밀키 (외부 유출 주의)
         const SECRET_SALT = "u2mkst!";
-        
-        // 🔑 나이스 오픈 API 인증 키
         const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
 
-        // 🏫 나이스 API 연동: 실시간 학교 실시간 검색 및 자동완성 엔진
         const schoolInput = document.getElementById('registerSchool');
         const schoolList = document.getElementById('schoolList');
         const schoolCodeInput = document.getElementById('registerSchoolCode');
 
         schoolInput.addEventListener('input', function() {
-    const query = this.value.trim();
-    
-    if (query.length < 2) {
-        schoolList.innerHTML = '';
-        schoolList.classList.add('hidden');
-        schoolCodeInput.value = '';
-        return;
-    }
-
-    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            schoolList.innerHTML = '';
-
-            if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
-                const rows = data.schoolInfo[1].row;
-                schoolList.classList.remove('hidden');
-
-                rows.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'autocomplete-item';
-                    
-                    // 🌟 item.LCTN_NM 대신 item.ATPT_OFCDC_SC_NM 으로 변경하여 교육청 명칭이 정확히 뜹니다.
-                    div.innerHTML = `${item.SCHUL_NM} <span class="school-region">${item.ATPT_OFCDC_SC_NM}</span>`;
-                    
-                    div.addEventListener('click', () => {
-                        schoolInput.value = item.SCHUL_NM;
-                        schoolCodeInput.value = item.SD_SCHUL_CODE;
-                        schoolList.innerHTML = '';
-                        schoolList.classList.add('hidden');
-                    });
-                    schoolList.appendChild(div);
-                });
-            } else {
+            const query = this.value.trim();
+            if (query.length < 2) {
+                schoolList.innerHTML = '';
                 schoolList.classList.add('hidden');
+                schoolCodeInput.value = '';
+                return;
             }
-        })
-        .catch(err => {
-            console.error("나이스 API 로딩 오류:", err);
-        });
-});
 
-        // 자동완성 켜진 상태에서 바깥 공간 터치/클릭 시 닫히도록 예외 처리
+            const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    schoolList.innerHTML = '';
+                    if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                        const rows = data.schoolInfo[1].row;
+                        schoolList.classList.remove('hidden');
+                        rows.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'autocomplete-item';
+                            div.innerHTML = `${item.SCHUL_NM} <span class="school-region">${item.ATPT_OFCDC_SC_NM}</span>`;
+                            div.addEventListener('click', () => {
+                                schoolInput.value = item.SCHUL_NM;
+                                schoolCodeInput.value = item.SD_SCHUL_CODE;
+                                schoolList.innerHTML = '';
+                                schoolList.classList.add('hidden');
+                            });
+                            schoolList.appendChild(div);
+                        });
+                    } else {
+                        schoolList.classList.add('hidden');
+                    }
+                })
+                .catch(err => {
+                    console.error("나이스 API 로딩 오류:", err);
+                });
+        });
+
         document.addEventListener('click', function(e) {
             if (e.target !== schoolInput && e.target !== schoolList) {
                 schoolList.innerHTML = '';
                 schoolList.classList.add('hidden');
             }
         });
-
 
         function toggleMode(mode) {
             if(mode === 'register') {
@@ -387,6 +398,11 @@
             const schoolName = schoolInput.value.trim();
             const schoolCode = schoolCodeInput.value.trim();
             const selectedTeacher = document.getElementById('registerTeacher').value;
+            
+            // 🌟 [추가 변수 확보] 매쓰플랫 데이터 가져오기 및 공백 제거
+            const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
+            const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
+            
             const isAgreed = document.getElementById('registerAgreement').checked;
 
             if (!u2mId.startsWith('ufes') || u2mId.length < 6) {
@@ -399,7 +415,6 @@
                 return;
             }
 
-            // 🏫 검색창에 타이핑만 하고 리스트에서 정확히 선택하지 않은 경우 방어코드
             if (!schoolName || !schoolCode) {
                 alert('⚠️ 소속 학교를 입력한 후, 반드시 자동완성 리스트에서 우리 학교를 터치(선택)해 주세요.');
                 return;
@@ -407,6 +422,16 @@
 
             if (!selectedTeacher) {
                 alert('담당 선생님을 선택해 주세요.');
+                return;
+            }
+
+            // 🌟 매쓰플랫 유효성 체크 추가
+            if (mathflatPhone.length < 10) {
+                alert('올바른 매쓰플랫 아이디(휴대폰 번호 전체)를 입력해 주세요.');
+                return;
+            }
+            if (!mathflatPw) {
+                alert('매쓰플랫 비밀번호를 입력해 주세요.');
                 return;
             }
 
@@ -418,9 +443,13 @@
             const studentEmail = u2mId + "@kst.com"; 
             const studentPassword = "00" + phoneTail; 
 
-            // 🔒 [보안 강화] 입력된 개인정보를 데이터베이스 저장 직전 AES-256 암호화
+            // 🔒 [보안 통제] 가입 정보 일체를 AES-256 구조로 고밀도 암호화
             const encryptedName = CryptoJS.AES.encrypt(studentName, SECRET_SALT).toString();
             const encryptedPhoneTail = CryptoJS.AES.encrypt(phoneTail, SECRET_SALT).toString();
+            
+            // 🌟 원장님 지시 사항: 수집된 매쓰플랫 계정 정보도 강력 암호화 기틀 적용
+            const encryptedMfPhone = CryptoJS.AES.encrypt(mathflatPhone, SECRET_SALT).toString();
+            const encryptedMfPw = CryptoJS.AES.encrypt(mathflatPw, SECRET_SALT).toString();
 
             auth.createUserWithEmailAndPassword(studentEmail, studentPassword)
                 .then((userCredential) => {
@@ -429,14 +458,16 @@
                     return user.updateProfile({
                         displayName: studentName 
                     }).then(() => {
-                        // Realtime Database에 학교 이름과 나이스 학교 코드를 함께 규격 전송합니다.
+                        // 🌟 Realtime Database 매핑 규격 (studentphone, mathflatpw 반영완료)
                         return database.ref('students/' + user.uid).set({
-                            name: encryptedName,                  // 🔒 암호화
-                            u2mId: u2mId,                         // 식별 및 대조용 ID
-                            schoolName: schoolName,               // 🏫 나이스 공식 학교명
-                            schoolCode: schoolCode,               // 🧬 표준 학교 고유 코드 (D-day 계산기 등에 활용)
-                            teacher: selectedTeacher,             // 배정용 선생님 명
-                            phone: encryptedPhoneTail,            // 🔒 암호화
+                            name: encryptedName,                  
+                            u2mId: u2mId,                         
+                            schoolName: schoolName,               
+                            schoolCode: schoolCode,               
+                            teacher: selectedTeacher,             
+                            phone: encryptedPhoneTail,            
+                            studentphone: encryptedMfPhone,       // 👈 원장님 지정 필드 (매쓰플랫 ID용 휴대폰번호)
+                            mathflatpw: encryptedMfPw,           // 👈 원장님 지정 필드 (매쓰플랫 비밀번호)
                             joinedAt: firebase.database.ServerValue.TIMESTAMP
                         });
                     });
@@ -444,6 +475,11 @@
                 .then(() => {
                     alert('🎉 회원가입이 완료되었습니다!\n유투엠 아이디와 비밀번호로 로그인해 주세요.');
                     document.getElementById('registerAgreement').checked = false;
+                    
+                    // 입력창 초기화
+                    document.getElementById('registerMathflatPhone').value = "";
+                    document.getElementById('registerMathflatPw').value = "";
+                    
                     toggleMode('login');
                     document.getElementById('loginId').value = u2mId;
                 })
