@@ -381,6 +381,21 @@
         </div>
     </div>
 
+<!-- 자동 로그아웃 경고 모달 -->
+<div id="idleWarningModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(6px); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: #ffffff; width: 90%; max-width: 380px; padding: 30px 24px; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;">
+        <div style="font-size: 1.3rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px;">⏳ 장시간 미사용 알림</div>
+        <div style="font-size: 0.95rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; word-break: keep-all;">
+            약 30분 동안 활동이 감지되지 않았습니다.<br>
+            보안을 위해 잠시 후 <span id="idleCountdown" style="color: #e53e3e; font-weight: bold;">60</span>초 뒤 자동으로 로그아웃됩니다.
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="extendSession()" style="flex: 1; background-color: #6c5ce7; color: #ffffff; border: none; padding: 14px 0; font-size: 0.95rem; font-weight: 600; border-radius: 14px; cursor: pointer;">로그인 유지하기</button>
+            <button onclick="triggerAutoLogout()" style="width: 100px; background-color: #e2e8f0; color: #4a5568; border: none; padding: 14px 0; font-size: 0.95rem; font-weight: 600; border-radius: 14px; cursor: pointer;">로그아웃</button>
+        </div>
+    </div>
+</div>
+    
     <div id="customAlertModal" class="modal-overlay">
         <div class="modal-box">
             <div id="customAlertTitle" class="modal-title">💡 알림</div>
@@ -562,6 +577,101 @@
                 .catch(err => showCustomAlert('전송 실패: ' + err.message, "❌ 에러"));
         }
 
+let idleTimer;       // 30분 미사용 체크용 타이머
+let countdownTimer;  // 팝업이 뜬 뒤 60초 카운트다운용 타이머
+let remainingSeconds = 60;
+
+const THIRTY_MINUTES = 30 * 60 * 1000; // 30분을 밀리초로 계산
+
+// 1. 유저 행동 감지 이벤트 등록/해제 함수
+function startIdleTracking() {
+    const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
+    events.forEach(event => {
+        window.addEventListener(event, resetIdleTimer);
+    });
+    resetIdleTimer(); // 초기 타이머 가동
+}
+
+function stopIdleTracking() {
+    const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
+    events.forEach(event => {
+        window.removeEventListener(event, resetIdleTimer);
+    });
+}
+
+// 2. 움직임이 있을 때마다 30분 타이머를 리셋
+function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    // 30분 동안 아무 움직임이 없으면 showIdleWarning 함수 실행
+    idleTimer = setTimeout(showIdleWarning, THIRTY_MINUTES);
+}
+
+// 3. 30분간 안 만졌을 때 팝업 띄우기
+function showIdleWarning() {
+    stopIdleTracking(); // 모달이 떠 있는 동안에는 마우스가 움직여도 타이머가 리셋되지 않게 감지 중지
+    
+    // 모달 띄우기
+    document.getElementById('idleWarningModal').style.display = 'flex';
+    
+    // 60초 카운트다운 시작
+    remainingSeconds = 60;
+    document.getElementById('idleCountdown').innerText = remainingSeconds;
+    
+    countdownTimer = setInterval(() => {
+        remainingSeconds--;
+        document.getElementById('idleCountdown').innerText = remainingSeconds;
+        
+        if (remainingSeconds <= 0) {
+            clearInterval(countdownTimer);
+            triggerAutoLogout(); // 0초 되면 강제 자동 로그아웃
+        }
+    }, 1000);
+}
+
+// 4. [로그인 유지하기] 버튼을 누른 경우
+function extendSession() {
+    clearInterval(countdownTimer); // 카운트다운 중지
+    document.getElementById('idleWarningModal').style.display = 'none'; // 모달 닫기
+    startIdleTracking(); // 다시 30분 미사용 감지 시작
+}
+
+// 5. [로그아웃] 버튼을 누르거나 60초가 지났을 때 작동할 최종 로그아웃 함수
+function triggerAutoLogout() {
+    clearInterval(countdownTimer);
+    clearTimeout(idleTimer);
+    
+    // 파이어베이스 로그아웃 처리
+    auth.signOut().then(() => {
+        // 로컬 스토리지에 저장된 유투엠 자동로그인 정보 완전 삭제
+        localStorage.removeItem('u2m_id');
+        localStorage.removeItem('u2m_pw');
+        
+        // 안드로이드 앱 웹뷰 쿠키/세션 삭제 브릿지 호출 (태블릿 로그아웃 처리용)
+        if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
+            window.AndroidApp.logoutAll();
+        }
+        
+        // 최종 로그인 페이지로 리다이렉트
+        window.location.replace('login.html');
+    }).catch((err) => {
+        console.error("자동 로그아웃 중 오류 발생:", err);
+        window.location.replace('login.html');
+    });
+}
+
+// 6. 페이지 로드 시 로그인 상태를 확인한 직후 감지 시작하게 연동
+// 기존 window.onload 나 auth.onAuthStateChanged 내부 성공 로직 마지막 줄에 아래 한 줄을 실행시켜 주세요.
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        // ... 기존 유저 데이터 불러오는 로직 ...
+        
+        // 로그인 성공 확인 후 미사용 감지 트래킹 시작
+        startIdleTracking();
+    } else {
+        window.location.replace('login.html');
+    }
+});
+        
         function transmitBridgeCredentials() {
             if (!currentStudentData) return;
             try {
