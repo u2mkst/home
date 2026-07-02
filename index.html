@@ -1217,6 +1217,27 @@
         });
     }
 
-    function logoutUser() { show
+    function logoutUser() { showModal('logoutCheckModal'); }
+
+    function confirmLogoutAction() {
+        closeModal('logoutCheckModal');
+        auth.signOut().then(() => {
+            localStorage.removeItem('u2m_id');
+            localStorage.removeItem('u2m_pw');
+            window.location.href = 'login.html';
+        }).catch((error) => {
+            showCustomAlert("로그아웃 중 오류가 발생했습니다: " + error.message, "❌ 에러");
+        });
+    }
+
+    // =======================================================
+    // 12. 전체 페이지 초기 로드 핸들러
+    // =======================================================
+    window.onload = function() {
+        checkUserAuth();
+        startClock();
+        listenToFirebase();
+    };
+</script>
 </body>
 </html>
