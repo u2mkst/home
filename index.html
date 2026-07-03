@@ -416,6 +416,7 @@
     let noteListener = null;
     let historyListeners = []; 
     let customAlertCallback = null;
+    let rebootListener = null; // 재부팅 리스너 추적용 변수
 
     let idleTimer;       
     let countdownTimer;  
@@ -431,7 +432,61 @@
     ];
 
     const advices = [
-        { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
+        { author: "익명", authorProfile: "학생들의 현실", message: "내일의 나는 오늘의 나보다 공부를 잘할 거라 믿었다. 그리고 내일도 그렇게 믿었다." },
+{ author: "익명", authorProfile: "시험 전날", message: "공부는 미리 하는 것이다. 나는 늘 그 사실을 시험 전날 깨닫는다." },
+{ author: "익명", authorProfile: "수학 문제집", message: "답지를 보면 이해가 된다. 덮는 순간 다시 모른다." },
+{ author: "익명", authorProfile: "숙제 전문가", message: "숙제는 빨리 시작할수록 일찍 끝난다. 문제는 시작이다." },
+{ author: "익명", authorProfile: "벼락치기 협회", message: "벼락치기도 꾸준히 하면 습관이 된다." },
+{ author: "익명", authorProfile: "국어 시간", message: "지문은 읽었는데 내용은 지문만 안다." },
+{ author: "익명", authorProfile: "수학 시간", message: "분명 배웠는데 처음 보는 문제처럼 생겼다." },
+{ author: "익명", authorProfile: "시험 감독관", message: "시험 시간은 평소보다 3배 빠르게 흐른다." },
+{ author: "익명", authorProfile: "알람 시계", message: "공부할 때 10분은 1시간 같고, 쉬는 시간 10분은 1분 같다." },
+{ author: "익명", authorProfile: "교과서", message: "나를 펼치면 졸리고 덮으면 불안하다." },
+
+{ author: "익명", authorProfile: "학생 공통", message: "공부 계획표는 세울 때가 가장 완벽하다." },
+{ author: "익명", authorProfile: "시험지", message: "나는 항상 학생보다 문제를 더 잘 안다." },
+{ author: "익명", authorProfile: "연필", message: "네가 포기해도 나는 끝까지 닳는다." },
+{ author: "익명", authorProfile: "지우개", message: "실수는 지울 수 있지만 점수는 안 지워진다." },
+{ author: "익명", authorProfile: "학원 가방", message: "지식보다 문제집이 더 무겁다." },
+{ author: "익명", authorProfile: "학생의 다짐", message: "오늘은 진짜 공부한다. 이 말은 어제도 했다." },
+{ author: "익명", authorProfile: "독서실", message: "들어올 때는 의욕이 넘치고 나갈 때는 배가 고프다." },
+{ author: "익명", authorProfile: "수면 연구소", message: "교과서는 최고의 수면 유도 장치다." },
+{ author: "익명", authorProfile: "영어 단어장", message: "외운 단어는 시험날 잠시 여행을 떠난다." },
+{ author: "익명", authorProfile: "수학 공식", message: "나를 외우지 말고 이해하라. 물론 이해도 어렵다." },
+
+{ author: "익명", authorProfile: "시험 결과", message: "공부를 안 하면 후회하고, 공부를 해도 더 할걸 후회한다." },
+{ author: "익명", authorProfile: "문제집", message: "한 권 끝내면 자신감이 생기고, 다음 권이 나타난다." },
+{ author: "익명", authorProfile: "방학 계획", message: "계획은 7월에 세우고 실천은 언젠가 한다." },
+{ author: "익명", authorProfile: "공부 명언 제조기", message: "집중은 5분, 휴식은 50분이면 균형 잡힌 삶이다." },
+{ author: "익명", authorProfile: "수학 선생님", message: "쉽죠? 라는 말은 보통 쉽지 않다는 뜻이다." },
+{ author: "익명", authorProfile: "과학 시간", message: "실험은 재밌고 보고서는 과학적으로 싫다." },
+{ author: "익명", authorProfile: "역사 시간", message: "연도는 외웠는데 어느 사건인지 모르겠다." },
+{ author: "익명", authorProfile: "학생 정신", message: "모르는 문제를 오래 보면 아는 척하게 된다." },
+{ author: "익명", authorProfile: "교실 시계", message: "쉬는 시간에는 달리고 수업 시간에는 걷는다." },
+{ author: "익명", authorProfile: "점수", message: "나는 노력의 결과지만 가끔 노력과 안 친하다." },
+
+{ author: "익명", authorProfile: "공부의 진실", message: "한 문제를 맞히면 자신감이 생기고, 다음 문제는 겸손을 가르친다." },
+{ author: "익명", authorProfile: "학생의 눈물", message: "답을 보면 왜 틀렸는지 안다. 시험 중엔 몰랐다." },
+{ author: "익명", authorProfile: "야식", message: "공부할 때 가장 열심히 생각나는 친구다." },
+{ author: "익명", authorProfile: "시험기간", message: "갑자기 방 청소가 하고 싶어진다." },
+{ author: "익명", authorProfile: "휴대폰", message: "공부 시작 3분 만에 가장 매력적인 물건이 된다." },
+{ author: "익명", authorProfile: "책상", message: "네 꿈과 간식이 함께 올라오는 곳." },
+{ author: "익명", authorProfile: "필통", message: "시험날 펜은 항상 한 개가 안 나온다." },
+{ author: "익명", authorProfile: "공부 고수", message: "천재는 노력한다. 나는 계획한다." },
+{ author: "익명", authorProfile: "수학 오답노트", message: "틀린 문제는 다시 만난다." },
+{ author: "익명", authorProfile: "국어 문제", message: "출제자의 마음을 맞히는 심리 게임." },
+
+{ author: "익명", authorProfile: "시험 직전", message: "지금 보면 나올 것 같고, 안 보면 나올 것 같다." },
+{ author: "익명", authorProfile: "학생 생태계", message: "공부는 하기 싫지만 성적은 갖고 싶다." },
+{ author: "익명", authorProfile: "벼락치기 장인", message: "시간은 없지만 희망은 있다." },
+{ author: "익명", authorProfile: "학습 통계", message: "공부 시간보다 공부할 생각한 시간이 더 길다." },
+{ author: "익명", authorProfile: "수업 시작 5분 전", message: "모든 숙제는 이때 떠오른다." },
+{ author: "익명", authorProfile: "영어 시험", message: "아는 단어보다 모르는 단어가 더 반갑다." },
+{ author: "익명", authorProfile: "모의고사", message: "현실을 알려주는 친절하지 않은 친구." },
+{ author: "익명", authorProfile: "공부 습관", message: "매일 조금씩 하면 된다. 그 조금씩이 어렵다." },
+{ author: "익명", authorProfile: "학생의 희망", message: "이번 시험은 다르다. 매 시험마다 다르다." },
+{ author: "익명", authorProfile: "학습의 결론", message: "포기하지 않으면 언젠가 맞힌다. 찍어서라도." },
+{ author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
 { author: "아리스토텔레스", authorProfile: "철학자", message: "교육의 뿌리는 쓰지만 그 열매는 달다." },
 { author: "알베르트 아인슈타인", authorProfile: "물리학자", message: "배움을 멈추는 순간 늙기 시작한다." },
 { author: "넬슨 만델라", authorProfile: "전 남아프리카공화국 대통령", message: "교육은 세상을 바꿀 가장 강력한 무기다." },
@@ -538,61 +593,7 @@
 { author: "박웅현", authorProfile: "광고인", message: "생각의 깊이가 인생의 깊이다." },
 { author: "도종환", authorProfile: "시인", message: "천천히 가더라도 멈추지 마라." },
 { author: "이국종", authorProfile: "의사", message: "실력을 쌓는 데는 지름길이 없다." },
-{ author: "백종원", authorProfile: "기업인", message: "기본을 제대로 익히는 것이 가장 중요하다." },
-{ author: "익명", authorProfile: "학생들의 현실", message: "내일의 나는 오늘의 나보다 공부를 잘할 거라 믿었다. 그리고 내일도 그렇게 믿었다." },
-{ author: "익명", authorProfile: "시험 전날", message: "공부는 미리 하는 것이다. 나는 늘 그 사실을 시험 전날 깨닫는다." },
-{ author: "익명", authorProfile: "수학 문제집", message: "답지를 보면 이해가 된다. 덮는 순간 다시 모른다." },
-{ author: "익명", authorProfile: "숙제 전문가", message: "숙제는 빨리 시작할수록 일찍 끝난다. 문제는 시작이다." },
-{ author: "익명", authorProfile: "벼락치기 협회", message: "벼락치기도 꾸준히 하면 습관이 된다." },
-{ author: "익명", authorProfile: "국어 시간", message: "지문은 읽었는데 내용은 지문만 안다." },
-{ author: "익명", authorProfile: "수학 시간", message: "분명 배웠는데 처음 보는 문제처럼 생겼다." },
-{ author: "익명", authorProfile: "시험 감독관", message: "시험 시간은 평소보다 3배 빠르게 흐른다." },
-{ author: "익명", authorProfile: "알람 시계", message: "공부할 때 10분은 1시간 같고, 쉬는 시간 10분은 1분 같다." },
-{ author: "익명", authorProfile: "교과서", message: "나를 펼치면 졸리고 덮으면 불안하다." },
-
-{ author: "익명", authorProfile: "학생 공통", message: "공부 계획표는 세울 때가 가장 완벽하다." },
-{ author: "익명", authorProfile: "시험지", message: "나는 항상 학생보다 문제를 더 잘 안다." },
-{ author: "익명", authorProfile: "연필", message: "네가 포기해도 나는 끝까지 닳는다." },
-{ author: "익명", authorProfile: "지우개", message: "실수는 지울 수 있지만 점수는 안 지워진다." },
-{ author: "익명", authorProfile: "학원 가방", message: "지식보다 문제집이 더 무겁다." },
-{ author: "익명", authorProfile: "학생의 다짐", message: "오늘은 진짜 공부한다. 이 말은 어제도 했다." },
-{ author: "익명", authorProfile: "독서실", message: "들어올 때는 의욕이 넘치고 나갈 때는 배가 고프다." },
-{ author: "익명", authorProfile: "수면 연구소", message: "교과서는 최고의 수면 유도 장치다." },
-{ author: "익명", authorProfile: "영어 단어장", message: "외운 단어는 시험날 잠시 여행을 떠난다." },
-{ author: "익명", authorProfile: "수학 공식", message: "나를 외우지 말고 이해하라. 물론 이해도 어렵다." },
-
-{ author: "익명", authorProfile: "시험 결과", message: "공부를 안 하면 후회하고, 공부를 해도 더 할걸 후회한다." },
-{ author: "익명", authorProfile: "문제집", message: "한 권 끝내면 자신감이 생기고, 다음 권이 나타난다." },
-{ author: "익명", authorProfile: "방학 계획", message: "계획은 7월에 세우고 실천은 언젠가 한다." },
-{ author: "익명", authorProfile: "공부 명언 제조기", message: "집중은 5분, 휴식은 50분이면 균형 잡힌 삶이다." },
-{ author: "익명", authorProfile: "수학 선생님", message: "쉽죠? 라는 말은 보통 쉽지 않다는 뜻이다." },
-{ author: "익명", authorProfile: "과학 시간", message: "실험은 재밌고 보고서는 과학적으로 싫다." },
-{ author: "익명", authorProfile: "역사 시간", message: "연도는 외웠는데 어느 사건인지 모르겠다." },
-{ author: "익명", authorProfile: "학생 정신", message: "모르는 문제를 오래 보면 아는 척하게 된다." },
-{ author: "익명", authorProfile: "교실 시계", message: "쉬는 시간에는 달리고 수업 시간에는 걷는다." },
-{ author: "익명", authorProfile: "점수", message: "나는 노력의 결과지만 가끔 노력과 안 친하다." },
-
-{ author: "익명", authorProfile: "공부의 진실", message: "한 문제를 맞히면 자신감이 생기고, 다음 문제는 겸손을 가르친다." },
-{ author: "익명", authorProfile: "학생의 눈물", message: "답을 보면 왜 틀렸는지 안다. 시험 중엔 몰랐다." },
-{ author: "익명", authorProfile: "야식", message: "공부할 때 가장 열심히 생각나는 친구다." },
-{ author: "익명", authorProfile: "시험기간", message: "갑자기 방 청소가 하고 싶어진다." },
-{ author: "익명", authorProfile: "휴대폰", message: "공부 시작 3분 만에 가장 매력적인 물건이 된다." },
-{ author: "익명", authorProfile: "책상", message: "네 꿈과 간식이 함께 올라오는 곳." },
-{ author: "익명", authorProfile: "필통", message: "시험날 펜은 항상 한 개가 안 나온다." },
-{ author: "익명", authorProfile: "공부 고수", message: "천재는 노력한다. 나는 계획한다." },
-{ author: "익명", authorProfile: "수학 오답노트", message: "틀린 문제는 다시 만난다." },
-{ author: "익명", authorProfile: "국어 문제", message: "출제자의 마음을 맞히는 심리 게임." },
-
-{ author: "익명", authorProfile: "시험 직전", message: "지금 보면 나올 것 같고, 안 보면 나올 것 같다." },
-{ author: "익명", authorProfile: "학생 생태계", message: "공부는 하기 싫지만 성적은 갖고 싶다." },
-{ author: "익명", authorProfile: "벼락치기 장인", message: "시간은 없지만 희망은 있다." },
-{ author: "익명", authorProfile: "학습 통계", message: "공부 시간보다 공부할 생각한 시간이 더 길다." },
-{ author: "익명", authorProfile: "수업 시작 5분 전", message: "모든 숙제는 이때 떠오른다." },
-{ author: "익명", authorProfile: "영어 시험", message: "아는 단어보다 모르는 단어가 더 반갑다." },
-{ author: "익명", authorProfile: "모의고사", message: "현실을 알려주는 친절하지 않은 친구." },
-{ author: "익명", authorProfile: "공부 습관", message: "매일 조금씩 하면 된다. 그 조금씩이 어렵다." },
-{ author: "익명", authorProfile: "학생의 희망", message: "이번 시험은 다르다. 매 시험마다 다르다." },
-{ author: "익명", authorProfile: "학습의 결론", message: "포기하지 않으면 언젠가 맞힌다. 찍어서라도." }
+{ author: "백종원", authorProfile: "기업인", message: "기본을 제대로 익히는 것이 가장 중요하다." }
     ];
 
     // =======================================================
@@ -661,28 +662,45 @@
                         
                         listenToTeacherNotes(user.uid);
                         startLiveChatHistory(user.uid); 
+                        
+                        // 🔋 배터리 자동 수집 주기 가동 및 원격 제어 신호 대기 시작
+                        startDeviceStatusReporting(user.uid);
+                        listenToRemoteCommands(user.uid);
                     } else {
-                        detachAllHistoryListeners();
-                        if (noteListener) noteListener.off();
-                        auth.signOut().then(() => {
-                            localStorage.removeItem('u2m_id');
-                            localStorage.removeItem('u2m_pw');
-                            window.location.replace('login.html');
-                        });
+                        cleanStudentSystemSession();
                     }
                 });
             } else {
-                detachAllHistoryListeners();
-                window.location.replace('login.html'); 
+                cleanStudentSystemSession();
+            }
+        });
+    }
+
+    function cleanStudentSystemSession() {
+        detachAllHistoryListeners();
+        if (noteListener) noteListener.off();
+        if (rebootListener) rebootListener.off();
+        auth.signOut().then(() => {
+            localStorage.removeItem('u2m_id');
+            localStorage.removeItem('u2m_pw');
+            if(window.location.pathname.indexOf('login.html') === -1) {
+                window.location.replace('login.html');
             }
         });
     }
 
     // =======================================================
-    // 4. 공통 UI 모달 및 알림 함수
+    // 4. 공통 UI 모달 및 알림 함수 (중복 closeModal 제거 완료)
     // =======================================================
-    function showModal(id) { document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function showModal(id) { 
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'flex'; 
+    }
+    
+    function closeModal(id) { 
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'none'; 
+    }
 
     function showCustomAlert(content, title = "💡 알림", callback = null) {
         document.getElementById('customAlertTitle').innerText = title;
@@ -724,17 +742,13 @@
     // =======================================================
     function startIdleTracking() {
         const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
-        events.forEach(event => {
-            window.addEventListener(event, resetIdleTimer);
-        });
+        events.forEach(event => { window.addEventListener(event, resetIdleTimer); });
         resetIdleTimer();
     }
 
     function stopIdleTracking() {
         const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
-        events.forEach(event => {
-            window.removeEventListener(event, resetIdleTimer);
-        });
+        events.forEach(event => { window.removeEventListener(event, resetIdleTimer); });
     }
 
     function resetIdleTimer() {
@@ -744,7 +758,7 @@
 
     function showIdleWarning() {
         stopIdleTracking(); 
-        document.getElementById('idleWarningModal').style.display = 'flex';
+        showModal('idleWarningModal');
         
         remainingSeconds = 60;
         document.getElementById('idleCountdown').innerText = remainingSeconds;
@@ -762,7 +776,7 @@
 
     function extendSession() {
         clearInterval(countdownTimer); 
-        document.getElementById('idleWarningModal').style.display = 'none'; 
+        closeModal('idleWarningModal'); 
         startIdleTracking(); 
     }
 
@@ -773,13 +787,11 @@
         auth.signOut().then(() => {
             localStorage.removeItem('u2m_id');
             localStorage.removeItem('u2m_pw');
-            
             if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
                 window.AndroidApp.logoutAll();
             }
             window.location.replace('login.html');
         }).catch((err) => {
-            console.error("자동 로그아웃 중 오류 발생:", err);
             window.location.replace('login.html');
         });
     }
@@ -788,15 +800,14 @@
     // 7. 건의사항 및 학원 문의 기능
     // =======================================================
     function openUnifiedInquiryModal() { showModal('unifiedInquiryModal'); }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     
     function triggerSuggestionFromUnified() {
-        closeUnifiedInquiryModal();
+        closeModal('unifiedInquiryModal');
         openSuggestionModal();
     }
     
     function triggerInquiryFromUnified() {
-        closeUnifiedInquiryModal();
+        closeModal('unifiedInquiryModal');
         openAcademyInquiryModal();
     }
 
@@ -908,28 +919,20 @@
     }
 
     // =======================================================
-    // 8. 안드로이드 연동 브릿지 (전달 매개변수 구조 전면 매칭 수정)
+    // 8. 안드로이드 연동 브릿지 (로그인 / 배터리 수집 / 원격 재부팅 연동)
     // =======================================================
     function transmitBridgeCredentials() {
         if (!currentStudentData) return;
         try {
-            // 1. 유투엠 자동로그인용 변수 설정
-            // 로컬 스토리지에 보관된 학생 본래 로그인 ID와 비밀번호를 획득하여 주입합니다.
             const u2mId = localStorage.getItem('u2m_id') || currentStudentData.u2mId || '';
             const u2mPw = localStorage.getItem('u2m_pw') || '';
-
-            // 2. 매쓰플랫 자동로그인용 변수 설정
-            // [수정] 매쓰플랫 ID = 학생 전화번호(studentPhone), 매쓰플랫 PW = mathflatPw
-            const mathflatId = decryptAES(currentStudentData.studentPhone || currentStudentData.phone).trim();
-            const rawMathflatPw = currentStudentData.mathflatPw || '';
-            const decryptedMathflatPw = decryptAES(rawMathflatPw).trim();
+            const mathflatId = decryptAES(currentStudentData.studentPhone || currentStudentData.phone || '').trim();
+            const decryptedMathflatPw = decryptAES(currentStudentData.mathflatPw || '').trim();
             
             if (window.AndroidApp) {
-                // 유투엠 브릿지 호출 (아이디, 패스워드 순서 매칭 보완)
                 if (typeof window.AndroidApp.loginToU2M === 'function') {
                     window.AndroidApp.loginToU2M(u2mId, u2mPw, "", "");
                 }
-                // 매쓰플랫 브릿지 호출 (전화번호가 ID 파라미터로 전송됨)
                 if (typeof window.AndroidApp.loginToMathflat === 'function') {
                     window.AndroidApp.loginToMathflat(mathflatId, decryptedMathflatPw);
                 }
@@ -945,6 +948,56 @@
     function goToMathflatDirect() {
         transmitBridgeCredentials();
         setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 1500);
+    }
+
+    // 🔋 [추가] 안드로이드 기기 배터리 정보 전송 함수
+    function startDeviceStatusReporting(studentUid) {
+        // 1분(60000ms)마다 안드로이드 웹뷰의 기기 배터리 잔량을 수집하여 실시간 파이어베이스 전송
+        setInterval(() => {
+            if (window.AndroidApp && typeof window.AndroidApp.getBatteryLevel === 'function') {
+                try {
+                    const level = window.AndroidApp.getBatteryLevel(); // 앱 내부 배터리 값 함수 호출
+                    if(level !== undefined && level !== null) {
+                        database.ref(`device_status/${studentUid}`).set({
+                            battery: parseInt(level),
+                            lastUpdated: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    }
+                } catch(e) { console.error("배터리 수집 오류:", e); }
+            } else if (navigator.getBattery) {
+                // 일반 웹브라우저 테스트 백업용 나침반 코드
+                navigator.getBattery().then(battery => {
+                    database.ref(`device_status/${studentUid}`).set({
+                        battery: Math.round(battery.level * 100),
+                        lastUpdated: firebase.database.ServerValue.TIMESTAMP
+                    });
+                });
+            }
+        }, 60000);
+    }
+
+    // 🔄 [추가] 원격 관리자 제어 신호 대기 및 안드로이드 시스템 reboot 트리거
+    function listenToRemoteCommands(studentUid) {
+        if (rebootListener) rebootListener.off();
+        rebootListener = database.ref(`commands/${studentUid}`);
+        
+        rebootListener.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const cmd = snapshot.val();
+                if (cmd && cmd.reboot === true) {
+                    // 명령을 확인했으므로 무한 재부팅 루프 방지를 위해 파이어베이스 명령 데이터 즉시 제거
+                    database.ref(`commands/${studentUid}`).remove();
+                    
+                    // 안드로이드 앱 웹뷰 브릿지에 탑재된 강제 단말기 재부팅 호출
+                    if (window.AndroidApp && typeof window.AndroidApp.rebootDevice === 'function') {
+                        window.AndroidApp.rebootDevice();
+                    } else {
+                        alert("🔄 [원격 제어] 관리자로부터 기기 재부팅 신호를 수신했습니다. (테스트 환경: 브라우저)");
+                        window.location.reload();
+                    }
+                }
+            }
+        });
     }
 
     // =======================================================
@@ -1005,7 +1058,6 @@
                 } else { renderDDayBadge(null); }
             })
             .catch(err => {
-                console.error("나이스 로딩 실패:", err);
                 renderDDayBadge(null);
             });
     }
@@ -1083,7 +1135,7 @@
                 if (decryptedMsg.startsWith("[답장완료] ")) { decryptedMsg = decryptedMsg.replace("[답장완료] ", ""); }
                 document.getElementById('modalTitle').innerText = "✉️ 선생님이 보낸 쪽지";
                 document.getElementById('modalNoticeContent').innerText = `[${note.teacher} 선생님]\n\n${decryptedMsg}`;
-                document.getElementById('noticeModal').style.display = 'flex';
+                showModal('noticeModal');
                 database.ref(`student_messages/${uid}/${snapshot.key}/read`).set(true);
             }
         });
@@ -1197,8 +1249,8 @@
             if (text.trim() !== "") {
                 document.getElementById('modalTitle').innerText = "📢 안내 말씀 드립니다";
                 document.getElementById('modalNoticeContent').innerText = text;
-                document.getElementById('noticeModal').style.display = 'flex';
-            } else { document.getElementById('noticeModal').style.display = 'none'; }
+                showModal('noticeModal');
+            } else { closeModal('noticeModal'); }
         });
 
         const now = new Date();
