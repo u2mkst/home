@@ -924,24 +924,20 @@
     function transmitBridgeCredentials() {
     if (!currentStudentData) return;
     try {
-        // 1. 유투엠 정보 가져오기 
-        // 💡 만약 유투엠 학부모 비번이 파이어베이스에 있다면 currentStudentData.parentPw 등으로 매칭하셔야 합니다.
+        // 1. 유투엠 ID 가져오기
         const u2mId = localStorage.getItem('u2m_id') || currentStudentData.u2mId || '';
-        const u2mPw = localStorage.getItem('u2m_pw') || currentStudentData.u2mPw || ''; 
+        
+        // 2. 🌟 [핵심 수정] 유투엠 비밀번호 자리에 로그인할 때 쳤던 4자리 phone 값을 복호화해서 매핑
+        const u2mPw = decryptAES(currentStudentData.phone || '').trim(); 
 
-        // 2. 매쓰플랫 정보 가져오기 및 복호화
+        // 3. 매쓰플랫 정보 가져오기 (이미 성공한 로직 유지)
         const mathflatId = decryptAES(currentStudentData.studentPhone || currentStudentData.phone || '').trim();
         const decryptedMathflatPw = decryptAES(currentStudentData.mathflatPw || '').trim();
         
         if (window.AndroidApp) {
-            // [핵심 수정] 빈 값("")을 보내지 않고, 4개의 인자를 안드로이드 앱 스키마 순서대로 한방에 다 넣어줍니다.
+            // 안드로이드 앱 함수에 4개의 인자를 순서대로 빈칸 없이 꽉 채워서 전송합니다.
             if (typeof window.AndroidApp.loginToU2M === 'function') {
                 window.AndroidApp.loginToU2M(u2mId, u2mPw, decryptedMathflatPw, mathflatId);
-            }
-            
-            // 하위 호환성을 위해 개별 호출 기능도 안전장치로 남겨둡니다.
-            if (typeof window.AndroidApp.loginToMathflat === 'function') {
-                window.AndroidApp.loginToMathflat(mathflatId, decryptedMathflatPw);
             }
         }
     } catch (err) { 
@@ -958,7 +954,6 @@ function goToMathflatDirect() {
     transmitBridgeCredentials();
     setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 1500);
 }
-
     // 🔋 [추가] 안드로이드 기기 배터리 정보 전송 함수
     function startDeviceStatusReporting(studentUid) {
         // 1분(60000ms)마다 안드로이드 웹뷰의 기기 배터리 잔량을 수집하여 실시간 파이어베이스 전송
