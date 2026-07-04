@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K&P 수학입시학원 총관리자</title>
+    <title>K&P 수학입시학원 마스터</title>
     
-    <!-- Firebase 라이브러리 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     
-    <!-- 복호화 암호 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
@@ -61,7 +59,7 @@
             margin-bottom: 25px;
         }
 
-        /* 반투명 카드 공통 스타일 (홈페이지 스타일 계승) */
+        /* 반투명 카드 공통 스타일 */
         .panel-card {
             background: rgba(255, 255, 255, 0.45);
             padding: 20px 16px; 
@@ -83,6 +81,12 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        /* 1순위: 날짜별 명언 조회 영역 특별 강조 UI */
+        .priority-card {
+            border: 2px solid rgba(108, 92, 231, 0.4);
+            background: rgba(255, 255, 255, 0.7);
         }
 
         /* 입력 폼 제어 */
@@ -115,6 +119,46 @@
             background: #ffffff;
         }
         textarea.form-control { resize: none; }
+
+        /* 대형 인라인 달력 스타일 커스텀 */
+        .calendar-input {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #6c5ce7;
+            text-align: center;
+            border: 2px solid #6c5ce7;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        /* 예약 상태 확인 창 */
+        .quote-status-box {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid #edf2f7;
+            margin-top: 12px;
+            min-height: 80px;
+        }
+        .status-empty {
+            color: #a0aec0;
+            text-align: center;
+            font-size: 0.88rem;
+            padding: 20px 0;
+        }
+        .status-exist {
+            text-align: left;
+        }
+        .status-date-badge {
+            display: inline-block;
+            background: #6c5ce7;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
 
         /* 버튼 컴포넌트 */
         .btn-block {
@@ -170,14 +214,11 @@
         .feed-sub { font-size: 0.78rem; color: #4a5568; font-style: italic; margin-bottom: 10px; }
 
         .no-data { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 0.85rem; }
-
-        /* 하단 로그아웃 버튼 링크 */
         .bottom-logout-btn {
             background: none; border: none; color: #a0aec0; font-size: 0.8rem; 
             font-family: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; margin-top: 15px;
         }
 
-        /* 섹션 제어 오버레이 토글 */
         #login-view { display: block; }
         #admin-view { display: none; }
 
@@ -197,7 +238,6 @@
 
     <div class="container">
         
-        <!-- 🔐 1. 원장님 로그인 화면 뷰 -->
         <div id="login-view" class="panel-card" style="margin-top: 40px; text-align: center;">
             <div class="admin-title">K&P 수학입시학원</div>
             <div class="admin-subtitle">총관리자 인증</div>
@@ -215,12 +255,41 @@
         </div>
 
 
-        <!-- 👑 2. 로그인 성공 시 노출되는 원장님 관리자 패널 뷰 -->
         <div id="admin-view">
             <div class="admin-title">총 관리센터</div>
             <div id="welcome-bar" class="admin-subtitle">실시간 원격 제어 연결됨</div>
 
-            <!-- 가. 실시간 홈 배너 제어 카드 -->
+            <div class="panel-card priority-card">
+                <h3>📅 [1순위] 예약 명언 달력 조회</h3>
+                
+                <div class="form-group">
+                    <label style="color: #6c5ce7; font-weight: 800;">조회 및 예약할 날짜를 선택하세요</label>
+                    <input type="date" id="quote-date" class="form-control calendar-input" onchange="fetchReservedQuote(this.value)">
+                </div>
+
+                <div id="quote-status-area" class="quote-status-box">
+                    <div class="status-empty">위 달력에서 조회할 날짜를 클릭해 주세요.</div>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <h3>💡 명언 신규 예약 / 수정 변경</h3>
+                <div class="form-group">
+                    <label for="quote-message">명언 문구 (한마디 내용)</label>
+                    <textarea id="quote-message" class="form-control" rows="2" placeholder="선택한 날짜에 노출될 문구를 작성하세요."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="quote-author">말한 사람 (이름)</label>
+                    <input type="text" id="quote-author" class="form-control" placeholder="예: 아인슈타인, 원장님">
+                </div>
+                <div class="form-group" style="margin-bottom: 18px;">
+                    <label for="quote-profile">말한 사람 설명 (직업 또는 신분)</label>
+                    <input type="text" id="quote-profile" class="form-control" placeholder="예: 물리학자, 졸업생 (생략 가능)">
+                </div>
+                
+                <button class="btn-block btn-green" onclick="saveManualQuoteData()">해당 일자 예약 명언으로 확정 등록</button>
+            </div>
+
             <div class="panel-card">
                 <h3>📢 메인 팝업 공지 및 전광판</h3>
                 
@@ -239,31 +308,6 @@
                 <button class="btn-block btn-orange" onclick="saveReminderData()">전광판 배너 적용</button>
             </div>
 
-            <!-- 나. 오늘의 명언 수동 강제 설정 카드 -->
-            <div class="panel-card">
-                <h3>💡 오늘의 명언 직접 등록</h3>
-                
-                <div class="form-group">
-                    <label for="quote-date">적용 대상 날짜</label>
-                    <input type="date" id="quote-date" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="quote-message">명언 문구(한마디 내용)</label>
-                    <textarea id="quote-message" class="form-control" rows="2" placeholder="기억에 남기고 싶은 문구를 적어주세요."></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="quote-author">말한 사람 (이름)</label>
-                    <input type="text" id="quote-author" class="form-control" placeholder="예: 아인슈타인, 3학년 홍길동 등">
-                </div>
-                <div class="form-group" style="margin-bottom: 18px;">
-                    <label for="quote-profile">말한 사람 설명 (직업 또는 신분)</label>
-                    <input type="text" id="quote-profile" class="form-control" placeholder="예: 물리학자, 수성고 졸업생 등 (생략 가능)">
-                </div>
-                
-                <button class="btn-block btn-green" onclick="saveManualQuoteData()">선택 일자 명언으로 강제 배포</button>
-            </div>
-
-            <!-- 다. 학생 문의/제안 수신 보관함 -->
             <div class="panel-card">
                 <h3>📬 실시간 알림 수신함</h3>
                 <div id="feed-container-list" class="feed-container">
@@ -271,7 +315,6 @@
                 </div>
             </div>
 
-            <!-- 라. 로그아웃 제어 트랙 -->
             <div style="text-align: center;">
                 <button class="bottom-logout-btn" onclick="handleAdminLogout()">관리자 모드 로그아웃</button>
             </div>
@@ -279,7 +322,6 @@
 
     </div>
 
-    <!-- 명언 배포 날짜 브릿지 매핑용 미니 팝업 모달 -->
     <div id="publishDateModal" class="modal-overlay">
         <div class="modal-box">
             <h4 style="margin-top: 0; color: #00b894; font-size: 1.05rem;">💡 제안 명언 배포 날짜 선택</h4>
@@ -298,7 +340,6 @@
     <script>
         const SECRET_KEY = "u2mkst!";
         
-        // 학생 메인 페이지와 완벽 조율된 파이어베이스 연동 객체
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
             authDomain: "ksthome-76889.firebaseapp.com",
@@ -314,9 +355,9 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        let targetQuoteCache = null; // 학생 제안 임시 보관 객체
+        let targetQuoteCache = null; 
 
-        // 학생 암호화 문자열 실시간 해독기 복제
+        // 암호화 복호화 이관 처리기
         function decryptAES(cipherText) {
             if (!cipherText) return "";
             try {
@@ -330,17 +371,18 @@
             }
         }
 
-        // Firebase Auth 인증 상태 흐름 제어 감지기
+        // 인증감지 스트리밍 연결
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('admin-view').style.display = 'block';
                 document.getElementById('welcome-bar').innerText = `${user.email} 원장님 계정 연결중`;
                 
-                // 기본 날짜 양식에 오늘 일자 디폴트 입력 채우기
-                document.getElementById('quote-date').value = new Date().toISOString().substring(0, 10);
+                // 오늘 날짜 기본 지정 후 명언 즉시 로드 처리 연결
+                const todayStr = new Date().toISOString().substring(0, 10);
+                document.getElementById('quote-date').value = todayStr;
+                fetchReservedQuote(todayStr);
                 
-                // 실시간 리스너 및 기존 폼 기본값 트리거 정렬
                 initAdminDataFeed();
             } else {
                 document.getElementById('login-view').style.display = 'block';
@@ -348,28 +390,76 @@
             }
         });
 
-        // 원장님 회원 가입/로그인 처리부
+        // 🌟 [핵심 기능] 달력 날짜 변경 시 파이어베이스 실시간 단독 조회 차단 구조
+        function fetchReservedQuote(selectedDate) {
+            const statusBox = document.getElementById('quote-status-area');
+            if(!selectedDate) {
+                statusBox.innerHTML = '<div class="status-empty">달력에서 날짜를 선택해 주세요.</div>';
+                return;
+            }
+
+            statusBox.innerHTML = '<div class="status-empty">데이터를 가져오는 중...</div>';
+
+            database.ref(`dailyQuotes/${selectedDate}`).once('value', (snapshot) => {
+                if(snapshot.exists()) {
+                    const data = snapshot.val();
+                    statusBox.innerHTML = `
+                        <div class="status-exist">
+                            <span class="status-date-badge">📋 ${selectedDate} 예약 완료</span>
+                            <div style="font-size:0.95rem; font-weight:bold; color:#2c3e50; margin: 6px 0;">"${data.message}"</div>
+                            <div style="font-size:0.8rem; color:#7f8c8d;">👤 인물: ${data.author} (${data.authorProfile || '-'})</div>
+                            <button class="btn-block btn-red" style="padding:6px; margin-top:10px; font-size:0.75rem; border-radius:8px;" onclick="deleteReservedQuote('${selectedDate}')">이 날짜 명언 예약 취소</button>
+                        </div>
+                    `;
+                    // 하단 입력 창에도 연동 배치하여 수정 편의 도모
+                    document.getElementById('quote-message').value = data.message;
+                    document.getElementById('quote-author').value = data.author;
+                    document.getElementById('quote-profile').value = data.authorProfile === "-" ? "" : data.authorProfile;
+                } else {
+                    statusBox.innerHTML = `
+                        <div class="status-empty" style="color:#e67e22;">
+                            📅 ${selectedDate}에는 예약된 명언이 없습니다.<br>
+                            <span style="font-size:0.75rem; color:#95a5a6;">아래 폼에서 새로 예약을 등록할 수 있습니다.</span>
+                        </div>
+                    `;
+                    // 입력창 초기화
+                    document.getElementById('quote-message').value = '';
+                    document.getElementById('quote-author').value = '';
+                    document.getElementById('quote-profile').value = '';
+                }
+            });
+        }
+
+        // 특정 날짜 지정 명언 삭제 처리기
+        function deleteReservedQuote(targetDate) {
+            if(confirm(`${targetDate} 일자의 명언 예약을 완전히 취소 삭제할까요?`)) {
+                database.ref(`dailyQuotes/${targetDate}`).remove()
+                    .then(() => {
+                        alert("명언 예약이 정상 취소되었습니다.");
+                        fetchReservedQuote(targetDate);
+                    })
+                    .catch(err => alert("삭제 에러: " + err.message));
+            }
+        }
+
+        // 로그인 핸들러
         function handleAdminLogin() {
             const email = document.getElementById('admin-email').value.trim();
             const password = document.getElementById('admin-password').value.trim();
-
             if (!email || !password) { alert("이메일과 패스워드를 입력하세요."); return; }
-
-            auth.signInWithEmailAndPassword(email, password)
-                .catch(err => {
-                    alert("원장님 인증 실패: " + err.message + "\n등록된 관리자 계정 정보인지 다시 확인 바랍니다.");
-                });
+            auth.signInWithEmailAndPassword(email, password).catch(err => {
+                alert("원장님 인증 실패: " + err.message);
+            });
         }
 
         function handleAdminLogout() {
-            if(confirm("관리자 센터에서 세션을 종료하고 로그아웃 하시겠습니까?")) {
+            if(confirm("관리자 모드를 종료하시겠습니까?")) {
                 auth.signOut().then(() => alert("로그아웃 완료."));
             }
         }
 
-        // 데이터베이스 통합 조회 초기화 및 동기화 처리
+        // 기본 베이스 테이블 데이터 스트리밍 리스너
         function initAdminDataFeed() {
-            // 1. 기존 메인화면 공지사항 및 리마인더 전광판 설정값 백업 패치
             database.ref('notice').once('value', (snapshot) => {
                 if(snapshot.exists()) document.getElementById('input-notice').value = snapshot.val();
             });
@@ -377,7 +467,6 @@
                 if(snapshot.exists()) document.getElementById('input-reminder').value = snapshot.val();
             });
 
-            // 2. 실시간 제안 및 문의 수신함 스트리밍 리스너 가동
             database.ref('suggestions').orderByChild('timestamp').on('value', (snapshot) => {
                 const listContainer = document.getElementById('feed-container-list');
                 listContainer.innerHTML = '';
@@ -388,12 +477,10 @@
                 }
 
                 let itemsHTML = [];
-
                 snapshot.forEach((child) => {
                     const key = child.key;
                     const val = child.val();
 
-                    // 각 파트 데이터 안전 복호화 이관
                     const realContent = decryptAES(val.content);
                     const realAuthor = val.author ? decryptAES(val.author) : "";
                     const realProfile = val.authorProfile ? decryptAES(val.authorProfile) : "";
@@ -427,65 +514,56 @@
                             </div>
                         </div>
                     `;
-                    itemsHTML.unshift(template); // 역순 배치 (최신 등록 글 최상단 배치)
+                    itemsHTML.unshift(template);
                 });
-
                 listContainer.innerHTML = itemsHTML.join('');
             });
         }
 
-        // 공지사항 파트 배포 및 삭제 처리 단두대
-        function saveNoticeData() {
-            const txt = document.getElementById('input-notice').value.trim();
-            database.ref('notice').set(txt)
-                .then(() => alert("전체 학생 홈 메인에 공지사항 팝업이 적용되었습니다."))
-                .catch(err => alert("에러: " + err.message));
-        }
-
-        function saveReminderData() {
-            const txt = document.getElementById('input-reminder').value.trim();
-            database.ref('reminder').set(txt)
-                .then(() => alert("하단 흐르는 긴급 띠 배너가 업데이트되었습니다."))
-                .catch(err => alert("에러: " + err.message));
-        }
-
-        // 수동 명언 강제 바인딩 처리
+        // 신규 수동 예약 기능
         function saveManualQuoteData() {
             const date = document.getElementById('quote-date').value;
             const message = document.getElementById('quote-message').value.trim();
             const author = document.getElementById('quote-author').value.trim();
             const profile = document.getElementById('quote-profile').value.trim();
 
-            if (!date || !message || !author) { alert("적용 날짜, 내용, 한마디 한 사람을 필수로 기입해 주세요."); return; }
+            if (!date || !message || !author) { alert("달력에서 예약 설정 날짜를 선택하고 문구와 인물을 작성해 주세요."); return; }
 
-            // 학생단 연계 구조 맞춤 동기화 패키징
             database.ref(`dailyQuotes/${date}`).set({
                 message: message,
                 author: author,
                 authorProfile: profile || "-"
             }).then(() => {
-                alert(`${date} 일자 수동 명언 지정 등록 성공!`);
-                document.getElementById('quote-message').value = '';
-                document.getElementById('quote-author').value = '';
-                document.getElementById('quote-profile').value = '';
+                alert(`${date} 일자 명언 예약 지정 처리가 완료되었습니다.`);
+                fetchReservedQuote(date); // 실시간 상단 리스트 리프레시 호출
             }).catch(err => alert("배포 오류: " + err.message));
         }
 
-        // 알림 메시지 삭제 소거기
+        function saveNoticeData() {
+            const txt = document.getElementById('input-notice').value.trim();
+            database.ref('notice').set(txt).then(() => alert("메인 공지 배포 성공")).catch(err => alert(err.message));
+        }
+
+        function saveReminderData() {
+            const txt = document.getElementById('input-reminder').value.trim();
+            database.ref('reminder').set(txt).then(() => alert("전광판 배너 적용 성공")).catch(err => alert(err.message));
+        }
+
         function deleteFeedItem(key) {
-            if (confirm("해당 건을 수신 보관함에서 완전히 삭제처리 할까요?")) {
-                database.ref(`suggestions/${key}`).remove()
-                    .then(() => alert("삭제되었습니다."))
-                    .catch(err => alert("실패: " + err.message));
+            if (confirm("해당 건을 보관함에서 삭제처리 할까요?")) {
+                database.ref(`suggestions/${key}`).remove().then(() => alert("삭제 완료"));
             }
         }
 
-        // 학생 제안 기반 명언 게시 가교 모달 제어
         function openPublishBridgeModal(id, content, author, profile) {
             targetQuoteCache = { id, content, author, profile };
             document.getElementById('modal-target-date').value = new Date().toISOString().substring(0, 10);
             document.getElementById('publishDateModal').style.display = 'flex';
         }
+
+        document.getElementById('publishDateModal').addEventListener('click', function(e) {
+            if(e.target === this) closePublishModal();
+        });
 
         function closePublishModal() {
             document.getElementById('publishDateModal').style.display = 'none';
@@ -494,7 +572,7 @@
 
         function commitStudentQuoteToMain() {
             const selectedDate = document.getElementById('modal-target-date').value;
-            if(!selectedDate) { alert("날짜를 명확히 정해 주세요."); return; }
+            if(!selectedDate) { alert("날짜를 정해 주세요."); return; }
             if(!targetQuoteCache) return;
 
             database.ref(`dailyQuotes/${selectedDate}`).set({
@@ -502,8 +580,9 @@
                 author: targetQuoteCache.author,
                 authorProfile: targetQuoteCache.profile || "-"
             }).then(() => {
-                alert(`${selectedDate} 일자 메인 홈 오늘의 명언으로 매핑 게시 완료!`);
+                alert(`${selectedDate} 일자에 오늘의 명언 매핑 예약이 최종 확정되었습니다!`);
                 closePublishModal();
+                fetchReservedQuote(selectedDate); // 달력 뷰 새로고침 동기화
             }).catch(err => alert("게시 에러: " + err.message));
         }
     </script>
