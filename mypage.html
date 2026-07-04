@@ -42,7 +42,6 @@
             box-sizing: border-box; 
         }
 
-        /* 상단 헤더 영역 */
         .header-zone {
             display: flex;
             justify-content: space-between;
@@ -71,7 +70,6 @@
             color: #6c5ce7;
         }
 
-        /* 입력 폼 스타일 */
         .form-container {
             background: rgba(255, 255, 255, 0.4);
             padding: 24px 20px;
@@ -120,7 +118,6 @@
             box-shadow: 0 4px 12px rgba(108, 92, 231, 0.1);
         }
 
-        /* 부서 및 그룹 구분을 위한 스타일 단락 */
         .section-divider {
             border-top: 1px dashed rgba(108, 92, 231, 0.3);
             margin: 24px 0 20px 0;
@@ -132,7 +129,6 @@
             position: absolute; top: -12px; left: 10px;
         }
 
-        /* 실시간 자동완성 리스트 레이아웃 */
         .autocomplete-list {
             position: absolute; 
             top: 100%; 
@@ -172,7 +168,6 @@
             font-weight: normal; 
         }
 
-        /* 하단 버튼 */
         .submit-btn {
             display: block; 
             background-color: #6c5ce7; 
@@ -216,7 +211,6 @@
             color: #e53e3e;
         }
 
-        /* 로딩 모달 */
         .modal-overlay {
             display: none; 
             position: fixed; 
@@ -409,25 +403,27 @@
             }
         }
 
+        // 🛡️ [오류 해결 핵심 1] plainText가 숫자인 경우 강제 형변환 처리로 안정성 보장
         function decryptAES(cipherText) {
             if (!cipherText) return "";
             try {
-                const cleanCipherText = cipherText.toString().trim();
+                const cleanCipherText = String(cipherText).trim();
                 if (!cleanCipherText.startsWith("U2FsdGVkX1")) return cleanCipherText;
                 const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_SALT);
                 return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText; 
             } catch (e) {
                 console.error("🚨 복호화 에러:", e);
-                return cipherText; 
+                return String(cipherText); 
             }
         }
 
+        // 🛡️ [오류 해결 핵심 2] plainText 숫자형 진입 대비 강제 예외 전처리
         function encryptAES(plainText) {
-            if (!plainText) return "";
-            return CryptoJS.AES.encrypt(plainText.trim(), SECRET_SALT).toString();
+            if (plainText === null || plainText === undefined) return "";
+            const textString = String(plainText).trim();
+            return CryptoJS.AES.encrypt(textString, SECRET_SALT).toString();
         }
 
-        // 나이스 학교 자동완성 API
         const schoolInput = document.getElementById('schoolName');
         const schoolList = document.getElementById('schoolList');
         const schoolCodeInput = document.getElementById('schoolCode');
@@ -476,7 +472,7 @@
             }
         });
 
-        // 🌟 [수정 핵심] 데이터 불러오기 할 때 실제 DB 필드명 매칭
+        // 🌟 [연동 해결 핵심 3] login(4).html 구조와 100% 매칭 (studentphone / mathflatpw)
         window.onload = function() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -494,7 +490,7 @@
                             document.getElementById('u2mId').value = data.u2mId || '';
                             document.getElementById('u2mPhone').value = decryptAES(data.phone);
                             
-                            // 💡 이부분을 원장님 실제 DB 구조인 studentphone, mathflatpw로 명확하게 연동했습니다!
+                            // 💡 가입 파일(login (4).html) 스펙 필드명과 정확히 동기화 구현
                             document.getElementById('mathflatId').value = decryptAES(data.studentphone);
                             document.getElementById('mathflatPw').value = decryptAES(data.mathflatpw);
                             
@@ -512,7 +508,6 @@
             });
         };
 
-        // 🌟 저장할 때도 실제 DB 필드명(studentphone, mathflatpw)으로 안전하게 암호화 전송
         function updateStudentProfile() {
             const user = auth.currentUser;
             if (!user) { showCustomAlert("세션이 만료되었습니다."); return; }
@@ -531,7 +526,6 @@
             }
 
             document.getElementById('dataLoadingOverlay').style.display = 'flex';
-
             const studentPassword = "00" + phoneTail; 
 
             user.updatePassword(studentPassword)
@@ -542,8 +536,8 @@
                         schoolCode: schoolCode,               
                         teacher: selectedTeacher,             
                         phone: encryptAES(phoneTail),            
-                        studentphone: encryptAES(mathflatId), // 👈 실 데이터베이스 매칭 성공
-                        mathflatpw: encryptAES(mathflatPw)       // 👈 실 데이터베이스 매칭 성공
+                        studentphone: encryptAES(mathflatPhone), 
+                        mathflatpw: encryptAES(mathflatPw)       
                     };
 
                     return database.ref(`students/${user.uid}`).update(updatedObject);
