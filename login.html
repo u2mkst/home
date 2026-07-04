@@ -460,16 +460,17 @@ K&P 수학입시학원 학생 관리 서비스(이하 '서비스')는 이용자�
                     }).then(() => {
                         // 🌟 Realtime Database 매핑 규격 (studentphone, mathflatpw 반영완료)
                         return database.ref('students/' + user.uid).set({
-                            name: encryptedName,                  
-                            u2mId: u2mId,                         
-                            schoolName: schoolName,               
-                            schoolCode: schoolCode,               
-                            teacher: selectedTeacher,             
-                            phone: encryptedPhoneTail,            
-                            studentphone: encryptedMfPhone,       // 👈 원장님 지정 필드 (매쓰플랫 ID용 휴대폰번호)
-                            mathflatpw: encryptedMfPw,           // 👈 원장님 지정 필드 (매쓰플랫 비밀번호)
-                            joinedAt: firebase.database.ServerValue.TIMESTAMP
-                        });
+    name: encryptedName,                  
+    u2mId: u2mId,                         
+    schoolName: schoolName,               
+    schoolCode: schoolCode,               
+    teacher: selectedTeacher,             
+    phone: encryptedPhoneTail,            
+    studentPhone: encryptedMfPhone,       // 💡 대문자 P 반영 (DB 구조와 일치)
+    mathflatPw: encryptedMfPw,           // 💡 대문자 P, W 반영 (DB 구조와 일치)
+    mathflatId: mathflatPhone,            // 💡 만약을 대비해 평문 번호도 백업 저장
+    joinedAt: firebase.database.ServerValue.TIMESTAMP
+});
                     });
                 })
                 .then(() => {
