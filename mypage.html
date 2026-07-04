@@ -403,7 +403,7 @@
             }
         }
 
-        // 🛡️ [오류 해결 핵심 1] plainText가 숫자인 경우 강제 형변환 처리로 안정성 보장
+        // 🛡️ plainText가 숫자 형식이어도 강제 문자열 변환하여 .trim() 터짐 오류 원천 해결
         function decryptAES(cipherText) {
             if (!cipherText) return "";
             try {
@@ -417,7 +417,6 @@
             }
         }
 
-        // 🛡️ [오류 해결 핵심 2] plainText 숫자형 진입 대비 강제 예외 전처리
         function encryptAES(plainText) {
             if (plainText === null || plainText === undefined) return "";
             const textString = String(plainText).trim();
@@ -472,7 +471,7 @@
             }
         });
 
-        // 🌟 [연동 해결 핵심 3] login(4).html 구조와 100% 매칭 (studentphone / mathflatpw)
+        // 🌟 [안전 로딩 구현] 원장님 DB 규격 (studentPhone, mathflatPw 대소문자 구조) 반영
         window.onload = function() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -490,9 +489,12 @@
                             document.getElementById('u2mId').value = data.u2mId || '';
                             document.getElementById('u2mPhone').value = decryptAES(data.phone);
                             
-                            // 💡 가입 파일(login (4).html) 스펙 필드명과 정확히 동기화 구현
-                            document.getElementById('mathflatId').value = decryptAES(data.studentphone);
-                            document.getElementById('mathflatPw').value = decryptAES(data.mathflatpw);
+                            // 암호화된 대문자 규격(studentPhone)을 우선하되, 없을 시 평문(mathflatId) 백업 매칭
+                            const rawMathflatId = data.studentPhone ? decryptAES(data.studentPhone) : (data.mathflatId || '');
+                            document.getElementById('mathflatId').value = rawMathflatId;
+                            
+                            // 비밀번호 대소문자 규격(mathflatPw) 매칭
+                            document.getElementById('mathflatPw').value = decryptAES(data.mathflatPw);
                             
                             document.getElementById('dataLoadingOverlay').style.display = 'none';
                         } else {
@@ -508,9 +510,10 @@
             });
         };
 
+        // 🌟 [안전 저장 구현] 민감정보 변경 전 백그라운드 재인증(Reauthentication) 추가
         function updateStudentProfile() {
             const user = auth.currentUser;
-            if (!user) { showCustomAlert("세션이 만료되었습니다."); return; }
+            if (!user) { showCustomAlert("세션이 만료되었습니다. 다시 로그인 해주세요."); return; }
 
             const studentName = document.getElementById('studentName').value.trim();
             const schoolName = document.getElementById('schoolName').value.trim();
@@ -527,22 +530,42 @@
 
             document.getElementById('dataLoadingOverlay').style.display = 'flex';
             const studentPassword = "00" + phoneTail; 
+            
+            const savedId = localStorage.getItem('u2m_id');
+            const savedPw = localStorage.getItem('u2m_pw');
+            
+            if (!savedId || !savedPw) {
+                document.getElementById('dataLoadingOverlay').style.display = 'none';
+                showCustomAlert("인증 정보가 유실되었습니다. 로그아웃 후 다시 로그인하여 시도해 주세요.");
+                return;
+            }
 
-            user.updatePassword(studentPassword)
+            const studentEmail = savedId.includes('@') ? savedId : savedId + "@kst.com";
+            const credential = firebase.auth.EmailAuthProvider.credential(studentEmail, savedPw);
+
+            // 1단계: 보안을 위한 재인증 세션 갱신
+            user.reauthenticateWithCredential(credential)
                 .then(() => {
+                    // 2단계: Auth 패스워드 수정
+                    return user.updatePassword(studentPassword);
+                })
+                .then(() => {
+                    // 3단계: 원장님 DB 실 구조명(studentPhone, mathflatPw)에 맞추어 RTDB 저장
                     const updatedObject = {
                         name: encryptAES(studentName),                  
                         schoolName: schoolName,               
                         schoolCode: schoolCode,               
                         teacher: selectedTeacher,             
                         phone: encryptAES(phoneTail),            
-                        studentphone: encryptAES(mathflatPhone), 
-                        mathflatpw: encryptAES(mathflatPw)       
+                        studentPhone: encryptAES(mathflatPhone), // 대문자 P 규격 매칭
+                        mathflatPw: encryptAES(mathflatPw),     // 대문자 P,W 규격 매칭
+                        mathflatId: mathflatPhone                // 평문 백업용 필드도 통합 갱신
                     };
 
                     return database.ref(`students/${user.uid}`).update(updatedObject);
                 })
                 .then(() => {
+                    // 4단계: 로컬 패스워드 갱신 후 성공 안내
                     localStorage.setItem('u2m_pw', studentPassword);
                     document.getElementById('dataLoadingOverlay').style.display = 'none';
                     showCustomAlert("학생 정보가 성공적으로 수정되었습니다!", "⚙️ 완료", () => {
@@ -551,7 +574,14 @@
                 })
                 .catch((err) => {
                     document.getElementById('dataLoadingOverlay').style.display = 'none';
-                    showCustomAlert("정보 수정을 실패했습니다: " + err.message);
+                    console.error(err);
+                    if (err.code === "auth/sensitive-actions-require-recent-login") {
+                        showCustomAlert("보안을 위해 다시 로그인한 뒤 변경해 주세요.", "🔒 보안 알림", () => {
+                            window.location.replace('login.html');
+                        });
+                    } else {
+                        showCustomAlert("정보 수정을 실패했습니다: " + err.message);
+                    }
                 });
         }
 
