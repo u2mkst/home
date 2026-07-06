@@ -285,22 +285,14 @@
         .chat-send-btn { width: auto; background: #6c5ce7; color: white; border: none; padding: 0 14px; border-radius: 10px; font-weight: bold; margin-bottom: 0; font-size: 0.85rem; }
         .chat-send-btn:hover { background: #5b4cc4; }
 
-        /* 🔋 신규 추가: 원격 기기 제어 구역 배치 스타일 */
-        .device-control-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* 📍 간소화된 상단 헤더 배치 스타일 */
+        .device-info-header {
             margin-bottom: 12px;
             background: rgba(108, 92, 231, 0.06);
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-radius: 12px;
             border: 1px solid rgba(108, 92, 231, 0.15);
         }
-        .btn-remote-reboot {
-            width: auto; margin-bottom: 0; padding: 6px 12px; font-size: 0.78rem; border-radius: 8px;
-            background-color: #e67e22; color: white; border: none; font-weight: bold; display: none;
-        }
-        .btn-remote-reboot:hover { background-color: #d35400; }
 
         #loginCard { display: none; }
         #controlPanel { display: none; }
@@ -349,12 +341,10 @@
             <div class="card" id="adminChatCard">
                 <h2>💬 1:1 실시간 대화방</h2>
                 
-                <div class="device-control-row">
-                    <label style="color:#2c3e50; margin-bottom:0;">선택 학생: 
-                        <span id="selectedStudentName" style="font-weight:bold; color:#6c5ce7;">없음</span> 
-                        <span id="selectedStudentBattery" style="font-weight:bold; margin-left:6px; color:#27ae60;"></span>
+                <div class="device-info-header">
+                    <label style="color:#2c3e50; margin-bottom:0; font-weight:bold;">선택 학생: 
+                        <span id="selectedStudentName" style="color:#6c5ce7;">없음</span> 
                     </label>
-                    <button id="deviceRebootBtn" class="btn-remote-reboot" onclick="requestRemoteReboot()">🔄 태블릿 재부팅</button>
                 </div>
 
                 <div class="chat-container">
@@ -512,15 +502,6 @@
                     }
                 }
                 filterStudents(); 
-
-                // 🔋 현재 대화방이 활성화 상태라면 배터리 정보 동적 실시간 업데이트 반영
-                if (currentSelectedStudentUid) {
-                    const currentStudent = allStudents.find(s => s.id === currentSelectedStudentUid);
-                    if (currentStudent) {
-                        const batStr = currentStudent.battery !== undefined ? `🔋 ${currentStudent.battery}%` : '🔋 --%';
-                        document.getElementById('selectedStudentBattery').innerText = batStr;
-                    }
-                }
             });
         }
 
@@ -548,15 +529,12 @@
 
             filtered.forEach(student => {
                 const studentIdStr = student.u2mId ? student.u2mId : '없음';
-                
-                // 🔋 [배터리 UI 적용] 리스트 목록 우측에 배터리 잔량 바로 출력
-                const batIndicator = student.battery !== undefined ? `[🔋 ${student.battery}%]` : '[🔋 --%]';
 
                 const item = document.createElement('div');
                 item.className = 'student-item';
                 item.innerHTML = `
                     <div class="student-info">
-                        <span class="student-name">👤 ${student.name} <span style="font-size:0.75rem; color:#27ae60; margin-left:4px;">${batIndicator}</span></span>
+                        <span class="student-name">👤 ${student.name}</span>
                         <span class="student-id">ID: ${studentIdStr}</span>
                     </div>
                     <button class="btn-note" onclick="loadStudentChatRoom('${student.id}', '${student.name}')">💬 대화방</button>
@@ -570,16 +548,6 @@
             currentSelectedStudentName = studentName;
             document.getElementById('selectedStudentName').innerText = studentName;
             
-            // 🔋 대화방 로딩 시 기기 제어 UI 동기화 활성화
-            const matchedStudent = allStudents.find(s => s.id === studentUid);
-            if (matchedStudent) {
-                const batStr = matchedStudent.battery !== undefined ? `🔋 ${matchedStudent.battery}%` : '🔋 --%';
-                document.getElementById('selectedStudentBattery').innerText = batStr;
-            } else {
-                document.getElementById('selectedStudentBattery').innerText = '';
-            }
-            document.getElementById('deviceRebootBtn').style.display = 'block'; // 재부팅 제어 버튼 표출
-
             detachAdminChatListeners();
 
             let studentQuestions = [];
@@ -700,29 +668,6 @@
                 .catch(err => alert("전송 실패: " + err.message));
         }
 
-        /**
-         * 🔄 [신규 추가] 특정 기기 구별 후 원격 리부트(재부팅) 명령 전송 함수
-         */
-        function requestRemoteReboot() {
-            if (!currentSelectedStudentUid) {
-                alert("제어할 대상을 선택해 주세요.");
-                return;
-            }
-            
-            const msg = `⚠️ [원격 제어 경고]\n정말로 ${currentSelectedStudentName} 학생의 태블릿 기기를 원격 재부팅 하시겠습니까?`;
-            if (confirm(msg)) {
-                // 해당 학생 고유 UID 경로 밑에 재부팅 명령 스탬프 푸시
-                database.ref(`device_commands/${currentSelectedStudentUid}`).set({
-                    command: "reboot",
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                })
-                .then(() => {
-                    alert(`정상적으로 ${currentSelectedStudentName} 학생의 태블릿 기기에 재부팅 신호를 전달했습니다.`);
-                })
-                .catch(err => alert("원격 제어 명령 실패: " + err.message));
-            }
-        }
-
         function detachAdminChatListeners() {
             adminChatListeners.forEach(item => item.ref.off(item.type));
             adminChatListeners = [];
@@ -732,13 +677,9 @@
             currentSelectedStudentUid = null;
             currentSelectedStudentName = "";
             const nameEl = document.getElementById('selectedStudentName');
-            const batEl = document.getElementById('selectedStudentBattery');
             const zoneEl = document.getElementById('adminChatHistoryZone');
-            const btnEl = document.getElementById('deviceRebootBtn');
             
             if(nameEl) nameEl.innerText = "없음";
-            if(batEl) batEl.innerText = "";
-            if(btnEl) btnEl.style.display = "none";
             if(zoneEl) zoneEl.innerHTML = '<div class="chat-no-data">위 학생 목록에서 [💬 대화방] 버튼을 누르면 대화 내역이 실시간 로드됩니다.</div>';
         }
 
