@@ -263,7 +263,12 @@
 
         <!-- 하단 기능 제어 서브 유틸리티 존 -->
         <div class="sub-utility-zone">
-            <button onclick="openSendMessageModal()" class="utility-btn btn-secondary"><span class="emoji-font">💬</span> 선생님 메시지</button>
+            <!-- href를 제거하고 id="open-chat-btn"을 추가합니다. 필요시 버튼 스타일 적용 -->
+<button id="open-chat-btn" class="flex items-center justify-between p-4 bg-yellow-50 hover:bg-yellow-100 rounded-xl w-full">
+    <span>선생님 메시지</span>
+    <!-- 안 읽은 알림 배지 하나 달아주면 카톡 느낌이 더 삽니다 -->
+    <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">1</span>
+</button>
             <button onclick="openUnifiedInquiryModal()" class="utility-btn btn-secondary"><span class="emoji-font">🛠️</span> 관리자 문의</button>
             <button onclick="goToMyPage()" class="utility-btn btn-secondary"><span class="emoji-font">👤</span> 마이페이지</button>
             <button onclick="logoutUser()" class="utility-btn btn-danger">로그아웃</button>
@@ -279,7 +284,6 @@
         <!-- 하단 저작권 정보 -->
         <div class="footer">
             <div class="footer-brand">K&P 수학입시학원 <span>with KST</span></div>
-            <a href="https://litt.ly/theu2m" target="_blank" class="more-links">KST가 만든 것들</a>
             <div class="footer-copyright">© 2026 KST</div>
         </div>
     </div>
@@ -1040,21 +1044,39 @@
     }
 
     // =======================================================
-    // 10. 실시간 비동기 양방향 채팅 및 알림 제어 파트
+    // 10. 통합 메시지 실시간 비동기 양방향 채팅 제어 파트
     // =======================================================
-    function openSendMessageModal() {
-        document.getElementById('studentMsgInput').value = '';
-        showModal('sendMsgModal');
-    }
-    function closeSendMessageModal() { closeModal('sendMsgModal'); }
     
-    function openHistoryModal() {
-        showModal('historyModal');
+    // [UI 열기/닫기 제어] 기존 호출 대비 호환성 유지
+    function openChatModal() {
+        const modal = document.getElementById('chat-modal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        
         const zoneEl = document.getElementById('messageHistoryZone');
-        if(zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
-    }
-    function closeHistoryModal() { closeModal('historyModal'); }
+        if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
+        
+        const inputEl = document.getElementById('chat-input');
+        if (inputEl) inputEl.focus();
 
+        // 현재 로그인된 유저가 있다면 실시간 채팅 리스너 활성화
+        if (auth.currentUser) {
+            startLiveChatHistory(auth.currentUser.uid);
+        }
+    }
+    
+    function closeChatModal() { 
+        const modal = document.getElementById('chat-modal');
+        if (modal) modal.classList.add('hidden'); 
+    }
+
+    // 하위 호환성 링크 (기존 레거시 버튼 연동 깨짐 방지)
+    function openSendMessageModal() { openChatModal(); }
+    function closeSendMessageModal() { closeChatModal(); }
+    function openHistoryModal() { openChatModal(); }
+    function closeHistoryModal() { closeChatModal(); }
+
+    // 선생님이 보낸 최신 안 읽은 쪽지 알림 팝업 감지 리스너
     function listenToTeacherNotes(uid) {
         noteListener = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false).limitToLast(1);
         noteListener.on('child_added', (snapshot) => {
@@ -1070,6 +1092,7 @@
         });
     }
 
+    // Firebase 데이터 실시간 트래킹 시작
     function startLiveChatHistory(studentUid) {
         detachAllHistoryListeners();
         let myQuestions = [];
@@ -1102,31 +1125,68 @@
         });
     }
 
+    // 원래 대시보드 톤앤매너에 맞춘 통합 대화방 렌더링 (날짜 구분선 자동 생성)
     function renderCombinedChat(questions, notes) {
         const zoneEl = document.getElementById('messageHistoryZone');
         if (!zoneEl) return;
+        
         const combined = [...questions, ...notes].sort((a, b) => a.timestamp - b.timestamp);
         if (combined.length === 0) {
-            zoneEl.innerHTML = '<div class="no-data">히스토리가 비어있습니다.</div>';
+            zoneEl.innerHTML = '<div class="text-center text-gray-400 text-sm py-8">선생님과 주고받은 메시지 내역이 없습니다.</div>';
             return;
         }
+        
         zoneEl.innerHTML = '';
+        let lastDateStr = "";
+
         combined.forEach(chat => {
             const date = new Date(chat.timestamp);
-            const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+            
+            // 날짜 변경 감지 시 구분선 추가
+            const currentDateStr = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+            if (currentDateStr !== lastDateStr) {
+                const dateBar = document.createElement('div');
+                dateBar.className = 'flex justify-center my-3';
+                dateBar.innerHTML = `<span class="bg-gray-200 text-gray-500 text-[11px] px-3 py-0.5 rounded-full">${currentDateStr}</span>`;
+                zoneEl.appendChild(dateBar);
+                lastDateStr = currentDateStr;
+            }
+
+            const timeStr = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
             const wrapper = document.createElement('div');
-            wrapper.style.display = 'flex'; wrapper.style.flexDirection = 'column'; wrapper.style.width = '100%';
+            wrapper.className = 'w-full flex flex-col';
 
             let rawMessage = chat.message || "";
             if (rawMessage.startsWith("[답장완료] ")) { rawMessage = rawMessage.replace("[답장완료] ", ""); }
 
             if (chat.isMine) {
-                wrapper.innerHTML = `<span class="chat-meta mine">나의 질문 (${timeStr})</span><div class="chat-bubble mine">${rawMessage}</div>`;
+                // 내 말풍선 (원래 디자인 매칭 클래스: 우측 정렬, 블루 테마)
+                wrapper.innerHTML = `
+                    <div class="flex justify-end items-end gap-1.5 my-1.5">
+                        <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
+                        <div class="bg-blue-600 text-white text-sm p-3 rounded-2xl rounded-tr-none max-w-[240px] shadow-sm whitespace-pre-line break-all">
+                            ${escapeHTML(rawMessage)}
+                        </div>
+                    </div>`;
             } else {
-                wrapper.innerHTML = `<span class="chat-meta"><span class="teacher-name">👤 ${chat.teacher || '담당교사'}</span> (${timeStr})</span><div class="chat-bubble teacher">${rawMessage}</div>`;
+                // 선생님 말풍선 (좌측 정렬, 화이트 배경 + 연회색 보더 테마)
+                wrapper.innerHTML = `
+                    <div class="flex items-start gap-2.5 my-1.5">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0 select-none">선</div>
+                        <div>
+                            <div class="text-xs text-gray-400 mb-0.5 select-none">${chat.teacher || '담당교사'}</div>
+                            <div class="flex items-end gap-1.5">
+                                <div class="bg-white text-gray-800 text-sm p-3 rounded-2xl rounded-tl-none max-w-[240px] shadow-sm border border-gray-200 whitespace-pre-line break-all">
+                                    ${escapeHTML(rawMessage)}
+                                </div>
+                                <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
+                            </div>
+                        </div>
+                    </div>`;
             }
             zoneEl.appendChild(wrapper);
         });
+        
         zoneEl.scrollTop = zoneEl.scrollHeight;
     }
 
@@ -1135,10 +1195,13 @@
         historyListeners = [];
     }
 
+    // 선생님께 실시간 메시지 발송 기능 (AES 내부 암호화 포함)
     function sendMessageToTeacher() {
-        const msgInput = document.getElementById('studentMsgInput'); 
+        const msgInput = document.getElementById('chat-input'); 
+        if (!msgInput) return;
+        
         const text = msgInput.value.trim();
-        if (!text) { showCustomAlert('전송 내용을 바르게 입력해 주세요.'); return; }
+        if (!text) return;
         if (!currentStudentData || !currentStudentData.teacher) { showCustomAlert('선생님 정보 동기화에 실패했습니다.'); return; }
         const currentUser = auth.currentUser;
 
@@ -1158,11 +1221,38 @@
 
         database.ref('messages').push(msgData)
             .then(() => {
-                showCustomAlert(`${currentStudentData.teacher} 선생님께 실시간 질문이 발송되었습니다.`, "✉️ 발송 완료");
                 msgInput.value = ''; 
-                closeSendMessageModal(); 
+                const zoneEl = document.getElementById('messageHistoryZone');
+                if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
             }).catch(err => showCustomAlert('전송 오류: ' + err.message));
     }
+
+    // XSS 방지 안전 이스케이프 함수
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    // 인터페이스 동적 바인딩 이벤트 설정
+    document.addEventListener('DOMContentLoaded', () => {
+        const openBtn = document.getElementById('open-chat-btn');
+        const closeBtn = document.getElementById('close-chat-btn');
+        const sendBtn = document.getElementById('send-btn');
+        const inputEl = document.getElementById('chat-input');
+
+        if (openBtn) openBtn.addEventListener('click', openChatModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeChatModal);
+        if (sendBtn) sendBtn.addEventListener('click', sendMessageToTeacher);
+        if (inputEl) {
+            inputEl.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessageToTeacher();
+                }
+            });
+        }
+    });
 
     // =======================================================
     // 11. 원격 공지사항 및 큐레이션 실시간 마스터 리스너
@@ -1214,7 +1304,7 @@
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => { fetchWeather(position.coords.latitude, position.coords.longitude); },
-                () => { fetchWeather(37.2638, 127.0286); } // 거부 시 기본 백업 좌표(수원) 자동 로드
+                () => { fetchWeather(37.2638, 127.0286); }
             );
         } else { fetchWeather(37.2638, 127.0286); }
     }
