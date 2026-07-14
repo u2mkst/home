@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>K&P 수학입시학원</title>
+    
+    <!-- 웹폰트 & 아이콘 에셋 선언 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
+
+    <!-- Firebase SDK (v8 라이브러리) 및 암호화 모듈 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
@@ -17,186 +21,174 @@
             font-weight: 500; 
             font-display: swap;
         }
+        @font-face {
+            font-family: 'FlightSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-display: swap;
+        }
+        
+        * {
+            font-family: 'FlightSans', 'Paperlogy', 'Noto Sans KR', 'Mona12', sans-serif;
+        }
+        
+        .emoji-font {
+            font-family: 'Mona12', sans-serif !important;
+            font-weight: normal !important;
+        }
         
         body {
-            font-family: 'Paperlogy', 'Noto Sans KR', sans-serif;
+            font-family: 'FlightSans', 'Paperlogy', 'Noto Sans KR', 'Mona12', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
                         linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; 
-            margin: 0; 
-            padding: 0;
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            min-height: 100vh; 
-            color: #333; 
-            overflow-x: hidden; 
-            padding-bottom: 80px;
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; color: #1d1d1f;
+            box-sizing: border-box; padding: 40px 24px;
+            overflow-x: hidden;
+        }
+        
+        .container { width: 100%; max-width: 860px; margin: 0 auto; }
+        
+        .header-zone {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 28px; padding: 0 8px;
+        }
+        
+        .welcome-text { font-family: 'Paperlogy', sans-serif; font-size: 1.8rem; font-weight: 700; color: #1d1d1f; margin: 0; letter-spacing: -0.8px; }
+        .dday-badge { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.95rem; font-weight: 700; color: #ff453a; letter-spacing: -0.3px; }
+
+        .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
+        @media (min-width: 768px) { .main-grid { grid-template-columns: 1fr 1fr; align-items: stretch; } }
+
+        /* Glassmorphism 카드 공통 인터페이스 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.38); 
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.45); 
+            border-radius: 24px; padding: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            box-sizing: border-box; display: flex; flex-direction: column;
+        }
+        
+        .info-card { justify-content: space-between; min-height: 230px; }
+        
+        /* 실시간 기상 관측 구역 */
+        .weather-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 0, 0, 0.04); padding-bottom: 14px; }
+        .weather-status { font-family: 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 600; color: #4a4a4c; display: flex; align-items: center; gap: 6px; }
+        .weather-temp { font-family: 'FlightSans', sans-serif; font-size: 1.15rem; font-weight: 700; color: #1d1d1f; }
+        .weather-details-text { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.78rem; color: #86868b; font-weight: 600; display: flex; gap: 8px; }
+
+        /* 실시간 서버 동기화 시간 구역 */
+        .clock-row { padding: 14px 0; }
+        .clock-date { font-family: 'Paperlogy', sans-serif; font-size: 0.9rem; color: #86868b; font-weight: 600; margin-bottom: 4px; }
+        .clock-time { font-family: 'FlightSans', sans-serif; font-size: 3rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; line-height: 1; margin: 0; }
+
+        /* 지성 격언 큐레이션 영역 */
+        .quote-row {
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+            padding-top: 14px; font-size: 0.85rem; line-height: 1.4; color: #515154; font-weight: 600;
+        }
+        .quote-row span { font-family: 'Paperlogy', sans-serif; }
+        .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.75rem; color: #86868b; margin-top: 4px; }
+
+        /* 우측 하이퍼링크 제어 카드 */
+        .menu-card { padding: 12px 0; justify-content: center; min-height: 230px; }
+        
+        .menu-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 24px 32px; text-decoration: none; color: #1d1d1f;
+            transition: all 0.25s ease; cursor: pointer; background: none; border: none; width: 100%; text-align: left;
+        }
+        .menu-item:not(:last-child) { border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
+        .menu-item:hover { background: rgba(255, 255, 255, 0.35); padding-left: 36px; }
+        
+        .menu-item-text { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.3px; }
+        .arrow-icon { font-family: 'FlightSans', sans-serif; font-size: 0.9rem; color: #86868b; transition: transform 0.2s ease; }
+        .menu-item:hover .arrow-icon { transform: translateX(4px); color: #6c5ce7; }
+
+        /* 하단 서브 모듈 제어 존 */
+        .sub-utility-zone {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 16px;
+            width: 100%;
             box-sizing: border-box;
         }
-        
-        .container { 
-            width: 100%; 
-            max-width: 430px; 
-            padding: 20px 24px; 
-            text-align: center; 
-            box-sizing: border-box; 
-        }
-        
-        /* 환영 인사 */
-        .welcome-text {
-            font-size: 1.4rem; 
-            font-weight: bold; 
-            color: #2c3e50;
-            margin-bottom: 20px; 
-            display: inline-block; 
-            width: 100%; 
-            box-sizing: border-box; 
-            word-break: keep-all;
+        @media (max-width: 600px) {
+            .sub-utility-zone { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* 시계 컨테이너 */
-        .clock-container {
-            margin-bottom: 25px; 
-            background: rgba(255, 255, 255, 0.4);
-            padding: 16px 12px; 
-            border-radius: 20px; 
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.5); 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-        }
-        .clock-date { font-size: 0.85rem; color: #6c5ce7; font-weight: 600; margin-bottom: 2px; }
-        .clock-time { font-size: 2rem; font-weight: 700; color: #2c3e50; letter-spacing: -1px; }
-
-        /* 나이스 연동 D-Day 배지 스타일 */
-        .dday-text {
-            font-size: 0.95rem;
-            font-weight: 700;
-            margin-top: 10px;
-            padding: 5px 16px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 30px;
-            display: inline-block;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+        .utility-btn {
+            font-family: 'Paperlogy', sans-serif;
+            font-size: 0.8rem; font-weight: 600; text-decoration: none;
+            padding: 14px 4px; border-radius: 12px; transition: all 0.2s ease;
+            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+            letter-spacing: -0.4px; white-space: nowrap; cursor: pointer; border: none;
         }
 
-        /* 바로가기 버튼 스타일 */
-        .link-button {
-            display: block; 
-            background-color: rgba(255, 255, 255, 0.9); 
-            color: #333333;
-            text-decoration: none; 
-            padding: 18px 20px; 
-            margin-bottom: 16px; 
-            border-radius: 16px;
-            font-size: 1.05rem; 
-            font-weight: 600; 
-            box-shadow: 0 8px 16px rgba(149, 157, 165, 0.1);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            cursor: pointer; 
-            box-sizing: border-box; 
-            width: 100%; 
-            text-align: center; 
-            font-family: inherit;
+        .btn-secondary {
+            color: #515154; 
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
-        .link-button:hover { 
-            transform: translateY(-4px); 
-            background-color: #6c5ce7; 
-            color: #ffffff; 
-            border-color: #6c5ce7; 
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.45); 
+            color: #1d1d1f;
+            border-color: rgba(108, 92, 231, 0.2);
         }
 
-        /* 알림 및 명언 박스 */
-        .quote-box {
-            background: rgba(255, 255, 255, 0.5); 
-            padding: 18px; 
-            border-radius: 16px;
-            margin-top: 20px; 
-            text-align: center; 
-            font-size: 0.95rem; 
-            color: #4a5568; 
-            line-height: 1.5;
-            border: 1px solid rgba(255, 255, 255, 0.6); 
-            box-shadow: 0 8px 16px rgba(149, 157, 165, 0.05); 
-            word-break: keep-all;
+        .btn-danger {
+            color: #ff3b30; 
+            background: rgba(255, 59, 48, 0.05);
+            border: 1px solid rgba(255, 59, 48, 0.12);
         }
-        .quote-author { display: block; margin-top: 8px; font-size: 0.85rem; color: #718096; font-weight: bold; }
+        .btn-danger:hover {
+            background: rgba(255, 59, 48, 0.1); 
+            border-color: rgba(255, 59, 48, 0.25);
+        }
 
-        .more-links { 
-            display: block; 
-            margin-top: 25px; 
-            font-size: 0.82rem; 
-            color: #718096; 
-            text-decoration: none; 
-            font-weight: 600; 
-            text-align: center;
+        /* 하단 크롤링 공지 롤러 시스템 */
+        .marquee-container {
+            margin-top: 24px; background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50px;
+            padding: 10px 24px; overflow: hidden; display: none;
         }
+        .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; font-weight: 600; color: #515154; white-space: nowrap; }
+        @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        /* 크레딧 푸터 고정 */
+        .footer { margin-top: 48px; text-align: center; }
+        .footer-brand { 
+            font-family: 'Paperlogy', sans-serif; font-size: 1.05rem; font-weight: 700; color: #1d1d1f; 
+            letter-spacing: -0.3px; margin-bottom: 6px; 
+        }
+        .footer-brand span { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-weight: 700; }
+        .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.75rem; color: #a1a1a6; letter-spacing: 0.5px; }
+        .more-links { display: block; margin-top: 8px; font-size: 0.8rem; color: #718096; text-decoration: none; font-weight: 600; }
         .more-links:hover { text-decoration: underline; }
-        
-        .footer { margin-top: 15px; font-size: 0.85rem; color: #8892b0; }
-        
-        /* 하단 메뉴 링크 그룹 */
-        .bottom-menu { 
-            margin-top: 25px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 12px; 
-        }
-        .bottom-link {
-            font-size: 0.9rem; 
-            color: #718096; 
-            text-decoration: none; 
-            cursor: pointer; 
-            background: none; 
-            border: none; 
-            padding: 5px 10px; 
-            font-family: inherit;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-        .bottom-link:hover { color: #6c5ce7; text-decoration: underline; }
 
-        /* 모달 레이아웃 */
+        /* 다이내믹 모달 레이아웃 인프라 */
         .modal-overlay {
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4); 
-            backdrop-filter: blur(4px); 
-            z-index: 1000;
-            justify-content: center; 
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000;
+            justify-content: center; align-items: center;
         }
         .modal-box {
-            background: #ffffff; 
-            width: 90%; 
-            max-width: 380px; 
-            padding: 30px 24px;
-            border-radius: 24px; 
-            text-align: center; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15); 
-            box-sizing: border-box;
+            background: #ffffff; width: 90%; max-width: 380px; padding: 30px 24px;
+            border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;
         }
-        .modal-title { font-size: 1.25rem; font-weight: 700; color: #6c5ce7; margin-bottom: 15px; text-align: center; }
-        .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; text-align: center; }
+        .modal-title { font-size: 1.25rem; font-weight: 700; color: #6c5ce7; margin-bottom: 15px; }
+        .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; }
         .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
         
         .modal-box textarea, .modal-box input[type="text"] {
-            width: 100%; 
-            padding: 14px; 
-            border: 1px solid #ddd; 
-            border-radius: 14px;
-            box-sizing: border-box; 
-            margin-bottom: 15px; 
-            font-size: 0.95rem; 
-            font-family: inherit;
-            background: #f8f9fa; 
+            width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 14px;
+            box-sizing: border-box; margin-bottom: 15px; font-size: 0.95rem; font-family: inherit; background: #f8f9fa; 
         }
         .modal-box textarea { resize: none; text-align: left; }
         .modal-box textarea:focus, .modal-box input[type="text"]:focus { outline: none; border-color: #6c5ce7; background: #fff; }
@@ -204,44 +196,10 @@
         .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
 
-        /* 플로팅 버튼 세트 */
-        .fab-group { position: fixed; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
-        .msg-fab {
-            width: 56px; 
-            height: 56px; 
-            border-radius: 50%;
-            color: white; 
-            border: none; 
-            font-weight: bold;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            cursor: pointer; 
-            display: none; 
-            justify-content: center; 
-            align-items: center;
-            font-size: 1.4rem; 
-            transition: all 0.2s ease;
-        }
-        #historyFabBtn { background-color: #00b894; box-shadow: 0 8px 20px rgba(0, 184, 148, 0.3); }
-        #historyFabBtn:hover { transform: scale(1.08); background-color: #00a383; }
-        #msgFabBtn { background-color: #6c5ce7; box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3); }
-        #msgFabBtn:hover { transform: scale(1.08); background-color: #5b4cc4; }
-        #inquiryFabBtn { background-color: #ff9f43; box-shadow: 0 8px 20px rgba(255, 159, 67, 0.35); }
-        #inquiryFabBtn:hover { transform: scale(1.08); background-color: #ee8f32; }
-
-        /* 메시지 히스토리 피드 */
+        /* 실시간 질문 메시지 히스토리 피드 로그 */
         .history-zone {
-            max-height: 320px; 
-            overflow-y: auto;
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            padding: 4px;
-            margin-bottom: 20px; 
-            background: #f8fafc; 
-            border-radius: 16px;
-            border: 1px solid #e2e8f0; 
-            box-sizing: border-box; 
-            text-align: left;
+            max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; 
+            padding: 4px; margin-bottom: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-sizing: border-box; text-align: left;
         }
         .no-data { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.9rem; width: 100%; }
         .chat-bubble { padding: 10px 14px; border-radius: 14px; font-size: 0.88rem; max-width: 82%; line-height: 1.45; word-break: break-all; }
@@ -250,69 +208,89 @@
         .chat-meta { font-size: 0.7rem; color: #94a3b8; margin-bottom: 2px; display: block; }
         .chat-meta.mine { text-align: right; }
         .teacher-name { font-weight: bold; color: #6c5ce7; }
-
-        /* 하단 전광판 */
-        .marquee-container {
-            display: none; 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%;
-            background: rgba(44, 62, 80, 0.95); 
-            color: #fff; 
-            padding: 10px 0;
-            font-size: 0.9rem; 
-            font-weight: 600; 
-            overflow: hidden; 
-            z-index: 999;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.1); 
-            backdrop-filter: blur(5px);
-        }
-        .marquee-text { display: inline-block; white-space: nowrap; padding-left: 100%; animation: marquee linear infinite; }
-        @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div id="welcome-message" class="welcome-text">학생 정보를 불러오는 중...</div>
-
-        <div class="clock-container">
-            <div id="clock-date" class="clock-date">0월 0일 0요일</div>
-            <div id="clock-time" class="clock-time">00:00:00</div>
-            <div id="dday-zone" class="dday-text" style="display: none;">해당없음</div>
+        <!-- 상단 헤더 존 -->
+        <div class="header-zone">
+            <h1 class="welcome-text" id="welcome-message">학생 정보를 불러오는 중...</h1>
+            <div class="dday-badge" id="ddayText">확인 중...</div>
         </div>
 
-        <button onclick="goToU2MWithCredentials()" class="link-button">유투엠 바로가기</button>
-        <button onclick="goToMathflatDirect()" class="link-button">매쓰플랫 바로가기</button>
-                    
-        <div class="quote-box">
-            💡 <b id="quote-header">오늘의 한마디:</b><br>
-            <span id="quote-text">문구를 불러오는 중...</span>
-            <span id="quote-author" class="quote-author"></span>
+        <!-- 계판 그리드 시스템 -->
+        <div class="main-grid">
+            <!-- 좌측 정밀 패널 (인포 카드) -->
+            <div class="glass-card info-card">
+                <div class="weather-row" style="align-items: flex-start; flex-direction: column; gap: 4px;">
+                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                        <span class="weather-status" id="weatherStatus">
+                            <span style="font-size:1rem;" id="weatherIcon" class="emoji-font">⏳</span> 위치 확인 중...
+                        </span>
+                        <span class="weather-temp" id="weatherTemp">--°C</span>
+                    </div>
+                    <div id="weatherDetails" class="weather-details-text"></div>
+                </div>
+                
+                <div class="clock-row">
+                    <div class="clock-date" id="dateText">동기화 중...</div>
+                    <div class="clock-time" id="timeText">00:00:00</div>
+                </div>
+                
+                <div class="quote-row">
+                    <b id="quote-header">오늘의 한마디:</b> <span id="quoteText">문구를 불러오는 중...</span>
+                    <span id="quoteAuthor" class="quote-author"></span>
+                </div>
+            </div>
+
+            <!-- 우측 연동 패널 (인증 게이트웨이 메뉴 카드) -->
+            <div class="glass-card menu-card">
+                <button onclick="goToU2MWithCredentials()" class="menu-item">
+                    <span class="menu-item-text">유투엠 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </button>
+                <button onclick="goToMathflatDirect()" class="menu-item">
+                    <span class="menu-item-text">매쓰플랫 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </button>
+                <button onclick="openHistoryModal()" class="menu-item">
+                    <span class="menu-item-text">내 메시지 내역함</span>
+                    <span class="arrow-icon">➔</span>
+                </button>
+            </div>
         </div>
-        
-        <a href="https://litt.ly/theu2m" target="_blank" class="more-links">KST가 만든 것들</a>
-        <div class="footer">© 2026 KST</div>
-        
-        <div class="bottom-menu">
-            <button onclick="goToMyPage()" class="bottom-link" style="color: #6c5ce7; font-weight: bold; font-size: 0.95rem;">마이페이지</button>
-            <button onclick="logoutUser()" class="bottom-link">로그아웃</button>
+
+        <!-- 하단 기능 제어 서브 유틸리티 존 -->
+        <div class="sub-utility-zone">
+            <button onclick="openSendMessageModal()" class="utility-btn btn-secondary"><span class="emoji-font">💬</span> 선생님 메시지</button>
+            <button onclick="openUnifiedInquiryModal()" class="utility-btn btn-secondary"><span class="emoji-font">🛠️</span> 관리자 문의</button>
+            <button onclick="goToMyPage()" class="utility-btn btn-secondary"><span class="emoji-font">👤</span> 마이페이지</button>
+            <button onclick="logoutUser()" class="utility-btn btn-danger">로그아웃</button>
+        </div>
+
+        <!-- 원격 비상 전광판 경보 배너 -->
+        <div class="marquee-container" id="reminderBar">
+            <div style="white-space: nowrap; overflow: hidden;">
+                <span class="marquee-text mona12" id="reminderText"></span>
+            </div>
+        </div>
+
+        <!-- 하단 저작권 정보 -->
+        <div class="footer">
+            <div class="footer-brand">K&P 수학입시학원 <span>with KST</span></div>
+            <a href="https://litt.ly/theu2m" target="_blank" class="more-links">KST가 만든 것들</a>
+            <div class="footer-copyright">© 2026 KST</div>
         </div>
     </div>
 
-    <div class="fab-group">
-        <button id="historyFabBtn" class="msg-fab" onclick="openHistoryModal()" title="메시지 내역">📂</button>
-        <button id="msgFabBtn" class="msg-fab" onclick="openSendMessageModal()" title="선생님께 메시지">✉️</button>
-        <button id="inquiryFabBtn" class="msg-fab" onclick="openUnifiedInquiryModal()" title="문의 및 제안">📝</button>
-    </div>
-
+    <!-- UI 다이내믹 모달 템플릿 컴포넌트 세트 -->
     <div id="unifiedInquiryModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 340px; padding: 24px 20px;">
             <div class="modal-title">📝 문의 및 제안 선택</div>
             <div class="modal-content" style="margin-bottom: 20px; font-size: 0.95rem;">원하시는 항목을 선택해 주세요.</div>
-            <button class="link-button" style="background-color: #00b894; color: white; margin-bottom: 12px; border: none; padding: 14px;" onclick="triggerSuggestionFromUnified()">💡 오늘의 한마디 제안하기</button>
-            <button class="link-button" style="background-color: #6c5ce7; color: white; margin-bottom: 20px; border: none; padding: 14px;" onclick="triggerInquiryFromUnified()">🏫 학원에 문의하기</button>
+            <button class="utility-btn btn-secondary" style="background-color: #00b894; color: white; margin-bottom: 12px; border: none; padding: 14px; width:100%; display:block;" onclick="triggerSuggestionFromUnified()">💡 오늘의 한마디 제안하기</button>
+            <button class="utility-btn btn-secondary" style="background-color: #6c5ce7; color: white; margin-bottom: 20px; border: none; padding: 14px; width:100%; display:block;" onclick="triggerInquiryFromUnified()">🏫 학원에 문의하기</button>
             <button class="btn-cancel" onclick="closeModal('unifiedInquiryModal')">닫기</button>
         </div>
     </div>
@@ -403,19 +381,17 @@
         </div>
     </div>
 
-    <div id="reminderBar" class="marquee-container">
-        <div id="reminderText" class="marquee-text"></div>
-    </div>
-
+    <!-- 엔진 코어 연동 스크립트 파트 -->
     <script>
     // =======================================================
-    // 1. 전역 변수 및 상수 선언
+    // 1. 전역 변수 및 원격 인프라 키 관리
     // =======================================================
     let currentStudentData = null; 
     let noteListener = null;
     let historyListeners = []; 
     let customAlertCallback = null;
-    let rebootListener = null; // 재부팅 리스너 추적용 변수
+    let rebootListener = null;
+    let serverTimeOffset = 0;
 
     let idleTimer;       
     let countdownTimer;  
@@ -535,7 +511,7 @@
         { author: "윈스턴 처칠", authorProfile: "전 영국 총리", message: "성공은 실패를 거듭해도 열정을 잃지 않는 것이다." },
         { author: "에이브러햄 링컨", authorProfile: "전 미국 대통령", message: "미래를 예측하는 가장 좋은 방법은 미래를 만드는 것이다." },
         { author: "시어도어 루스벨트", authorProfile: "전 미국 대통령", message: "할 수 있다고 믿으면 이미 절반은 이룬 것이다." },
-        { author: "존 F. 케네디", authorProfile: "전 미국 대통령", message: "변화는 삶의 법칙이다." },
+        { author: "존 F. 케네디", boardTitle: "전 미국 대통령", message: "변화는 삶의 법칙이다." },
         { author: "마틴 루터 킹 주니어", authorProfile: "인권운동가", message: "첫걸음을 내딛어라. 계단 전체를 볼 필요는 없다." },
         { author: "데일 카네기", authorProfile: "작가", message: "오늘을 최대한 활용하라." },
         { author: "스티븐 코비", authorProfile: "작가", message: "습관이 인생을 만든다." },
@@ -584,7 +560,7 @@
     ];
 
     // =======================================================
-    // 2. 파이어베이스 설정 및 객체 초기화
+    // 2. 파이어베이스 클라우드 환경 초기화
     // =======================================================
     const firebaseConfig = {
         apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
@@ -602,11 +578,9 @@
     const auth = firebase.auth();
 
     // =======================================================
-    // 3. 인증 및 로그아웃 관련 함수
+    // 3. 인증 바인딩 및 실시간 데이터 스트리밍 연동
     // =======================================================
-    function logoutUser() { 
-        showModal('logoutCheckModal'); 
-    }
+    function logoutUser() { showModal('logoutCheckModal'); }
 
     function confirmLogoutAction() {
         closeModal('logoutCheckModal');
@@ -615,7 +589,7 @@
             localStorage.removeItem('u2m_pw');
             window.location.href = 'login.html';
         }).catch((error) => {
-            showCustomAlert("로그아웃 중 오류가 발생했습니다: " + error.message, "❌ 에러");
+            showCustomAlert("로그아웃 오류: " + error.message, "❌ 에러");
         });
     }
 
@@ -623,21 +597,23 @@
         auth.onAuthStateChanged((user) => {
             if (user) {
                 startIdleTracking();
+                
+                // Realtime Database 오프셋 추출
+                database.ref(".info/serverTimeOffset").on("value", function(snapshot) {
+                    serverTimeOffset = snapshot.val() || 0;
+                });
+
                 database.ref(`students/${user.uid}`).once('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         currentStudentData = data;
-                        document.getElementById('msgFabBtn').style.display = 'flex';
-                        document.getElementById('historyFabBtn').style.display = 'flex'; 
-                        document.getElementById('inquiryFabBtn').style.display = 'flex'; 
-
                         const rawName = data.name || data.studentName || data.userName;
                         const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
-                        document.getElementById('welcome-message').innerText = `${actualName}님 반가워요!`;
+                        document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
                         
                         if (!data.mathflatId && !data.studentPhone) {
                             setTimeout(() => { 
-                                showCustomAlert("로그인 정보 설정이 필요합니다. 마이페이지로 이동합니다.", "⚙️ 알림", () => {
+                                showCustomAlert("정보 설정이 누락되었습니다. 마이페이지로 이동합니다.", "⚙️ 알림", () => {
                                     goToMyPage();
                                 });
                             }, 600);
@@ -649,8 +625,6 @@
                         
                         listenToTeacherNotes(user.uid);
                         startLiveChatHistory(user.uid); 
-                        
-                        // 🔋 배터리 자동 수집 주기 가동 및 원격 제어 신호 대기 시작
                         startDeviceStatusReporting(user.uid);
                         listenToRemoteCommands(user.uid);
                     } else {
@@ -677,7 +651,7 @@
     }
 
     // =======================================================
-    // 4. 공통 UI 모달 및 알림 함수 (중복 closeModal 제거 완료)
+    // 4. 공통 뷰 제어 모달 모듈 포팅
     // =======================================================
     function showModal(id) { 
         const el = document.getElementById(id);
@@ -705,7 +679,7 @@
     }
 
     // =======================================================
-    // 5. 암호화 / 복호화 및 유틸리티
+    // 5. 대칭키 암호화(AES) 코어 엔진 디코더
     // =======================================================
     function decryptAES(cipherText) {
         if (!cipherText) return "";
@@ -715,17 +689,15 @@
             const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
             return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText; 
         } catch (e) {
-            console.error("🚨 복호화 에러:", e);
+            console.error("🚨 복호화 실패:", e);
             return cipherText; 
         }
     }
 
-    function goToMyPage() {
-        window.location.href = 'mypage.html';
-    }
+    function goToMyPage() { window.location.href = 'mypage.html'; }
 
     // =======================================================
-    // 6. 30분 미사용 타이머 (자동 로그아웃 시스템)
+    // 6. 장시간 미사용 자동 셧다운 방어 메커니즘
     // =======================================================
     function startIdleTracking() {
         const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
@@ -746,14 +718,12 @@
     function showIdleWarning() {
         stopIdleTracking(); 
         showModal('idleWarningModal');
-        
         remainingSeconds = 60;
         document.getElementById('idleCountdown').innerText = remainingSeconds;
         
         countdownTimer = setInterval(() => {
             remainingSeconds--;
             document.getElementById('idleCountdown').innerText = remainingSeconds;
-            
             if (remainingSeconds <= 0) {
                 clearInterval(countdownTimer);
                 triggerAutoLogout(); 
@@ -770,7 +740,6 @@
     function triggerAutoLogout() {
         clearInterval(countdownTimer);
         clearTimeout(idleTimer);
-        
         auth.signOut().then(() => {
             localStorage.removeItem('u2m_id');
             localStorage.removeItem('u2m_pw');
@@ -778,25 +747,17 @@
                 window.AndroidApp.logoutAll();
             }
             window.location.replace('login.html');
-        }).catch((err) => {
+        }).catch(() => {
             window.location.replace('login.html');
         });
     }
 
     // =======================================================
-    // 7. 건의사항 및 학원 문의 기능
+    // 7. 통합 건의 제안 수집 모듈 (비속어 방어 인젝션 포함)
     // =======================================================
     function openUnifiedInquiryModal() { showModal('unifiedInquiryModal'); }
-    
-    function triggerSuggestionFromUnified() {
-        closeModal('unifiedInquiryModal');
-        openSuggestionModal();
-    }
-    
-    function triggerInquiryFromUnified() {
-        closeModal('unifiedInquiryModal');
-        openAcademyInquiryModal();
-    }
+    function triggerSuggestionFromUnified() { closeModal('unifiedInquiryModal'); openSuggestionModal(); }
+    function triggerInquiryFromUnified() { closeModal('unifiedInquiryModal'); openAcademyInquiryModal(); }
 
     function openSuggestionModal() {
         document.getElementById('suggestContent').value = '';
@@ -813,14 +774,14 @@
 
         if (!contentText) { showCustomAlert("명언 내용을 입력해 주세요."); return; }
         if (!authorText) { showCustomAlert("말한 사람(닉네임)을 입력해 주세요."); return; }
-        if (!currentStudentData) { showCustomAlert("학생 정보 로딩 중입니다. 잠시 후 다시 시도해 주세요."); return; }
+        if (!currentStudentData) { showCustomAlert("학생 데이터 동기화 중입니다."); return; }
         
         const combinedText = contentText + authorText + profileText;
         const cleanText = combinedText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
         const hasBadWord = BANNED_KEYWORDS.some(word => cleanText.includes(word));
         
         if (hasBadWord) {
-            showCustomAlert("⚠️ 작성하신 내용에 부적절한 표현(비속어/욕설)이 포함되어 있어 제안을 등록할 수 없습니다.", "🚨 경고");
+            showCustomAlert("⚠️ 비속어 및 욕설이 감지되어 제출이 차단되었습니다.", "🚨 경고");
             return;
         }
 
@@ -828,15 +789,9 @@
         const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
         const realName = decryptAES(rawName);
 
-        let encryptedContent = contentText;
-        let encryptedAuthor = authorText;
-        let encryptedProfile = profileText;
-        
-        if (typeof CryptoJS !== 'undefined' && CryptoJS.AES) { 
-            encryptedContent = CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString(); 
-            encryptedAuthor = CryptoJS.AES.encrypt(authorText, SECRET_KEY).toString(); 
-            encryptedProfile = CryptoJS.AES.encrypt(profileText, SECRET_KEY).toString(); 
-        }
+        let encryptedContent = CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString(); 
+        let encryptedAuthor = CryptoJS.AES.encrypt(authorText, SECRET_KEY).toString(); 
+        let encryptedProfile = CryptoJS.AES.encrypt(profileText, SECRET_KEY).toString(); 
 
         const suggestData = {
             studentName: realName,
@@ -851,10 +806,9 @@
 
         database.ref('suggestions').push(suggestData)
             .then(() => {
-                showCustomAlert(`원장님께 오늘의 한마디가 안전하게 전달되었습니다. 소중한 의견 감사합니다!`, "💡 제안 접수 완료");
+                showCustomAlert(`원장님께 한마디 제안이 완료되었습니다.`, "💡 제안 접수 완료");
                 closeSuggestionModal();
-            })
-            .catch(err => showCustomAlert('전송 실패: ' + err.message, "❌ 에러"));
+            }).catch(err => showCustomAlert('전송 실패: ' + err.message));
     }
 
     function openAcademyInquiryModal() {
@@ -865,26 +819,21 @@
 
     function submitAcademyInquiry() {
         const contentText = document.getElementById('inquiryContent').value.trim();
-
         if (!contentText) { showCustomAlert("문의사항 내용을 적어주세요."); return; }
-        if (!currentStudentData) { showCustomAlert("학생 정보 로딩 중입니다. 잠시 후 다시 시도해 주세요."); return; }
+        if (!currentStudentData) { showCustomAlert("학생 데이터 동기화 중입니다."); return; }
 
         const cleanText = contentText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
         const hasBadWord = BANNED_KEYWORDS.some(word => cleanText.includes(word));
 
         if (hasBadWord) {
-            showCustomAlert("⚠️ 작성하신 내용에 부적절한 표현(비속어/욕설)이 포함되어 있어 문의를 등록할 수 없습니다.", "🚨 경고");
+            showCustomAlert("⚠️ 비속어 및 욕설이 감지되어 문의를 등록할 수 없습니다.", "🚨 경고");
             return;
         }
 
         const currentUser = auth.currentUser;
         const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
         const realName = decryptAES(rawName);
-
-        let encryptedContent = contentText;
-        if (typeof CryptoJS !== 'undefined' && CryptoJS.AES) {
-            encryptedContent = CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString();
-        }
+        let encryptedContent = CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString();
 
         const inquiryData = {
             studentName: realName,
@@ -899,14 +848,13 @@
 
         database.ref('suggestions').push(inquiryData)
             .then(() => {
-                showCustomAlert(`원장님께 문의 및 건의사항이 안전하게 전달되었습니다.`, "🏫 문의 접수 완료");
+                showCustomAlert(`원장님께 다이렉트 문의가 접수되었습니다.`, "🏫 문의 접수 완료");
                 closeAcademyInquiryModal();
-            })
-            .catch(err => showCustomAlert('전송 실패: ' + err.message, "❌ 에러"));
+            }).catch(err => showCustomAlert('전송 실패: ' + err.message));
     }
 
     // =======================================================
-    // 8. 안드로이드 연동 브릿지 (로그인 / 배터리 수집 / 원격 재부팅 연동)
+    // 8. 하이브리드 네이티브 앱 브릿지 프로토콜 연동 인터페이스
     // =======================================================
     function transmitBridgeCredentials() {
         if (!currentStudentData) return;
@@ -916,14 +864,10 @@
             const mathflatId = decryptAES(currentStudentData.studentPhone || currentStudentData.phone || '').trim();
             const decryptedMathflatPw = decryptAES(currentStudentData.mathflatPw || '').trim();
             
-            if (window.AndroidApp) {
-                if (typeof window.AndroidApp.loginToU2M === 'function') {
-                    window.AndroidApp.loginToU2M(u2mId, u2mPw, decryptedMathflatPw, mathflatId);
-                }
+            if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
+                window.AndroidApp.loginToU2M(u2mId, u2mPw, decryptedMathflatPw, mathflatId);
             }
-        } catch (err) { 
-            console.error("❌ 브릿지 연동 실패:", err); 
-        }
+        } catch (err) { console.error("크레덴셜 앱 전달 오류:", err); }
     }
 
     function goToU2MWithCredentials() {
@@ -947,7 +891,7 @@
                             lastUpdated: firebase.database.ServerValue.TIMESTAMP
                         });
                     }
-                } catch(e) { console.error("배터리 수집 오류:", e); }
+                } catch(e) { console.error("배터리 텔레메트리 에러:", e); }
             } else if (navigator.getBattery) {
                 navigator.getBattery().then(battery => {
                     database.ref(`device_status/${studentUid}`).set({
@@ -962,7 +906,6 @@
     function listenToRemoteCommands(studentUid) {
         if (rebootListener) rebootListener.off();
         rebootListener = database.ref(`commands/${studentUid}`);
-        
         rebootListener.on('value', (snapshot) => {
             if (snapshot.exists()) {
                 const cmd = snapshot.val();
@@ -971,7 +914,7 @@
                     if (window.AndroidApp && typeof window.AndroidApp.rebootDevice === 'function') {
                         window.AndroidApp.rebootDevice();
                     } else {
-                        alert("🔄 [원격 제어] 관리자로부터 기기 재부팅 신호를 수신했습니다. (테스트 환경: 브라우저)");
+                        alert("🔄 [원격 제어] 시스템 강제 재부팅 신호가 수신되었습니다.");
                         window.location.reload();
                     }
                 }
@@ -980,18 +923,34 @@
     }
 
     // =======================================================
-    // 9. NEIS Open API 연동 및 시계 기능 등 기존 스크립트 유지
+    // 9. 고정밀 시계, NEIS 공공 데이터 크롤러 엔진
     // =======================================================
-    function startClock() {
-        const dateEl = document.getElementById('clock-date');
-        const timeEl = document.getElementById('clock-time');
-        const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-        setInterval(() => {
-            const now = new Date();
-            if(dateEl) dateEl.innerText = `${now.getMonth() + 1}월 ${now.getDate()}일 ${weekDays[now.getDay()]}`;
-            if(timeEl) timeEl.innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-        }, 1000);
+    function updateClock() {
+        const serverTimeMillis = Date.now() + serverTimeOffset;
+        const now = new Date(serverTimeMillis);
+
+        const formatter = new Intl.DateTimeFormat('ko-KR', {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            weekday: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+        });
+
+        const parts = formatter.formatToParts(now);
+        let month, day, weekday, hour, minute, second;
+        for (const part of parts) {
+            if (part.type === 'month') month = part.value;
+            if (part.type === 'day') day = part.value;
+            if (part.type === 'weekday') weekday = part.value;
+            if (part.type === 'hour') hour = part.value;
+            if (part.type === 'minute') minute = part.value;
+            if (part.type === 'second') second = part.value;
+        }
+
+        document.getElementById('timeText').innerText = `${hour}:${minute}:${second}`;
+        document.getElementById('dateText').innerText = `${parseInt(month)}월 ${parseInt(day)}일 ${weekday}`;
     }
+    setInterval(updateClock, 1000);
 
     function fetchExamDateFromNeis(schoolName) {
         if (!schoolName) { renderDDayBadge(null); return; }
@@ -1024,34 +983,29 @@
                     if (eventDate >= todayStr) {
                         if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") || 
                             eventName.includes("지필") || eventName.includes("시험") || eventName.includes("정규")) {
-                            upcomingExamDates.push(eventDate);
+                            upcomingExamDates.push({ date: eventDate, name: eventName });
                         }
                     }
                 });
                 
                 if (upcomingExamDates.length > 0) {
-                    upcomingExamDates.sort(); 
-                    const closestDate = upcomingExamDates[0]; 
-                    const finalDateForm = `${closestDate.substring(0,4)}-${closestDate.substring(4,6)}-${closestDate.substring(6,8)}`;
-                    renderDDayBadge(finalDateForm);
+                    upcomingExamDates.sort((a,b) => a.date.localeCompare(b.date)); 
+                    const closest = upcomingExamDates[0];
+                    const finalDateForm = `${closest.date.substring(0,4)}-${closest.date.substring(4,6)}-${closest.date.substring(6,8)}`;
+                    renderDDayBadge(finalDateForm, closest.name);
                 } else { renderDDayBadge(null); }
-            })
-            .catch(err => {
-                renderDDayBadge(null);
-            });
+            }).catch(() => renderDDayBadge(null));
     }
 
-    function renderDDayBadge(examDate) {
-        const ddayZone = document.getElementById('dday-zone');
+    function renderDDayBadge(examDate, examName = "정기고사") {
+        const ddayZone = document.getElementById('ddayText');
         if (!ddayZone) return;
         if (currentStudentData && currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) {
             ddayZone.style.display = 'none';
             return;
         }
         if (!examDate) {
-            ddayZone.innerText = "해당없음";
-            ddayZone.style.color = "#7f8c8d";
-            ddayZone.style.display = 'inline-block';
+            ddayZone.innerText = "학사 일정 분석불가";
             return;
         }
 
@@ -1063,18 +1017,14 @@
         const diffTime = targetDate - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+        let schoolTag = currentStudentData.schoolName ? currentStudentData.schoolName.replace("대한민국", "").substring(0,5) : "학교";
+
         if (diffDays > 0) {
-            ddayZone.innerText = `시험 D-${String(diffDays).padStart(2, '0')}`;
-            ddayZone.style.color = "#e74c3c";
-            ddayZone.style.display = 'inline-block';
+            ddayZone.innerText = `${schoolTag} [${examName}] D-${diffDays}`;
         } else if (diffDays === 0) {
-            ddayZone.innerText = "시험 D-Day";
-            ddayZone.style.color = "#e74c3c";
-            ddayZone.style.display = 'inline-block';
+            ddayZone.innerHTML = `⚠️ [${examName}] 오늘 D-DAY 🎉`;
         } else {
-            ddayZone.innerText = "해당없음";
-            ddayZone.style.color = "#7f8c8d";
-            ddayZone.style.display = 'inline-block';
+            ddayZone.innerText = "예정된 시험 없음";
         }
     }
 
@@ -1084,13 +1034,13 @@
         const dateValue = now.getFullYear() + (now.getMonth() + 1) + now.getDate();
         const dailyData = advices[dateValue % advices.length];
         document.getElementById('quote-header').innerText = "오늘의 한마디:";
-        document.getElementById('quote-text').innerText = `"${dailyData.message}"`;
+        document.getElementById('quoteText').innerText = `"${dailyData.message}"`;
         const profileStr = dailyData.authorProfile && dailyData.authorProfile !== "-" ? ` (${dailyData.authorProfile})` : "";
-        document.getElementById('quote-author').innerText = `- ${dailyData.author}${profileStr} -`;
+        document.getElementById('quoteAuthor').innerText = `- ${dailyData.author}${profileStr}`;
     }
 
     // =======================================================
-    // 10. 실시간 질문 및 채팅 기능
+    // 10. 실시간 비동기 양방향 채팅 및 알림 제어 파트
     // =======================================================
     function openSendMessageModal() {
         document.getElementById('studentMsgInput').value = '';
@@ -1112,7 +1062,7 @@
             if (note) {
                 let decryptedMsg = decryptAES(note.message);
                 if (decryptedMsg.startsWith("[답장완료] ")) { decryptedMsg = decryptedMsg.replace("[답장완료] ", ""); }
-                document.getElementById('modalTitle').innerText = "✉️ 선생님이 보낸 쪽지";
+                document.getElementById('modalTitle').innerText = "✉️ 선생님의 전송 쪽지";
                 document.getElementById('modalNoticeContent').innerText = `[${note.teacher} 선생님]\n\n${decryptedMsg}`;
                 showModal('noticeModal');
                 database.ref(`student_messages/${uid}/${snapshot.key}/read`).set(true);
@@ -1157,7 +1107,7 @@
         if (!zoneEl) return;
         const combined = [...questions, ...notes].sort((a, b) => a.timestamp - b.timestamp);
         if (combined.length === 0) {
-            zoneEl.innerHTML = '<div class="no-data">최근 주고받은 메시지가 없습니다.</div>';
+            zoneEl.innerHTML = '<div class="no-data">히스토리가 비어있습니다.</div>';
             return;
         }
         zoneEl.innerHTML = '';
@@ -1165,17 +1115,15 @@
             const date = new Date(chat.timestamp);
             const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
             const wrapper = document.createElement('div');
-            wrapper.style.display = 'flex';
-            wrapper.style.flexDirection = 'column';
-            wrapper.style.width = '100%';
+            wrapper.style.display = 'flex'; wrapper.style.flexDirection = 'column'; wrapper.style.width = '100%';
 
             let rawMessage = chat.message || "";
             if (rawMessage.startsWith("[답장완료] ")) { rawMessage = rawMessage.replace("[답장완료] ", ""); }
 
             if (chat.isMine) {
-                wrapper.innerHTML = `<span class="chat-meta mine">내가 보낸 질문 (${timeStr})</span><div class="chat-bubble mine">${rawMessage}</div>`;
+                wrapper.innerHTML = `<span class="chat-meta mine">나의 질문 (${timeStr})</span><div class="chat-bubble mine">${rawMessage}</div>`;
             } else {
-                wrapper.innerHTML = `<span class="chat-meta"><span class="teacher-name">👤 ${chat.teacher || '선생님'}</span> (${timeStr})</span><div class="chat-bubble teacher">${rawMessage}</div>`;
+                wrapper.innerHTML = `<span class="chat-meta"><span class="teacher-name">👤 ${chat.teacher || '담당교사'}</span> (${timeStr})</span><div class="chat-bubble teacher">${rawMessage}</div>`;
             }
             zoneEl.appendChild(wrapper);
         });
@@ -1190,15 +1138,13 @@
     function sendMessageToTeacher() {
         const msgInput = document.getElementById('studentMsgInput'); 
         const text = msgInput.value.trim();
-        if (!text) { showCustomAlert('보낼 내용을 입력해 주세요.'); return; }
-        if (!currentStudentData || !currentStudentData.teacher) { showCustomAlert('선생님 정보가 없습니다. 다시 로그인해 주세요.'); return; }
+        if (!text) { showCustomAlert('전송 내용을 바르게 입력해 주세요.'); return; }
+        if (!currentStudentData || !currentStudentData.teacher) { showCustomAlert('선생님 정보 동기화에 실패했습니다.'); return; }
         const currentUser = auth.currentUser;
-        if (!currentUser) { showCustomAlert('❌ 세션이 종료되었습니다. 다시 로그인해 주세요.'); return; }
 
         const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
         const realName = decryptAES(rawName);
-        let encryptedMessage = text;
-        if (typeof CryptoJS !== 'undefined' && CryptoJS.AES) { encryptedMessage = CryptoJS.AES.encrypt(text, SECRET_KEY).toString(); }
+        let encryptedMessage = CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
 
         const msgData = {
             studentName: realName,
@@ -1212,15 +1158,14 @@
 
         database.ref('messages').push(msgData)
             .then(() => {
-                showCustomAlert(`${currentStudentData.teacher} 선생님께 메시지가 전송되었습니다.`, "✉️ 전송 완료");
+                showCustomAlert(`${currentStudentData.teacher} 선생님께 실시간 질문이 발송되었습니다.`, "✉️ 발송 완료");
                 msgInput.value = ''; 
                 closeSendMessageModal(); 
-            })
-            .catch(err => showCustomAlert('전송 실패: ' + err.message, "❌ 에러"));
+            }).catch(err => showCustomAlert('전송 오류: ' + err.message));
     }
 
     // =======================================================
-    // 11. 파이어베이스 메인 리스너 (공지사항, 명언, 전광판)
+    // 11. 원격 공지사항 및 큐레이션 실시간 마스터 리스너
     // =======================================================
     function listenToFirebase() {
         database.ref('notice').on('value', (snapshot) => {
@@ -1239,8 +1184,8 @@
             if (snapshot.exists()) {
                 const quoteData = snapshot.val();
                 document.getElementById('quote-header').innerText = "오늘의 명언:";
-                document.getElementById('quote-text').innerText = `"${quoteData.message}"`;
-                document.getElementById('quote-author').innerText = quoteData.author ? `- ${quoteData.author} -` : "";
+                document.getElementById('quoteText').innerText = `"${quoteData.message}"`;
+                document.getElementById('quoteAuthor').innerText = quoteData.author ? `- ${quoteData.author}` : "";
             } else {
                 displayDefaultAdvice();
             }
@@ -1251,7 +1196,7 @@
             const bar = document.getElementById('reminderBar');
             const txtEl = document.getElementById('reminderText');
             if (text.trim() !== "") {
-                if(txtEl) txtEl.innerText = `⚠️ ${text} ⚠️\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0`;
+                if(txtEl) txtEl.innerText = `⚠️ 긴급 공지: ${text} ⚠️\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0`;
                 if(bar) bar.style.display = 'block';
                 const duration = Math.max(14, text.length * 0.45);
                 if(txtEl) txtEl.style.animationDuration = `${duration}s`;
@@ -1263,12 +1208,51 @@
     }
 
     // =======================================================
-    // 12. 전체 페이지 초기 로드 핸들러
+    // 12. 오픈웨더 맵 API 기상 실시간 수집 연동 파트
+    // =======================================================
+    function initWeather() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => { fetchWeather(position.coords.latitude, position.coords.longitude); },
+                () => { fetchWeather(37.2638, 127.0286); } // 거부 시 기본 백업 좌표(수원) 자동 로드
+            );
+        } else { fetchWeather(37.2638, 127.0286); }
+    }
+
+    async function fetchWeather(lat, lon) {
+        const apiKey = '5bce1dcb3eac35e493f0ed9df94b5dac';
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('날씨 수집 불가');
+            const data = await response.json();
+            const temp = Math.round(data.main.temp * 10) / 10;
+            document.getElementById('weatherTemp').innerText = `${temp}°C`;
+
+            const weatherId = data.weather[0].id;
+            let emoji = '☀️';
+            if (weatherId >= 200 && weatherId < 300) emoji = '⛈️';
+            else if (weatherId >= 300 && weatherId < 600) emoji = '🌧️';
+            else if (weatherId >= 600 && weatherId < 700) emoji = '❄️';
+            else if (weatherId >= 700 && weatherId < 800) emoji = '🌫️';
+            else if (weatherId === 800) emoji = '☀️';
+            else if (weatherId > 800) emoji = '☁️';
+
+            const description = data.weather[0].description;
+            document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" id="weatherIcon" class="emoji-font">${emoji}</span> ${description}`;
+            document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">💧</span> 습도 ${data.main.humidity}%</span> <span><span class="emoji-font">💨</span> 풍속 ${data.wind.speed}m/s</span>`;
+        } catch {
+            document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" class="emoji-font">⚠️</span> 날씨 로드 실패`;
+        }
+    }
+
+    // =======================================================
+    // 13. 커널 로딩 엔트리포인트 
     // =======================================================
     window.onload = function() {
         checkUserAuth();
-        startClock();
         listenToFirebase();
+        initWeather();
     };
 </script>
 </body>
