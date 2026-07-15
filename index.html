@@ -31,7 +31,6 @@
             font-display: swap;
         }
         
-        /* 전체적인 폰트 사이즈를 축소 (16px -> 13.5px) 하여 모든 UI 비율을 작게 만듭니다 */
         html { font-size: 13.5px; }
 
         * {
@@ -51,12 +50,10 @@
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; color: #1d1d1f;
             box-sizing: border-box; 
-            /* 양 사이드 공백 추가 및 상하 여백 조정 */
             padding: 40px 8vw;
             overflow-x: hidden;
         }
         
-        /* 최대 너비 축소로 양측 여백 확보 */
         .container { width: 100%; max-width: 740px; margin: 0 auto; }
         
         .header-zone {
@@ -88,53 +85,97 @@
         .weather-temp { font-family: 'FlightSans', sans-serif; font-size: 1.1rem; font-weight: 700; color: #1d1d1f; }
         .weather-details-text { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.75rem; color: #86868b; font-weight: 600; display: flex; gap: 8px; }
 
-        /* 실시간 서버 동기화 시간 구역 */
+        /* 실시간 서버 동기화 시간 구역 (사이즈 대폭 증가) */
         .clock-row { padding: 12px 0; }
-        .clock-date { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; font-weight: 600; margin-bottom: 4px; }
-        .clock-time { font-family: 'FlightSans', sans-serif; font-size: 2.6rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; line-height: 1; margin: 0; }
+        .clock-date { font-family: 'Paperlogy', sans-serif; font-size: 1rem; color: #86868b; font-weight: 600; margin-bottom: 4px; }
+        .clock-time { font-family: 'FlightSans', sans-serif; font-size: 3.4rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; line-height: 1; margin: 0; }
 
-        /* 지성 격언 큐레이션 영역 */
+        /* 지성 격언 큐레이션 영역 (사이즈 증가 및 여백 조정) */
         .quote-row {
             border-top: 1px solid rgba(0, 0, 0, 0.04);
-            padding-top: 12px; font-size: 0.8rem; line-height: 1.4; color: #515154; font-weight: 600;
+            padding-top: 14px; font-size: 0.95rem; line-height: 1.4; color: #4a4a4c; font-weight: 600;
         }
         .quote-row span { font-family: 'Paperlogy', sans-serif; }
-        .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.7rem; color: #86868b; margin-top: 4px; }
+        .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; margin-top: 6px; }
 
-        /* 우측 하이퍼링크 제어 카드 */
-        .menu-card { gap: 12px; justify-content: center; min-height: 200px; }
-
-        /* ★ 완벽하게 통일된 마스터 버튼 디자인 시스템 ★ */
+        /* 우측 하이퍼링크 제어 카드 (버튼 꽉 차게 변경) */
+        .menu-card { gap: 14px; justify-content: space-between; min-height: 200px; display: flex; flex-direction: column; }
+        
+        /* [전체 버튼 공통 디자인] */
         .btn-base {
             font-family: 'Paperlogy', sans-serif;
             font-size: 0.9rem; font-weight: 600; text-decoration: none;
-            padding: 14px 16px; border-radius: 14px; transition: all 0.2s ease;
+            padding: 14px 16px; border-radius: 14px; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 통통 튀는 모션 효과 */
             box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
             gap: 8px; letter-spacing: -0.3px; white-space: nowrap; cursor: pointer; border: none; width: 100%;
+            position: relative;
         }
 
-        /* 투명 글래스 스타일 (메인 메뉴, 서브 유틸리티용 통일) */
+        /* 메인 바로가기 버튼 전용 스타일 (텍스트와 화살표를 양끝 배치) */
+        .menu-card .btn-base {
+            flex: 1; /* 상하 여백 꽉 채우기 */
+            font-size: 1.05rem; 
+            border-radius: 16px;
+            justify-content: space-between; /* 글씨는 왼쪽, 화살표는 오른쪽에 예쁘게 배치 */
+            padding: 16px 24px;
+        }
+
+        /* [기본 투명 글래스 버튼 설정] */
         .btn-glass {
-            color: #1d1d1f; 
-            background: rgba(255, 255, 255, 0.45);
+            color: #333333 !important; 
+            background: rgba(255, 255, 255, 0.9) !important; /* 선명하고 깨끗한 투명도 */
             border: 1px solid rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 8px 16px rgba(149, 157, 165, 0.1);
         }
+        
+        /* [🔥 마우스 올렸을 때: 보라색 액션 + 4px 승천] */
         .btn-glass:hover {
-            background: rgba(255, 255, 255, 0.7); 
-            transform: translateY(-1px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.04);
+            background: #6c5ce7 !important; 
+            color: #ffffff !important; 
+            border-color: #6c5ce7;
+            transform: translateY(-4px); /* 위로 둥실 떠오름 */
+            box-shadow: 0 12px 24px rgba(108, 92, 231, 0.25); /* 보라색 네온 피드백 */
         }
-        .btn-glass.danger { color: #e53e3e; }
 
-        /* 모달창 전용 솔리드 컬러 스타일 */
+        /* [화살표 아이콘 부드러운 움직임 설정] */
+        .btn-arrow {
+            display: inline-flex;
+            align-items: center;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* 화살표 내부 선 색상 트랜지션 */
+        .btn-arrow svg path {
+            transition: stroke 0.3s ease;
+        }
+
+        /* [🔥 마우스 올렸을 때: 화살표 오른쪽으로 튕기는 효과] */
+        .btn-glass:hover .btn-arrow {
+            transform: translateX(6px); /* 오른쪽으로 6px 이동 */
+        }
+
+        /* 마우스 올리면 화살표 검은 선이 흰색 선으로 변환 */
+        .btn-glass:hover .btn-arrow svg path {
+            stroke: #ffffff;
+        }
+
+        /* [로그아웃 등 빨간색 경고 버튼 전용] */
+        .btn-glass.danger { color: #e53e3e !important; }
+        .btn-glass.danger:hover {
+            background: #ff453a !important; 
+            color: #ffffff !important;
+            border-color: #ff453a;
+            box-shadow: 0 12px 24px rgba(255, 69, 58, 0.25);
+        }
+
+        /* [모달창 등 일반 컬러 버튼] */
         .btn-primary { background-color: #6c5ce7; color: #ffffff; }
         .btn-primary:hover { background-color: #5b4bc4; }
         .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
         .btn-secondary:hover { background-color: #cbd5e1; }
 
-        /* 하단 서브 모듈 제어 존 */
         .sub-utility-zone {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -145,10 +186,9 @@
         }
         @media (max-width: 650px) {
             .sub-utility-zone { grid-template-columns: repeat(2, 1fr); }
-            body { padding: 30px 6vw; } /* 모바일에서는 여백을 약간 줄여줌 */
+            body { padding: 30px 6vw; } 
         }
 
-        /* 하단 크롤링 공지 롤러 시스템 */
         .marquee-container {
             margin-top: 20px; background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -158,7 +198,6 @@
         .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.8rem; font-weight: 600; color: #515154; white-space: nowrap; }
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
-        /* 크레딧 푸터 고정 */
         .footer { margin-top: 40px; text-align: center; }
         .footer-brand { 
             font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; color: #1d1d1f; 
@@ -167,7 +206,6 @@
         .footer-brand span { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-weight: 700; }
         .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.75rem; color: #a1a1a6; letter-spacing: 0.5px; }
 
-        /* 다이내믹 모달 레이아웃 인프라 */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000;
@@ -188,14 +226,12 @@
         .modal-box textarea:focus, .modal-box input[type="text"]:focus { outline: none; border-color: #6c5ce7; background: #fff; }
         .btn-flex-group { display: flex; gap: 8px; }
 
-        /* 실시간 질문 메시지 히스토리 피드 로그 */
         .history-zone {
             max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; 
             padding: 4px; margin-bottom: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-sizing: border-box; text-align: left;
         }
         .no-data { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.85rem; width: 100%; }
         
-        /* 스크롤바 디자인 (말풍선 영역용) */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -236,13 +272,25 @@
                 </div>
             </div>
 
-            <!-- 우측 연동 패널 (인증 게이트웨이 메뉴 카드) -->
+            <!-- 우측 연동 패널 (메인 바로가기 버튼 꽉 차게 수정) -->
+            <!-- 우측 연동 패널 (화살표 추가 및 공간 양끝 배치형) -->
             <div class="glass-card menu-card">
                 <button onclick="goToU2MWithCredentials()" class="btn-base btn-glass">
-                    🚀 유투엠 바로가기
+                    <span>유투엠 바로가기</span>
+                    <!-- 슥 밀리는 애니메이션용 화살표 SVG -->
+                    <span class="btn-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#333333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
                 </button>
                 <button onclick="goToMathflatDirect()" class="btn-base btn-glass">
-                    📈 매쓰플랫 바로가기
+                    <span>매쓰플랫 바로가기</span>
+                    <span class="btn-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#333333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
                 </button>
             </div>
         </div>
@@ -251,22 +299,20 @@
         <div class="sub-utility-zone">
             <button id="open-chat-btn" class="btn-base btn-glass">
                 <span class="emoji-font">💬</span> 선생님 메시지
-                <!-- 안 읽은 알림 배지 하나 달아주면 카톡 느낌이 더 삽니다 -->
-                <span style="background: #ff453a; color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto;">1</span>
+                <!-- 동적 알림 배지로 변경 -->
+                <span id="chat-badge" style="display: none; background: #ff453a; color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto;">0</span>
             </button>
             <button onclick="openUnifiedInquiryModal()" class="btn-base btn-glass"><span class="emoji-font">🛠️</span> 관리자 문의</button>
             <button onclick="goToMyPage()" class="btn-base btn-glass"><span class="emoji-font">👤</span> 마이페이지</button>
             <button onclick="logoutUser()" class="btn-base btn-glass danger"><span class="emoji-font">🔓</span> 로그아웃</button>
         </div>
 
-        <!-- 원격 비상 전광판 경보 배너 -->
         <div class="marquee-container" id="reminderBar">
             <div style="white-space: nowrap; overflow: hidden;">
                 <span class="marquee-text mona12" id="reminderText"></span>
             </div>
         </div>
 
-        <!-- 하단 저작권 정보 -->
         <div class="footer">
             <div class="footer-brand">K&P 수학입시학원 <span>with KST</span></div>
             <div class="footer-copyright">© 2026 KST</div>
@@ -308,11 +354,8 @@
         </div>
     </div>
 
-    <!-- 통합 카카오톡 스타일 실시간 채팅 모달 -->
     <div id="chat-modal" class="modal-overlay" style="display: none;">
         <div class="modal-box" style="max-width: 400px; padding: 0; display: flex; flex-direction: column; height: 80vh; max-height: 600px; overflow: hidden;">
-            
-            <!-- 채팅방 헤더 영역 -->
             <div class="bg-white px-5 py-4 flex justify-between items-center border-b border-gray-100 z-10 shadow-sm">
                 <div class="text-[1.1rem] font-bold text-indigo-600 flex items-center gap-2 tracking-tight" style="font-family: 'Paperlogy', sans-serif;">
                     <span class="emoji-font">💬</span> 선생님께 메시지
@@ -320,17 +363,14 @@
                 <button id="close-chat-btn" class="text-gray-400 hover:text-gray-600 text-xl focus:outline-none transition-colors">✖</button>
             </div>
             
-            <!-- 메인 메시지 히스토리 출력 영역 -->
             <div id="messageHistoryZone" class="history-zone flex-1 overflow-y-auto p-4 bg-slate-50" style="max-height: none; margin-bottom: 0; border: none; border-radius: 0;">
                 <div class="no-data">메시지 내역을 불러오는 중입니다...</div>
             </div>
             
-            <!-- 하단 메시지 입력 바 영역 -->
             <div class="bg-white p-3 border-t border-gray-100 flex gap-2 z-10">
                 <input type="text" id="chat-input" class="flex-1 bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all font-medium text-gray-800" placeholder="메시지를 입력하세요...">
                 <button id="send-btn" class="btn-base btn-primary" style="width: auto; padding: 12px 20px;">전송</button>
             </div>
-
         </div>
     </div>
 
@@ -375,11 +415,7 @@
         </div>
     </div>
 
-    <!-- 엔진 코어 연동 스크립트 파트 -->
     <script>
-    // =======================================================
-    // 1. 전역 변수 및 원격 인프라 키 관리
-    // =======================================================
     let currentStudentData = null; 
     let noteListener = null;
     let historyListeners = []; 
@@ -553,9 +589,6 @@
         { author: "백종원", authorProfile: "기업인", message: "기본을 제대로 익히는 것이 가장 중요하다." }
     ];
 
-    // =======================================================
-    // 2. 파이어베이스 클라우드 환경 초기화
-    // =======================================================
     const firebaseConfig = {
         apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
         authDomain: "ksthome-76889.firebaseapp.com",
@@ -571,9 +604,6 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
-    // =======================================================
-    // 3. 인증 바인딩 및 실시간 데이터 스트리밍 연동
-    // =======================================================
     function logoutUser() { showModal('logoutCheckModal'); }
 
     function confirmLogoutAction() {
@@ -643,9 +673,6 @@
         });
     }
 
-    // =======================================================
-    // 4. 공통 뷰 제어 모달 모듈 포팅
-    // =======================================================
     function showModal(id) { 
         const el = document.getElementById(id);
         if(el) el.style.display = 'flex'; 
@@ -671,9 +698,6 @@
         }
     }
 
-    // =======================================================
-    // 5. 대칭키 암호화(AES) 코어 엔진 디코더
-    // =======================================================
     function decryptAES(cipherText) {
         if (!cipherText) return "";
         try {
@@ -682,16 +706,12 @@
             const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
             return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText; 
         } catch (e) {
-            console.error("🚨 복호화 실패:", e);
             return cipherText; 
         }
     }
 
     function goToMyPage() { window.location.href = 'mypage.html'; }
 
-    // =======================================================
-    // 6. 장시간 미사용 자동 셧다운 방어 메커니즘
-    // =======================================================
     function startIdleTracking() {
         const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
         events.forEach(event => { window.addEventListener(event, resetIdleTimer); });
@@ -745,9 +765,6 @@
         });
     }
 
-    // =======================================================
-    // 7. 통합 건의 제안 수집 모듈 (비속어 방어 인젝션 포함)
-    // =======================================================
     function openUnifiedInquiryModal() { showModal('unifiedInquiryModal'); }
     function triggerSuggestionFromUnified() { closeModal('unifiedInquiryModal'); openSuggestionModal(); }
     function triggerInquiryFromUnified() { closeModal('unifiedInquiryModal'); openAcademyInquiryModal(); }
@@ -846,9 +863,6 @@
             }).catch(err => showCustomAlert('전송 실패: ' + err.message));
     }
 
-    // =======================================================
-    // 8. 하이브리드 네이티브 앱 브릿지 프로토콜 연동 인터페이스
-    // =======================================================
     function transmitBridgeCredentials() {
         if (!currentStudentData) return;
         try {
@@ -915,9 +929,6 @@
         });
     }
 
-    // =======================================================
-    // 9. 고정밀 시계, NEIS 공공 데이터 크롤러 엔진
-    // =======================================================
     function updateClock() {
         const serverTimeMillis = Date.now() + serverTimeOffset;
         const now = new Date(serverTimeMillis);
@@ -1032,10 +1043,7 @@
         document.getElementById('quoteAuthor').innerText = `- ${dailyData.author}${profileStr}`;
     }
 
-    // =======================================================
-    // 10. 통합 메시지 실시간 비동기 양방향 채팅 제어 파트
-    // =======================================================
-    
+    // [수정됨] 실시간 안 읽은 배지 관리 시스템 및 채팅창 리스너
     function openChatModal() {
         const modal = document.getElementById('chat-modal');
         if (!modal) return;
@@ -1049,6 +1057,15 @@
 
         if (auth.currentUser) {
             startLiveChatHistory(auth.currentUser.uid);
+            
+            // 🔥 채팅창을 여는 즉시 모든 안 읽은 선생님 메시지를 읽음(read: true) 처리합니다.
+            database.ref(`student_messages/${auth.currentUser.uid}`).orderByChild('read').equalTo(false).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        child.ref.update({ read: true });
+                    });
+                }
+            });
         }
     }
     
@@ -1057,10 +1074,27 @@
         if (modal) modal.style.display = 'none'; 
     }
 
-    // 선생님이 보낸 최신 안 읽은 쪽지 알림 팝업 감지 리스너
     function listenToTeacherNotes(uid) {
-        noteListener = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false).limitToLast(1);
-        noteListener.on('child_added', (snapshot) => {
+        let isInitialLoad = true;
+        const unreadRef = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false);
+        
+        // 1. 전체 안읽은 메시지 개수 파악 및 1번 배지 활성화/비활성화 (동적)
+        unreadRef.on('value', (snapshot) => {
+            const badge = document.getElementById('chat-badge');
+            if (snapshot.exists()) {
+                const count = snapshot.numChildren();
+                if (badge) {
+                    badge.innerText = count > 99 ? '99+' : count;
+                    badge.style.display = 'inline-block';
+                }
+            } else {
+                if (badge) badge.style.display = 'none'; // 전부 읽었으면 사라짐
+            }
+        });
+
+        // 2. 새로운 쪽지가 왔을 때만 모달 팝업 표출 (자동 읽음처리는 제거, 유저가 눌러야 사라짐)
+        unreadRef.limitToLast(1).on('child_added', (snapshot) => {
+            if(isInitialLoad) return; 
             const note = snapshot.val();
             if (note) {
                 let decryptedMsg = decryptAES(note.message);
@@ -1068,12 +1102,13 @@
                 document.getElementById('modalTitle').innerText = "✉️ 선생님의 전송 쪽지";
                 document.getElementById('modalNoticeContent').innerText = `[${note.teacher} 선생님]\n\n${decryptedMsg}`;
                 showModal('noticeModal');
-                database.ref(`student_messages/${uid}/${snapshot.key}/read`).set(true);
             }
         });
+
+        // 시스템 진입 후 2초 뒤부터 새로 날아오는 메시지만 팝업 띄우도록 설정
+        setTimeout(() => { isInitialLoad = false; }, 2000); 
     }
 
-    // Firebase 데이터 실시간 트래킹 시작
     function startLiveChatHistory(studentUid) {
         detachAllHistoryListeners();
         let myQuestions = [];
@@ -1172,7 +1207,6 @@
         historyListeners = [];
     }
 
-    // 선생님께 실시간 메시지 발송 기능
     function sendMessageToTeacher() {
         const msgInput = document.getElementById('chat-input'); 
         if (!msgInput) return;
@@ -1210,7 +1244,6 @@
         );
     }
 
-    // 인터페이스 동적 바인딩 이벤트 설정
     document.addEventListener('DOMContentLoaded', () => {
         const openBtn = document.getElementById('open-chat-btn');
         const closeBtn = document.getElementById('close-chat-btn');
@@ -1230,9 +1263,6 @@
         }
     });
 
-    // =======================================================
-    // 11. 원격 공지사항 및 큐레이션 실시간 마스터 리스너
-    // =======================================================
     function listenToFirebase() {
         database.ref('notice').on('value', (snapshot) => {
             const text = snapshot.val() || "";
@@ -1273,9 +1303,6 @@
         });
     }
 
-    // =======================================================
-    // 12. 오픈웨더 맵 API 기상 실시간 수집 연동 파트
-    // =======================================================
     function initWeather() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -1312,9 +1339,6 @@
         }
     }
 
-    // =======================================================
-    // 13. 커널 로딩 엔트리포인트 
-    // =======================================================
     window.onload = function() {
         checkUserAuth();
         listenToFirebase();
