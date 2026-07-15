@@ -8,6 +8,9 @@
     <!-- 웹폰트 & 아이콘 에셋 선언 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
 
+    <!-- Tailwind CSS (JS에서 사용하신 채팅 말풍선 UI 지원용) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- Firebase SDK (v8 라이브러리) 및 암호화 모듈 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -184,7 +187,8 @@
         }
         .modal-title { font-size: 1.25rem; font-weight: 700; color: #6c5ce7; margin-bottom: 15px; }
         .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; }
-        .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
+        .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; transition: opacity 0.2s; }
+        .modal-btn:hover { opacity: 0.9; }
         
         .modal-box textarea, .modal-box input[type="text"] {
             width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 14px;
@@ -193,7 +197,7 @@
         .modal-box textarea { resize: none; text-align: left; }
         .modal-box textarea:focus, .modal-box input[type="text"]:focus { outline: none; border-color: #6c5ce7; background: #fff; }
         .btn-flex-group { display: flex; gap: 8px; }
-        .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
+        .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; transition: background-color 0.2s; }
         .btn-cancel:hover { background-color: #cbd5e1; }
 
         /* 실시간 질문 메시지 히스토리 피드 로그 */
@@ -202,12 +206,12 @@
             padding: 4px; margin-bottom: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-sizing: border-box; text-align: left;
         }
         .no-data { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.9rem; width: 100%; }
-        .chat-bubble { padding: 10px 14px; border-radius: 14px; font-size: 0.88rem; max-width: 82%; line-height: 1.45; word-break: break-all; }
-        .chat-bubble.mine { background: #e1dbff; color: #3b2da3; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .chat-bubble.teacher { background: #ffffff; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; border-left: 4px solid #6c5ce7; box-shadow: 0 2px 5px rgba(0,0,0,0.04); }
-        .chat-meta { font-size: 0.7rem; color: #94a3b8; margin-bottom: 2px; display: block; }
-        .chat-meta.mine { text-align: right; }
-        .teacher-name { font-weight: bold; color: #6c5ce7; }
+        
+        /* 스크롤바 디자인 (말풍선 영역용) */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -263,12 +267,11 @@
 
         <!-- 하단 기능 제어 서브 유틸리티 존 -->
         <div class="sub-utility-zone">
-            <!-- href를 제거하고 id="open-chat-btn"을 추가합니다. 필요시 버튼 스타일 적용 -->
-<button id="open-chat-btn" class="flex items-center justify-between p-4 bg-yellow-50 hover:bg-yellow-100 rounded-xl w-full">
-    <span>선생님 메시지</span>
-    <!-- 안 읽은 알림 배지 하나 달아주면 카톡 느낌이 더 삽니다 -->
-    <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">1</span>
-</button>
+            <button id="open-chat-btn" class="flex items-center justify-between p-4 bg-yellow-50 hover:bg-yellow-100 rounded-xl w-full border border-yellow-100 transition-colors cursor-pointer text-left">
+                <span class="font-bold text-yellow-800 tracking-tight" style="font-family: 'Paperlogy', sans-serif;">💬 선생님 메시지</span>
+                <!-- 안 읽은 알림 배지 하나 달아주면 카톡 느낌이 더 삽니다 -->
+                <span class="bg-red-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">1</span>
+            </button>
             <button onclick="openUnifiedInquiryModal()" class="utility-btn btn-secondary"><span class="emoji-font">🛠️</span> 관리자 문의</button>
             <button onclick="goToMyPage()" class="utility-btn btn-secondary"><span class="emoji-font">👤</span> 마이페이지</button>
             <button onclick="logoutUser()" class="utility-btn btn-danger">로그아웃</button>
@@ -323,24 +326,29 @@
         </div>
     </div>
 
-    <div id="sendMsgModal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-title">✉️ 선생님께 메시지 전송</div>
-            <textarea id="studentMsgInput" rows="4" placeholder="담당 선생님께 질문이나 요청사항을 실시간으로 적어주세요."></textarea>
-            <div class="btn-flex-group">
-                <button class="btn-cancel" onclick="closeSendMessageModal()">취소</button>
-                <button class="modal-btn" onclick="sendMessageToTeacher()">보내기</button>
+    <!-- 통합 카카오톡 스타일 실시간 채팅 모달 -->
+    <div id="chat-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box" style="max-width: 420px; padding: 0; display: flex; flex-direction: column; height: 80vh; max-height: 650px; overflow: hidden;">
+            
+            <!-- 채팅방 헤더 영역 -->
+            <div class="bg-white px-5 py-4 flex justify-between items-center border-b border-gray-100 z-10 shadow-sm">
+                <div class="text-[1.1rem] font-bold text-indigo-600 flex items-center gap-2 tracking-tight" style="font-family: 'Paperlogy', sans-serif;">
+                    <span class="emoji-font">💬</span> 선생님께 메시지
+                </div>
+                <button id="close-chat-btn" class="text-gray-400 hover:text-gray-600 text-xl focus:outline-none transition-colors">✖</button>
             </div>
-        </div>
-    </div>
-
-    <div id="historyModal" class="modal-overlay">
-        <div class="modal-box" style="max-width: 400px; padding: 24px 20px;">
-            <div class="modal-title">📬 내 메시지 및 선생님 답장</div>
-            <div id="messageHistoryZone" class="history-zone">
+            
+            <!-- 메인 메시지 히스토리 출력 영역 -->
+            <div id="messageHistoryZone" class="history-zone flex-1 overflow-y-auto p-4 bg-slate-50" style="max-height: none; margin-bottom: 0; border: none; border-radius: 0;">
                 <div class="no-data">메시지 내역을 불러오는 중입니다...</div>
             </div>
-            <button class="modal-btn" onclick="closeHistoryModal()">닫기</button>
+            
+            <!-- 하단 메시지 입력 바 영역 -->
+            <div class="bg-white p-3 border-t border-gray-100 flex gap-2 z-10">
+                <input type="text" id="chat-input" class="flex-1 bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all font-medium text-gray-800" placeholder="메시지를 입력하세요...">
+                <button id="send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-5 py-3 text-sm transition-colors whitespace-nowrap shadow-sm">전송</button>
+            </div>
+
         </div>
     </div>
 
@@ -1047,11 +1055,11 @@
     // 10. 통합 메시지 실시간 비동기 양방향 채팅 제어 파트
     // =======================================================
     
-    // [UI 열기/닫기 제어] 기존 호출 대비 호환성 유지
+    // [UI 열기/닫기 제어] 통합 모달 제어용 통일
     function openChatModal() {
         const modal = document.getElementById('chat-modal');
         if (!modal) return;
-        modal.classList.remove('hidden');
+        modal.style.display = 'flex'; // hidden 제거 대신 style 제어로 통합
         
         const zoneEl = document.getElementById('messageHistoryZone');
         if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
@@ -1067,7 +1075,7 @@
     
     function closeChatModal() { 
         const modal = document.getElementById('chat-modal');
-        if (modal) modal.classList.add('hidden'); 
+        if (modal) modal.style.display = 'none'; 
     }
 
     // 하위 호환성 링크 (기존 레거시 버튼 연동 깨짐 방지)
@@ -1147,7 +1155,7 @@
             if (currentDateStr !== lastDateStr) {
                 const dateBar = document.createElement('div');
                 dateBar.className = 'flex justify-center my-3';
-                dateBar.innerHTML = `<span class="bg-gray-200 text-gray-500 text-[11px] px-3 py-0.5 rounded-full">${currentDateStr}</span>`;
+                dateBar.innerHTML = `<span class="bg-gray-200 text-gray-500 text-[11px] px-3 py-0.5 rounded-full font-medium">${currentDateStr}</span>`;
                 zoneEl.appendChild(dateBar);
                 lastDateStr = currentDateStr;
             }
@@ -1164,7 +1172,7 @@
                 wrapper.innerHTML = `
                     <div class="flex justify-end items-end gap-1.5 my-1.5">
                         <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
-                        <div class="bg-blue-600 text-white text-sm p-3 rounded-2xl rounded-tr-none max-w-[240px] shadow-sm whitespace-pre-line break-all">
+                        <div class="bg-indigo-600 text-white text-[13.5px] font-medium p-3 rounded-2xl rounded-tr-none max-w-[240px] shadow-sm whitespace-pre-line break-all">
                             ${escapeHTML(rawMessage)}
                         </div>
                     </div>`;
@@ -1172,11 +1180,11 @@
                 // 선생님 말풍선 (좌측 정렬, 화이트 배경 + 연회색 보더 테마)
                 wrapper.innerHTML = `
                     <div class="flex items-start gap-2.5 my-1.5">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0 select-none">선</div>
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[11px] font-bold shrink-0 select-none shadow-sm">선</div>
                         <div>
-                            <div class="text-xs text-gray-400 mb-0.5 select-none">${chat.teacher || '담당교사'}</div>
+                            <div class="text-[11px] font-bold text-gray-500 mb-0.5 select-none ml-1">${chat.teacher || '담당교사'}</div>
                             <div class="flex items-end gap-1.5">
-                                <div class="bg-white text-gray-800 text-sm p-3 rounded-2xl rounded-tl-none max-w-[240px] shadow-sm border border-gray-200 whitespace-pre-line break-all">
+                                <div class="bg-white text-gray-800 text-[13.5px] font-medium p-3 rounded-2xl rounded-tl-none max-w-[240px] shadow-sm border border-gray-200 whitespace-pre-line break-all">
                                     ${escapeHTML(rawMessage)}
                                 </div>
                                 <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
