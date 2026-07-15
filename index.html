@@ -31,6 +31,9 @@
             font-display: swap;
         }
         
+        /* 전체적인 폰트 사이즈를 축소 (16px -> 13.5px) 하여 모든 UI 비율을 작게 만듭니다 */
+        html { font-size: 13.5px; }
+
         * {
             font-family: 'FlightSans', 'Paperlogy', 'Noto Sans KR', 'Mona12', sans-serif;
         }
@@ -41,28 +44,30 @@
         }
         
         body {
-            font-family: 'FlightSans', 'Paperlogy', 'Noto Sans KR', 'Mona12', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
                         linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; 
-            margin: 0; padding: 0;
+            margin: 0; 
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; color: #1d1d1f;
-            box-sizing: border-box; padding: 40px 24px;
+            box-sizing: border-box; 
+            /* 양 사이드 공백 추가 및 상하 여백 조정 */
+            padding: 40px 8vw;
             overflow-x: hidden;
         }
         
-        .container { width: 100%; max-width: 860px; margin: 0 auto; }
+        /* 최대 너비 축소로 양측 여백 확보 */
+        .container { width: 100%; max-width: 740px; margin: 0 auto; }
         
         .header-zone {
             display: flex; justify-content: space-between; align-items: flex-end;
-            margin-bottom: 28px; padding: 0 8px;
+            margin-bottom: 24px; padding: 0 8px;
         }
         
-        .welcome-text { font-family: 'Paperlogy', sans-serif; font-size: 1.8rem; font-weight: 700; color: #1d1d1f; margin: 0; letter-spacing: -0.8px; }
-        .dday-badge { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.95rem; font-weight: 700; color: #ff453a; letter-spacing: -0.3px; }
+        .welcome-text { font-family: 'Paperlogy', sans-serif; font-size: 1.6rem; font-weight: 700; color: #1d1d1f; margin: 0; letter-spacing: -0.8px; }
+        .dday-badge { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 700; color: #ff453a; letter-spacing: -0.3px; }
 
-        .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
+        .main-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
         @media (min-width: 768px) { .main-grid { grid-template-columns: 1fr 1fr; align-items: stretch; } }
 
         /* Glassmorphism 카드 공통 인터페이스 */
@@ -70,110 +75,97 @@
             background: rgba(255, 255, 255, 0.38); 
             backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             border: 1px solid rgba(255, 255, 255, 0.45); 
-            border-radius: 24px; padding: 32px;
+            border-radius: 20px; padding: 24px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.4);
             box-sizing: border-box; display: flex; flex-direction: column;
         }
         
-        .info-card { justify-content: space-between; min-height: 230px; }
+        .info-card { justify-content: space-between; min-height: 200px; }
         
         /* 실시간 기상 관측 구역 */
-        .weather-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 0, 0, 0.04); padding-bottom: 14px; }
-        .weather-status { font-family: 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 600; color: #4a4a4c; display: flex; align-items: center; gap: 6px; }
-        .weather-temp { font-family: 'FlightSans', sans-serif; font-size: 1.15rem; font-weight: 700; color: #1d1d1f; }
-        .weather-details-text { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.78rem; color: #86868b; font-weight: 600; display: flex; gap: 8px; }
+        .weather-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 0, 0, 0.04); padding-bottom: 12px; }
+        .weather-status { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; font-weight: 600; color: #4a4a4c; display: flex; align-items: center; gap: 6px; }
+        .weather-temp { font-family: 'FlightSans', sans-serif; font-size: 1.1rem; font-weight: 700; color: #1d1d1f; }
+        .weather-details-text { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.75rem; color: #86868b; font-weight: 600; display: flex; gap: 8px; }
 
         /* 실시간 서버 동기화 시간 구역 */
-        .clock-row { padding: 14px 0; }
-        .clock-date { font-family: 'Paperlogy', sans-serif; font-size: 0.9rem; color: #86868b; font-weight: 600; margin-bottom: 4px; }
-        .clock-time { font-family: 'FlightSans', sans-serif; font-size: 3rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; line-height: 1; margin: 0; }
+        .clock-row { padding: 12px 0; }
+        .clock-date { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; font-weight: 600; margin-bottom: 4px; }
+        .clock-time { font-family: 'FlightSans', sans-serif; font-size: 2.6rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; line-height: 1; margin: 0; }
 
         /* 지성 격언 큐레이션 영역 */
         .quote-row {
             border-top: 1px solid rgba(0, 0, 0, 0.04);
-            padding-top: 14px; font-size: 0.85rem; line-height: 1.4; color: #515154; font-weight: 600;
+            padding-top: 12px; font-size: 0.8rem; line-height: 1.4; color: #515154; font-weight: 600;
         }
         .quote-row span { font-family: 'Paperlogy', sans-serif; }
-        .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.75rem; color: #86868b; margin-top: 4px; }
+        .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.7rem; color: #86868b; margin-top: 4px; }
 
         /* 우측 하이퍼링크 제어 카드 */
-        .menu-card { padding: 12px 0; justify-content: center; min-height: 230px; }
-        
-        .menu-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 24px 32px; text-decoration: none; color: #1d1d1f;
-            transition: all 0.25s ease; cursor: pointer; background: none; border: none; width: 100%; text-align: left;
+        .menu-card { gap: 12px; justify-content: center; min-height: 200px; }
+
+        /* ★ 완벽하게 통일된 마스터 버튼 디자인 시스템 ★ */
+        .btn-base {
+            font-family: 'Paperlogy', sans-serif;
+            font-size: 0.9rem; font-weight: 600; text-decoration: none;
+            padding: 14px 16px; border-radius: 14px; transition: all 0.2s ease;
+            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; letter-spacing: -0.3px; white-space: nowrap; cursor: pointer; border: none; width: 100%;
         }
-        .menu-item:not(:last-child) { border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
-        .menu-item:hover { background: rgba(255, 255, 255, 0.35); padding-left: 36px; }
-        
-        .menu-item-text { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.3px; }
-        .arrow-icon { font-family: 'FlightSans', sans-serif; font-size: 0.9rem; color: #86868b; transition: transform 0.2s ease; }
-        .menu-item:hover .arrow-icon { transform: translateX(4px); color: #6c5ce7; }
+
+        /* 투명 글래스 스타일 (메인 메뉴, 서브 유틸리티용 통일) */
+        .btn-glass {
+            color: #1d1d1f; 
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.7); 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.04);
+        }
+        .btn-glass.danger { color: #e53e3e; }
+
+        /* 모달창 전용 솔리드 컬러 스타일 */
+        .btn-primary { background-color: #6c5ce7; color: #ffffff; }
+        .btn-primary:hover { background-color: #5b4bc4; }
+        .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
+        .btn-secondary:hover { background-color: #cbd5e1; }
 
         /* 하단 서브 모듈 제어 존 */
         .sub-utility-zone {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 12px;
             margin-top: 16px;
             width: 100%;
             box-sizing: border-box;
         }
-        @media (max-width: 600px) {
+        @media (max-width: 650px) {
             .sub-utility-zone { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        .utility-btn {
-            font-family: 'Paperlogy', sans-serif;
-            font-size: 0.8rem; font-weight: 600; text-decoration: none;
-            padding: 14px 4px; border-radius: 12px; transition: all 0.2s ease;
-            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
-            letter-spacing: -0.4px; white-space: nowrap; cursor: pointer; border: none;
-        }
-
-        .btn-secondary {
-            color: #515154; 
-            background: rgba(255, 255, 255, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-        }
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.45); 
-            color: #1d1d1f;
-            border-color: rgba(108, 92, 231, 0.2);
-        }
-
-        .btn-danger {
-            color: #ff3b30; 
-            background: rgba(255, 59, 48, 0.05);
-            border: 1px solid rgba(255, 59, 48, 0.12);
-        }
-        .btn-danger:hover {
-            background: rgba(255, 59, 48, 0.1); 
-            border-color: rgba(255, 59, 48, 0.25);
+            body { padding: 30px 6vw; } /* 모바일에서는 여백을 약간 줄여줌 */
         }
 
         /* 하단 크롤링 공지 롤러 시스템 */
         .marquee-container {
-            margin-top: 24px; background: rgba(255, 255, 255, 0.25);
+            margin-top: 20px; background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50px;
-            padding: 10px 24px; overflow: hidden; display: none;
+            border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 50px;
+            padding: 8px 24px; overflow: hidden; display: none;
         }
-        .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; font-weight: 600; color: #515154; white-space: nowrap; }
+        .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.8rem; font-weight: 600; color: #515154; white-space: nowrap; }
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
         /* 크레딧 푸터 고정 */
-        .footer { margin-top: 48px; text-align: center; }
+        .footer { margin-top: 40px; text-align: center; }
         .footer-brand { 
-            font-family: 'Paperlogy', sans-serif; font-size: 1.05rem; font-weight: 700; color: #1d1d1f; 
+            font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; color: #1d1d1f; 
             letter-spacing: -0.3px; margin-bottom: 6px; 
         }
         .footer-brand span { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-weight: 700; }
         .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.75rem; color: #a1a1a6; letter-spacing: 0.5px; }
-        .more-links { display: block; margin-top: 8px; font-size: 0.8rem; color: #718096; text-decoration: none; font-weight: 600; }
-        .more-links:hover { text-decoration: underline; }
 
         /* 다이내믹 모달 레이아웃 인프라 */
         .modal-overlay {
@@ -182,30 +174,26 @@
             justify-content: center; align-items: center;
         }
         .modal-box {
-            background: #ffffff; width: 90%; max-width: 380px; padding: 30px 24px;
-            border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;
+            background: #ffffff; width: 90%; max-width: 360px; padding: 28px 24px;
+            border-radius: 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;
         }
-        .modal-title { font-size: 1.25rem; font-weight: 700; color: #6c5ce7; margin-bottom: 15px; }
-        .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: break-all; }
-        .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; transition: opacity 0.2s; }
-        .modal-btn:hover { opacity: 0.9; }
+        .modal-title { font-size: 1.15rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px; }
+        .modal-content { font-size: 0.95rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px; white-space: pre-wrap; word-break: break-all; }
         
         .modal-box textarea, .modal-box input[type="text"] {
-            width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 14px;
-            box-sizing: border-box; margin-bottom: 15px; font-size: 0.95rem; font-family: inherit; background: #f8f9fa; 
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px;
+            box-sizing: border-box; margin-bottom: 12px; font-size: 0.9rem; font-family: inherit; background: #f8f9fa; 
         }
         .modal-box textarea { resize: none; text-align: left; }
         .modal-box textarea:focus, .modal-box input[type="text"]:focus { outline: none; border-color: #6c5ce7; background: #fff; }
         .btn-flex-group { display: flex; gap: 8px; }
-        .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; transition: background-color 0.2s; }
-        .btn-cancel:hover { background-color: #cbd5e1; }
 
         /* 실시간 질문 메시지 히스토리 피드 로그 */
         .history-zone {
             max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; 
             padding: 4px; margin-bottom: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-sizing: border-box; text-align: left;
         }
-        .no-data { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.9rem; width: 100%; }
+        .no-data { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.85rem; width: 100%; }
         
         /* 스크롤바 디자인 (말풍선 영역용) */
         ::-webkit-scrollbar { width: 6px; }
@@ -223,7 +211,7 @@
             <div class="dday-badge" id="ddayText">확인 중...</div>
         </div>
 
-        <!-- 계판 그리드 시스템 -->
+        <!-- 메인 그리드 시스템 -->
         <div class="main-grid">
             <!-- 좌측 정밀 패널 (인포 카드) -->
             <div class="glass-card info-card">
@@ -250,31 +238,25 @@
 
             <!-- 우측 연동 패널 (인증 게이트웨이 메뉴 카드) -->
             <div class="glass-card menu-card">
-                <button onclick="goToU2MWithCredentials()" class="menu-item">
-                    <span class="menu-item-text">유투엠 바로가기</span>
-                    <span class="arrow-icon">➔</span>
+                <button onclick="goToU2MWithCredentials()" class="btn-base btn-glass">
+                    🚀 유투엠 바로가기
                 </button>
-                <button onclick="goToMathflatDirect()" class="menu-item">
-                    <span class="menu-item-text">매쓰플랫 바로가기</span>
-                    <span class="arrow-icon">➔</span>
-                </button>
-                <button onclick="openHistoryModal()" class="menu-item">
-                    <span class="menu-item-text">내 메시지 내역함</span>
-                    <span class="arrow-icon">➔</span>
+                <button onclick="goToMathflatDirect()" class="btn-base btn-glass">
+                    📈 매쓰플랫 바로가기
                 </button>
             </div>
         </div>
 
         <!-- 하단 기능 제어 서브 유틸리티 존 -->
         <div class="sub-utility-zone">
-            <button id="open-chat-btn" class="flex items-center justify-between p-4 bg-yellow-50 hover:bg-yellow-100 rounded-xl w-full border border-yellow-100 transition-colors cursor-pointer text-left">
-                <span class="font-bold text-yellow-800 tracking-tight" style="font-family: 'Paperlogy', sans-serif;">💬 선생님 메시지</span>
+            <button id="open-chat-btn" class="btn-base btn-glass">
+                <span class="emoji-font">💬</span> 선생님 메시지
                 <!-- 안 읽은 알림 배지 하나 달아주면 카톡 느낌이 더 삽니다 -->
-                <span class="bg-red-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">1</span>
+                <span style="background: #ff453a; color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto;">1</span>
             </button>
-            <button onclick="openUnifiedInquiryModal()" class="utility-btn btn-secondary"><span class="emoji-font">🛠️</span> 관리자 문의</button>
-            <button onclick="goToMyPage()" class="utility-btn btn-secondary"><span class="emoji-font">👤</span> 마이페이지</button>
-            <button onclick="logoutUser()" class="utility-btn btn-danger">로그아웃</button>
+            <button onclick="openUnifiedInquiryModal()" class="btn-base btn-glass"><span class="emoji-font">🛠️</span> 관리자 문의</button>
+            <button onclick="goToMyPage()" class="btn-base btn-glass"><span class="emoji-font">👤</span> 마이페이지</button>
+            <button onclick="logoutUser()" class="btn-base btn-glass danger"><span class="emoji-font">🔓</span> 로그아웃</button>
         </div>
 
         <!-- 원격 비상 전광판 경보 배너 -->
@@ -293,12 +275,12 @@
 
     <!-- UI 다이내믹 모달 템플릿 컴포넌트 세트 -->
     <div id="unifiedInquiryModal" class="modal-overlay">
-        <div class="modal-box" style="max-width: 340px; padding: 24px 20px;">
+        <div class="modal-box" style="padding: 24px 20px;">
             <div class="modal-title">📝 문의 및 제안 선택</div>
-            <div class="modal-content" style="margin-bottom: 20px; font-size: 0.95rem;">원하시는 항목을 선택해 주세요.</div>
-            <button class="utility-btn btn-secondary" style="background-color: #00b894; color: white; margin-bottom: 12px; border: none; padding: 14px; width:100%; display:block;" onclick="triggerSuggestionFromUnified()">💡 오늘의 한마디 제안하기</button>
-            <button class="utility-btn btn-secondary" style="background-color: #6c5ce7; color: white; margin-bottom: 20px; border: none; padding: 14px; width:100%; display:block;" onclick="triggerInquiryFromUnified()">🏫 학원에 문의하기</button>
-            <button class="btn-cancel" onclick="closeModal('unifiedInquiryModal')">닫기</button>
+            <div class="modal-content" style="margin-bottom: 20px;">원하시는 항목을 선택해 주세요.</div>
+            <button class="btn-base btn-glass" style="margin-bottom: 12px;" onclick="triggerSuggestionFromUnified()">💡 오늘의 한마디 제안하기</button>
+            <button class="btn-base btn-glass" style="margin-bottom: 20px;" onclick="triggerInquiryFromUnified()">🏫 학원에 문의하기</button>
+            <button class="btn-base btn-secondary" onclick="closeModal('unifiedInquiryModal')">닫기</button>
         </div>
     </div>
 
@@ -309,8 +291,8 @@
             <input type="text" id="suggestAuthor" placeholder="말한 사람 (닉네임)">
             <input type="text" id="suggestProfile" placeholder="그 사람 설명 (예: 3학년, 과학자, 소설가 등)">
             <div class="btn-flex-group">
-                <button class="btn-cancel" onclick="closeSuggestionModal()">취소</button>
-                <button class="modal-btn" onclick="submitSuggestion()" style="background-color: #00b894;">제안하기</button>
+                <button class="btn-base btn-secondary" onclick="closeSuggestionModal()">취소</button>
+                <button class="btn-base btn-primary" onclick="submitSuggestion()">제안하기</button>
             </div>
         </div>
     </div>
@@ -320,15 +302,15 @@
             <div class="modal-title">🏫 학원에 문의하기</div>
             <textarea id="inquiryContent" rows="5" placeholder="학원에 궁금한 점이나 건의사항을 자유롭게 적어주세요. 원장님께 직접 전달됩니다."></textarea>
             <div class="btn-flex-group">
-                <button class="btn-cancel" onclick="closeAcademyInquiryModal()">취소</button>
-                <button class="modal-btn" onclick="submitAcademyInquiry()" style="background-color: #6c5ce7;">문의하기</button>
+                <button class="btn-base btn-secondary" onclick="closeAcademyInquiryModal()">취소</button>
+                <button class="btn-base btn-primary" onclick="submitAcademyInquiry()">문의하기</button>
             </div>
         </div>
     </div>
 
     <!-- 통합 카카오톡 스타일 실시간 채팅 모달 -->
     <div id="chat-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-box" style="max-width: 420px; padding: 0; display: flex; flex-direction: column; height: 80vh; max-height: 650px; overflow: hidden;">
+        <div class="modal-box" style="max-width: 400px; padding: 0; display: flex; flex-direction: column; height: 80vh; max-height: 600px; overflow: hidden;">
             
             <!-- 채팅방 헤더 영역 -->
             <div class="bg-white px-5 py-4 flex justify-between items-center border-b border-gray-100 z-10 shadow-sm">
@@ -346,7 +328,7 @@
             <!-- 하단 메시지 입력 바 영역 -->
             <div class="bg-white p-3 border-t border-gray-100 flex gap-2 z-10">
                 <input type="text" id="chat-input" class="flex-1 bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all font-medium text-gray-800" placeholder="메시지를 입력하세요...">
-                <button id="send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-5 py-3 text-sm transition-colors whitespace-nowrap shadow-sm">전송</button>
+                <button id="send-btn" class="btn-base btn-primary" style="width: auto; padding: 12px 20px;">전송</button>
             </div>
 
         </div>
@@ -356,7 +338,7 @@
         <div class="modal-box">
             <div id="modalTitle" class="modal-title">📢 안내 말씀 드립니다</div>
             <div id="modalNoticeContent" class="modal-content">공지사항을 불러오는 중...</div>
-            <button class="modal-btn" onclick="document.getElementById('noticeModal').style.display='none'">확인</button>
+            <button class="btn-base btn-primary" onclick="document.getElementById('noticeModal').style.display='none'">확인</button>
         </div>
     </div>
 
@@ -365,22 +347,22 @@
             <div class="modal-title" style="color: #6c5ce7;">🔓 로그아웃</div>
             <div class="modal-content">정말로 안전하게 로그아웃 하시겠습니까?</div>
             <div class="btn-flex-group">
-                <button class="btn-cancel" onclick="closeModal('logoutCheckModal')">취소</button>
-                <button class="modal-btn" onclick="confirmLogoutAction()">로그아웃</button>
+                <button class="btn-base btn-secondary" onclick="closeModal('logoutCheckModal')">취소</button>
+                <button class="btn-base btn-primary" onclick="confirmLogoutAction()">로그아웃</button>
             </div>
         </div>
     </div>
 
     <div id="idleWarningModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(6px); z-index: 9999; justify-content: center; align-items: center;">
-        <div style="background: #ffffff; width: 90%; max-width: 380px; padding: 30px 24px; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;">
-            <div style="font-size: 1.3rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px;">⏳ 장시간 미사용 알림</div>
-            <div style="font-size: 0.95rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; word-break: keep-all;">
+        <div style="background: #ffffff; width: 90%; max-width: 360px; padding: 28px 24px; border-radius: 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px;">⏳ 장시간 미사용 알림</div>
+            <div style="font-size: 0.95rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px; word-break: keep-all;">
                 약 30분 동안 활동이 감지되지 않았습니다.<br>
                 보안을 위해 잠시 후 <span id="idleCountdown" style="color: #e53e3e; font-weight: bold;">60</span>초 뒤 자동으로 로그아웃됩니다.
             </div>
-            <div style="display: flex; gap: 8px;">
-                <button onclick="extendSession()" style="flex: 1; background-color: #6c5ce7; color: #ffffff; border: none; padding: 14px 0; font-size: 0.95rem; font-weight: 600; border-radius: 14px; cursor: pointer;">로그인 유지하기</button>
-                <button onclick="triggerAutoLogout()" style="width: 100px; background-color: #e2e8f0; color: #4a5568; border: none; padding: 14px 0; font-size: 0.95rem; font-weight: 600; border-radius: 14px; cursor: pointer;">로그아웃</button>
+            <div class="btn-flex-group">
+                <button onclick="extendSession()" class="btn-base btn-primary">로그인 유지</button>
+                <button onclick="triggerAutoLogout()" class="btn-base btn-secondary" style="width: auto; flex: none; padding: 14px 24px;">로그아웃</button>
             </div>
         </div>
     </div>
@@ -389,7 +371,7 @@
         <div class="modal-box">
             <div id="customAlertTitle" class="modal-title">💡 알림</div>
             <div id="customAlertContent" class="modal-content">내용</div>
-            <button class="modal-btn" onclick="closeCustomAlert()">확인</button>
+            <button class="btn-base btn-primary" onclick="closeCustomAlert()">확인</button>
         </div>
     </div>
 
@@ -610,7 +592,6 @@
             if (user) {
                 startIdleTracking();
                 
-                // Realtime Database 오프셋 추출
                 database.ref(".info/serverTimeOffset").on("value", function(snapshot) {
                     serverTimeOffset = snapshot.val() || 0;
                 });
@@ -1055,11 +1036,10 @@
     // 10. 통합 메시지 실시간 비동기 양방향 채팅 제어 파트
     // =======================================================
     
-    // [UI 열기/닫기 제어] 통합 모달 제어용 통일
     function openChatModal() {
         const modal = document.getElementById('chat-modal');
         if (!modal) return;
-        modal.style.display = 'flex'; // hidden 제거 대신 style 제어로 통합
+        modal.style.display = 'flex'; 
         
         const zoneEl = document.getElementById('messageHistoryZone');
         if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
@@ -1067,7 +1047,6 @@
         const inputEl = document.getElementById('chat-input');
         if (inputEl) inputEl.focus();
 
-        // 현재 로그인된 유저가 있다면 실시간 채팅 리스너 활성화
         if (auth.currentUser) {
             startLiveChatHistory(auth.currentUser.uid);
         }
@@ -1077,12 +1056,6 @@
         const modal = document.getElementById('chat-modal');
         if (modal) modal.style.display = 'none'; 
     }
-
-    // 하위 호환성 링크 (기존 레거시 버튼 연동 깨짐 방지)
-    function openSendMessageModal() { openChatModal(); }
-    function closeSendMessageModal() { closeChatModal(); }
-    function openHistoryModal() { openChatModal(); }
-    function closeHistoryModal() { closeChatModal(); }
 
     // 선생님이 보낸 최신 안 읽은 쪽지 알림 팝업 감지 리스너
     function listenToTeacherNotes(uid) {
@@ -1133,7 +1106,6 @@
         });
     }
 
-    // 원래 대시보드 톤앤매너에 맞춘 통합 대화방 렌더링 (날짜 구분선 자동 생성)
     function renderCombinedChat(questions, notes) {
         const zoneEl = document.getElementById('messageHistoryZone');
         if (!zoneEl) return;
@@ -1150,7 +1122,6 @@
         combined.forEach(chat => {
             const date = new Date(chat.timestamp);
             
-            // 날짜 변경 감지 시 구분선 추가
             const currentDateStr = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
             if (currentDateStr !== lastDateStr) {
                 const dateBar = document.createElement('div');
@@ -1168,23 +1139,21 @@
             if (rawMessage.startsWith("[답장완료] ")) { rawMessage = rawMessage.replace("[답장완료] ", ""); }
 
             if (chat.isMine) {
-                // 내 말풍선 (원래 디자인 매칭 클래스: 우측 정렬, 블루 테마)
                 wrapper.innerHTML = `
                     <div class="flex justify-end items-end gap-1.5 my-1.5">
                         <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
-                        <div class="bg-indigo-600 text-white text-[13.5px] font-medium p-3 rounded-2xl rounded-tr-none max-w-[240px] shadow-sm whitespace-pre-line break-all">
+                        <div class="bg-indigo-600 text-white text-[13px] font-medium p-3 rounded-2xl rounded-tr-none max-w-[240px] shadow-sm whitespace-pre-line break-all">
                             ${escapeHTML(rawMessage)}
                         </div>
                     </div>`;
             } else {
-                // 선생님 말풍선 (좌측 정렬, 화이트 배경 + 연회색 보더 테마)
                 wrapper.innerHTML = `
                     <div class="flex items-start gap-2.5 my-1.5">
                         <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[11px] font-bold shrink-0 select-none shadow-sm">선</div>
                         <div>
                             <div class="text-[11px] font-bold text-gray-500 mb-0.5 select-none ml-1">${chat.teacher || '담당교사'}</div>
                             <div class="flex items-end gap-1.5">
-                                <div class="bg-white text-gray-800 text-[13.5px] font-medium p-3 rounded-2xl rounded-tl-none max-w-[240px] shadow-sm border border-gray-200 whitespace-pre-line break-all">
+                                <div class="bg-white text-gray-800 text-[13px] font-medium p-3 rounded-2xl rounded-tl-none max-w-[240px] shadow-sm border border-gray-200 whitespace-pre-line break-all">
                                     ${escapeHTML(rawMessage)}
                                 </div>
                                 <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
@@ -1203,7 +1172,7 @@
         historyListeners = [];
     }
 
-    // 선생님께 실시간 메시지 발송 기능 (AES 내부 암호화 포함)
+    // 선생님께 실시간 메시지 발송 기능
     function sendMessageToTeacher() {
         const msgInput = document.getElementById('chat-input'); 
         if (!msgInput) return;
@@ -1235,7 +1204,6 @@
             }).catch(err => showCustomAlert('전송 오류: ' + err.message));
     }
 
-    // XSS 방지 안전 이스케이프 함수
     function escapeHTML(str) {
         return str.replace(/[&<>'"]/g, 
             tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
@@ -1352,6 +1320,6 @@
         listenToFirebase();
         initWeather();
     };
-</script>
+    </script>
 </body>
 </html>
