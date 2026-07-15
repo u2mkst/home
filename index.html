@@ -98,83 +98,114 @@
         .quote-row span { font-family: 'Paperlogy', sans-serif; }
         .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; margin-top: 6px; }
 
-        /* 우측 하이퍼링크 제어 카드 (버튼 꽉 차게 변경) */
-        .menu-card { gap: 14px; justify-content: space-between; min-height: 200px; display: flex; flex-direction: column; }
+        /* ==========================================================================
+           [1] 우측 연동 패널 전용 - 깔끔하고 고급스러운 iOS 스타일 목록형 디자인
+           ========================================================================== */
+        .menu-card { 
+            padding: 12px 0; 
+            justify-content: center; 
+            min-height: 230px; 
+            gap: 0; /* 목록형 배치를 위해 간격 차단 */
+        }
         
-        /* [전체 버튼 공통 디자인] */
+        .menu-item {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            padding: 24px 32px; 
+            text-decoration: none; 
+            color: #1d1d1f;
+            transition: all 0.25s ease;
+        }
+        
+        .menu-item:not(:last-child) { 
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04); 
+        }
+        
+        .menu-item:hover { 
+            background: rgba(255, 255, 255, 0.35); 
+            padding-left: 36px; /* 호버 시 텍스트가 오른쪽으로 부드럽게 밀림 */
+        }
+        
+        .menu-item-text { 
+            font-family: 'Paperlogy', sans-serif; 
+            font-size: 1.15rem; 
+            font-weight: 600; 
+            letter-spacing: -0.3px; 
+        }
+        
+        .arrow-icon { 
+            font-family: 'FlightSans', sans-serif; 
+            font-size: 0.9rem; 
+            color: #86868b; 
+            transition: transform 0.2s ease, color 0.2s ease; 
+        }
+        
+        .menu-item:hover .arrow-icon { 
+            transform: translateX(4px); /* 호버 시 화살표가 오른쪽으로 톡 움직임 */
+            color: #0071e3; /* 세련된 애플 블루 컬러 포인트 */
+        }
+
+
+        /* ==========================================================================
+           [2] 하단 및 모달 버튼 전용 - 둥실 떠오르는 보라색 호버 트랜지션
+           ========================================================================== */
+        /* [전체 기능 버튼 기본 디자인] */
         .btn-base {
             font-family: 'Paperlogy', sans-serif;
             font-size: 0.9rem; font-weight: 600; text-decoration: none;
             padding: 14px 16px; border-radius: 14px; 
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 통통 튀는 모션 효과 */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 쫀득하고 튀는 모션 */
             box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
             gap: 8px; letter-spacing: -0.3px; white-space: nowrap; cursor: pointer; border: none; width: 100%;
-            position: relative;
         }
 
-        /* 메인 바로가기 버튼 전용 스타일 (텍스트와 화살표를 양끝 배치) */
-        .menu-card .btn-base {
-            flex: 1; /* 상하 여백 꽉 채우기 */
-            font-size: 1.05rem; 
-            border-radius: 16px;
-            justify-content: space-between; /* 글씨는 왼쪽, 화살표는 오른쪽에 예쁘게 배치 */
-            padding: 16px 24px;
-        }
-
-        /* [기본 투명 글래스 버튼 설정] */
+        /* [하단 서브 유틸리티 투명 글래스 버튼] */
         .btn-glass {
-            color: #333333 !important; 
-            background: rgba(255, 255, 255, 0.9) !important; /* 선명하고 깨끗한 투명도 */
+            color: #1d1d1f !important; 
+            background: rgba(255, 255, 255, 0.45) !important;
             border: 1px solid rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 8px 16px rgba(149, 157, 165, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
         }
         
-        /* [🔥 마우스 올렸을 때: 보라색 액션 + 4px 승천] */
+        /* [🔥 하단 버튼 마우스 호버: 4px 부드럽게 뜨며 보라색 변환] */
         .btn-glass:hover {
             background: #6c5ce7 !important; 
             color: #ffffff !important; 
             border-color: #6c5ce7;
             transform: translateY(-4px); /* 위로 둥실 떠오름 */
-            box-shadow: 0 12px 24px rgba(108, 92, 231, 0.25); /* 보라색 네온 피드백 */
+            box-shadow: 0 12px 24px rgba(108, 92, 231, 0.25); /* 입체감 넘치는 보라색 그림자 */
         }
 
-        /* [화살표 아이콘 부드러운 움직임 설정] */
-        .btn-arrow {
-            display: inline-flex;
-            align-items: center;
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        /* [로그아웃 빨간색 경고 버튼 스타일] */
+        .btn-glass.danger { 
+            color: #e53e3e !important; 
         }
-
-        /* 화살표 내부 선 색상 트랜지션 */
-        .btn-arrow svg path {
-            transition: stroke 0.3s ease;
-        }
-
-        /* [🔥 마우스 올렸을 때: 화살표 오른쪽으로 튕기는 효과] */
-        .btn-glass:hover .btn-arrow {
-            transform: translateX(6px); /* 오른쪽으로 6px 이동 */
-        }
-
-        /* 마우스 올리면 화살표 검은 선이 흰색 선으로 변환 */
-        .btn-glass:hover .btn-arrow svg path {
-            stroke: #ffffff;
-        }
-
-        /* [로그아웃 등 빨간색 경고 버튼 전용] */
-        .btn-glass.danger { color: #e53e3e !important; }
+        
+        /* [🔥 로그아웃 마우스 호버: 4px 부드럽게 뜨며 빨간색 변환] */
         .btn-glass.danger:hover {
             background: #ff453a !important; 
             color: #ffffff !important;
             border-color: #ff453a;
-            box-shadow: 0 12px 24px rgba(255, 69, 58, 0.25);
+            box-shadow: 0 12px 24px rgba(255, 69, 58, 0.25); /* 긴장감 있는 레드 네온 그림자 */
         }
 
-        /* [모달창 등 일반 컬러 버튼] */
-        .btn-primary { background-color: #6c5ce7; color: #ffffff; }
-        .btn-primary:hover { background-color: #5b4bc4; }
-        .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
-        .btn-secondary:hover { background-color: #cbd5e1; }
+        /* [모달 및 팝업창 컬러 버튼] */
+        .btn-primary { 
+            background-color: #6c5ce7; 
+            color: #ffffff; 
+        }
+        .btn-primary:hover { 
+            background-color: #5b4bc4; 
+        }
+        .btn-secondary { 
+            background-color: #e2e8f0; 
+            color: #4a5568; 
+        }
+        .btn-secondary:hover { 
+            background-color: #cbd5e1; 
+        }
 
         .sub-utility-zone {
             display: grid;
@@ -275,23 +306,14 @@
             <!-- 우측 연동 패널 (메인 바로가기 버튼 꽉 차게 수정) -->
             <!-- 우측 연동 패널 (화살표 추가 및 공간 양끝 배치형) -->
             <div class="glass-card menu-card">
-                <button onclick="goToU2MWithCredentials()" class="btn-base btn-glass">
-                    <span>유투엠 바로가기</span>
-                    <!-- 슥 밀리는 애니메이션용 화살표 SVG -->
-                    <span class="btn-arrow">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#333333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
-                </button>
-                <button onclick="goToMathflatDirect()" class="btn-base btn-glass">
-                    <span>매쓰플랫 바로가기</span>
-                    <span class="btn-arrow">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#333333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
-                </button>
+                <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
+                    <span class="menu-item-text">유투엠 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </a>
+                <a href="#" onclick="goToMathflatDirect(); return false;" class="menu-item">
+                    <span class="menu-item-text">매쓰플랫 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </a>
             </div>
         </div>
 
