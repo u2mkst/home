@@ -6,230 +6,308 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>K&P 수학입시학원 관리자</title>
     
+    <!-- Firebase & CryptoJS -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
+    <!-- 폰트 2종 적용: Plus Jakarta Sans (헤더/타이틀용), Pretendard (본문용) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+    
     <style>
-        @font-face {
-            font-family: 'Paperozi';
-            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
-            font-weight: 500; font-display: swap;
+        :root {
+            --font-title: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-body: 'Pretendard', -apple-system, sans-serif;
+
+            /* Liquid Glass Theme Colors */
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-card: rgba(255, 255, 255, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shine: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 100%);
+            
+            --primary: #4f46e5;
+            --primary-light: rgba(79, 70, 229, 0.1);
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --danger: #ef4444;
+            --success: #10b981;
+            
+            --shadow-glass: 0 16px 32px 0 rgba(31, 38, 135, 0.07);
         }
 
+        * { box-sizing: border-box; }
+
         body { 
-            font-family: 'Paperozi', 'Noto Sans KR', sans-serif; 
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
-            background-blend-mode: multiply;
+            font-family: var(--font-body); 
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 50%, #e2e8f0 100%);
             margin: 0; 
-            padding: 24px 16px; 
-            color: #333;
+            padding: 32px 16px; 
+            color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-sizing: border-box;
         }
 
         .container {
             width: 100%;
-            max-width: 430px;
+            max-width: 900px;
         }
 
         .header-zone {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 28px;
         }
 
         .header-zone h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #2c3e50;
+            font-family: var(--font-title);
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: var(--text-main);
             margin: 0 0 6px 0;
-            letter-spacing: -1px;
+            letter-spacing: -0.5px;
         }
 
         .header-zone p {
-            color: #6c5ce7;
+            font-family: var(--font-title);
+            color: var(--primary);
             margin: 0;
             font-size: 0.9rem;
-            font-weight: 600;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
         }
 
+        /* 리퀴드 글래스 대시보드 레이아웃 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* 애플 리퀴드 글래스 카스트 효과 */
         .card { 
-            background: rgba(255, 255, 255, 0.55); 
-            padding: 22px 20px; 
-            border-radius: 20px; 
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 25px rgba(149, 157, 165, 0.04);
-            box-sizing: border-box;
-            margin-bottom: 20px;
+            position: relative;
+            background: var(--glass-card); 
+            padding: 24px; 
+            border-radius: 24px; 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-glass);
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: var(--glass-shine);
         }
 
         h2 { 
+            font-family: var(--font-title);
             margin-top: 0; 
-            color: #2c3e50; 
+            color: var(--text-main); 
             font-size: 1.1rem; 
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 16px;
-            border-bottom: 1px dashed rgba(108, 92, 231, 0.3);
-            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding-bottom: 10px;
         }
         
         textarea, input[type="text"], input[type="email"], input[type="password"], select { 
+            font-family: var(--font-body);
             width: 100%; 
-            padding: 14px; 
+            padding: 12px 16px; 
             border: 1px solid rgba(255, 255, 255, 0.8); 
             border-radius: 14px; 
             box-sizing: border-box; 
             margin-bottom: 12px; 
             font-size: 0.95rem; 
-            font-family: inherit;
-            background-color: rgba(255, 255, 255, 0.7);
-            color: #333;
-            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            color: var(--text-main);
+            transition: all 0.25s ease;
         }
 
         textarea:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, select:focus {
             outline: none;
-            border-color: #6c5ce7;
-            background-color: #fff;
-            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
         }
 
         button { 
-            display: block;
-            background-color: rgba(255, 255, 255, 0.9); 
-            color: #333333;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            padding: 15px 20px; 
+            font-family: var(--font-title);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--primary); 
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 18px; 
             border-radius: 14px; 
             cursor: pointer; 
-            font-weight: 600; 
+            font-weight: 700; 
             font-size: 0.95rem;
             width: 100%; 
-            margin-bottom: 10px; 
-            font-family: inherit;
-            box-shadow: 0 4px 10px rgba(149, 157, 165, 0.06);
-            transition: all 0.2s ease;
+            margin-bottom: 8px; 
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         button:hover { 
-            background-color: #6c5ce7; 
-            color: #ffffff; 
-            border-color: #6c5ce7;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
         }
-        button:active { transform: scale(0.98); }
+        button:active { transform: translateY(0); }
 
-        .btn-delete { color: #d63031; margin-bottom: 0; }
-        .btn-delete:hover { background-color: #d63031; color: #fff; border-color: #d63031; }
+        .btn-delete { 
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            margin-bottom: 0; 
+            box-shadow: none;
+        }
+        .btn-delete:hover { background: var(--danger); color: #fff; }
         
-        .btn-logout { background-color: transparent; color: #7f8c8d; border: none; box-shadow: none; font-size: 0.85rem; padding: 5px; margin-top: 10px;}
-        .btn-logout:hover { background-color: rgba(0,0,0,0.05); color: #333; }
+        .btn-logout { 
+            background: rgba(255, 255, 255, 0.4); 
+            color: var(--text-sub); 
+            border: 1px solid var(--glass-border); 
+            box-shadow: none; 
+            font-size: 0.85rem; 
+            padding: 10px; 
+            margin-top: 10px;
+        }
+        .btn-logout:hover { background: rgba(255, 255, 255, 0.7); color: var(--text-main); }
 
-        .reset-teacher-zone { text-align: center; margin-top: 15px; }
-        .btn-reset-teacher { background: none; border: none; color: #b2bec3; font-size: 0.75rem; text-decoration: underline; cursor: pointer; padding: 5px; }
-        .btn-reset-teacher:hover { color: #6c5ce7; }
+        .reset-teacher-zone { text-align: center; margin-top: 8px; }
+        .btn-reset-teacher { 
+            background: none; 
+            border: none; 
+            color: var(--text-sub); 
+            font-size: 0.8rem; 
+            text-decoration: underline; 
+            cursor: pointer; 
+            padding: 4px; 
+            box-shadow: none;
+            width: auto;
+        }
+        .btn-reset-teacher:hover { color: var(--primary); }
 
         label {
             display: block;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 0.85rem;
-            color: #4a5568;
+            color: var(--text-sub);
             margin-bottom: 6px;
         }
 
-        /* 👥 학생 목록 및 검색 스타일 */
+        /* 👥 학생 목록 */
         .student-list {
-            max-height: 200px;
+            max-height: 220px;
             overflow-y: auto;
             margin-top: 10px;
+            padding-right: 4px;
         }
         .student-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255,255,255,0.7);
+            background: rgba(255, 255, 255, 0.6);
             padding: 10px 14px;
-            border-radius: 12px;
+            border-radius: 14px;
             margin-bottom: 8px;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.8);
         }
-        .student-info {
-            display: flex;
-            flex-direction: column;
-        }
-        .student-name { font-weight: bold; font-size: 0.95rem; color: #2c3e50; }
-        .student-id { font-size: 0.8rem; color: #7f8c8d; }
+        .student-info { display: flex; flex-direction: column; }
+        .student-name { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+        .student-id { font-size: 0.78rem; color: var(--text-sub); margin-top: 2px; }
         .btn-note {
-            width: auto; margin-bottom: 0; padding: 6px 14px; font-size: 0.8rem; border-radius: 8px;
-            background-color: #6c5ce7; color: white; border: none;
+            width: auto; margin-bottom: 0; padding: 6px 12px; font-size: 0.8rem; border-radius: 10px;
+            background: var(--primary-light); color: var(--primary); border: none; font-weight: 700; box-shadow: none;
         }
-        .btn-note:hover { background-color: #5b4cc4; }
+        .btn-note:hover { background: var(--primary); color: white; }
 
-        /* ✉️ 우측 하단 플로팅 메시지 버튼 디자인 */
+        /* ✉️ 플로팅 메시지 버튼 */
         .msg-fab {
-            position: fixed; bottom: 25px; right: 25px;
+            position: fixed; bottom: 30px; right: 30px;
             width: 60px; height: 60px; border-radius: 50%;
-            background-color: #6c5ce7; color: white; border: none;
-            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+            background: var(--primary); color: white; border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
             cursor: pointer; display: none; justify-content: center; align-items: center;
-            font-size: 1.6rem; z-index: 999; transition: all 0.2s ease;
+            font-size: 1.5rem; z-index: 999; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .msg-fab:hover { transform: scale(1.08); background-color: #5b4cc4; }
+        .msg-fab:hover { transform: scale(1.1); }
         .msg-badge {
             position: absolute; top: -2px; right: -2px;
-            background-color: #ff7675; color: white;
+            background: var(--danger); color: white;
             font-size: 0.75rem; font-weight: bold;
             padding: 3px 7px; border-radius: 10px;
             border: 2px solid white; display: none;
         }
 
-        /* 🗂️ 메시지 팝업 모달창 디자인 */
+        /* 🗂️ 메시지 모달창 */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000;
+            background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(8px); z-index: 1000;
             justify-content: center; align-items: center;
         }
         .modal-box {
-            background: #ffffff; width: 90%; max-width: 420px; padding: 24px;
-            border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.85); width: 90%; max-width: 450px; padding: 24px;
+            border-radius: 28px; backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); box-sizing: border-box;
         }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .modal-title { font-size: 1.2rem; font-weight: 700; color: #2c3e50; }
-        .close-modal { background: none; border: none; font-size: 1.2rem; color: #aaa; cursor: pointer; width: auto; margin: 0; padding: 0; }
-        .close-modal:hover { color: #333; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-title { font-family: var(--font-title); font-size: 1.15rem; font-weight: 700; color: var(--text-main); }
+        .close-modal { background: none; border: none; font-size: 1.2rem; color: var(--text-sub); cursor: pointer; width: auto; margin: 0; padding: 0; box-shadow: none; }
+        .close-modal:hover { color: var(--text-main); }
         
-        .msg-list { max-height: 280px; overflow-y: auto; margin-bottom: 15px; padding-right: 4px; }
-        .msg-item { background: #f8f9fa; padding: 14px; border-radius: 12px; margin-bottom: 12px; font-size: 0.9rem; border-left: 4px solid #6c5ce7; }
-        .msg-item.unread { background: #edf2ff; border-left-color: #ff7675; }
-        .msg-meta { font-size: 0.75rem; color: #888; margin-bottom: 6px; display: flex; justify-content: space-between; }
-        .msg-sender { font-weight: bold; color: #4a5568; }
-        .msg-body { word-break: break-all; color: #333; line-height: 1.4; margin-bottom: 8px; }
+        .msg-list { max-height: 320px; overflow-y: auto; padding-right: 4px; }
+        .msg-item { background: rgba(255, 255, 255, 0.6); padding: 14px; border-radius: 16px; margin-bottom: 12px; font-size: 0.9rem; border-left: 4px solid var(--primary); border-top: 1px solid rgba(255,255,255,0.8); }
+        .msg-item.unread { background: rgba(254, 242, 242, 0.8); border-left-color: var(--danger); }
+        .msg-meta { font-size: 0.78rem; color: var(--text-sub); margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .msg-sender { font-weight: 700; color: var(--text-main); }
+        .msg-body { word-break: break-all; color: var(--text-main); line-height: 1.4; margin-bottom: 8px; }
 
-        /* ↩️ 수신함 내부의 답장 폼 및 누적 기록창 스타일 */
-        .reply-box { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1; }
-        .reply-toggle-btn { background: #6c5ce7; color: white; border: none; padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; cursor: pointer; width: auto; font-family: inherit; }
-        .reply-input-zone { display: none; margin-top: 6px; }
-        .reply-mini-textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; resize: none; font-size: 0.85rem; box-sizing: border-box; margin-bottom: 5px; }
-        .reply-send-btn { background: #2ecc71; color: white; border: none; padding: 4px 12px; font-size: 0.75rem; border-radius: 6px; cursor: pointer; width: auto; font-family: inherit; }
-        .history-list { margin-top: 6px; background: #f1f5f9; padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; color: #475569; }
+        /* 답장 폼 */
+        .reply-box { margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.1); }
+        .reply-toggle-btn { background: var(--primary-light); color: var(--primary); border: none; padding: 5px 10px; font-size: 0.75rem; border-radius: 8px; cursor: pointer; width: auto; font-weight: 700; box-shadow: none; }
+        .reply-input-zone { display: none; margin-top: 8px; }
+        .reply-mini-textarea { width: 100%; padding: 8px 10px; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; resize: none; font-size: 0.85rem; box-sizing: border-box; margin-bottom: 6px; background: rgba(255,255,255,0.8); }
+        .reply-send-btn { background: var(--success); color: white; border: none; padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; cursor: pointer; width: auto; box-shadow: none; }
+        .history-list { margin-top: 6px; background: rgba(0, 0, 0, 0.03); padding: 8px 12px; border-radius: 10px; font-size: 0.8rem; color: var(--text-sub); }
         .history-item { margin-bottom: 4px; line-height: 1.3; }
         .history-item:last-child { margin-bottom: 0; }
-        .history-teacher { font-weight: bold; color: #6c5ce7; }
+        .history-teacher { font-weight: bold; color: var(--primary); }
 
-        .no-msg { text-align: center; color: #aaa; padding: 30px 0; font-size: 0.9rem; }
+        .no-msg { text-align: center; color: var(--text-sub); padding: 30px 0; font-size: 0.9rem; }
 
-        /* 📬 통합 실시간 1:1 대화방(카톡형) 스타일 */
+        /* 💬 실시간 대화방 */
         .chat-container {
             display: flex;
             flex-direction: column;
-            height: 320px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
+            height: 280px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 18px;
             padding: 12px;
             box-sizing: border-box;
         }
@@ -239,62 +317,60 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding-right: 2px;
+            padding-right: 4px;
             margin-bottom: 10px;
         }
         .chat-no-data {
             text-align: center;
-            color: #94a3b8;
+            color: var(--text-sub);
             padding: 40px 0;
             font-size: 0.85rem;
             margin: auto;
         }
         .admin-bubble {
-            padding: 9px 13px;
-            border-radius: 14px;
+            padding: 10px 14px;
+            border-radius: 16px;
             font-size: 0.85rem;
-            max-width: 78%;
+            max-width: 80%;
             line-height: 1.4;
             word-break: break-all;
         }
         .admin-bubble.student {
-            background: #ffffff;
-            color: #1e293b;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-main);
             align-self: flex-start;
-            border-bottom-left-radius: 2px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
         }
         .admin-bubble.teacher {
-            background: #6c5ce7;
+            background: var(--primary);
             color: #ffffff;
             align-self: flex-end;
-            border-bottom-right-radius: 2px;
+            border-bottom-right-radius: 4px;
         }
         .admin-chat-meta {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            margin-bottom: 2px;
+            font-size: 0.72rem;
+            color: var(--text-sub);
+            margin-bottom: 3px;
             display: block;
         }
         .admin-chat-meta.teacher { text-align: right; }
-        .chat-sender-name { font-weight: bold; color: #475569; }
-        .chat-sender-name.me { color: #6c5ce7; }
+        .chat-sender-name { font-weight: 700; color: var(--text-main); }
+        .chat-sender-name.me { color: var(--primary); }
         
-        .chat-input-row { display: flex; gap: 6px; }
-        .chat-input-row input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; margin-bottom: 0; }
-        .chat-send-btn { width: auto; background: #6c5ce7; color: white; border: none; padding: 0 14px; border-radius: 10px; font-weight: bold; margin-bottom: 0; font-size: 0.85rem; }
-        .chat-send-btn:hover { background: #5b4cc4; }
+        .chat-input-row { display: flex; gap: 8px; }
+        .chat-input-row input { flex: 1; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.8); border-radius: 12px; font-size: 0.88rem; margin-bottom: 0; }
+        .chat-send-btn { width: auto; background: var(--primary); color: white; border: none; padding: 0 16px; border-radius: 12px; font-weight: bold; margin-bottom: 0; font-size: 0.85rem; box-shadow: none; }
 
-        /* 📍 간소화된 상단 헤더 배치 스타일 */
         .device-info-header {
             margin-bottom: 12px;
-            background: rgba(108, 92, 231, 0.06);
+            background: rgba(255, 255, 255, 0.5);
             padding: 10px 14px;
             border-radius: 12px;
-            border: 1px solid rgba(108, 92, 231, 0.15);
+            border: 1px solid rgba(255,255,255,0.8);
         }
 
-        #loginCard { display: none; }
+        #loginCard { max-width: 400px; margin: 40px auto 0; }
         #controlPanel { display: none; }
     </style>
 </head>
@@ -302,16 +378,17 @@
 
     <div class="container">
         <div class="header-zone">
-            <h1>학생 태블릿 제어</h1>
-            <p id="currentTeacherTitle">by KST</p>
+            <h1>학생 태블릿 원격 제어</h1>
+            <p id="currentTeacherTitle">K&P 수학입시학원</p>
         </div>
 
+        <!-- 로그인 카드 -->
         <div id="loginCard" class="card">
-            <h2>🔒 관리자 계정 인증</h2>
+            <h2>🔒 관리자 인증</h2>
             
             <label>선생님 선택</label>
             <select id="adminTeacher" required>
-                <option value="" disabled selected>선생님 이름을 선택해 주세요</option>
+                <option value="" disabled selected>선생님 선택</option>
                 <option value="김동진">김동진 선생님</option>
                 <option value="이주희">이주희 선생님</option>
                 <option value="차현준">차현준 선생님</option>
@@ -321,82 +398,94 @@
                 <option value="김영호">김영호 선생님</option>
             </select>
 
-            <label>이메일 주소</label>
+            <label>이메일</label>
             <input type="email" id="adminEmail" placeholder="example@u2m.com">
             
             <label>비밀번호</label>
             <input type="password" id="adminPassword" placeholder="비밀번호 입력" onkeyup="if(window.event.keyCode==13){handleLogin()}">
             
-            <button onclick="handleLogin()">보안 로그인</button>
+            <button onclick="handleLogin()">로그인</button>
         </div>
 
+        <!-- 메인 제어 패널 -->
         <div id="controlPanel">
-            <div class="card">
-                <h2>👥 내 학생 현황</h2>
-                <label>학생 이름 검색</label>
-                <input type="text" id="studentSearchInput" placeholder="이름을 입력해 주세요" oninput="filterStudents()">
-                <div id="studentListZone" class="student-list"></div>
-            </div>
-
-            <div class="card" id="adminChatCard">
-                <h2>💬 1:1 실시간 대화방</h2>
+            <div class="dashboard-grid">
                 
-                <div class="device-info-header">
-                    <label style="color:#2c3e50; margin-bottom:0; font-weight:bold;">선택 학생: 
-                        <span id="selectedStudentName" style="color:#6c5ce7;">없음</span> 
-                    </label>
+                <!-- 좌측: 학생 및 대화방 -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="card">
+                        <h2>👥 담당 학생 목록</h2>
+                        <input type="text" id="studentSearchInput" placeholder="학생 이름 검색..." oninput="filterStudents()">
+                        <div id="studentListZone" class="student-list"></div>
+                    </div>
+
+                    <div class="card" id="adminChatCard">
+                        <h2>💬 1:1 대화방</h2>
+                        
+                        <div class="device-info-header">
+                            <label style="color:var(--text-main); margin-bottom:0; font-weight:bold;">선택 학생: 
+                                <span id="selectedStudentName" style="color:var(--primary);">없음</span> 
+                            </label>
+                        </div>
+
+                        <div class="chat-container">
+                            <div id="adminChatHistoryZone" class="chat-history-zone">
+                                <div class="chat-no-data">학생 목록에서 [대화방]을 선택해 주세요.</div>
+                            </div>
+                            <div class="chat-input-row">
+                                <input type="text" id="teacherReplyInput" placeholder="메시지 입력..." onkeydown="if(event.keyCode==13) sendTeacherReply()">
+                                <button class="chat-send-btn" onclick="sendTeacherReply()">전송</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="chat-container">
-                    <div id="adminChatHistoryZone" class="chat-history-zone">
-                        <div class="chat-no-data">위 학생 목록에서 [💬 대화방] 버튼을 누르면 대화 내역이 실시간 로드됩니다.</div>
+                <!-- 우측: 원격 제어 -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="card">
+                        <h2>📢 전체 화면 팝업</h2>
+                        <textarea id="noticeInput" rows="4" placeholder="태블릿 정중앙에 표시할 공지사항을 입력하세요. (비우고 전송 시 팝업 닫힘)"></textarea>
+                        <button onclick="publishData('notice', 'noticeInput')">즉시 팝업 전송</button>
                     </div>
-                    <div class="chat-input-row">
-                        <input type="text" id="teacherReplyInput" placeholder="실시간 답장/쪽지 입력..." onkeydown="if(event.keyCode==13) sendTeacherReply()">
-                        <button class="chat-send-btn" onclick="sendTeacherReply()">전송</button>
+
+                    <div class="card">
+                        <h2>🔔 하단 자막 방송</h2>
+                        <input type="text" id="reminderInput" placeholder="하단 자막 메시지 입력...">
+                        <button onclick="publishData('reminder', 'reminderInput')">자막 전송 / 갱신</button>
+                        <button class="btn-delete" onclick="clearData('reminder', 'reminderInput')">자막 방송 종료</button>
+                    </div>
+
+                    <div class="card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+                        <button class="btn-logout" onclick="handleLogout()">로그아웃</button>
+                        
+                        <div class="reset-teacher-zone">
+                            <button class="btn-reset-teacher" onclick="resetTeacherConfig()">담당 선생님 재선택</button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="card">
-                <h2>🔔 전체 화면 강제 팝업</h2>
-                <label>공지할 내용을 작성해 주세요</label>
-                <textarea id="noticeInput" rows="4" placeholder="텍스트를 적고 전송하면 모든 학생용 태블릿 정중앙에 팝업창이 나타납니다. 내용을 비우고 전송하면 팝업이 닫힙니다."></textarea>
-                <button onclick="publishData('notice', 'noticeInput')">⚡ 즉시 팝업 전송</button>
-            </div>
-
-            <div class="card">
-                <h2>🔔 하단 리마인더 자막 방송</h2>
-                <label>화면 밑에 흘려보낼 메시지</label>
-                <input type="text" id="reminderInput" placeholder="예시) 소곤소곤 잡담 엄금! 즉시 퇴실 조치">
-                <button onclick="publishData('reminder', 'reminderInput')">⚡ 자막 전송 / 갱신</button>
-                <button class="btn-delete" onclick="clearData('reminder', 'reminderInput')">✖ 자막 방송 끄기</button>
-            </div>
-            
-            <button class="btn-logout" onclick="handleLogout()">로그아웃 (세션 종료)</button>
-            
-            <div class="reset-teacher-zone">
-                <button class="btn-reset-teacher" onclick="resetTeacherConfig()">🔄 다른 담당 선생님으로 다시 선택하기</button>
             </div>
         </div>
     </div>
 
+    <!-- 플로팅 메시지 버튼 -->
     <button id="msgFabBtn" class="msg-fab" onclick="openMessageModal()">
         ✉️
         <span id="msgBadgeCount" class="msg-badge">0</span>
     </button>
 
+    <!-- 메시지 모달 (중복 닫기 버튼 제거됨) -->
     <div id="messageModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
-                <div class="modal-title">📬 도착한 학생 메시지</div>
+                <div class="modal-title">📬 받은 메시지</div>
                 <button class="close-modal" onclick="closeMessageModal()">✕</button>
             </div>
             <div id="modalMsgList" class="msg-list"></div>
-            <button onclick="closeMessageModal()" style="margin-bottom:0; background:#f1f2f6; color:#333;">닫기</button>
         </div>
     </div>
 
+    <!-- Firebase 및 기능 로직 (100% 동일 유지) -->
     <script>
         const SECRET_KEY = "u2mkst!";
 
@@ -419,7 +508,7 @@
                 const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
                 return decryptedText || cipherText;
             } catch (e) {
-                console.error("복호화 진행 중 예외 발생:", e);
+                console.error("복호화 예외 발생:", e);
                 return cipherText;
             }
         }
@@ -467,7 +556,7 @@
                 document.getElementById('msgFabBtn').style.display = 'flex'; 
                 
                 const currentTeacher = localStorage.getItem('admin_teacher') || "관리자";
-                document.getElementById('currentTeacherTitle').innerText = `담당 관리자: ${currentTeacher} 선생님`;
+                document.getElementById('currentTeacherTitle').innerText = `${currentTeacher} 선생님`;
                 
                 loadCurrentStatus();
                 fetchTeacherStudents(currentTeacher); 
@@ -476,7 +565,7 @@
                 document.getElementById('controlPanel').style.display = 'none';
                 document.getElementById('loginCard').style.display = 'block';
                 document.getElementById('msgFabBtn').style.display = 'none';
-                document.getElementById('currentTeacherTitle').innerText = "by KST";
+                document.getElementById('currentTeacherTitle').innerText = "K&P 수학입시학원";
                 
                 if (messageListener) {
                     database.ref('messages').off('value', messageListener);
@@ -537,7 +626,7 @@
                         <span class="student-name">👤 ${student.name}</span>
                         <span class="student-id">ID: ${studentIdStr}</span>
                     </div>
-                    <button class="btn-note" onclick="loadStudentChatRoom('${student.id}', '${student.name}')">💬 대화방</button>
+                    <button class="btn-note" onclick="loadStudentChatRoom('${student.id}', '${student.name}')">대화방</button>
                 `;
                 listZone.appendChild(item);
             });
@@ -603,7 +692,7 @@
             });
 
             if (totalChat.length === 0) {
-                zoneEl.innerHTML = '<div class="chat-no-data"> 주고받은 대화가 없습니다. 첫 대화를 시작해 보세요!</div>';
+                zoneEl.innerHTML = '<div class="chat-no-data">주고받은 대화가 없습니다.</div>';
                 return;
             }
 
@@ -647,7 +736,7 @@
             const teacherName = localStorage.getItem('admin_teacher') || "선생님";
 
             if (!currentSelectedStudentUid) {
-                alert("대화방을 열기 위해 학생 목록에서 학생을 먼저 선택해 주세요.");
+                alert("대화할 학생을 먼저 선택해 주세요.");
                 return;
             }
             if (!text) return;
@@ -680,7 +769,7 @@
             const zoneEl = document.getElementById('adminChatHistoryZone');
             
             if(nameEl) nameEl.innerText = "없음";
-            if(zoneEl) zoneEl.innerHTML = '<div class="chat-no-data">위 학생 목록에서 [💬 대화방] 버튼을 누르면 대화 내역이 실시간 로드됩니다.</div>';
+            if(zoneEl) zoneEl.innerHTML = '<div class="chat-no-data">학생 목록에서 [대화방]을 선택해 주세요.</div>';
         }
 
         function listenToIncomingMessages(teacherName) {
@@ -722,10 +811,10 @@
                             <div class="msg-body">${decryptedMsg || ''}</div>
                             
                             <div class="reply-box">
-                                <button class="reply-toggle-btn" onclick="toggleReplyZone('${msg.id}')">↩️ 답장하기</button>
+                                <button class="reply-toggle-btn" onclick="toggleReplyZone('${msg.id}')">답장하기</button>
                                 
                                 <div class="reply-input-zone" id="replyZone-${msg.id}">
-                                    <textarea class="reply-mini-textarea" id="replyInput-${msg.id}" rows="2" placeholder="학생에게 보낼 답장을 기입하세요."></textarea>
+                                    <textarea class="reply-mini-textarea" id="replyInput-${msg.id}" rows="2" placeholder="답장 내용을 입력하세요."></textarea>
                                     <button class="reply-send-btn" onclick="sendReplyFromModal('${msg.id}', '${msg.studentUid}', '${msg.teacher}')">전송 및 저장</button>
                                 </div>
                                 
@@ -766,7 +855,7 @@
                 return;
             }
             if (!studentUid || studentUid === "undefined") {
-                alert("❌ 학생의 식별자(studentUid)를 찾을 수 없습니다.");
+                alert("❌ 학생 식별자(studentUid)를 찾을 수 없습니다.");
                 return;
             }
 
@@ -788,7 +877,7 @@
                 });
             })
             .then(() => {
-                alert("학생에게 답장이 전송되었으며 내역이 기록되었습니다.");
+                alert("답장이 전송되었습니다.");
                 inputEl.value = '';
                 document.getElementById(`replyZone-${msgId}`).style.display = 'none';
             })
@@ -817,8 +906,8 @@
 
                     const itemHtml = `
                         <div class="history-item">
-                            <span class="history-teacher">└ ↩️ 내 답장:</span> ${decryptedReply} 
-                            <span style="font-size:0.7rem; color:#aaa;">(${timeStr})</span>
+                            <span class="history-teacher">└ 답장:</span> ${decryptedReply} 
+                            <span style="font-size:0.7rem; color:var(--text-sub);">(${timeStr})</span>
                         </div>
                     `;
                     historyContainer.insertAdjacentHTML('beforeend', itemHtml);
@@ -856,11 +945,11 @@
             const password = document.getElementById('adminPassword').value;
 
             if(!teacher) {
-                alert("담당 선생님 이름을 먼저 선택해 주세요.");
+                alert("선생님을 선택해 주세요.");
                 return;
             }
             if(!email || !password) {
-                alert("이메일과 비밀번호를 모두 입력해주세요.");
+                alert("이메일과 비밀번호를 입력해주세요.");
                 return;
             }
 
@@ -876,21 +965,21 @@
         }
 
         function handleLogout() {
-            if(confirm("안전을 위해 로그아웃 하시겠습니까?")) {
+            if(confirm("로그아웃 하시겠습니까?")) {
                 auth.signOut().then(() => {
-                    alert("정상적으로 로그아웃되었습니다.");
+                    alert("로그아웃되었습니다.");
                 });
             }
         }
 
         function resetTeacherConfig() {
-            if(confirm("저장된 선생님 설정과 자동 로그인 정보를 모두 삭제하고 다시 선택하시겠습니까?")) {
+            if(confirm("저장된 선생님 설정과 로그인 정보를 초기화하시겠습니까?")) {
                 clearLocalStorageAuth();
                 auth.signOut().then(() => {
                     document.getElementById('adminTeacher').value = "";
                     document.getElementById('adminEmail').value = "";
                     document.getElementById('adminPassword').value = "";
-                    alert("초기화되었습니다. 새로운 선생님 정보를 입력하세요.");
+                    alert("초기화되었습니다.");
                 });
             }
         }
@@ -907,13 +996,13 @@
                 val = encryptAES(val); 
             }
             database.ref(path).set(val);
-            alert("전송 완료! 모든 태블릿에 실시간 반영되었습니다.");
+            alert("전송 완료! 태블릿에 실시간 반영되었습니다.");
         }
         
         function clearData(path, inputId) {
             document.getElementById(inputId).value = "";
             database.ref(path).remove();
-            alert("원격 전송을 중단했습니다.");
+            alert("전송을 중단했습니다.");
         }
 
         function loadCurrentStatus() {
