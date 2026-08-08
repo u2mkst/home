@@ -98,14 +98,12 @@
         .quote-row span { font-family: 'Paperlogy', sans-serif; }
         .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; margin-top: 6px; }
 
-        /* ==========================================================================
-           [1] 우측 연동 패널 전용 - 깔끔하고 고급스러운 iOS 스타일 목록형 디자인
-           ========================================================================== */
+        /* 우측 연동 패널 전용 */
         .menu-card { 
             padding: 12px 0; 
             justify-content: center; 
             min-height: 230px; 
-            gap: 0; /* 목록형 배치를 위해 간격 차단 */
+            gap: 0; 
         }
         
         .menu-item {
@@ -124,7 +122,7 @@
         
         .menu-item:hover { 
             background: rgba(255, 255, 255, 0.35); 
-            padding-left: 36px; /* 호버 시 텍스트가 오른쪽으로 부드럽게 밀림 */
+            padding-left: 36px; 
         }
         
         .menu-item-text { 
@@ -142,25 +140,20 @@
         }
         
         .menu-item:hover .arrow-icon { 
-            transform: translateX(4px); /* 호버 시 화살표가 오른쪽으로 톡 움직임 */
-            color: #0071e3; /* 세련된 애플 블루 컬러 포인트 */
+            transform: translateX(4px);
+            color: #0071e3;
         }
 
-
-        /* ==========================================================================
-           [2] 하단 및 모달 버튼 전용 - 둥실 떠오르는 보라색 호버 트랜지션
-           ========================================================================== */
-        /* [전체 기능 버튼 기본 디자인] */
+        /* 하단 및 모달 버튼 전용 */
         .btn-base {
             font-family: 'Paperlogy', sans-serif;
             font-size: 0.9rem; font-weight: 600; text-decoration: none;
             padding: 14px 16px; border-radius: 14px; 
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 쫀득하고 튀는 모션 */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
             gap: 8px; letter-spacing: -0.3px; white-space: nowrap; cursor: pointer; border: none; width: 100%;
         }
 
-        /* [하단 서브 유틸리티 투명 글래스 버튼] */
         .btn-glass {
             color: #1d1d1f !important; 
             background: rgba(255, 255, 255, 0.45) !important;
@@ -169,43 +162,29 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
         }
         
-        /* [🔥 하단 버튼 마우스 호버: 4px 부드럽게 뜨며 보라색 변환] */
         .btn-glass:hover {
             background: #6c5ce7 !important; 
             color: #ffffff !important; 
             border-color: #6c5ce7;
-            transform: translateY(-4px); /* 위로 둥실 떠오름 */
-            box-shadow: 0 12px 24px rgba(108, 92, 231, 0.25); /* 입체감 넘치는 보라색 그림자 */
+            transform: translateY(-4px); 
+            box-shadow: 0 12px 24px rgba(108, 92, 231, 0.25); 
         }
 
-        /* [로그아웃 빨간색 경고 버튼 스타일] */
         .btn-glass.danger { 
             color: #e53e3e !important; 
         }
         
-        /* [🔥 로그아웃 마우스 호버: 4px 부드럽게 뜨며 빨간색 변환] */
         .btn-glass.danger:hover {
             background: #ff453a !important; 
             color: #ffffff !important;
             border-color: #ff453a;
-            box-shadow: 0 12px 24px rgba(255, 69, 58, 0.25); /* 긴장감 있는 레드 네온 그림자 */
+            box-shadow: 0 12px 24px rgba(255, 69, 58, 0.25); 
         }
 
-        /* [모달 및 팝업창 컬러 버튼] */
-        .btn-primary { 
-            background-color: #6c5ce7; 
-            color: #ffffff; 
-        }
-        .btn-primary:hover { 
-            background-color: #5b4bc4; 
-        }
-        .btn-secondary { 
-            background-color: #e2e8f0; 
-            color: #4a5568; 
-        }
-        .btn-secondary:hover { 
-            background-color: #cbd5e1; 
-        }
+        .btn-primary { background-color: #6c5ce7; color: #ffffff; }
+        .btn-primary:hover { background-color: #5b4bc4; }
+        .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
+        .btn-secondary:hover { background-color: #cbd5e1; }
 
         .sub-utility-zone {
             display: grid;
@@ -267,9 +246,95 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==========================================================================
+           [신규] K&P with KST 로딩 화면 스타일
+           ========================================================================== */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(245, 247, 250, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .brand-logo {
+            font-family: 'FlightSans', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .brand-logo .sub-kst {
+            font-family: 'Paperlogy', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #6c5ce7;
+            letter-spacing: -0.3px;
+        }
+
+        .progress-bar {
+            width: 180px;
+            height: 4px;
+            background: rgba(108, 92, 231, 0.15);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .progress-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+            animation: progress 1.4s infinite ease-in-out;
+            transform-origin: left;
+        }
+
+        @keyframes progress {
+            0% { transform: scaleX(0); }
+            50% { transform: scaleX(0.7); }
+            100% { transform: scaleX(1); opacity: 0; }
+        }
+
+        .loading-subtext {
+            font-family: 'Paperlogy', sans-serif;
+            font-size: 0.85rem;
+            color: #86868b;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
+
+    <!-- 🔥 [신규] 로딩 화면 오버레이 -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="brand-logo">
+            K&P <span class="sub-kst">with KST</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <div class="loading-subtext">학생 정보를 불러오는 중...</div>
+    </div>
 
     <div class="container">
         <!-- 상단 헤더 존 -->
@@ -303,7 +368,6 @@
                 </div>
             </div>
 
-            <!-- 우측 연동 패널 (메인 바로가기 버튼 꽉 차게 수정) -->
             <!-- 우측 연동 패널 (화살표 추가 및 공간 양끝 배치형) -->
             <div class="glass-card menu-card">
                 <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
@@ -438,6 +502,14 @@
     </div>
 
     <script>
+    // 🔥 [신규] 로딩 화면 숨기기 함수 추가
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+        }
+    }
+
     let currentStudentData = null; 
     let noteListener = null;
     let historyListeners = []; 
@@ -609,7 +681,6 @@
         { author: "도종환", authorProfile: "시인", message: "천천히 가더라도 멈추지 마라." },
         { author: "이국종", authorProfile: "의사", message: "실력을 쌓는 데는 지름길이 없다." },
         { author: "백종원", authorProfile: "기업인", message: "기본을 제대로 익히는 것이 가장 중요하다." }
-    ];
 
     const firebaseConfig = {
         apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
@@ -639,6 +710,7 @@
         });
     }
 
+    // 🔥 [수정됨] 데이터 조회가 완료된 후 로딩창을 숨기는 로직 적용
     function checkUserAuth() {
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -672,12 +744,25 @@
                         startLiveChatHistory(user.uid); 
                         startDeviceStatusReporting(user.uid);
                         listenToRemoteCommands(user.uid);
+
+                        // 데이터 로드 성공 시 로딩 화면 닫기
+                        hideLoading(); 
                     } else {
                         cleanStudentSystemSession();
+                        
+                        // 데이터가 없을 때도 로딩 화면 닫기
+                        hideLoading(); 
                     }
+                }).catch((error) => {
+                    console.error("데이터 불러오기 실패:", error);
+                    // 에러 발생 시에도 로딩 화면 닫기
+                    hideLoading(); 
                 });
             } else {
                 cleanStudentSystemSession();
+                
+                // 로그인되지 않은 상태일 때도 로딩 화면 닫기
+                hideLoading(); 
             }
         });
     }
@@ -1065,7 +1150,6 @@
         document.getElementById('quoteAuthor').innerText = `- ${dailyData.author}${profileStr}`;
     }
 
-    // [수정됨] 실시간 안 읽은 배지 관리 시스템 및 채팅창 리스너
     function openChatModal() {
         const modal = document.getElementById('chat-modal');
         if (!modal) return;
@@ -1080,7 +1164,6 @@
         if (auth.currentUser) {
             startLiveChatHistory(auth.currentUser.uid);
             
-            // 🔥 채팅창을 여는 즉시 모든 안 읽은 선생님 메시지를 읽음(read: true) 처리합니다.
             database.ref(`student_messages/${auth.currentUser.uid}`).orderByChild('read').equalTo(false).once('value', (snapshot) => {
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
@@ -1100,7 +1183,6 @@
         let isInitialLoad = true;
         const unreadRef = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false);
         
-        // 1. 전체 안읽은 메시지 개수 파악 및 1번 배지 활성화/비활성화 (동적)
         unreadRef.on('value', (snapshot) => {
             const badge = document.getElementById('chat-badge');
             if (snapshot.exists()) {
@@ -1110,11 +1192,10 @@
                     badge.style.display = 'inline-block';
                 }
             } else {
-                if (badge) badge.style.display = 'none'; // 전부 읽었으면 사라짐
+                if (badge) badge.style.display = 'none';
             }
         });
 
-        // 2. 새로운 쪽지가 왔을 때만 모달 팝업 표출 (자동 읽음처리는 제거, 유저가 눌러야 사라짐)
         unreadRef.limitToLast(1).on('child_added', (snapshot) => {
             if(isInitialLoad) return; 
             const note = snapshot.val();
@@ -1127,7 +1208,6 @@
             }
         });
 
-        // 시스템 진입 후 2초 뒤부터 새로 날아오는 메시지만 팝업 띄우도록 설정
         setTimeout(() => { isInitialLoad = false; }, 2000); 
     }
 
