@@ -18,7 +18,6 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
     
     <style>
-        /* 추가된 커스텀 폰트 */
         @font-face {
             font-family: 'FlightSans';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Bold.woff2') format('woff2');
@@ -27,9 +26,10 @@
         }
 
         :root {
-            /* 헤더 및 타이틀에 FlightSans 적용 */
             --font-title: 'FlightSans', 'Plus Jakarta Sans', -apple-system, sans-serif;
             --font-body: 'Pretendard', -apple-system, sans-serif;
+            /* 이모지 전용 폰트 스택 */
+            --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
 
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -53,16 +53,13 @@
             margin: 0; padding: 24px 16px; color: var(--text-main);
             min-height: 100vh;
             display: flex; justify-content: center; align-items: center;
-            box-sizing: border-box;
         }
 
         .container {
             width: 100%;
             max-width: 420px;
-            box-sizing: border-box;
         }
 
-        /* 로고 헤더 영역 */
         .header-zone { 
             text-align: center; 
             margin-bottom: 18px; 
@@ -72,11 +69,8 @@
             border: 1px solid rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             box-shadow: 0 10px 28px rgba(0, 0, 0, 0.03);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            user-select: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; user-select: none;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
@@ -87,24 +81,16 @@
         }
 
         .header-zone .logo-wrapper {
-            width: 100%;
-            max-width: 190px;
-            height: 38px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%; max-width: 190px; height: 38px;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
             pointer-events: none;
         }
 
         .header-zone .logo-img {
-            width: 100%;
-            height: 110px;
-            object-fit: cover;
-            object-position: center 48%;
+            width: 100%; height: 110px;
+            object-fit: cover; object-position: center 48%;
         }
 
-        /* 메인 인증 카드 */
         .auth-card { 
             background: rgba(255, 255, 255, 0.78); 
             padding: 36px 28px;
@@ -112,7 +98,6 @@
             backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.95);
             box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
-            box-sizing: border-box;
             animation: cardFadeIn 0.35s ease-out;
         }
 
@@ -123,116 +108,60 @@
 
         h2 { 
             font-family: var(--font-title);
-            margin-top: 0; 
-            color: var(--text-main); 
-            font-size: 1.45rem; 
-            font-weight: 700; 
-            margin-bottom: 24px; 
-            text-align: center; 
-            letter-spacing: -0.3px;
+            margin-top: 0; color: var(--text-main); 
+            font-size: 1.45rem; font-weight: 700; 
+            margin-bottom: 24px; text-align: center; letter-spacing: -0.3px;
         }
 
-        /* 단계 표시 스텝 바 (Step Indicator) */
         .step-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            position: relative;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; position: relative;
         }
 
         .step-bar::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: rgba(0, 0, 0, 0.08);
-            z-index: 1;
+            content: ''; position: absolute; top: 50%; left: 0; right: 0;
+            height: 2px; background: rgba(0, 0, 0, 0.08); z-index: 1;
             transform: translateY(-50%);
         }
 
         .step-item {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #ffffff;
-            border: 2px solid #cbd5e1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-family: var(--font-title);
-            font-weight: 700;
-            color: #64748b;
-            position: relative;
-            z-index: 2;
-            transition: all 0.25s ease;
+            width: 32px; height: 32px; border-radius: 50%; background: #ffffff;
+            border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-family: var(--font-title); font-weight: 700; color: #64748b;
+            position: relative; z-index: 2; transition: all 0.25s ease;
         }
 
         .step-item.active {
-            border-color: var(--primary);
-            background: var(--primary);
-            color: #ffffff;
+            border-color: var(--primary); background: var(--primary); color: #ffffff;
             box-shadow: 0 0 0 4px var(--primary-glow);
         }
 
         .step-item.completed {
-            border-color: var(--primary);
-            background: var(--primary);
-            color: #ffffff;
+            border-color: var(--primary); background: var(--primary); color: #ffffff;
         }
 
-        /* 폼 구성 요소 */
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 18px;
-        }
-
-        label { 
-            display: block; 
-            font-weight: 700; 
-            font-size: 0.83rem; 
-            color: #334155; 
-            margin-bottom: 6px; 
-            padding-left: 2px; 
-        }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 18px; }
+        label { display: block; font-weight: 700; font-size: 0.83rem; color: #334155; margin-bottom: 6px; padding-left: 2px; }
 
         input, select { 
-            width: 100%; 
-            padding: 13px 16px; 
-            border: 1px solid rgba(0, 0, 0, 0.1); 
-            border-radius: var(--radius-md); 
-            box-sizing: border-box; 
-            font-size: 0.92rem; 
-            font-family: var(--font-body);
-            background-color: var(--input-bg); 
-            color: var(--text-main); 
+            width: 100%; padding: 13px 16px; 
+            border: 1px solid rgba(0, 0, 0, 0.1); border-radius: var(--radius-md); 
+            font-size: 0.92rem; font-family: var(--font-body);
+            background-color: var(--input-bg); color: var(--text-main); 
             transition: all 0.2s ease;
         }
-        
         input::placeholder { color: #94a3b8; }
-
         input:focus, select:focus { 
-            outline: none; 
-            border-color: var(--primary); 
-            background-color: #ffffff; 
-            box-shadow: 0 0 0 4px var(--primary-glow); 
+            outline: none; border-color: var(--primary); 
+            background-color: #ffffff; box-shadow: 0 0 0 4px var(--primary-glow); 
         }
 
-        /* 학교 자동완성 레이어 */
         .autocomplete-wrapper { position: relative; width: 100%; }
         .autocomplete-list {
             position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-            background: #ffffff;
-            border-radius: var(--radius-md); max-height: 180px; overflow-y: auto;
-            border: 1px solid rgba(79, 70, 229, 0.2);
-            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
-            z-index: 1000;
+            background: #ffffff; border-radius: var(--radius-md); max-height: 180px; overflow-y: auto;
+            border: 1px solid rgba(79, 70, 229, 0.2); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12); z-index: 1000;
         }
-        
         .autocomplete-item {
             padding: 12px 16px; cursor: pointer; font-size: 0.88rem;
             color: var(--text-main); border-bottom: 1px solid #f1f5f9;
@@ -240,93 +169,108 @@
         }
         .autocomplete-item:last-child { border-bottom: none; }
         .autocomplete-item:hover { background: rgba(79, 70, 229, 0.06); color: var(--primary); font-weight: 600; }
-        .autocomplete-item .school-region { font-size: 0.76rem; color: var(--text-muted); font-weight: normal; }
+        .autocomplete-item .school-region { font-size: 0.76rem; color: var(--text-muted); }
 
         .info-text { font-size: 0.76rem; color: var(--text-muted); margin-top: 5px; padding-left: 2px; line-height: 1.35; }
-        .warning-text { font-size: 0.76rem; color: #dc2626; margin-top: 5px; padding-left: 2px; font-weight: 600; line-height: 1.35; }
 
-        /* 약관 동의 체크박스 */
-        .agree-container {
-            display: flex;
-            align-items: center;
-            margin: 6px 0 12px 0;
-            padding-left: 2px;
-            cursor: pointer;
-            user-select: none;
-        }
-        .agree-container input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            margin-right: 10px;
-            margin-bottom: 0;
-            cursor: pointer;
-            accent-color: var(--primary);
-        }
-        .agree-text {
-            font-size: 0.85rem;
-            color: #334155;
-            font-weight: 600;
-        }
+        .agree-container { display: flex; align-items: center; margin: 6px 0 12px 0; padding-left: 2px; cursor: pointer; user-select: none; }
+        .agree-container input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; accent-color: var(--primary); }
+        .agree-text { font-size: 0.85rem; color: #334155; font-weight: 600; }
         
         .policy-text-box {
-            width: 100%;
-            height: 140px;
-            padding: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: var(--radius-md);
-            background-color: rgba(255, 255, 255, 0.85);
-            font-size: 0.76rem;
-            line-height: 1.45;
-            color: #475569;
-            resize: none;
-            box-sizing: border-box;
-            margin-bottom: 12px;
-            font-family: var(--font-body);
-            outline: none;
+            width: 100%; height: 140px; padding: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md);
+            background-color: rgba(255, 255, 255, 0.85); font-size: 0.76rem; line-height: 1.45;
+            color: #475569; resize: none; margin-bottom: 12px; font-family: var(--font-body); outline: none;
         }
 
-        /* 버튼 그룹 */
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
 
         button { 
-            font-family: var(--font-title);
-            display: block; 
-            background: var(--primary); 
-            color: #ffffff; border: none;
+            font-family: var(--font-title); display: block; 
+            background: var(--primary); color: #ffffff; border: none;
             padding: 14px 20px; border-radius: var(--radius-md);
-            cursor: pointer; font-weight: 700; font-size: 0.98rem;
-            width: 100%;
+            cursor: pointer; font-weight: 700; font-size: 0.98rem; width: 100%;
             box-shadow: 0 4px 14px rgba(79, 70, 229, 0.28);
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
         }
-        button:hover { 
-            background: var(--primary-hover);
-            transform: translateY(-2px); 
-            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35); 
-        }
-        button:active { 
-            transform: translateY(0); 
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2); 
-        }
+        button:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35); }
+        button:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2); }
 
-        button.btn-prev {
-            background: #e2e8f0;
-            color: #475569;
-            box-shadow: none;
-            width: 35%;
-        }
-        button.btn-prev:hover {
-            background: #cbd5e1;
-            box-shadow: none;
-        }
+        button.btn-prev { background: #e2e8f0; color: #475569; box-shadow: none; width: 35%; }
+        button.btn-prev:hover { background: #cbd5e1; box-shadow: none; }
 
-        .switch-mode { text-align: center; margin-top: 22px; font-size: 0.85rem; color: var(--text-muted); }
+        .switch-mode { text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--text-muted); }
         .switch-link { color: var(--primary); text-decoration: none; font-weight: 700; margin-left: 4px; cursor: pointer; }
         .switch-link:hover { text-decoration: underline; }
+
+        /* 🌟 Lite 모드 카적 스타일 */
+        .lite-mode-card {
+            margin-top: 20px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(79, 70, 229, 0.15);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .lite-mode-card:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .lite-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ⚡ 이모지 전용 폰트 스타일 적용 */
+        .emoji-icon {
+            font-family: var(--font-emoji);
+            font-style: normal;
+        }
+
+        .lite-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+        }
+
+        .lite-text-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .lite-title {
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .lite-desc {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .lite-arrow {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
 
         .hidden { display: none !important; }
     </style>
@@ -357,16 +301,28 @@
                 
                 <button type="submit" style="margin-top: 8px;">로그인하고 입장하기</button>
             </form>
+
             <div class="switch-mode">
                 처음 왔나요? <span class="switch-link" onclick="toggleMode('register')">회원가입 하기</span>
             </div>
+
+            <!-- 🌟 Lite 모드 이동 카드 (로그인 상태에서만 표시) -->
+            <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
+                <div class="lite-info">
+                    <div class="lite-icon"><i class="emoji-icon">⚡</i></div>
+                    <div class="lite-text-group">
+                        <span class="lite-title">Lite 모드 이용하기</span>
+                        <span class="lite-desc">로그인 없이 빠르게 바로 사용</span>
+                    </div>
+                </div>
+                <span class="lite-arrow">➔</span>
+            </a>
         </div>
 
         <!-- 학생 회원가입 단계별 폼 카드 -->
         <div id="registerCard" class="auth-card hidden">
             <h2>학생 회원가입</h2>
 
-            <!-- 스텝 진행도 표시 바 -->
             <div class="step-bar">
                 <div class="step-item active" id="stepIndicator1">1</div>
                 <div class="step-item" id="stepIndicator2">2</div>
@@ -374,8 +330,7 @@
             </div>
 
             <form id="registerForm" onsubmit="handleStudentRegister(event)">
-                
-                <!-- STEP 1: 기본 정보 -->
+                <!-- STEP 1 -->
                 <div id="step1" class="step-content">
                     <div class="form-group">
                         <label>학생 이름</label>
@@ -420,7 +375,7 @@
                     <button type="button" onclick="nextStep(2)">다음</button>
                 </div>
 
-                <!-- STEP 2: 매쓰플랫 연동 정보 -->
+                <!-- STEP 2 -->
                 <div id="step2" class="step-content hidden">
                     <div class="form-group">
                         <label>매쓰플랫 아이디 (학생 휴대폰)</label>
@@ -438,7 +393,7 @@
                     </div>
                 </div>
 
-                <!-- STEP 3: 약관 동의 및 최종 완료 -->
+                <!-- STEP 3 -->
                 <div id="step3" class="step-content hidden">
                     <div class="form-group">
                         <label>이용약관 및 개인정보처리방침</label>
@@ -504,7 +459,6 @@
                         <button type="submit">가입 완료하기</button>
                     </div>
                 </div>
-
             </form>
             
             <div class="switch-mode">
@@ -537,20 +491,17 @@
 
         let currentStep = 1;
 
-        /* 자연스러운 ufes 접두사 유지 및 숫자만 입력 허용 함수 */
         function handleFixedPrefix(input) {
             let nums = input.value.replace(/[^0-9]/g, '');
             input.value = "ufes" + nums;
         }
 
-        /* 백스페이스 등으로 ufes 문자열 영역이 지워지지 않도록 커서 위치 제어 */
         function protectPrefix(event, input) {
             if ((event.key === 'Backspace' || event.key === 'Delete') && input.selectionStart <= 4 && input.selectionEnd <= 4) {
                 event.preventDefault();
             }
         }
 
-        /* 초기 화면 로드시 로그인 입력란 커서 지정 */
         window.addEventListener('DOMContentLoaded', () => {
             const loginIdInput = document.getElementById('loginId');
             if(loginIdInput) {
@@ -559,7 +510,6 @@
             }
         });
 
-        /* 스텝 이동 제어 */
         function updateStepView(targetStep) {
             document.getElementById('step1').classList.add('hidden');
             document.getElementById('step2').classList.add('hidden');
@@ -582,7 +532,6 @@
 
         function nextStep(targetStep) {
             if (targetStep === 2) {
-                // Step 1 유효성 검사
                 const studentName = document.getElementById('registerName').value.trim();
                 const u2mId = document.getElementById('registerId').value.trim().toLowerCase();
                 const phoneTail = document.getElementById('registerParentPhone').value.trim();
@@ -590,41 +539,19 @@
                 const schoolCode = schoolCodeInput.value.trim();
                 const selectedTeacher = document.getElementById('registerTeacher').value;
 
-                if (!studentName) {
-                    alert('학생 이름을 입력하세요.');
-                    return;
-                }
-                if (u2mId.length <= 4) {
-                    alert('⚠️ ufes 뒤에 숫자를 입력해 주세요.');
-                    return;
-                }
-                if (!/^\d{4}$/.test(phoneTail)) {
-                    alert('부모님 전화번호 뒷자리는 숫자 4자리로 입력해주세요.');
-                    return;
-                }
-                if (!schoolName || !schoolCode) {
-                    alert('⚠️ 소속 학교를 입력한 후, 반드시 자동완성 리스트에서 학교를 터치(선택)해 주세요.');
-                    return;
-                }
-                if (!selectedTeacher) {
-                    alert('담당 선생님을 선택해 주세요.');
-                    return;
-                }
+                if (!studentName) { alert('학생 이름을 입력하세요.'); return; }
+                if (u2mId.length <= 4) { alert('⚠️ ufes 뒤에 숫자를 입력해 주세요.'); return; }
+                if (!/^\d{4}$/.test(phoneTail)) { alert('부모님 전화번호 뒷자리는 숫자 4자리로 입력해주세요.'); return; }
+                if (!schoolName || !schoolCode) { alert('⚠️ 소속 학교를 입력한 후, 반드시 자동완성 리스트에서 학교를 선택해 주세요.'); return; }
+                if (!selectedTeacher) { alert('담당 선생님을 선택해 주세요.'); return; }
             }
 
             if (targetStep === 3) {
-                // Step 2 유효성 검사
                 const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
                 const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
 
-                if (mathflatPhone.length < 10) {
-                    alert('올바른 매쓰플랫 아이디(휴대폰 번호 전체)를 입력해 주세요.');
-                    return;
-                }
-                if (!mathflatPw) {
-                    alert('매쓰플랫 비밀번호를 입력해 주세요.');
-                    return;
-                }
+                if (mathflatPhone.length < 10) { alert('올바른 매쓰플랫 아이디(휴대폰 번호)를 입력해 주세요.'); return; }
+                if (!mathflatPw) { alert('매쓰플랫 비밀번호를 입력해 주세요.'); return; }
             }
 
             updateStepView(targetStep);
@@ -634,7 +561,6 @@
             updateStepView(targetStep);
         }
 
-        /* 로고 5회 클릭 시 kst.html 이동 */
         let logoClickCount = 0;
         let logoClickTimeout;
 
@@ -649,7 +575,6 @@
             }
         });
 
-        /* 나이스 학교 자동완성 */
         schoolInput.addEventListener('input', function() {
             const query = this.value.trim();
             if (query.length < 2) {
@@ -684,9 +609,7 @@
                         schoolList.classList.add('hidden');
                     }
                 })
-                .catch(err => {
-                    console.error("나이스 API 로딩 오류:", err);
-                });
+                .catch(err => console.error("API 오류:", err));
         });
 
         document.addEventListener('click', function(e) {
@@ -696,10 +619,17 @@
             }
         });
 
+        /* 🌟 로그인/회원가입 전환 함수 (Lite 모드 버튼 표시/숨김 처리 추가) */
         function toggleMode(mode) {
+            const liteBox = document.getElementById('liteModeBox');
+
             if(mode === 'register') {
                 document.getElementById('loginCard').classList.add('hidden');
                 document.getElementById('registerCard').classList.remove('hidden');
+                
+                // 회원가입 모드일 때 Lite 모드 버튼 숨기기
+                if (liteBox) liteBox.classList.add('hidden');
+
                 updateStepView(1); 
                 
                 const regInput = document.getElementById('registerId');
@@ -710,6 +640,9 @@
                 document.getElementById('registerCard').classList.add('hidden');
                 document.getElementById('loginCard').classList.remove('hidden');
                 
+                // 로그인 모드로 돌아오면 Lite 모드 버튼 다시 표시하기
+                if (liteBox) liteBox.classList.remove('hidden');
+
                 const loginInput = document.getElementById('loginId');
                 if(!loginInput.value.startsWith('ufes')) loginInput.value = "ufes";
                 loginInput.focus();
@@ -717,7 +650,6 @@
             }
         }
 
-        /* 회원가입 제출 처리 */
         function handleStudentRegister(e) {
             e.preventDefault();
 
@@ -747,10 +679,7 @@
             auth.createUserWithEmailAndPassword(studentEmail, studentPassword)
                 .then((userCredential) => {
                     const user = userCredential.user;
-                    
-                    return user.updateProfile({
-                        displayName: studentName 
-                    }).then(() => {
+                    return user.updateProfile({ displayName: studentName }).then(() => {
                         return database.ref('students/' + user.uid).set({
                             name: encryptedName,                  
                             u2mId: u2mId,                         
@@ -780,7 +709,6 @@
                 });
         }
 
-        /* 로그인 처리 */
         function handleStudentLogin(e) {
             e.preventDefault();
             const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
