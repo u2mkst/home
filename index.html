@@ -681,7 +681,8 @@
         { author: "도종환", authorProfile: "시인", message: "천천히 가더라도 멈추지 마라." },
         { author: "이국종", authorProfile: "의사", message: "실력을 쌓는 데는 지름길이 없다." },
         { author: "백종원", authorProfile: "기업인", message: "기본을 제대로 익히는 것이 가장 중요하다." }
-
+];
+        
     const firebaseConfig = {
         apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
         authDomain: "ksthome-76889.firebaseapp.com",
@@ -1442,10 +1443,15 @@
     }
 
     window.onload = function() {
-        checkUserAuth();
-        listenToFirebase();
-        initWeather();
-    };
+    checkUserAuth();
+    listenToFirebase();
+    initWeather();
+
+    // 💡 [안전장치] 만약 어떤 이유로든 로딩이 길어지면 3초 후 강제로 로딩창을 닫음
+    setTimeout(() => {
+        hideLoading();
+    }, 3000);
+};
     </script>
 </body>
 </html>
