@@ -24,6 +24,8 @@
             font-weight: 700;
             font-display: swap;
         }
+        /* style 태그 최상단에 추가 */
+@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap');
 
         :root {
             --font-title: 'FlightSans', 'Plus Jakarta Sans', -apple-system, sans-serif;
@@ -233,9 +235,11 @@
 
         /* ⚡ 이모지 전용 폰트 스타일 적용 */
         .emoji-icon {
-            font-family: var(--font-emoji);
-            font-style: normal;
-        }
+    font-family: 'Mona Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-style: normal;
+    display: inline-block;
+    /* 기존 스타일 유지 */
+}
 
         .lite-icon {
             width: 32px;
