@@ -347,8 +347,7 @@
             <form onsubmit="handleStudentLogin(event)">
                 <div class="form-group">
                     <label>유투엠 아이디</label>
-                    <!-- inputmode="numeric" 및 pattern 설정으로 숫자 키패드 활성화 -->
-                    <input type="text" id="loginId" value="ufes" inputmode="numeric" pattern="[0-9]*" placeholder="ufes로 시작하는 아이디 입력" required>
+                    <input type="text" id="loginId" value="ufes" inputmode="numeric" oninput="handleFixedPrefix(this)" onkeydown="protectPrefix(event, this)" required>
                 </div>
                 
                 <div class="form-group">
@@ -385,9 +384,8 @@
 
                     <div class="form-group">
                         <label>유투엠 아이디</label>
-                        <!-- inputmode="numeric" 및 pattern 설정으로 숫자 키패드 활성화 -->
-                        <input type="text" id="registerId" value="ufes" inputmode="numeric" pattern="[0-9]*" placeholder="예: ufes123456">
-                        <div class="warning-text">※ 반드시 ufes로 시작하는 아이디를 입력하세요.</div>
+                        <input type="text" id="registerId" value="ufes" inputmode="numeric" oninput="handleFixedPrefix(this)" onkeydown="protectPrefix(event, this)">
+                        <div class="info-text">※ ufes 뒤에 숫자만 연속으로 입력하세요.</div>
                     </div>
 
                     <div class="form-group">
@@ -539,12 +537,24 @@
 
         let currentStep = 1;
 
+        /* 자연스러운 ufes 접두사 유지 및 숫자만 입력 허용 함수 */
+        function handleFixedPrefix(input) {
+            let nums = input.value.replace(/[^0-9]/g, '');
+            input.value = "ufes" + nums;
+        }
+
+        /* 백스페이스 등으로 ufes 문자열 영역이 지워지지 않도록 커서 위치 제어 */
+        function protectPrefix(event, input) {
+            if ((event.key === 'Backspace' || event.key === 'Delete') && input.selectionStart <= 4 && input.selectionEnd <= 4) {
+                event.preventDefault();
+            }
+        }
+
         /* 초기 화면 로드시 로그인 입력란 커서 지정 */
         window.addEventListener('DOMContentLoaded', () => {
             const loginIdInput = document.getElementById('loginId');
             if(loginIdInput) {
                 loginIdInput.focus();
-                // 커서를 ufes 글자 맨 뒤로 이동
                 loginIdInput.setSelectionRange(loginIdInput.value.length, loginIdInput.value.length);
             }
         });
@@ -584,8 +594,8 @@
                     alert('학생 이름을 입력하세요.');
                     return;
                 }
-                if (!u2mId.startsWith('ufes') || u2mId.length < 6) {
-                    alert('⚠️ 올바른 유투엠 아이디 형식이 아닙니다!\n아이디는 반드시 ufes로 시작해야 합니다.');
+                if (u2mId.length <= 4) {
+                    alert('⚠️ ufes 뒤에 숫자를 입력해 주세요.');
                     return;
                 }
                 if (!/^\d{4}$/.test(phoneTail)) {
@@ -692,9 +702,8 @@
                 document.getElementById('registerCard').classList.remove('hidden');
                 updateStepView(1); 
                 
-                // 회원가입창 전환 시 유투엠 아이디 기본값 ufes 보장 및 커서 이동
                 const regInput = document.getElementById('registerId');
-                if(!regInput.value) regInput.value = "ufes";
+                if(!regInput.value.startsWith('ufes')) regInput.value = "ufes";
                 regInput.focus();
                 regInput.setSelectionRange(regInput.value.length, regInput.value.length);
             } else {
@@ -702,7 +711,7 @@
                 document.getElementById('loginCard').classList.remove('hidden');
                 
                 const loginInput = document.getElementById('loginId');
-                if(!loginInput.value) loginInput.value = "ufes";
+                if(!loginInput.value.startsWith('ufes')) loginInput.value = "ufes";
                 loginInput.focus();
                 loginInput.setSelectionRange(loginInput.value.length, loginInput.value.length);
             }
@@ -782,8 +791,8 @@
 
             auth.signInWithEmailAndPassword(studentEmail, studentPassword)
                 .then((userCredential) => {
-                    const u2mId = studentEmail.split('@')[0];
-                    localStorage.setItem('u2m_id', u2mId);
+                    const savedId = studentEmail.split('@')[0];
+                    localStorage.setItem('u2m_id', savedId);
                     localStorage.setItem('u2m_pw', studentPassword);
                     window.location.href = './index.html'; 
                 })
