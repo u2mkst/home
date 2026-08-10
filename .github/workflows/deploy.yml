@@ -17,6 +17,7 @@ jobs:
         run: |
           find . -type f -name "*.html" -exec sed -i 's/ENV_NEIS_API_KEY/${{ secrets.NEIS_API_KEY }}/g' {} +
           find . -type f -name "*.html" -exec sed -i 's/ENV_SECRET_SALT/${{ secrets.SECRET_SALT }}/g' {} +
+          find . -type f -name "*.html" -exec sed -i 's/ENV_SECRET_KEY/${{ secrets.SECRET_KEY }}/g' {} +
           find . -type f -name "*.html" -exec sed -i 's/ENV_NAVER_CLIENT_ID/${{ secrets.NAVER_CLIENT_ID }}/g' {} +
           find . -type f -name "*.html" -exec sed -i 's/ENV_NAVER_CLIENT_SECRET/${{ secrets.NAVER_CLIENT_SECRET }}/g' {} +
 
