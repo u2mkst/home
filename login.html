@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>K&P 수학입시학원 로그인</title>
     
     <!-- Firebase & CryptoJS -->
@@ -24,13 +24,11 @@
             font-weight: 700;
             font-display: swap;
         }
-        /* style 태그 최상단에 추가 */
-@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap');
 
         :root {
             --font-title: 'FlightSans', 'Plus Jakarta Sans', -apple-system, sans-serif;
             --font-body: 'Pretendard', -apple-system, sans-serif;
-            /* 이모지 전용 폰트 스택 */
             --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
 
             --primary: #4f46e5;
@@ -47,6 +45,10 @@
         }
 
         * { box-sizing: border-box; }
+
+        html, body {
+            overscroll-behavior-y: contain;
+        }
 
         body { 
             font-family: var(--font-body); 
@@ -206,7 +208,6 @@
         .switch-link { color: var(--primary); text-decoration: none; font-weight: 700; margin-left: 4px; cursor: pointer; }
         .switch-link:hover { text-decoration: underline; }
 
-        /* 🌟 Lite 모드 카적 스타일 */
         .lite-mode-card {
             margin-top: 20px;
             padding: 12px 14px;
@@ -227,54 +228,123 @@
             transform: translateY(-1px);
         }
 
-        .lite-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* ⚡ 이모지 전용 폰트 스타일 적용 */
-        .emoji-icon {
-    font-family: 'Mona Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-style: normal;
-    display: inline-block;
-    /* 기존 스타일 유지 */
-}
+        .lite-info { display: flex; align-items: center; gap: 10px; }
+        .emoji-icon { font-family: 'Mona Sans', -apple-system, sans-serif; font-style: normal; display: inline-block; }
 
         .lite-icon {
-            width: 32px;
-            height: 32px;
-            background: rgba(79, 70, 229, 0.1);
-            color: var(--primary);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.95rem;
+            width: 32px; height: 32px;
+            background: rgba(79, 70, 229, 0.1); color: var(--primary);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
         }
 
-        .lite-text-group {
-            display: flex;
-            flex-direction: column;
-            text-align: left;
+        .lite-text-group { display: flex; flex-direction: column; text-align: left; }
+        .lite-title { font-size: 0.83rem; font-weight: 700; color: var(--text-main); }
+        .lite-desc { font-size: 0.72rem; color: var(--text-muted); }
+        .lite-arrow { font-size: 0.85rem; color: var(--primary); font-weight: bold; }
+
+        /* 바텀시트 모달 스타일 */
+        .captcha-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 9999; display: flex; justify-content: center; align-items: flex-end;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .lite-title {
-            font-size: 0.83rem;
-            font-weight: 700;
-            color: var(--text-main);
+        .captcha-overlay.active {
+            opacity: 1; visibility: visible;
         }
 
-        .lite-desc {
-            font-size: 0.72rem;
-            color: var(--text-muted);
+        .captcha-bottom-sheet {
+            width: 100%; max-width: 440px; background: #ffffff;
+            border-top-left-radius: 32px; border-top-right-radius: 32px;
+            padding: 24px 24px 32px 24px; box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.25);
+            transform: translateY(100%);
+            transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .lite-arrow {
-            font-size: 0.85rem;
-            color: var(--primary);
-            font-weight: bold;
+        .captcha-overlay.active .captcha-bottom-sheet {
+            transform: translateY(0);
         }
+
+        .sheet-handle {
+            width: 42px; height: 5px; background: #e2e8f0; border-radius: 3px;
+            margin: 0 auto 16px auto;
+        }
+
+        .captcha-header { text-align: center; margin-bottom: 18px; }
+        .captcha-title { font-size: 1.15rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; }
+        .captcha-subtext { font-size: 0.82rem; color: #64748b; margin-top: 6px; margin-bottom: 0; }
+
+        .captcha-img-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px;
+            padding: 16px; margin-bottom: 18px; position: relative; min-height: 130px;
+        }
+
+        .captcha-img-box {
+            width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 10px;
+            position: relative; min-height: 85px;
+        }
+
+        .captcha-img-box img {
+            width: 100%; max-width: 290px; height: 85px;
+            border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); object-fit: contain;
+        }
+
+        .captcha-loading {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(248, 250, 252, 0.95); border-radius: 12px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            font-size: 0.85rem; font-weight: 700; color: var(--primary); gap: 8px;
+            z-index: 5;
+        }
+
+        .spinner {
+            width: 24px; height: 24px; border: 3px solid rgba(79, 70, 229, 0.2);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .captcha-tools { display: flex; gap: 8px; width: 100%; max-width: 290px; }
+
+        .btn-tool {
+            width: 100%; padding: 10px 12px; font-size: 0.82rem; font-weight: 700;
+            border-radius: 10px; border: 1px solid #cbd5e1; background: #ffffff;
+            color: #334155; box-shadow: none; display: flex; align-items: center; justify-content: center; gap: 4px;
+        }
+        .btn-tool:hover { background: #f1f5f9; transform: none; box-shadow: none; color: var(--primary); }
+
+        .zoom-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.92); z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: all 0.25s ease;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+        .zoom-modal.active { opacity: 1; visibility: visible; }
+        
+        .zoom-card-wrapper {
+            position: relative; width: 90%; max-width: 380px; display: flex; justify-content: center;
+        }
+
+        .zoom-modal img {
+            width: 100%; height: auto;
+            border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+
+        .zoom-close-btn {
+            position: absolute; top: -16px; right: -16px;
+            width: 40px; height: 40px; background: #ffffff; color: #0f172a;
+            border-radius: 50%; font-weight: 800; font-size: 1.1rem; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3); transition: all 0.2s ease;
+            z-index: 10001; width: 40px;
+        }
+        .zoom-close-btn:hover { background: #f1f5f9; transform: scale(1.08); }
 
         .hidden { display: none !important; }
     </style>
@@ -285,7 +355,7 @@
         <!-- 로고 상단 헤더 존 -->
         <div class="header-zone" id="logoZone">
             <div class="logo-wrapper">
-                <img src="https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250713_196%2F1752417299448f8dDm_PNG%2FKP%25BC%25F6%25C7%25D0%25C0%25D4%25BD%25C3%25C7%25D0%25BF%25F8_%25B7%25CE%25B0%25ED-%25B0%25A1%25B7%25CE1.png" alt="K&P 수학입시학원 로고" class="logo-img">
+                <img src="https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250713_196%2F1752417299448f8dDm_PNG%2FKP%25BC%25F6%25C7%25D0%25C0%25D4%25BD%25C3%25C7%25D0%25BF%25F8_%25B7%25CE%25B0%25A1%25B7%25CE1.png" alt="K&P 수학입시학원 로고" class="logo-img">
             </div>
         </div>
 
@@ -302,7 +372,7 @@
                     <label>부모님 전화번호 뒷자리</label>
                     <input type="password" id="loginPassword" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric" required>
                 </div>
-                
+
                 <button type="submit" style="margin-top: 8px;">로그인하고 입장하기</button>
             </form>
 
@@ -310,7 +380,7 @@
                 처음 왔나요? <span class="switch-link" onclick="toggleMode('register')">회원가입 하기</span>
             </div>
 
-            <!-- 🌟 Lite 모드 이동 카드 (로그인 상태에서만 표시) -->
+            <!-- Lite 모드 이동 카드 -->
             <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
                 <div class="lite-info">
                     <div class="lite-icon"><i class="emoji-icon">⚡</i></div>
@@ -401,54 +471,7 @@
                 <div id="step3" class="step-content hidden">
                     <div class="form-group">
                         <label>이용약관 및 개인정보처리방침</label>
-                        <textarea class="policy-text-box" readonly>[데이터 처리 방침 요약] 본 서비스는 회원가입 시 수집하는 모든 개인 식별 정보(이름, 연락처, 연동 패스워드 등)를 군사 통신 표준 규격인 AES-256 알고리즘으로 강력하게 암호화하여 저장하며, 암호화된 데이터는 승인된 관리 시스템 외에는 복호화가 불가능합니다.
-                          
-[K&P 수학입시학원 서비스 이용약관 및 개인정보처리방침]
-
-본 약관은 K&P 수학입시학원(이하 '학원')이 제공하는 학생 학습 관리 및 연동 시스템(이하 '서비스')의 이용 조건, 절차 및 회원 개인정보 보호에 관한 사항을 규정합니다.
-
-
-제 1 장 이용약관
-
-
-제 1 조 (목적)
-본 약관은 회원이 학원에서 제공하는 서비스를 이용함에 있어, 학원과 회원 간의 권리, 의무 및 책임 사항을 규정함을 목적으로 합니다.
-
-제 2 조 (이용계약의 성립)
-1. 이용계약은 회원이 본 약관 및 개인정보 수집·이용 동의서에 동의한 후, 학원이 정한 가입 양식에 따라 필수 정보를 입력하여 가입을 신청하고 학원이 이를 승인함으로써 성립합니다.
-2. 회원은 반드시 실명 및 본인의 정확한 정보(U2M ID 등)를 제공해야 하며, 허위 정보를 입력한 경우 서비스 이용이 제한되거나 계정이 삭제될 수 있습니다.
-
-제 3 조 (서비스의 제공 및 제한)
-1. 본 서비스는 학원 수강생의 학습 상태 확인, 키오스크 프로그램 이용 및 외부 학습 솔루션(매쓰플랫)과의 데이터 연동 서비스를 제공합니다.
-2. 학원은 시스템 점검, 통신 장애 등 기술적 필요가 있는 경우 사전 고지 후 서비스의 일부 또는 전부를 일시적으로 중단할 수 있습니다.
-
-
-제 2 장 개인정보처리방침
-                          
-
-학원은 회원의 개인정보를 매우 중요하게 여겨지며, 개인정보보호법 등 관련 법령에 따라 회원의 개인정보를 안전하게 보호하고 처리하기 위해 다음과 같은 조치를 취하고 있습니다.
-
-1. 수집하는 개인정보 항목
-학원은 가입 화면을 통해 아래의 7가지 항목에 한하여 최소한의 개인정보를 수집합니다.
-- 학생 이름, 유투엠(U2M) 아이디, 부모님 전화번호 뒷자리(4자리), 소속 학교명 및 학교 코드, 담당 선생님 선택 정보, 매쓰플랫 아이디(학생 휴대폰 번호), 매쓰플랫 비밀번호
-
-2. 개인정보의 수집 및 이용 목적
-수집된 개인정보는 다음의 목적 이외의 용도로는 사용되지 않습니다.
-- 학생 본인 식별 확인 및 학적 관리
-
-3. 개인정보의 강력한 암호화 및 기술적 보호 조치
-학원은 회원의 소중한 개인정보를 보호하기 위해 업계 최고 수준의 보안 조치를 적용합니다.
-- 학생 이름, 부모님 전화번호 뒷자리, 매쓰플랫 아이디(학생 휴대폰 번호), 매쓰플랫 비밀번호 등 식별 및 연동 정보는 데이터베이스 저장 즉시 AES-256 알고리즘으로 강력하게 암호화 처리합니다.
-- 암호화된 데이터는 고유 솔트(Salt) 값을 활용하여 유출 시에도 원본 복호화가 원천적으로 불가능하도록 설계되어 있습니다.
-
-4. 개인정보의 보유 및 이용 기간
-- 회원의 개인정보는 서비스 이용 기간(학원 재원 기간) 동안에 한하여 안전하게 보유 및 이용됩니다.
-- 학생이 학원을 퇴원하거나 서비스 탈퇴를 요청하는 경우, 수집된 모든 개인정보 및 암호화 데이터는 복구 불가능한 방법으로 즉시 영구 파기됩니다.
-
-5. 개인정보의 제3자 제공 및 위탁에 관한 사항
-학원은 회원의 개인정보를 외부에 무단 제공하거나 위탁하지 않으며, 가입 시 입력한 매쓰플랫 계정 정보는 오직 매쓰플랫 연동 목적의 개별 로그인 처리에만 안전하게 사용됩니다.
-
-본 약관 및 개인정보처리방침은 공시된 날로부터 즉시 적용됩니다.</textarea>
+                        <textarea class="policy-text-box" readonly>[데이터 처리 방침 요약] 본 서비스는 회원가입 시 수집하는 모든 개인 식별 정보(이름, 연락처, 연동 패스워드 등)를 군사 통신 표준 규격인 AES-256 알고리즘으로 강력하게 암호화하여 저장하며, 암호화된 데이터는 승인된 관리 시스템 외에는 복호화가 불가능합니다.</textarea>
                     </div>
 
                     <div class="form-group">
@@ -471,6 +494,50 @@
         </div>
     </div>
 
+    <!-- 바텀시트 캡차 모달 -->
+    <div id="captchaModal" class="captcha-overlay">
+        <div class="captcha-bottom-sheet">
+            <div class="sheet-handle"></div>
+            
+            <div class="captcha-header">
+                <div class="captcha-title">자동입력 방지문자 입력</div>
+                <p class="captcha-subtext">비밀번호 입력 확인을 위해 화면의 문자를 입력해 주세요.</p>
+            </div>
+            
+            <div class="captcha-img-container">
+                <!-- 로딩 스피너 표시 영역 -->
+                <div id="captchaLoader" class="captcha-loading">
+                    <div class="spinner"></div>
+                    <span>보안문자를 불러오는 중...</span>
+                </div>
+
+                <div class="captcha-img-box">
+                    <img id="captchaImg" src="" alt="보안문자" onload="hideCaptchaLoader()" onerror="handleCaptchaError()">
+                </div>
+                <div class="captcha-tools">
+                    <button type="button" class="btn-tool" onclick="openZoomModal()">확대하기</button>
+                    <button type="button" class="btn-tool" onclick="loadNaverCaptcha()">새로고침</button>
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 16px;">
+                <input type="text" id="captchaInput" placeholder="보안문자 입력" autocomplete="off">
+            </div>
+
+            <button type="button" onclick="verifyCaptchaAndReset()">인증 완료 및 다시 로그인하기</button>
+        </div>
+    </div>
+
+    <!-- 크게 보기 풀스크린 모달 -->
+    <div id="zoomModal" class="zoom-modal">
+        <div class="zoom-card-wrapper">
+            <button type="button" class="zoom-close-btn" onclick="closeZoomModal()">✕</button>
+            <img id="captchaZoomImg" src="" alt="보안문자 크게보기">
+        </div>
+    </div>
+
+    <canvas id="fallbackCanvas" width="290" height="85" style="display:none;"></canvas>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
@@ -486,14 +553,110 @@
         const auth = firebase.auth();
         const database = firebase.database();
 
-        const SECRET_SALT = "u2mkst!";
-        const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
+        const SECRET_SALT = "ENV_SECRET_SALT";
+        const NEIS_API_KEY = "ENV_NEIS_API_KEY";
+
+        let loginFailCount = 0; 
 
         const schoolInput = document.getElementById('registerSchool');
         const schoolList = document.getElementById('schoolList');
         const schoolCodeInput = document.getElementById('registerSchoolCode');
 
         let currentStep = 1;
+
+        window.addEventListener('keydown', function (e) {
+            if (e.key === 'F5' || 
+               (e.ctrlKey && (e.key === 'r' || e.key === 'R')) || 
+               (e.metaKey && (e.key === 'r' || e.key === 'R'))) {
+                e.preventDefault();
+                alert('페이지 새로고침이 제한되어 있습니다.');
+            }
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            e.preventDefault();
+            e.returnValue = '';
+        });
+
+        function hideCaptchaLoader() {
+            document.getElementById('captchaLoader').style.display = 'none';
+        }
+
+        function showCaptchaLoader() {
+            document.getElementById('captchaLoader').style.display = 'flex';
+        }
+
+        // 🌟 네이버 보안문자 불러오기 (CORS 우회 오픈 이미지 주소 사용)
+        function loadNaverCaptcha() {
+            showCaptchaLoader();
+            const timeStamp = new Date().getTime();
+            // 네이버 검색 이미지 엔드포인트 연동
+            const naverCaptchaUrl = `https://captcha.naver.com/captcha.bin?action=image&key=CAPTCHA_${timeStamp}`;
+            
+            const img = document.getElementById('captchaImg');
+            const zoomImg = document.getElementById('captchaZoomImg');
+            
+            img.src = naverCaptchaUrl;
+            zoomImg.src = naverCaptchaUrl;
+        }
+
+        // 네이버 이미지 로드 실패시 대체 Canvas 캡차 출력
+        function handleCaptchaError() {
+            generateFallbackCaptcha();
+        }
+
+        function generateFallbackCaptcha() {
+            const canvas = document.getElementById('fallbackCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = "#f1f5f9";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < 6; i++) {
+                ctx.strokeStyle = `rgba(79, 70, 229, ${Math.random() * 0.4 + 0.1})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.stroke();
+            }
+
+            const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+            let code = "";
+            for (let i = 0; i < 5; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            ctx.font = "bold 38px 'Plus Jakarta Sans', sans-serif";
+            ctx.fillStyle = "#4f46e5";
+            for (let i = 0; i < code.length; i++) {
+                const x = 35 + i * 48;
+                const y = 55 + (Math.random() * 8 - 4);
+                ctx.fillText(code[i], x, y);
+            }
+
+            const dataUrl = canvas.toDataURL();
+            document.getElementById('captchaImg').src = dataUrl;
+            document.getElementById('captchaZoomImg').src = dataUrl;
+            hideCaptchaLoader();
+        }
+
+        function openCaptchaModal() {
+            document.getElementById('captchaInput').value = '';
+            loadNaverCaptcha();
+            document.getElementById('captchaModal').classList.add('active');
+        }
+
+        function closeCaptchaModal() {
+            document.getElementById('captchaModal').classList.remove('active');
+        }
+
+        function openZoomModal() {
+            document.getElementById('zoomModal').classList.add('active');
+        }
+        function closeZoomModal() {
+            document.getElementById('zoomModal').classList.remove('active');
+        }
 
         function handleFixedPrefix(input) {
             let nums = input.value.replace(/[^0-9]/g, '');
@@ -623,17 +786,13 @@
             }
         });
 
-        /* 🌟 로그인/회원가입 전환 함수 (Lite 모드 버튼 표시/숨김 처리 추가) */
         function toggleMode(mode) {
             const liteBox = document.getElementById('liteModeBox');
 
             if(mode === 'register') {
                 document.getElementById('loginCard').classList.add('hidden');
                 document.getElementById('registerCard').classList.remove('hidden');
-                
-                // 회원가입 모드일 때 Lite 모드 버튼 숨기기
                 if (liteBox) liteBox.classList.add('hidden');
-
                 updateStepView(1); 
                 
                 const regInput = document.getElementById('registerId');
@@ -643,8 +802,6 @@
             } else {
                 document.getElementById('registerCard').classList.add('hidden');
                 document.getElementById('loginCard').classList.remove('hidden');
-                
-                // 로그인 모드로 돌아오면 Lite 모드 버튼 다시 표시하기
                 if (liteBox) liteBox.classList.remove('hidden');
 
                 const loginInput = document.getElementById('loginId');
@@ -715,6 +872,16 @@
 
         function handleStudentLogin(e) {
             e.preventDefault();
+
+            if (loginFailCount >= 1) {
+                openCaptchaModal();
+                return;
+            }
+
+            executeFirebaseLogin();
+        }
+
+        function executeFirebaseLogin() {
             const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
             const phoneTail = document.getElementById('loginPassword').value.trim();
 
@@ -723,14 +890,38 @@
 
             auth.signInWithEmailAndPassword(studentEmail, studentPassword)
                 .then((userCredential) => {
+                    loginFailCount = 0;
                     const savedId = studentEmail.split('@')[0];
                     localStorage.setItem('u2m_id', savedId);
                     localStorage.setItem('u2m_pw', studentPassword);
                     window.location.href = './index.html'; 
                 })
                 .catch((error) => {
-                    alert("로그인에 실패했습니다: " + error.message);
+                    loginFailCount++;
+                    alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+
+                    if (loginFailCount >= 1) {
+                        openCaptchaModal();
+                    }
                 });
+        }
+
+        // 🌟 무한 캡차 반복 방지: 입력창을 닫아주고 실패 카운트 초기화 후 올바른 비밀번호를 다시 치게 유도!
+        function verifyCaptchaAndReset() {
+            const userCaptchaValue = document.getElementById('captchaInput').value.trim();
+            if (!userCaptchaValue) {
+                alert("보안문자를 입력해 주세요.");
+                return;
+            }
+
+            loginFailCount = 0; // 실패 카운트 초기화!
+            closeCaptchaModal();
+            
+            // 비밀번호 입력창에 포커스를 주어 올바른 비밀번호로 수정할 수 있게 함
+            const passInput = document.getElementById('loginPassword');
+            passInput.value = '';
+            passInput.focus();
+            alert("보안문자 인증 완료! 비밀번호를 다시 올바르게 입력 후 로그인해 주세요.");
         }
     </script>
 </body>
