@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K&P 수학입시학원</title>
+    
+    <!-- 웹폰트 & 아이콘 에셋 선언 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
+
+    <!-- Tailwind CSS (JS에서 사용하신 채팅 말풍선 UI 지원용) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Firebase SDK (v8 라이브러리) 및 암호화 모듈 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'Paperlogy';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+            font-weight: 500; 
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'FlightSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-display: swap;
+        }
+        
+        html { font-size: 13.5px; }
+
+        * {
+            font-family: 'FlightSans', 'Paperlogy', 'Noto Sans KR', 'Mona12', sans-serif;
+        }
+        
+        .emoji-font {
+            font-family: 'Mona12', sans-serif !important;
+            font-weight: normal !important;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
+                        linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
+            background-blend-mode: multiply; 
+            margin: 0; 
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; color: #1d1d1f;
+            box-sizing: border-box; 
+            padding: 40px 8vw;
+            overflow-x: hidden;
+        }
+        
+        .container { width: 100%; max-width: 740px; margin: 0 auto; }
+        
+        .header-zone {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 24px; padding: 0 8px;
+        }
+        
+        .welcome-text { font-family: 'Paperlogy', sans-serif; font-size: 1.6rem; font-weight: 700; color: #1d1d1f; margin: 0; letter-spacing: -0.8px; }
+        .dday-badge { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 700; color: #ff453a; letter-spacing: -0.3px; }
+
+        .main-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
+        @media (min-width: 768px) { .main-grid { grid-template-columns: 1fr 1fr; align-items: stretch; } }
+
+        /* Glassmorphism 카드 공통 인터페이스 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.38); 
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.45); 
+            border-radius: 20px; padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            box-sizing: border-box; display: flex; flex-direction: column;
+        }
+        
+        .info-card { justify-content: space-between; min-height: 200px; }
+        
+        /* 실시간 기상 관측 구역 */
+        .weather-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 0, 0, 0.04); padding-bottom: 12px; }
+        .weather-status { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; font-weight: 600; color: #4a4a4c; display: flex; align-items: center; gap: 6px; }
+        .weather-temp { font-family: 'FlightSans', sans-serif; font-size: 1.1rem; font-weight: 700; color: #1d1d1f; }
+        .weather-details-text { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.75rem; color: #86868b; font-weight: 600; display: flex; gap: 8px; }
+
+        /* 실시간 서버 동기화 시간 구역 (사이즈 대폭 증가) */
+        .clock-row { padding: 12px 0; }
+        .clock-date { font-family: 'Paperlogy', sans-serif; font-size: 1rem; color: #86868b; font-weight: 600; margin-bottom: 4px; }
+        .clock-time { font-family: 'FlightSans', sans-serif; font-size: 3.4rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; line-height: 1; margin: 0; }
+
+        /* 지성 격언 큐레이션 영역 (사이즈 증가 및 여백 조정) */
+        .quote-row {
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+            padding-top: 14px; font-size: 0.95rem; line-height: 1.4; color: #4a4a4c; font-weight: 600;
+        }
+        .quote-row span { font-family: 'Paperlogy', sans-serif; }
+        .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; margin-top: 6px; }
+
+        /* 우측 연동 패널 전용 */
+        .menu-card { 
+            padding: 12px 0; 
+            justify-content: center; 
+            min-height: 230px; 
+            gap: 0; 
+        }
+        
+        .menu-item {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            padding: 24px 32px; 
+            text-decoration: none; 
+            color: #1d1d1f;
+            transition: all 0.25s ease;
+        }
+        
+        .menu-item:not(:last-child) { 
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04); 
+        }
+        
+        .menu-item:hover { 
+            background: rgba(255, 255, 255, 0.35); 
+            padding-left: 36px; 
+        }
+        
+        .menu-item-text { 
+            font-family: 'Paperlogy', sans-serif; 
+            font-size: 1.15rem; 
+            font-weight: 600; 
+            letter-spacing: -0.3px; 
+        }
+        
+        .arrow-icon { 
+            font-family: 'FlightSans', sans-serif; 
+            font-size: 0.9rem; 
+            color: #86868b; 
+            transition: transform 0.2s ease, color 0.2s ease; 
+        }
+        
+        .menu-item:hover .arrow-icon { 
+            transform: translateX(4px);
+            color: #0071e3;
+        }
+
+        /* 하단 및 모달 버튼 전용 */
+        .btn-base {
+            font-family: 'Paperlogy', sans-serif;
+            font-size: 0.9rem; font-weight: 600; text-decoration: none;
+            padding: 14px 16px; border-radius: 14px; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; letter-spacing: -0.3px; white-space: nowrap; cursor: pointer; border: none; width: 100%;
+        }
+
+        .btn-glass {
+            color: #1d1d1f !important; 
+            background: rgba(255, 255, 255, 0.45) !important;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+        
+        .btn-glass:hover {
+            background: #6c5ce7 !important; 
+            color: #ffffff !important; 
+            border-color: #6c5ce7;
+            transform: translateY(-4px); 
+            box-shadow: 0 12px 24px rgba(108, 92, 231, 0.25); 
+        }
+
+        .btn-glass.danger { 
+            color: #e53e3e !important; 
+        }
+        
+        .btn-glass.danger:hover {
+            background: #ff453a !important; 
+            color: #ffffff !important;
+            border-color: #ff453a;
+            box-shadow: 0 12px 24px rgba(255, 69, 58, 0.25); 
+        }
+
+        .btn-primary { background-color: #6c5ce7; color: #ffffff; }
+        .btn-primary:hover { background-color: #5b4bc4; }
+        .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
+        .btn-secondary:hover { background-color: #cbd5e1; }
+
+        .sub-utility-zone {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        @media (max-width: 650px) {
+            .sub-utility-zone { grid-template-columns: repeat(2, 1fr); }
+            body { padding: 30px 6vw; } 
+        }
+
+        .marquee-container {
+            margin-top: 20px; background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 50px;
+            padding: 8px 24px; overflow: hidden; display: none;
+        }
+        .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.8rem; font-weight: 600; color: #515154; white-space: nowrap; }
+        @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        .footer { margin-top: 40px; text-align: center; }
+        .footer-brand { 
+            font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; color: #1d1d1f; 
+            letter-spacing: -0.3px; margin-bottom: 6px; 
+        }
+        .footer-brand span { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-weight: 700; }
+        .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.75rem; color: #a1a1a6; letter-spacing: 0.5px; }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: #ffffff; width: 90%; max-width: 360px; padding: 28px 24px;
+            border-radius: 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;
+        }
+        .modal-title { font-size: 1.15rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px; }
+        .modal-content { font-size: 0.95rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px; white-space: pre-wrap; word-break: break-all; }
+        
+        .modal-box textarea, .modal-box input[type="text"] {
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px;
+            box-sizing: border-box; margin-bottom: 12px; font-size: 0.9rem; font-family: inherit; background: #f8f9fa; 
+        }
+        .modal-box textarea { resize: none; text-align: left; }
+        .modal-box textarea:focus, .modal-box input[type="text"]:focus { outline: none; border-color: #6c5ce7; background: #fff; }
+        .btn-flex-group { display: flex; gap: 8px; }
+
+        .history-zone {
+            max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; 
+            padding: 4px; margin-bottom: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-sizing: border-box; text-align: left;
+        }
+        .no-data { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.85rem; width: 100%; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==========================================================================
+           [신규] K&P with KST 로딩 화면 스타일
+           ========================================================================== */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(245, 247, 250, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .brand-logo {
+            font-family: 'FlightSans', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .brand-logo .sub-kst {
+            font-family: 'Paperlogy', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #6c5ce7;
+            letter-spacing: -0.3px;
+        }
+
+        .progress-bar {
+            width: 180px;
+            height: 4px;
+            background: rgba(108, 92, 231, 0.15);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .progress-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+            animation: progress 1.4s infinite ease-in-out;
+            transform-origin: left;
+        }
+
+        @keyframes progress {
+            0% { transform: scaleX(0); }
+            50% { transform: scaleX(0.7); }
+            100% { transform: scaleX(1); opacity: 0; }
+        }
+
+        .loading-subtext {
+            font-family: 'Paperlogy', sans-serif;
+            font-size: 0.85rem;
+            color: #86868b;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🔥 [신규] 로딩 화면 오버레이 -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="brand-logo">
+            K&P <span class="sub-kst">with KST</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <div class="loading-subtext">학생 정보를 불러오는 중...</div>
+    </div>
+
+    <div class="container">
+        <!-- 상단 헤더 존 -->
+        <div class="header-zone">
+            <h1 class="welcome-text" id="welcome-message">학생 정보를 불러오는 중...</h1>
+            <div class="dday-badge" id="ddayText">확인 중...</div>
+        </div>
+
+        <!-- 메인 그리드 시스템 -->
+        <div class="main-grid">
+            <!-- 좌측 정밀 패널 (인포 카드) -->
+            <div class="glass-card info-card">
+                <div class="weather-row" style="align-items: flex-start; flex-direction: column; gap: 4px;">
+                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                        <span class="weather-status" id="weatherStatus">
+                            <span style="font-size:1rem;" id="weatherIcon" class="emoji-font">⏳</span> 위치 확인 중...
+                        </span>
+                        <span class="weather-temp" id="weatherTemp">--°C</span>
+                    </div>
+                    <div id="weatherDetails" class="weather-details-text"></div>
+                </div>
+                
+                <div class="clock-row">
+                    <div class="clock-date" id="dateText">동기화 중...</div>
+                    <div class="clock-time" id="timeText">00:00:00</div>
+                </div>
+                
+                <div class="quote-row">
+                    <b id="quote-header">오늘의 한마디:</b> <span id="quoteText">문구를 불러오는 중...</span>
+                    <span id="quoteAuthor" class="quote-author"></span>
+                </div>
+            </div>
+
+            <!-- 우측 연동 패널 (화살표 추가 및 공간 양끝 배치형) -->
+            <div class="glass-card menu-card">
+                <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
+                    <span class="menu-item-text">유투엠 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </a>
+                <a href="#" onclick="goToMathflatDirect(); return false;" class="menu-item">
+                    <span class="menu-item-text">매쓰플랫 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 하단 기능 제어 서브 유틸리티 존 -->
+        <div class="sub-utility-zone">
+            <button id="open-chat-btn" class="btn-base btn-glass">
+                <span class="emoji-font">💬</span> 선생님 메시지
+                <!-- 동적 알림 배지로 변경 -->
+                <span id="chat-badge" style="display: none; background: #ff453a; color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto;">0</span>
+            </button>
+            <button onclick="openUnifiedInquiryModal()" class="btn-base btn-glass"><span class="emoji-font">🛠️</span> 관리자 문의</button>
+            <button onclick="goToMyPage()" class="btn-base btn-glass"><span class="emoji-font">👤</span> 마이페이지</button>
+            <button onclick="logoutUser()" class="btn-base btn-glass danger"><span class="emoji-font">🔓</span> 로그아웃</button>
+        </div>
+
+        <div class="marquee-container" id="reminderBar">
+            <div style="white-space: nowrap; overflow: hidden;">
+                <span class="marquee-text mona12" id="reminderText"></span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-brand">K&P 수학입시학원 <span>with KST</span></div>
+            <div class="footer-copyright">© 2026 KST</div>
+        </div>
+    </div>
+
+    <!-- UI 다이내믹 모달 템플릿 컴포넌트 세트 -->
+    <div id="unifiedInquiryModal" class="modal-overlay">
+        <div class="modal-box" style="padding: 24px 20px;">
+            <div class="modal-title">📝 문의 및 제안 선택</div>
+            <div class="modal-content" style="margin-bottom: 20px;">원하시는 항목을 선택해 주세요.</div>
+            <button class="btn-base btn-glass" style="margin-bottom: 12px;" onclick="triggerSuggestionFromUnified()">💡 오늘의 한마디 제안하기</button>
+            <button class="btn-base btn-glass" style="margin-bottom: 20px;" onclick="triggerInquiryFromUnified()">🏫 학원에 문의하기</button>
+            <button class="btn-base btn-secondary" onclick="closeModal('unifiedInquiryModal')">닫기</button>
+        </div>
+    </div>
+
+    <div id="suggestionModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">💡 오늘의 한마디 제안</div>
+            <textarea id="suggestContent" rows="3" placeholder="기억에 남는 명언이나 하고 싶은 말(내용)을 입력해 주세요."></textarea>
+            <input type="text" id="suggestAuthor" placeholder="말한 사람 (닉네임)">
+            <input type="text" id="suggestProfile" placeholder="그 사람 설명 (예: 3학년, 과학자, 소설가 등)">
+            <div class="btn-flex-group">
+                <button class="btn-base btn-secondary" onclick="closeSuggestionModal()">취소</button>
+                <button class="btn-base btn-primary" onclick="submitSuggestion()">제안하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="academyInquiryModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">🏫 학원에 문의하기</div>
+            <textarea id="inquiryContent" rows="5" placeholder="학원에 궁금한 점이나 건의사항을 자유롭게 적어주세요. 원장님께 직접 전달됩니다."></textarea>
+            <div class="btn-flex-group">
+                <button class="btn-base btn-secondary" onclick="closeAcademyInquiryModal()">취소</button>
+                <button class="btn-base btn-primary" onclick="submitAcademyInquiry()">문의하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box" style="max-width: 400px; padding: 0; display: flex; flex-direction: column; height: 80vh; max-height: 600px; overflow: hidden;">
+            <div class="bg-white px-5 py-4 flex justify-between items-center border-b border-gray-100 z-10 shadow-sm">
+                <div class="text-[1.1rem] font-bold text-indigo-600 flex items-center gap-2 tracking-tight" style="font-family: 'Paperlogy', sans-serif;">
+                    <span class="emoji-font">💬</span> 선생님께 메시지
+                </div>
+                <button id="close-chat-btn" class="text-gray-400 hover:text-gray-600 text-xl focus:outline-none transition-colors">✖</button>
+            </div>
+            
+            <div id="messageHistoryZone" class="history-zone flex-1 overflow-y-auto p-4 bg-slate-50" style="max-height: none; margin-bottom: 0; border: none; border-radius: 0;">
+                <div class="no-data">메시지 내역을 불러오는 중입니다...</div>
+            </div>
+            
+            <div class="bg-white p-3 border-t border-gray-100 flex gap-2 z-10">
+                <input type="text" id="chat-input" class="flex-1 bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all font-medium text-gray-800" placeholder="메시지를 입력하세요...">
+                <button id="send-btn" class="btn-base btn-primary" style="width: auto; padding: 12px 20px;">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="noticeModal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modalTitle" class="modal-title">📢 안내 말씀 드립니다</div>
+            <div id="modalNoticeContent" class="modal-content">공지사항을 불러오는 중...</div>
+            <button class="btn-base btn-primary" onclick="document.getElementById('noticeModal').style.display='none'">확인</button>
+        </div>
+    </div>
+
+    <div id="logoutCheckModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" style="color: #6c5ce7;">🔓 로그아웃</div>
+            <div class="modal-content">정말로 안전하게 로그아웃 하시겠습니까?</div>
+            <div class="btn-flex-group">
+                <button class="btn-base btn-secondary" onclick="closeModal('logoutCheckModal')">취소</button>
+                <button class="btn-base btn-primary" onclick="confirmLogoutAction()">로그아웃</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="idleWarningModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(6px); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: #ffffff; width: 90%; max-width: 360px; padding: 28px 24px; border-radius: 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px;">⏳ 장시간 미사용 알림</div>
+            <div style="font-size: 0.95rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px; word-break: keep-all;">
+                약 30분 동안 활동이 감지되지 않았습니다.<br>
+                보안을 위해 잠시 후 <span id="idleCountdown" style="color: #e53e3e; font-weight: bold;">60</span>초 뒤 자동으로 로그아웃됩니다.
+            </div>
+            <div class="btn-flex-group">
+                <button onclick="extendSession()" class="btn-base btn-primary">로그인 유지</button>
+                <button onclick="triggerAutoLogout()" class="btn-base btn-secondary" style="width: auto; flex: none; padding: 14px 24px;">로그아웃</button>
+            </div>
+        </div>
+    </div>
+        
+    <div id="customAlertModal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="customAlertTitle" class="modal-title">💡 알림</div>
+            <div id="customAlertContent" class="modal-content">내용</div>
+            <button class="btn-base btn-primary" onclick="closeCustomAlert()">확인</button>
+        </div>
+    </div>
+
+    <script>
+    // 🔥 [신규] 로딩 화면 숨기기 함수 추가
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+        }
+    }
+
+    let currentStudentData = null; 
+    let noteListener = null;
+    let historyListeners = []; 
+    let customAlertCallback = null;
+    let rebootListener = null;
+    let serverTimeOffset = 0;
+
+    let idleTimer;       
+    let countdownTimer;  
+    let remainingSeconds = 60;
+
+    const THIRTY_MINUTES = 30 * 60 * 1000; 
+    const SECRET_KEY = "u2mkst!";
+    const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
+
+    const BANNED_KEYWORDS = [
+        "시발", "씨발", "개새끼", "새끼", "존나", "좆", "지랄", "병신", "개세끼", "썅", "미친놈", "미친년", 
+        "새키", "뒤져", "닥쳐", "쓰벌", "씨벌", "엠창", "凸", "fuck", "shibal", "ssibal", "bbyungshin"
+    ];
+
+    const advices = [
+        { author: "익명", authorProfile: "학생들의 현실", message: "내일의 나는 오늘의 나보다 공부를 잘할 거라 믿었다. 그리고 내일도 그렇게 믿었다." },
+        { author: "익명", authorProfile: "시험 전날", message: "공부는 미리 하는 것이다. 나는 늘 그 사실을 시험 전날 깨닫는다." },
+        { author: "익명", authorProfile: "수학 문제집", message: "답지를 보면 이해가 된다. 덮는 순간 다시 모른다." },
+        { author: "익명", authorProfile: "숙제 전문가", message: "숙제는 빨리 시작할수록 일찍 끝난다. 문제는 시작이다." },
+        { author: "익명", authorProfile: "벼락치기 협회", message: "벼락치기도 꾸준히 하면 습관이 된다." },
+        { author: "익명", authorProfile: "국어 시간", message: "지문은 읽었는데 내용은 지문만 안다." },
+        { author: "익명", authorProfile: "수학 시간", message: "분명 배웠는데 처음 보는 문제처럼 생겼다." },
+        { author: "익명", authorProfile: "시험 감독관", message: "시험 시간은 평소보다 3배 빠르게 흐른다." },
+        { author: "익명", authorProfile: "알람 시계", message: "공부할 때 10분은 1시간 같고, 쉬는 시간 10분은 1분 같다." },
+        { author: "익명", authorProfile: "교과서", message: "나를 펼치면 졸리고 덮으면 불안하다." },
+        { author: "익명", authorProfile: "학생 공통", message: "공부 계획표는 세울 때가 가장 완벽하다." },
+        { author: "익명", authorProfile: "시험지", message: "나는 항상 학생보다 문제를 더 잘 안다." },
+        { author: "익명", authorProfile: "연필", message: "네가 포기해도 나는 끝까지 닳는다." },
+        { author: "익명", authorProfile: "지우개", message: "실수는 지울 수 있지만 점수는 안 지워진다." },
+        { author: "익명", authorProfile: "학원 가방", message: "지식보다 문제집이 더 무겁다." },
+        { author: "익명", authorProfile: "학생의 다짐", message: "오늘은 진짜 공부한다. 이 말은 어제도 했다." },
+        { author: "익명", authorProfile: "독서실", message: "들어올 때는 의욕이 넘치고 나갈 때는 배가 고프다." },
+        { author: "익명", authorProfile: "수면 연구소", message: "교과서는 최고의 수면 유도 장치다." },
+        { author: "익명", authorProfile: "영어 단어장", message: "외운 단어는 시험날 잠시 여행을 떠난다." },
+        { author: "익명", authorProfile: "수학 공식", message: "나를 외우지 말고 이해하라. 물론 이해도 어렵다." },
+        { author: "익명", authorProfile: "시험 결과", message: "공부를 안 하면 후회하고, 공부를 해도 더 할걸 후회한다." },
+        { author: "익명", authorProfile: "문제집", message: "한 권 끝내면 자신감이 생기고, 다음 권이 나타난다." },
+        { author: "익명", authorProfile: "방학 계획", message: "계획은 7월에 세우고 실천은 언젠가 한다." },
+        { author: "익명", authorProfile: "공부 명언 제조기", message: "집중은 5분, 휴식은 50분이면 균형 잡힌 삶이다." },
+        { author: "익명", authorProfile: "수학 선생님", message: "쉽죠? 라는 말은 보통 쉽지 않다는 뜻이다." },
+        { author: "익명", authorProfile: "과학 시간", message: "실험은 재밌고 보고서는 과학적으로 싫다." },
+        { author: "익명", authorProfile: "역사 시간", message: "연도는 외웠는데 어느 사건인지 모르겠다." },
+        { author: "익명", authorProfile: "학생 정신", message: "모르는 문제를 오래 보면 아는 척하게 된다." },
+        { author: "익명", authorProfile: "교실 시계", message: "쉬는 시간에는 달리고 수업 시간에는 걷는다." },
+        { author: "익명", authorProfile: "점수", message: "나는 노력의 결과지만 가끔 노력과 안 친하다." },
+        { author: "익명", authorProfile: "공부의 진실", message: "한 문제를 맞히면 자신감이 생기고, 다음 문제는 겸손을 가르친다." },
+        { author: "익명", authorProfile: "학생의 눈물", message: "답을 보면 왜 틀렸는지 안다. 시험 중엔 몰랐다." },
+        { author: "익명", authorProfile: "야식", message: "공부할 때 가장 열심히 생각나는 친구다." },
+        { author: "익명", authorProfile: "시험기간", message: "갑자기 방 청소가 하고 싶어진다." },
+        { author: "익명", authorProfile: "휴대폰", message: "공부 시작 3분 만에 가장 매력적인 물건이 된다." },
+        { author: "익명", authorProfile: "책상", message: "네 꿈과 간식이 함께 올라오는 곳." },
+        { author: "익명", authorProfile: "필통", message: "시험날 펜은 항상 한 개가 안 나올다." },
+        { author: "익명", authorProfile: "공부 고수", message: "천재는 노력한다. 나는 계획한다." },
+        { author: "익명", authorProfile: "수학 오답노트", message: "틀린 문제는 다시 만난다." },
+        { author: "익명", authorProfile: "국어 문제", message: "출제자의 마음을 맞히는 심리 게임." },
+        { author: "익명", authorProfile: "시험 직전", message: "지금 보면 나올 것 같고, 안 보면 나올 것 같다." },
+        { author: "익명", authorProfile: "학생 생태계", message: "공부는 하기 싫지만 성적은 갖고 싶다." },
+        { author: "익명", authorProfile: "벼락치기 장인", message: "시간은 없지만 희망은 있다." },
+        { author: "익명", authorProfile: "학습 통계", message: "공부 시간보다 공부할 생각한 시간이 더 길다." },
+        { author: "익명", authorProfile: "수업 시작 5분 전", message: "모든 숙제는 이때 떠오른다." },
+        { author: "익명", authorProfile: "영어 시험", message: "아는 단어보다 모르는 단어가 더 반갑다." },
+        { author: "익명", authorProfile: "모의고사", message: "현실을 알려주는 친절하지 않은 친구." },
+        { author: "익명", authorProfile: "공부 습관", message: "매일 조금씩 하면 된다. 그 조금씩이 어렵다." },
+        { author: "익명", authorProfile: "학생의 희망", message: "이번 시험은 다르다. 매 시험마다 다르다." },
+        { author: "익명", authorProfile: "학습의 결론", message: "포기하지 않으면 언젠가 맞힌다. 찍어서라도." },
+        { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
+        { author: "아리스토텔레스", authorProfile: "철학자", message: "교육의 뿌리는 쓰지만 그 열매는 달다." },
+        { author: "알베르트 아인슈타인", authorProfile: "물리학자", message: "배움을 멈추는 순간 늙기 시작한다." },
+        { author: "넬슨 만델라", authorProfile: "전 남아프리카공화국 대통령", message: "교육은 세상을 바꿀 가장 강력한 무기다." },
+        { author: "벤저민 프랭클린", authorProfile: "정치가·발명가", message: "지식에 대한 투자는 최고의 이자를 남긴다." },
+        { author: "레오나르도 다 빈치", authorProfile: "예술가·발명가", message: "배움은 결코 정신을 지치게 하지 않는다." },
+        { author: "마리아 몬테소리", authorProfile: "교육자", message: "아이들은 스스로 배우려는 강한 의지를 가지고 있다." },
+        { author: "존 듀이", authorProfile: "교육학자", message: "교육은 미래를 위한 준비가 아니라 삶 그 자체다." },
+        { author: "빌 게이츠", authorProfile: "마이크로소프트 창업자", message: "인내심은 성공을 위한 중요한 열쇠다." },
+        { author: "스티브 잡스", authorProfile: "애플 공동창업자", message: "배움에 대한 열정이 있다면 어떤 일이든 가능하다." },
+        { author: "마크 트웨인", authorProfile: "작가", message: "학교 교육이 내 학습을 방해하게 두지 마라." },
+        { author: "토머스 에디슨", authorProfile: "발명가", message: "천재는 1퍼센트의 영감과 99퍼센트의 노력이다." },
+        { author: "헨리 포드", authorProfile: "기업가", message: "배움을 멈추는 사람은 스무 살이든 여든 살이든 늙은 사람이다." },
+        { author: "플루타르코스", authorProfile: "철학자", message: "배움은 그릇을 채우는 것이 아니라 불을 지피는 것이다." },
+        { author: "소크라테스", authorProfile: "철학자", message: "나는 내가 아무것도 모른다는 것을 안다." },
+        { author: "칼 세이건", authorProfile: "천문학자", message: "어딘가에는 믿을 수 없을 만큼 놀라운 진실이 발견되기를 기다리고 있다." },
+        { author: "리처드 파인만", authorProfile: "물리학자", message: "이해하지 못하면 진정으로 배운 것이 아니다." },
+        { author: "워런 버핏", authorProfile: "투자자", message: "매일 조금씩 배우면 큰 차이를 만든다." },
+        { author: "피터 드러커", authorProfile: "경영학자", message: "지식은 끊임없이 갱신해야 하는 자산이다." },
+        { author: "말콤 X", authorProfile: "인권운동가", message: "교육은 미래로 가는 여권이다." },
+        { author: "김구", authorProfile: "독립운동가", message: "한없이 가지고 싶은 것은 높은 문화의 힘이다." },
+        { author: "안창호", authorProfile: "독립운동가", message: "배우고 힘써 실천하라." },
+        { author: "이순신", authorProfile: "조선 장군", message: "뜻이 있는 곳에 길이 있다." },
+        { author: "정약용", authorProfile: "실학자", message: "배운 것은 반드시 실천으로 이어져야 한다." },
+        { author: "세종대왕", authorProfile: "조선 국왕", message: "백성을 가르치는 일은 나라의 근본이다." },
+        { author: "김대중", authorProfile: "전 대통령", message: "지식정보화 시대의 힘은 교육에서 나온다." },
+        { author: "이어령", authorProfile: "문학평론가", message: "생각하는 힘이 미래를 만든다." },
+        { author: "신영복", authorProfile: "교수·작가", message: "배움은 사람과 사람을 잇는 과정이다." },
+        { author: "김난도", authorProfile: "교수", message: "오늘의 노력이 내일의 경쟁력이 된다." },
+        { author: "유재석", authorProfile: "방송인", message: "꾸준함은 재능을 이긴다." },
+        { author: "J.K. 롤링", authorProfile: "작가", message: "실패는 불필요한 것을 벗겨내고 본질에 집중하게 한다." },
+        { author: "오프라 윈프리", authorProfile: "방송인", message: "교육은 인생을 바꾸는 가장 강력한 도구다." },
+        { author: "엘론 머스크", authorProfile: "기업가", message: "중요한 것은 끊임없이 질문하는 것이다." },
+        { author: "제프 베이조스", authorProfile: "기업가", message: "매일 조금씩 발전하는 것이 중요하다." },
+        { author: "마이클 조던", authorProfile: "농구선수", message: "나는 실패를 반복했기에 성공할 수 있었다." },
+        { author: "코비 브라이언트", authorProfile: "농구선수", message: "매일 더 나아지려는 노력이 차이를 만든다." },
+        { author: "손흥민", authorProfile: "축구선수", message: "노력은 절대 배신하지 않는다." },
+        { author: "박지성", authorProfile: "축구선수", message: "성공은 꾸준함에서 시작된다." },
+        { author: "페이커", authorProfile: "프로게이머", message: "연습은 실력을 만든다." },
+        { author: "류현진", authorProfile: "야구선수", message: "기본을 지키는 것이 가장 중요하다." },
+        { author: "공자", authorProfile: "중국 사상가", message: "아는 것을 안다고 하고 모르는 것을 모른다고 하는 것이 참된 앎이다." },
+        { author: "맹자", authorProfile: "사상가", message: "배움에는 끝이 없다." },
+        { author: "주희", authorProfile: "성리학자", message: "작은 공부도 쌓이면 큰 힘이 된다." },
+        { author: "프랜시스 베이컨", authorProfile: "철학자", message: "아는 것이 힘이다." },
+        { author: "임마누엘 칸트", authorProfile: "철학자", message: "스스로 생각하는 용기를 가져라." },
+        { author: "볼테르", authorProfile: "철학자", message: "배움은 인간을 자유롭게 한다." },
+        { author: "괴테", authorProfile: "작가", message: "아는 것만으로는 충분하지 않다. 실천해야 한다." },
+        { author: "파블로 피카소", authorProfile: "화가", message: "배움의 목적은 규칙을 깨기 위함이다." },
+        { author: "헬렌 켈러", authorProfile: "작가", message: "세상은 노력하는 사람에게 길을 열어준다." },
+        { author: "앤드루 카네기", authorProfile: "기업가", message: "스스로 배우는 사람이 가장 멀리 간다." },
+        { author: "나폴레옹", authorProfile: "프랑스 황제", message: "승리는 가장 끈기 있는 사람의 것이다." },
+        { author: "윈스턴 처칠", authorProfile: "전 영국 총리", message: "성공은 실패를 거듭해도 열정을 잃지 않는 것이다." },
+        { author: "에이브러햄 링컨", authorProfile: "전 미국 대통령", message: "미래를 예측하는 가장 좋은 방법은 미래를 만드는 것이다." },
+        { author: "시어도어 루스벨트", authorProfile: "전 미국 대통령", message: "할 수 있다고 믿으면 이미 절반은 이룬 것이다." },
+        { author: "존 F. 케네디", boardTitle: "전 미국 대통령", message: "변화는 삶의 법칙이다." },
+        { author: "마틴 루터 킹 주니어", authorProfile: "인권운동가", message: "첫걸음을 내딛어라. 계단 전체를 볼 필요는 없다." },
+        { author: "데일 카네기", authorProfile: "작가", message: "오늘을 최대한 활용하라." },
+        { author: "스티븐 코비", authorProfile: "작가", message: "습관이 인생을 만든다." },
+        { author: "브라이언 트레이시", authorProfile: "작가", message: "매일 공부하는 사람이 결국 앞서간다." },
+        { author: "짐 론", authorProfile: "동기부여 연설가", message: "형식적인 교육은 생계를, 자기 교육은 부를 만든다." },
+        { author: "칼 융", authorProfile: "심리학자", message: "당신이 바라보는 것이 아니라 보는 방식이 중요하다." },
+        { author: "지그문트 프로이트", authorProfile: "심리학자", message: "배움은 자기 이해에서 시작된다." },
+        { author: "에릭 호퍼", authorProfile: "철학자", message: "배우는 사람은 변화하는 세상을 상속받는다." },
+        { author: "스티븐 호킹", authorProfile: "물리학자", message: "지적 성장에는 한계가 없다." },
+        { author: "칼 포퍼", authorProfile: "철학자", message: "모든 지식은 가설에서 시작된다." },
+        { author: "닐 디그래스 타이슨", authorProfile: "천체물리학자", message: "질문은 과학의 시작이다." },
+        { author: "리처드 브랜슨", authorProfile: "기업가", message: "배우고 도전하고 반복하라." },
+        { author: "사티아 나델라", authorProfile: "마이크로소프트 CEO", message: "성장하는 사람은 끊임없이 학습하는 사람이다." },
+        { author: "잭 마", authorProfile: "기업가", message: "오늘 힘들어도 배우는 것을 멈추지 마라." },
+        { author: "래리 페이지", authorProfile: "구글 공동창업자", message: "큰 꿈은 큰 배움에서 시작된다." },
+        { author: "김연아", authorProfile: "피겨스케이팅 선수", message: "연습은 배신하지 않는다." },
+        { author: "박세리", authorProfile: "골프선수", message: "포기하지 않으면 성장할 수 있다." },
+        { author: "차범근", authorProfile: "축구인", message: "노력은 재능보다 강하다." },
+        { author: "이강인", authorProfile: "축구선수", message: "매 순간 배우려는 자세가 중요하다." },
+        { author: "황희찬", authorProfile: "축구선수", message: "작은 발전이 큰 결과를 만든다." },
+        { author: "유관순", authorProfile: "독립운동가", message: "뜻을 세우고 끝까지 밀고 나가라." },
+        { author: "안중근", authorProfile: "독립운동가", message: "배움은 나라와 자신을 위한 힘이다." },
+        { author: "법정", authorProfile: "승려·수필가", message: "하루하루 성실하게 살아가는 것이 중요하다." },
+        { author: "이외수", authorProfile: "작가", message: "상상력이 배움의 날개다." },
+        { author: "박경리", authorProfile: "소설가", message: "배움은 사람을 깊게 만든다." },
+        { author: "알베르 카뮈", authorProfile: "작가", message: "한겨울 속에서도 내 안에 여름이 있었다." },
+        { author: "빅터 위고", authorProfile: "작가", message: "미래에는 여러 이름이 있다. 노력하는 사람에게는 기회다." },
+        { author: "톨스토이", authorProfile: "작가", message: "배움은 스스로를 변화시키는 과정이다." },
+        { author: "헤르만 헤세", authorProfile: "작가", message: "지혜는 가르칠 수 없고 스스로 얻어야 한다." },
+        { author: "앙투안 드 생텍쥐페리", authorProfile: "작가", message: "목표를 향한 열정이 사람을 성장시킨다." },
+        { author: "조앤 디디온", authorProfile: "작가", message: "배움은 세상을 이해하는 창이다." },
+        { author: "마야 안젤루", authorProfile: "시인", message: "더 나은 것을 알게 되면 더 나은 행동을 하게 된다." },
+        { author: "랄프 왈도 에머슨", authorProfile: "철학자", message: "열정 없이는 위대한 일을 이룰 수 없다." },
+        { author: "헨리 데이비드 소로", authorProfile: "작가", message: "꿈을 향해 자신 있게 나아가라." },
+        { author: "버락 오바마", authorProfile: "전 미국 대통령", message: "독서를 아이디어를 현실로 바꾸는 힘을 준다." },
+        { author: "유발 하라리", authorProfile: "역사학자", message: "21세기 핵심 능력은 계속 배우는 능력이다." },
+        { author: "정재승", authorProfile: "과학자", message: "호기심은 배움의 출발점이다." },
+        { author: "김상욱", authorProfile: "물리학자", message: "질문하는 사람이 더 멀리 간다." },
+        { author: "최재천", authorProfile: "생물학자", message: "독서는 가장 쉬운 자기 혁신이다." },
+        { author: "한강", authorProfile: "소설가", message: "깊이 생각하는 힘이 사람을 성장시킨다." },
+        { author: "김영하", authorProfile: "소설가", message: "읽고 쓰는 사람은 계속 성장한다." },
+        { author: "박웅현", authorProfile: "광고인", message: "생각의 깊이가 인생의 깊이다." },
+        { author: "도종환", authorProfile: "시인", message: "천천히 가더라도 멈추지 마라." },
+        { author: "이국종", authorProfile: "의사", message: "실력을 쌓는 데는 지름길이 없다." },
+        { author: "백종원", authorProfile: "기업인", message: "기본을 제대로 익히는 것이 가장 중요하다." }
+];
+        
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+        authDomain: "ksthome-76889.firebaseapp.com",
+        databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+        projectId: "ksthome-76889",
+        storageBucket: "ksthome-76889.firebasestorage.app",
+        messagingSenderId: "411945142173",
+        appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+        measurementId: "G-72TJ0364MJ"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    function logoutUser() { showModal('logoutCheckModal'); }
+
+    function confirmLogoutAction() {
+        closeModal('logoutCheckModal');
+        auth.signOut().then(() => {
+            localStorage.removeItem('u2m_id');
+            localStorage.removeItem('u2m_pw');
+            window.location.href = 'login.html';
+        }).catch((error) => {
+            showCustomAlert("로그아웃 오류: " + error.message, "❌ 에러");
+        });
+    }
+
+    // 🔥 [수정됨] 데이터 조회가 완료된 후 로딩창을 숨기는 로직 적용
+    function checkUserAuth() {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                startIdleTracking();
+                
+                database.ref(".info/serverTimeOffset").on("value", function(snapshot) {
+                    serverTimeOffset = snapshot.val() || 0;
+                });
+
+                database.ref(`students/${user.uid}`).once('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        currentStudentData = data;
+                        const rawName = data.name || data.studentName || data.userName;
+                        const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
+                        document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
+                        
+                        if (!data.mathflatId && !data.studentPhone) {
+                            setTimeout(() => { 
+                                showCustomAlert("정보 설정이 누락되었습니다. 마이페이지로 이동합니다.", "⚙️ 알림", () => {
+                                    goToMyPage();
+                                });
+                            }, 600);
+                        }
+
+                        if (data.schoolName && !data.schoolName.includes('초등')) {
+                            fetchExamDateFromNeis(data.schoolName);
+                        } else { renderDDayBadge(null); }
+                        
+                        listenToTeacherNotes(user.uid);
+                        startLiveChatHistory(user.uid); 
+                        startDeviceStatusReporting(user.uid);
+                        listenToRemoteCommands(user.uid);
+
+                        // 데이터 로드 성공 시 로딩 화면 닫기
+                        hideLoading(); 
+                    } else {
+                        cleanStudentSystemSession();
+                        
+                        // 데이터가 없을 때도 로딩 화면 닫기
+                        hideLoading(); 
+                    }
+                }).catch((error) => {
+                    console.error("데이터 불러오기 실패:", error);
+                    // 에러 발생 시에도 로딩 화면 닫기
+                    hideLoading(); 
+                });
+            } else {
+                cleanStudentSystemSession();
+                
+                // 로그인되지 않은 상태일 때도 로딩 화면 닫기
+                hideLoading(); 
+            }
+        });
+    }
+
+    function cleanStudentSystemSession() {
+        detachAllHistoryListeners();
+        if (noteListener) noteListener.off();
+        if (rebootListener) rebootListener.off();
+        auth.signOut().then(() => {
+            localStorage.removeItem('u2m_id');
+            localStorage.removeItem('u2m_pw');
+            if(window.location.pathname.indexOf('login.html') === -1) {
+                window.location.replace('login.html');
+            }
+        });
+    }
+
+    function showModal(id) { 
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'flex'; 
+    }
+    
+    function closeModal(id) { 
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'none'; 
+    }
+
+    function showCustomAlert(content, title = "💡 알림", callback = null) {
+        document.getElementById('customAlertTitle').innerText = title;
+        document.getElementById('customAlertContent').innerText = content;
+        customAlertCallback = callback;
+        showModal('customAlertModal');
+    }
+
+    function closeCustomAlert() {
+        closeModal('customAlertModal');
+        if (customAlertCallback && typeof customAlertCallback === 'function') {
+            customAlertCallback();
+            customAlertCallback = null;
+        }
+    }
+
+    function decryptAES(cipherText) {
+        if (!cipherText) return "";
+        try {
+            const cleanCipherText = cipherText.toString().trim();
+            if (!cleanCipherText.startsWith("U2FsdGVkX1")) return cleanCipherText;
+            const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
+            return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText; 
+        } catch (e) {
+            return cipherText; 
+        }
+    }
+
+    function goToMyPage() { window.location.href = 'mypage.html'; }
+
+    function startIdleTracking() {
+        const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
+        events.forEach(event => { window.addEventListener(event, resetIdleTimer); });
+        resetIdleTimer();
+    }
+
+    function stopIdleTracking() {
+        const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
+        events.forEach(event => { window.removeEventListener(event, resetIdleTimer); });
+    }
+
+    function resetIdleTimer() {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(showIdleWarning, THIRTY_MINUTES);
+    }
+
+    function showIdleWarning() {
+        stopIdleTracking(); 
+        showModal('idleWarningModal');
+        remainingSeconds = 60;
+        document.getElementById('idleCountdown').innerText = remainingSeconds;
+        
+        countdownTimer = setInterval(() => {
+            remainingSeconds--;
+            document.getElementById('idleCountdown').innerText = remainingSeconds;
+            if (remainingSeconds <= 0) {
+                clearInterval(countdownTimer);
+                triggerAutoLogout(); 
+            }
+        }, 1000);
+    }
+
+    function extendSession() {
+        clearInterval(countdownTimer); 
+        closeModal('idleWarningModal'); 
+        startIdleTracking(); 
+    }
+
+    function triggerAutoLogout() {
+        clearInterval(countdownTimer);
+        clearTimeout(idleTimer);
+        auth.signOut().then(() => {
+            localStorage.removeItem('u2m_id');
+            localStorage.removeItem('u2m_pw');
+            if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
+                window.AndroidApp.logoutAll();
+            }
+            window.location.replace('login.html');
+        }).catch(() => {
+            window.location.replace('login.html');
+        });
+    }
+
+    function openUnifiedInquiryModal() { showModal('unifiedInquiryModal'); }
+    function triggerSuggestionFromUnified() { closeModal('unifiedInquiryModal'); openSuggestionModal(); }
+    function triggerInquiryFromUnified() { closeModal('unifiedInquiryModal'); openAcademyInquiryModal(); }
+
+    function openSuggestionModal() {
+        document.getElementById('suggestContent').value = '';
+        document.getElementById('suggestAuthor').value = '';
+        document.getElementById('suggestProfile').value = '';
+        showModal('suggestionModal');
+    }
+    function closeSuggestionModal() { closeModal('suggestionModal'); }
+
+    function submitSuggestion() {
+        const contentText = document.getElementById('suggestContent').value.trim();
+        const authorText = document.getElementById('suggestAuthor').value.trim();
+        const profileText = document.getElementById('suggestProfile').value.trim();
+
+        if (!contentText) { showCustomAlert("명언 내용을 입력해 주세요."); return; }
+        if (!authorText) { showCustomAlert("말한 사람(닉네임)을 입력해 주세요."); return; }
+        if (!currentStudentData) { showCustomAlert("학생 데이터 동기화 중입니다."); return; }
+        
+        const combinedText = contentText + authorText + profileText;
+        const cleanText = combinedText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
+        const hasBadWord = BANNED_KEYWORDS.some(word => cleanText.includes(word));
+        
+        if (hasBadWord) {
+            showCustomAlert("⚠️ 비속어 및 욕설이 감지되어 제출이 차단되었습니다.", "🚨 경고");
+            return;
+        }
+
+        const currentUser = auth.currentUser;
+        const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
+        const realName = decryptAES(rawName);
+
+        let encryptedContent = CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString(); 
+        let encryptedAuthor = CryptoJS.AES.encrypt(authorText, SECRET_KEY).toString(); 
+        let encryptedProfile = CryptoJS.AES.encrypt(profileText, SECRET_KEY).toString(); 
+
+        const suggestData = {
+            studentName: realName,
+            studentUid: currentUser ? currentUser.uid : "익명",
+            schoolName: currentStudentData.schoolName || "미지정",
+            category: "오늘의 한마디 제안",
+            content: encryptedContent,
+            author: encryptedAuthor,
+            authorProfile: encryptedProfile,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        database.ref('suggestions').push(suggestData)
+            .then(() => {
+                showCustomAlert(`원장님께 한마디 제안이 완료되었습니다.`, "💡 제안 접수 완료");
+                closeSuggestionModal();
+            }).catch(err => showCustomAlert('전송 실패: ' + err.message));
+    }
+
+    function openAcademyInquiryModal() {
+        document.getElementById('inquiryContent').value = '';
+        showModal('academyInquiryModal');
+    }
+    function closeAcademyInquiryModal() { closeModal('academyInquiryModal'); }
+
+    function submitAcademyInquiry() {
+        const contentText = document.getElementById('inquiryContent').value.trim();
+        if (!contentText) { showCustomAlert("문의사항 내용을 적어주세요."); return; }
+        if (!currentStudentData) { showCustomAlert("학생 데이터 동기화 중입니다."); return; }
+
+        const cleanText = contentText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
+        const hasBadWord = BANNED_KEYWORDS.some(word => cleanText.includes(word));
+
+        if (hasBadWord) {
+            showCustomAlert("⚠️ 비속어 및 욕설이 감지되어 문의를 등록할 수 없습니다.", "🚨 경고");
+            return;
+        }
+
+        const currentUser = auth.currentUser;
+        const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
+        const realName = decryptAES(rawName);
+        let encryptedContent = CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString();
+
+        const inquiryData = {
+            studentName: realName,
+            studentUid: currentUser ? currentUser.uid : "익명",
+            schoolName: currentStudentData.schoolName || "미지정",
+            category: "학원에 문의하기",
+            content: encryptedContent,
+            author: "",
+            authorProfile: "",
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        database.ref('suggestions').push(inquiryData)
+            .then(() => {
+                showCustomAlert(`원장님께 다이렉트 문의가 접수되었습니다.`, "🏫 문의 접수 완료");
+                closeAcademyInquiryModal();
+            }).catch(err => showCustomAlert('전송 실패: ' + err.message));
+    }
+
+    function transmitBridgeCredentials() {
+        if (!currentStudentData) return;
+        try {
+            const u2mId = localStorage.getItem('u2m_id') || currentStudentData.u2mId || '';
+            const u2mPw = decryptAES(currentStudentData.phone || '').trim(); 
+            const mathflatId = decryptAES(currentStudentData.studentPhone || currentStudentData.phone || '').trim();
+            const decryptedMathflatPw = decryptAES(currentStudentData.mathflatPw || '').trim();
+            
+            if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
+                window.AndroidApp.loginToU2M(u2mId, u2mPw, decryptedMathflatPw, mathflatId);
+            }
+        } catch (err) { console.error("크레덴셜 앱 전달 오류:", err); }
+    }
+
+    function goToU2MWithCredentials() {
+        transmitBridgeCredentials();
+        setTimeout(() => { window.location.href = "https://www.u2math.co.kr/Login/Index"; }, 1000);
+    }
+
+    function goToMathflatDirect() {
+        transmitBridgeCredentials();
+        setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 1500);
+    }
+
+    function startDeviceStatusReporting(studentUid) {
+        setInterval(() => {
+            if (window.AndroidApp && typeof window.AndroidApp.getBatteryLevel === 'function') {
+                try {
+                    const level = window.AndroidApp.getBatteryLevel();
+                    if(level !== undefined && level !== null) {
+                        database.ref(`device_status/${studentUid}`).set({
+                            battery: parseInt(level),
+                            lastUpdated: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    }
+                } catch(e) { console.error("배터리 텔레메트리 에러:", e); }
+            } else if (navigator.getBattery) {
+                navigator.getBattery().then(battery => {
+                    database.ref(`device_status/${studentUid}`).set({
+                        battery: Math.round(battery.level * 100),
+                        lastUpdated: firebase.database.ServerValue.TIMESTAMP
+                    });
+                });
+            }
+        }, 60000);
+    }
+
+    function listenToRemoteCommands(studentUid) {
+        if (rebootListener) rebootListener.off();
+        rebootListener = database.ref(`commands/${studentUid}`);
+        rebootListener.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const cmd = snapshot.val();
+                if (cmd && cmd.reboot === true) {
+                    database.ref(`commands/${studentUid}`).remove();
+                    if (window.AndroidApp && typeof window.AndroidApp.rebootDevice === 'function') {
+                        window.AndroidApp.rebootDevice();
+                    } else {
+                        alert("🔄 [원격 제어] 시스템 강제 재부팅 신호가 수신되었습니다.");
+                        window.location.reload();
+                    }
+                }
+            }
+        });
+    }
+
+    function updateClock() {
+        const serverTimeMillis = Date.now() + serverTimeOffset;
+        const now = new Date(serverTimeMillis);
+
+        const formatter = new Intl.DateTimeFormat('ko-KR', {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            weekday: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+        });
+
+        const parts = formatter.formatToParts(now);
+        let month, day, weekday, hour, minute, second;
+        for (const part of parts) {
+            if (part.type === 'month') month = part.value;
+            if (part.type === 'day') day = part.value;
+            if (part.type === 'weekday') weekday = part.value;
+            if (part.type === 'hour') hour = part.value;
+            if (part.type === 'minute') minute = part.value;
+            if (part.type === 'second') second = part.value;
+        }
+
+        document.getElementById('timeText').innerText = `${hour}:${minute}:${second}`;
+        document.getElementById('dateText').innerText = `${parseInt(month)}월 ${parseInt(day)}일 ${weekday}`;
+    }
+    setInterval(updateClock, 1000);
+
+    function fetchExamDateFromNeis(schoolName) {
+        if (!schoolName) { renderDDayBadge(null); return; }
+        const schoolInfoUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
+        
+        fetch(schoolInfoUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.schoolInfo) { renderDDayBadge(null); return; }
+                const row = data.schoolInfo[1].row[0];
+                const officeCode = row.ATPT_OFCDC_SC_CODE; 
+                const schoolCode = row.SD_SCHUL_CODE;       
+                const currentYear = new Date().getFullYear();
+                const fromYmd = `${currentYear}0301`;
+                const toYmd = `${currentYear + 1}0228`;
+                const scheduleUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=800`;
+                return fetch(scheduleUrl);
+            })
+            .then(res => res ? res.json() : null)
+            .then(data => {
+                if (!data || !data.SchoolSchedule) { renderDDayBadge(null); return; }
+                const rows = data.SchoolSchedule[1].row;
+                const now = new Date();
+                const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+                let upcomingExamDates = [];
+                
+                rows.forEach(item => {
+                    const eventName = item.EVENT_NM || "";
+                    const eventDate = item.AA_YMD; 
+                    if (eventDate >= todayStr) {
+                        if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") || 
+                            eventName.includes("지필") || eventName.includes("시험") || eventName.includes("정규")) {
+                            upcomingExamDates.push({ date: eventDate, name: eventName });
+                        }
+                    }
+                });
+                
+                if (upcomingExamDates.length > 0) {
+                    upcomingExamDates.sort((a,b) => a.date.localeCompare(b.date)); 
+                    const closest = upcomingExamDates[0];
+                    const finalDateForm = `${closest.date.substring(0,4)}-${closest.date.substring(4,6)}-${closest.date.substring(6,8)}`;
+                    renderDDayBadge(finalDateForm, closest.name);
+                } else { renderDDayBadge(null); }
+            }).catch(() => renderDDayBadge(null));
+    }
+
+    function renderDDayBadge(examDate, examName = "정기고사") {
+        const ddayZone = document.getElementById('ddayText');
+        if (!ddayZone) return;
+        if (currentStudentData && currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) {
+            ddayZone.style.display = 'none';
+            return;
+        }
+        if (!examDate) {
+            ddayZone.innerText = "학사 일정 분석불가";
+            return;
+        }
+
+        const targetDate = new Date(examDate + "T00:00:00");
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        targetDate.setHours(0, 0, 0, 0);
+
+        const diffTime = targetDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        let schoolTag = currentStudentData.schoolName ? currentStudentData.schoolName.replace("대한민국", "").substring(0,5) : "학교";
+
+        if (diffDays > 0) {
+            ddayZone.innerText = `${schoolTag} [${examName}] D-${diffDays}`;
+        } else if (diffDays === 0) {
+            ddayZone.innerHTML = `⚠️ [${examName}] 오늘 D-DAY 🎉`;
+        } else {
+            ddayZone.innerText = "예정된 시험 없음";
+        }
+    }
+
+    function displayDefaultAdvice() {
+        if (advices.length === 0) return;
+        const now = new Date();
+        const dateValue = now.getFullYear() + (now.getMonth() + 1) + now.getDate();
+        const dailyData = advices[dateValue % advices.length];
+        document.getElementById('quote-header').innerText = "오늘의 한마디:";
+        document.getElementById('quoteText').innerText = `"${dailyData.message}"`;
+        const profileStr = dailyData.authorProfile && dailyData.authorProfile !== "-" ? ` (${dailyData.authorProfile})` : "";
+        document.getElementById('quoteAuthor').innerText = `- ${dailyData.author}${profileStr}`;
+    }
+
+    function openChatModal() {
+        const modal = document.getElementById('chat-modal');
+        if (!modal) return;
+        modal.style.display = 'flex'; 
+        
+        const zoneEl = document.getElementById('messageHistoryZone');
+        if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
+        
+        const inputEl = document.getElementById('chat-input');
+        if (inputEl) inputEl.focus();
+
+        if (auth.currentUser) {
+            startLiveChatHistory(auth.currentUser.uid);
+            
+            database.ref(`student_messages/${auth.currentUser.uid}`).orderByChild('read').equalTo(false).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        child.ref.update({ read: true });
+                    });
+                }
+            });
+        }
+    }
+    
+    function closeChatModal() { 
+        const modal = document.getElementById('chat-modal');
+        if (modal) modal.style.display = 'none'; 
+    }
+
+    function listenToTeacherNotes(uid) {
+        let isInitialLoad = true;
+        const unreadRef = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false);
+        
+        unreadRef.on('value', (snapshot) => {
+            const badge = document.getElementById('chat-badge');
+            if (snapshot.exists()) {
+                const count = snapshot.numChildren();
+                if (badge) {
+                    badge.innerText = count > 99 ? '99+' : count;
+                    badge.style.display = 'inline-block';
+                }
+            } else {
+                if (badge) badge.style.display = 'none';
+            }
+        });
+
+        unreadRef.limitToLast(1).on('child_added', (snapshot) => {
+            if(isInitialLoad) return; 
+            const note = snapshot.val();
+            if (note) {
+                let decryptedMsg = decryptAES(note.message);
+                if (decryptedMsg.startsWith("[답장완료] ")) { decryptedMsg = decryptedMsg.replace("[답장완료] ", ""); }
+                document.getElementById('modalTitle').innerText = "✉️ 선생님의 전송 쪽지";
+                document.getElementById('modalNoticeContent').innerText = `[${note.teacher} 선생님]\n\n${decryptedMsg}`;
+                showModal('noticeModal');
+            }
+        });
+
+        setTimeout(() => { isInitialLoad = false; }, 2000); 
+    }
+
+    function startLiveChatHistory(studentUid) {
+        detachAllHistoryListeners();
+        let myQuestions = [];
+        let teacherNotes = [];
+
+        const qRef = database.ref('messages').orderByChild('studentUid').equalTo(studentUid);
+        historyListeners.push({ ref: qRef, type: 'value' });
+        qRef.on('value', (snapshot) => {
+            myQuestions = [];
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const val = child.val();
+                    myQuestions.push({ id: child.key, isMine: true, ...val, message: decryptAES(val.message) });
+                });
+            }
+            renderCombinedChat(myQuestions, teacherNotes);
+        });
+
+        const nRef = database.ref(`student_messages/${studentUid}`);
+        historyListeners.push({ ref: nRef, type: 'value' });
+        nRef.on('value', (snapshot) => {
+            teacherNotes = [];
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const val = child.val();
+                    teacherNotes.push({ id: child.key, isMine: false, ...val, message: decryptAES(val.message) });
+                });
+            }
+            renderCombinedChat(myQuestions, teacherNotes);
+        });
+    }
+
+    function renderCombinedChat(questions, notes) {
+        const zoneEl = document.getElementById('messageHistoryZone');
+        if (!zoneEl) return;
+        
+        const combined = [...questions, ...notes].sort((a, b) => a.timestamp - b.timestamp);
+        if (combined.length === 0) {
+            zoneEl.innerHTML = '<div class="text-center text-gray-400 text-sm py-8">선생님과 주고받은 메시지 내역이 없습니다.</div>';
+            return;
+        }
+        
+        zoneEl.innerHTML = '';
+        let lastDateStr = "";
+
+        combined.forEach(chat => {
+            const date = new Date(chat.timestamp);
+            
+            const currentDateStr = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+            if (currentDateStr !== lastDateStr) {
+                const dateBar = document.createElement('div');
+                dateBar.className = 'flex justify-center my-3';
+                dateBar.innerHTML = `<span class="bg-gray-200 text-gray-500 text-[11px] px-3 py-0.5 rounded-full font-medium">${currentDateStr}</span>`;
+                zoneEl.appendChild(dateBar);
+                lastDateStr = currentDateStr;
+            }
+
+            const timeStr = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full flex flex-col';
+
+            let rawMessage = chat.message || "";
+            if (rawMessage.startsWith("[답장완료] ")) { rawMessage = rawMessage.replace("[답장완료] ", ""); }
+
+            if (chat.isMine) {
+                wrapper.innerHTML = `
+                    <div class="flex justify-end items-end gap-1.5 my-1.5">
+                        <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
+                        <div class="bg-indigo-600 text-white text-[13px] font-medium p-3 rounded-2xl rounded-tr-none max-w-[240px] shadow-sm whitespace-pre-line break-all">
+                            ${escapeHTML(rawMessage)}
+                        </div>
+                    </div>`;
+            } else {
+                wrapper.innerHTML = `
+                    <div class="flex items-start gap-2.5 my-1.5">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[11px] font-bold shrink-0 select-none shadow-sm">선</div>
+                        <div>
+                            <div class="text-[11px] font-bold text-gray-500 mb-0.5 select-none ml-1">${chat.teacher || '담당교사'}</div>
+                            <div class="flex items-end gap-1.5">
+                                <div class="bg-white text-gray-800 text-[13px] font-medium p-3 rounded-2xl rounded-tl-none max-w-[240px] shadow-sm border border-gray-200 whitespace-pre-line break-all">
+                                    ${escapeHTML(rawMessage)}
+                                </div>
+                                <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            zoneEl.appendChild(wrapper);
+        });
+        
+        zoneEl.scrollTop = zoneEl.scrollHeight;
+    }
+
+    function detachAllHistoryListeners() {
+        historyListeners.forEach(item => item.ref.off(item.type));
+        historyListeners = [];
+    }
+
+    function sendMessageToTeacher() {
+        const msgInput = document.getElementById('chat-input'); 
+        if (!msgInput) return;
+        
+        const text = msgInput.value.trim();
+        if (!text) return;
+        if (!currentStudentData || !currentStudentData.teacher) { showCustomAlert('선생님 정보 동기화에 실패했습니다.'); return; }
+        const currentUser = auth.currentUser;
+
+        const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
+        const realName = decryptAES(rawName);
+        let encryptedMessage = CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
+
+        const msgData = {
+            studentName: realName,
+            u2mId: currentStudentData.u2mId || '',       
+            studentUid: currentUser.uid,                 
+            teacher: currentStudentData.teacher,
+            message: encryptedMessage,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            read: false
+        };
+
+        database.ref('messages').push(msgData)
+            .then(() => {
+                msgInput.value = ''; 
+                const zoneEl = document.getElementById('messageHistoryZone');
+                if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
+            }).catch(err => showCustomAlert('전송 오류: ' + err.message));
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const openBtn = document.getElementById('open-chat-btn');
+        const closeBtn = document.getElementById('close-chat-btn');
+        const sendBtn = document.getElementById('send-btn');
+        const inputEl = document.getElementById('chat-input');
+
+        if (openBtn) openBtn.addEventListener('click', openChatModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeChatModal);
+        if (sendBtn) sendBtn.addEventListener('click', sendMessageToTeacher);
+        if (inputEl) {
+            inputEl.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessageToTeacher();
+                }
+            });
+        }
+    });
+
+    function listenToFirebase() {
+        database.ref('notice').on('value', (snapshot) => {
+            const text = snapshot.val() || "";
+            if (text.trim() !== "") {
+                document.getElementById('modalTitle').innerText = "📢 안내 말씀 드립니다";
+                document.getElementById('modalNoticeContent').innerText = text;
+                showModal('noticeModal');
+            } else { closeModal('noticeModal'); }
+        });
+
+        const now = new Date();
+        const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        database.ref('dailyQuotes/' + todayKey).on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const quoteData = snapshot.val();
+                document.getElementById('quote-header').innerText = "오늘의 명언:";
+                document.getElementById('quoteText').innerText = `"${quoteData.message}"`;
+                document.getElementById('quoteAuthor').innerText = quoteData.author ? `- ${quoteData.author}` : "";
+            } else {
+                displayDefaultAdvice();
+            }
+        });
+
+        database.ref('reminder').on('value', (snapshot) => {
+            const text = snapshot.val() || "";
+            const bar = document.getElementById('reminderBar');
+            const txtEl = document.getElementById('reminderText');
+            if (text.trim() !== "") {
+                if(txtEl) txtEl.innerText = `⚠️ 긴급 공지: ${text} ⚠️\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0`;
+                if(bar) bar.style.display = 'block';
+                const duration = Math.max(14, text.length * 0.45);
+                if(txtEl) txtEl.style.animationDuration = `${duration}s`;
+            } else {
+                if(bar) bar.style.display = 'none';
+                if(txtEl) txtEl.innerText = "";
+            }
+        });
+    }
+
+    function initWeather() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => { fetchWeather(position.coords.latitude, position.coords.longitude); },
+                () => { fetchWeather(37.2638, 127.0286); }
+            );
+        } else { fetchWeather(37.2638, 127.0286); }
+    }
+
+    async function fetchWeather(lat, lon) {
+        const apiKey = '5bce1dcb3eac35e493f0ed9df94b5dac';
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('날씨 수집 불가');
+            const data = await response.json();
+            const temp = Math.round(data.main.temp * 10) / 10;
+            document.getElementById('weatherTemp').innerText = `${temp}°C`;
+
+            const weatherId = data.weather[0].id;
+            let emoji = '☀️';
+            if (weatherId >= 200 && weatherId < 300) emoji = '⛈️';
+            else if (weatherId >= 300 && weatherId < 600) emoji = '🌧️';
+            else if (weatherId >= 600 && weatherId < 700) emoji = '❄️';
+            else if (weatherId >= 700 && weatherId < 800) emoji = '🌫️';
+            else if (weatherId === 800) emoji = '☀️';
+            else if (weatherId > 800) emoji = '☁️';
+
+            const description = data.weather[0].description;
+            document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" id="weatherIcon" class="emoji-font">${emoji}</span> ${description}`;
+            document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">💧</span> 습도 ${data.main.humidity}%</span> <span><span class="emoji-font">💨</span> 풍속 ${data.wind.speed}m/s</span>`;
+        } catch {
+            document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" class="emoji-font">⚠️</span> 날씨 로드 실패`;
+        }
+    }
+
+    window.onload = function() {
+    checkUserAuth();
+    listenToFirebase();
+    initWeather();
+
+    // 💡 [안전장치] 만약 어떤 이유로든 로딩이 길어지면 3초 후 강제로 로딩창을 닫음
+    setTimeout(() => {
+        hideLoading();
+    }, 3000);
+};
+    </script>
+</body>
+</html>

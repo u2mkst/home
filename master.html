@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K&P 수학입시학원 마스터</title>
+    
+    <!-- Firebase & CryptoJS -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- 폰트 2종 적용: Plus Jakarta Sans (헤더/강조용), Pretendard (본문/입력용) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root {
+            --font-title: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-body: 'Pretendard', -apple-system, sans-serif;
+
+            /* Apple Liquid Glass Theme System */
+            --glass-card: rgba(255, 255, 255, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shine: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.15) 100%);
+            
+            --primary: #4f46e5;
+            --primary-light: rgba(79, 70, 229, 0.1);
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            
+            --shadow-glass: 0 16px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 50%, #e2e8f0 100%);
+            margin: 0; 
+            padding: 32px 16px 40px;
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start;
+            min-height: 100vh; 
+            color: var(--text-main); 
+        }
+        
+        .container { 
+            width: 100%; 
+            max-width: 460px; 
+        }
+        
+        /* 헤더 스타일 */
+        .admin-title {
+            font-family: var(--font-title);
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            color: var(--text-main);
+            margin-bottom: 6px;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+        .admin-subtitle {
+            font-family: var(--font-title);
+            font-size: 0.88rem;
+            color: var(--primary);
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+        }
+        .header-wrapper {
+            text-align: center;
+        }
+
+        /* 리퀴드 글래스 카드 커스텀 */
+        .panel-card {
+            position: relative;
+            background: var(--glass-card);
+            padding: 22px 20px; 
+            border-radius: 24px; 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); 
+            box-shadow: var(--shadow-glass);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .panel-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: var(--glass-shine);
+        }
+
+        .panel-card h3 {
+            font-family: var(--font-title);
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding-bottom: 10px;
+        }
+
+        /* 1순위 강조 카드 */
+        .priority-card {
+            border: 1.5px solid rgba(79, 70, 229, 0.4);
+            background: rgba(255, 255, 255, 0.65);
+        }
+
+        /* 폼 제어 */
+        .form-group {
+            margin-bottom: 14px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: all 0.25s ease;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+        }
+        textarea.form-control { resize: none; }
+
+        /* 대형 달력 스타일 */
+        .calendar-input {
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            background: rgba(255, 255, 255, 0.85);
+            cursor: pointer;
+        }
+
+        /* 예약 상태 확인 창 */
+        .quote-status-box {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            margin-top: 12px;
+            min-height: 80px;
+        }
+        .status-empty {
+            color: var(--text-sub);
+            text-align: center;
+            font-size: 0.88rem;
+            padding: 16px 0;
+            line-height: 1.5;
+        }
+        .status-exist {
+            text-align: left;
+        }
+        .status-date-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-family: var(--font-title);
+            margin-bottom: 8px;
+        }
+
+        /* 버튼 시스템 */
+        .btn-block {
+            font-family: var(--font-title);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            margin-bottom: 10px;
+            text-align: center;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .btn-block:hover { transform: translateY(-2px); }
+        .btn-block:active { transform: translateY(0); }
+        
+        .btn-purple { background-color: var(--primary); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
+        .btn-green { background-color: var(--success); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); }
+        .btn-orange { background-color: var(--warning); color: white; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25); }
+        .btn-red { 
+            background: rgba(239, 68, 68, 0.15); 
+            color: var(--danger); 
+            border: 1px solid rgba(239, 68, 68, 0.2); 
+            box-shadow: none; 
+        }
+        .btn-red:hover { background: var(--danger); color: white; }
+        .btn-gray { background-color: rgba(255, 255, 255, 0.6); color: var(--text-sub); border: 1px solid var(--glass-border); box-shadow: none; }
+
+        .btn-group-flex { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-group-flex .btn-block { margin-bottom: 0; padding: 10px; font-size: 0.85rem; }
+
+        /* 피드 리스트 카테고리 */
+        .feed-container { display: flex; flex-direction: column; gap: 12px; }
+        .feed-item {
+            background: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: left;
+        }
+        .feed-badge {
+            display: inline-block;
+            font-family: var(--font-title);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .badge-inquiry { background-color: var(--primary-light); color: var(--primary); }
+        .badge-suggest { background-color: rgba(16, 185, 129, 0.12); color: var(--success); }
+
+        .feed-meta { font-size: 0.82rem; color: var(--text-sub); margin-bottom: 6px; }
+        .feed-meta b { color: var(--text-main); }
+        .feed-body { 
+            font-size: 0.9rem; 
+            color: var(--text-main); 
+            line-height: 1.45; 
+            white-space: pre-wrap; 
+            background: rgba(255, 255, 255, 0.85); 
+            padding: 12px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255, 255, 255, 0.9); 
+            margin-bottom: 8px; 
+        }
+        .feed-sub { font-size: 0.8rem; color: var(--text-sub); font-style: italic; margin-bottom: 10px; }
+
+        .no-data { text-align: center; color: var(--text-sub); padding: 30px 0; font-size: 0.88rem; }
+        
+        .bottom-logout-btn {
+            font-family: var(--font-title);
+            background: rgba(255, 255, 255, 0.4); 
+            color: var(--text-sub); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.85rem; 
+            font-weight: 700;
+            cursor: pointer; 
+            margin-top: 10px;
+            transition: all 0.2s ease;
+        }
+        .bottom-logout-btn:hover { background: rgba(255, 255, 255, 0.7); color: var(--text-main); }
+
+        #login-view { display: block; }
+        #admin-view { display: none; }
+
+        /* 모달 레이아웃 */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(8px); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: rgba(255, 255, 255, 0.85); width: 90%; max-width: 380px; padding: 24px;
+            border-radius: 28px; backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- 로그인 뷰 -->
+        <div id="login-view" class="panel-card" style="margin-top: 30px; text-align: center;">
+            <div class="admin-title">K&P 마스터</div>
+            <div class="admin-subtitle" style="margin-bottom: 20px;">총관리자 인증</div>
+            
+            <div class="form-group">
+                <label for="admin-email">관리자 이메일</label>
+                <input type="email" id="admin-email" class="form-control" placeholder="example@email.com">
+            </div>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="admin-password">비밀번호</label>
+                <input type="password" id="admin-password" class="form-control" placeholder="••••••••" onkeyup="if(window.event.keyCode==13){handleAdminLogin()}">
+            </div>
+            
+            <button class="btn-block btn-purple" onclick="handleAdminLogin()">원장님 로그인</button>
+        </div>
+
+        <!-- 메인 관리자 뷰 -->
+        <div id="admin-view">
+            <div class="header-wrapper">
+                <div class="admin-title">총 관리센터</div>
+                <div id="welcome-bar" class="admin-subtitle">원격 제어 연결됨</div>
+            </div>
+
+            <div class="panel-card priority-card">
+                <h3>📅 [1순위] 예약 명언 달력 조회</h3>
+                
+                <div class="form-group">
+                    <label style="color: var(--primary); font-weight: 700;">조회 및 예약할 날짜 선택</label>
+                    <input type="date" id="quote-date" class="form-control calendar-input" onchange="fetchReservedQuote(this.value)">
+                </div>
+
+                <div id="quote-status-area" class="quote-status-box">
+                    <div class="status-empty">위 달력에서 조회할 날짜를 클릭해 주세요.</div>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <h3>💡 명언 예약 및 수정</h3>
+                <div class="form-group">
+                    <label for="quote-message">명언 문구</label>
+                    <textarea id="quote-message" class="form-control" rows="2" placeholder="선택한 날짜에 노출될 문구를 입력하세요."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="quote-author">발언자 (이름)</label>
+                    <input type="text" id="quote-author" class="form-control" placeholder="예: 아인슈타인, 원장님">
+                </div>
+                <div class="form-group" style="margin-bottom: 18px;">
+                    <label for="quote-profile">발언자 설명 (선택)</label>
+                    <input type="text" id="quote-profile" class="form-control" placeholder="예: 물리학자, 졸업생">
+                </div>
+                
+                <button class="btn-block btn-green" onclick="saveManualQuoteData()">선택 날짜 명언으로 확정 등록</button>
+            </div>
+
+            <div class="panel-card">
+                <h3>📢 메인 공지 및 전광판</h3>
+                
+                <div class="form-group">
+                    <label for="input-notice">학생 메인 공지사항 (비우면 팝업 숨김)</label>
+                    <textarea id="input-notice" class="form-control" rows="3" placeholder="휴강 정보 및 주요 일정을 입력하세요."></textarea>
+                </div>
+                <button class="btn-block btn-purple" onclick="saveNoticeData()">공지사항 즉시 배포</button>
+                
+                <div style="height: 10px;"></div>
+                
+                <div class="form-group">
+                    <label for="input-reminder">하단 흐르는 긴급 전광판 문구 (비우면 숨김)</label>
+                    <input type="text" id="input-reminder" class="form-control" placeholder="텍스트가 좌측으로 자막 방송됩니다.">
+                </div>
+                <button class="btn-block btn-orange" onclick="saveReminderData()">전광판 배너 적용</button>
+            </div>
+
+            <div class="panel-card">
+                <h3>📬 실시간 알림 수신함</h3>
+                <div id="feed-container-list" class="feed-container">
+                    <div class="no-data">수신 대기 중인 문의 사항이 없습니다.</div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button class="bottom-logout-btn" onclick="handleAdminLogout()">관리자 로그아웃</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 명언 게시 모달 -->
+    <div id="publishDateModal" class="modal-overlay">
+        <div class="modal-box">
+            <h4 style="font-family: var(--font-title); margin-top: 0; color: var(--text-main); font-size: 1.1rem; font-weight:700;">💡 제안 명언 배포 날짜 선택</h4>
+            <p style="font-size: 0.85rem; color: var(--text-sub); line-height: 1.4; margin-bottom:16px;">학생이 제안한 문구를 게시할 날짜를 지정합니다.</p>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="modal-target-date">명언 게시 날짜</label>
+                <input type="date" id="modal-target-date" class="form-control calendar-input" style="font-size:1rem;">
+            </div>
+            <div class="btn-group-flex">
+                <button class="btn-block btn-gray" onclick="closePublishModal()">취소</button>
+                <button class="btn-block btn-green" onclick="commitStudentQuoteToMain()">게시하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SECRET_KEY = "u2mkst!";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+            authDomain: "ksthome-76889.firebaseapp.com",
+            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+            projectId: "ksthome-76889",
+            storageBucket: "ksthome-76889.firebasestorage.app",
+            messagingSenderId: "411945142173",
+            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+            measurementId: "G-72TJ0364MJ"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        let targetQuoteCache = null; 
+
+        function decryptAES(cipherText) {
+            if (!cipherText) return "";
+            try {
+                const cleanCipherText = cipherText.toString().trim();
+                if (!cleanCipherText.startsWith("U2FsdGVkX1")) return cleanCipherText;
+                const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
+                return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText; 
+            } catch (e) {
+                console.error("복호화 실패:", e);
+                return cipherText; 
+            }
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('admin-view').style.display = 'block';
+                document.getElementById('welcome-bar').innerText = `${user.email} 연결됨`;
+                
+                const todayStr = new Date().toISOString().substring(0, 10);
+                document.getElementById('quote-date').value = todayStr;
+                fetchReservedQuote(todayStr);
+                
+                initAdminDataFeed();
+            } else {
+                document.getElementById('login-view').style.display = 'block';
+                document.getElementById('admin-view').style.display = 'none';
+            }
+        });
+
+        function fetchReservedQuote(selectedDate) {
+            const statusBox = document.getElementById('quote-status-area');
+            if(!selectedDate) {
+                statusBox.innerHTML = '<div class="status-empty">달력에서 날짜를 선택해 주세요.</div>';
+                return;
+            }
+
+            statusBox.innerHTML = '<div class="status-empty">데이터 조회 중...</div>';
+
+            database.ref(`dailyQuotes/${selectedDate}`).once('value', (snapshot) => {
+                if(snapshot.exists()) {
+                    const data = snapshot.val();
+                    statusBox.innerHTML = `
+                        <div class="status-exist">
+                            <span class="status-date-badge">📋 ${selectedDate} 예약 완료</span>
+                            <div style="font-size:0.95rem; font-weight:bold; color:var(--text-main); margin: 6px 0;">"${data.message}"</div>
+                            <div style="font-size:0.8rem; color:var(--text-sub);">👤 인물: ${data.author} (${data.authorProfile || '-'})</div>
+                            <button class="btn-block btn-red" style="padding:6px; margin-top:10px; font-size:0.78rem; border-radius:10px;" onclick="deleteReservedQuote('${selectedDate}')">예약 취소</button>
+                        </div>
+                    `;
+                    document.getElementById('quote-message').value = data.message;
+                    document.getElementById('quote-author').value = data.author;
+                    document.getElementById('quote-profile').value = data.authorProfile === "-" ? "" : data.authorProfile;
+                } else {
+                    statusBox.innerHTML = `
+                        <div class="status-empty" style="color:var(--warning);">
+                            📅 ${selectedDate}에는 예약된 명언이 없습니다.<br>
+                            <span style="font-size:0.78rem; color:var(--text-sub);">아래 폼에서 새로 예약을 등록해 보세요.</span>
+                        </div>
+                    `;
+                    document.getElementById('quote-message').value = '';
+                    document.getElementById('quote-author').value = '';
+                    document.getElementById('quote-profile').value = '';
+                }
+            });
+        }
+
+        function deleteReservedQuote(targetDate) {
+            if(confirm(`${targetDate} 일자의 명언 예약을 완전히 취소 삭제할까요?`)) {
+                database.ref(`dailyQuotes/${targetDate}`).remove()
+                    .then(() => {
+                        alert("명언 예약이 취소되었습니다.");
+                        fetchReservedQuote(targetDate);
+                    })
+                    .catch(err => alert("삭제 에러: " + err.message));
+            }
+        }
+
+        function handleAdminLogin() {
+            const email = document.getElementById('admin-email').value.trim();
+            const password = document.getElementById('admin-password').value.trim();
+            if (!email || !password) { alert("이메일과 비밀번호를 입력하세요."); return; }
+            auth.signInWithEmailAndPassword(email, password).catch(err => {
+                alert("인증 실패: " + err.message);
+            });
+        }
+
+        function handleAdminLogout() {
+            if(confirm("로그아웃 하시겠습니까?")) {
+                auth.signOut().then(() => alert("로그아웃되었습니다."));
+            }
+        }
+
+        function initAdminDataFeed() {
+            database.ref('notice').once('value', (snapshot) => {
+                if(snapshot.exists()) document.getElementById('input-notice').value = snapshot.val();
+            });
+            database.ref('reminder').once('value', (snapshot) => {
+                if(snapshot.exists()) document.getElementById('input-reminder').value = snapshot.val();
+            });
+
+            database.ref('suggestions').orderByChild('timestamp').on('value', (snapshot) => {
+                const listContainer = document.getElementById('feed-container-list');
+                listContainer.innerHTML = '';
+
+                if (!snapshot.exists()) {
+                    listContainer.innerHTML = '<div class="no-data">수신된 알림 내역이 비어 있습니다.</div>';
+                    return;
+                }
+
+                let itemsHTML = [];
+                snapshot.forEach((child) => {
+                    const key = child.key;
+                    const val = child.val();
+
+                    const realContent = decryptAES(val.content);
+                    const realAuthor = val.author ? decryptAES(val.author) : "";
+                    const realProfile = val.authorProfile ? decryptAES(val.authorProfile) : "";
+
+                    const isSuggestion = (val.category === "오늘의 한마디 제안");
+                    const badgeClass = isSuggestion ? "badge-suggest" : "badge-inquiry";
+                    const badgeText = isSuggestion ? "💡 오늘의 한마디 제안" : "🏫 학원 문의사항";
+
+                    let subInfoRow = '';
+                    if (isSuggestion) {
+                        const profileString = realProfile ? ` (${realProfile})` : "";
+                        subInfoRow = `<div class="feed-sub">말한 사람: <b>${realAuthor}</b>${profileString}</div>`;
+                    }
+
+                    let commandButtons = `<button class="btn-block btn-red" onclick="deleteFeedItem('${key}')">기록 삭제</button>`;
+                    if (isSuggestion) {
+                        commandButtons = `
+                            <button class="btn-block btn-green" onclick="openPublishBridgeModal('${key}', '${realContent.replace(/'/g, "\\'")}', '${realAuthor.replace(/'/g, "\\'")}', '${realProfile.replace(/'/g, "\\'")}')">명언 게시</button>
+                            ${commandButtons}
+                        `;
+                    }
+
+                    const template = `
+                        <div class="feed-item">
+                            <div class="feed-badge ${badgeClass}">${badgeText}</div>
+                            <div class="feed-meta">학생: <b>${val.studentName}</b> (${val.schoolName || '미지정'})</div>
+                            <div class="feed-body">${realContent}</div>
+                            ${subInfoRow}
+                            <div class="btn-group-flex">
+                                ${commandButtons}
+                            </div>
+                        </div>
+                    `;
+                    itemsHTML.unshift(template);
+                });
+                listContainer.innerHTML = itemsHTML.join('');
+            });
+        }
+
+        function saveManualQuoteData() {
+            const date = document.getElementById('quote-date').value;
+            const message = document.getElementById('quote-message').value.trim();
+            const author = document.getElementById('quote-author').value.trim();
+            const profile = document.getElementById('quote-profile').value.trim();
+
+            if (!date || !message || !author) { alert("달력에서 날짜를 선택하고 문구와 발언자를 작성해 주세요."); return; }
+
+            database.ref(`dailyQuotes/${date}`).set({
+                message: message,
+                author: author,
+                authorProfile: profile || "-"
+            }).then(() => {
+                alert(`${date} 일자 명언 예약 등록이 완료되었습니다.`);
+                fetchReservedQuote(date);
+            }).catch(err => alert("배포 오류: " + err.message));
+        }
+
+        function saveNoticeData() {
+            const txt = document.getElementById('input-notice').value.trim();
+            database.ref('notice').set(txt).then(() => alert("메인 공지 배포 완료")).catch(err => alert(err.message));
+        }
+
+        function saveReminderData() {
+            const txt = document.getElementById('input-reminder').value.trim();
+            database.ref('reminder').set(txt).then(() => alert("전광판 배너 적용 완료")).catch(err => alert(err.message));
+        }
+
+        function deleteFeedItem(key) {
+            if (confirm("해당 건을 수신함에서 삭제하시겠습니까?")) {
+                database.ref(`suggestions/${key}`).remove().then(() => alert("삭제 완료"));
+            }
+        }
+
+        function openPublishBridgeModal(id, content, author, profile) {
+            targetQuoteCache = { id, content, author, profile };
+            document.getElementById('modal-target-date').value = new Date().toISOString().substring(0, 10);
+            document.getElementById('publishDateModal').style.display = 'flex';
+        }
+
+        document.getElementById('publishDateModal').addEventListener('click', function(e) {
+            if(e.target === this) closePublishModal();
+        });
+
+        function closePublishModal() {
+            document.getElementById('publishDateModal').style.display = 'none';
+            targetQuoteCache = null;
+        }
+
+        function commitStudentQuoteToMain() {
+            const selectedDate = document.getElementById('modal-target-date').value;
+            if(!selectedDate) { alert("날짜를 선택해 주세요."); return; }
+            if(!targetQuoteCache) return;
+
+            database.ref(`dailyQuotes/${selectedDate}`).set({
+                message: targetQuoteCache.content,
+                author: targetQuoteCache.author,
+                authorProfile: targetQuoteCache.profile || "-"
+            }).then(() => {
+                alert(`${selectedDate} 일자에 명언이 성공적으로 게시 예약되었습니다.`);
+                closePublishModal();
+                fetchReservedQuote(selectedDate);
+            }).catch(err => alert("게시 에러: " + err.message));
+        }
+    </script>
+</body>
+</html>

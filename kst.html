@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K&P 수학입시학원 - KST 시스템 관리</title>
+    
+    <!-- Firebase & CryptoJS -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- 프리미엄 폰트 시스템 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+
+    <style>
+        :root {
+            --font-title: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-body: 'Pretendard', -apple-system, sans-serif;
+
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-glow: rgba(79, 70, 229, 0.25);
+            
+            --bg-gradient: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.25) 0%, transparent 40%),
+                           radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.2) 0%, transparent 40%),
+                           linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --radius-lg: 28px;
+            --radius-md: 16px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: var(--font-body); 
+            background: var(--bg-gradient);
+            margin: 0; padding: 24px 16px; color: var(--text-main);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            box-sizing: border-box;
+        }
+
+        /* 리퀴드 글라스(Liquid Glass) 카드 스타일 */
+        .glass-card { 
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.35) 100%); 
+            padding: 36px 28px;
+            border-radius: var(--radius-lg); 
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08), 
+                        inset 0 1px 1px rgba(255, 255, 255, 0.9),
+                        inset 0 -1px 2px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+            animation: glassFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes glassFadeIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 14px;
+            background: rgba(79, 70, 229, 0.12);
+            color: var(--primary);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: 0.8px;
+            backdrop-filter: blur(4px);
+        }
+
+        h1 { 
+            font-family: var(--font-title);
+            margin: 0; 
+            color: var(--text-main); 
+            font-size: 1.55rem; 
+            font-weight: 800; 
+            letter-spacing: -0.5px;
+        }
+
+        p.sub-text {
+            font-size: 0.86rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            margin-bottom: 0;
+            line-height: 1.4;
+        }
+
+        /* 리퀴드 폼 구성 요소 */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 18px;
+        }
+
+        label { 
+            display: block; 
+            font-weight: 700; 
+            font-size: 0.83rem; 
+            color: #334155; 
+            margin-bottom: 8px; 
+            padding-left: 2px; 
+        }
+
+        input { 
+            width: 100%; 
+            padding: 14px 18px; 
+            border: 1px solid rgba(255, 255, 255, 0.7); 
+            border-radius: var(--radius-md); 
+            box-sizing: border-box; 
+            font-size: 0.95rem; 
+            font-family: var(--font-body);
+            background: rgba(255, 255, 255, 0.5); 
+            color: var(--text-main); 
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
+        }
+
+        input::placeholder { color: #94a3b8; }
+
+        input:focus { 
+            outline: none; 
+            border-color: var(--primary); 
+            background: rgba(255, 255, 255, 0.85); 
+            box-shadow: 0 0 0 4px var(--primary-glow), inset 0 1px 2px rgba(255, 255, 255, 0.8); 
+        }
+
+        /* 리퀴드 글라스 섹션 박스 */
+        .glass-section {
+            background: rgba(255, 255, 255, 0.45);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+            backdrop-filter: blur(12px);
+        }
+
+        .section-title {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .section-desc {
+            font-size: 0.81rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        /* 리퀴드 버튼 스타일 */
+        .btn {
+            font-family: var(--font-title);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+            box-sizing: border-box;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(79, 70, 229, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-action {
+            text-align: center;
+            margin-top: 24px;
+        }
+        .back-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- 1. 관리자 비밀번호 입력 영역 (아이디 X) -->
+        <div id="authCard" class="glass-card">
+            <div class="header">
+                <span class="badge">SECURITY CHECK</span>
+                <h1>관리자 비밀번호 확인</h1>
+                <p class="sub-text">등록된 관리자 비밀번호를 입력해 주세요.</p>
+            </div>
+
+            <form onsubmit="handleAdminAuth(event)">
+                <div class="form-group">
+                    <label>비밀번호</label>
+                    <input type="password" id="adminPassword" placeholder="비밀번호 입력" required autofocus>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 6px;">인증하고 입장하기</button>
+            </form>
+
+            <div class="footer-action">
+                <a class="back-link" href="./login.html">← 이전 화면으로 돌아가기</a>
+            </div>
+        </div>
+
+        <!-- 2. 인증 성공 후 노출되는 메인 대시보드 영역 -->
+        <div id="dashboardCard" class="glass-card hidden">
+            <div class="header">
+                <span class="badge">SYSTEM ADMIN</span>
+                <h1>KST 관리자 센터</h1>
+                <p class="sub-text">K&P 수학입시학원 키오스크 및 시스템 설정</p>
+            </div>
+
+            <!-- APK 다운로드 섹션 -->
+            <div class="glass-section">
+                <div class="section-title">📱 KIOSK SYSTEM APK</div>
+                <div class="section-desc">
+                    태블릿 및 키오스크 단말기 전용 최신 빌드 설치 파일(.apk)입니다. 다운로드 후 설치를 진행해 주세요.
+                </div>
+                <button class="btn btn-download" onclick="downloadApk()">
+                    💾 최신 APK 설치 파일 다운로드
+                </button>
+            </div>
+
+            <!-- 시스템 바로가기 섹션 -->
+            <div class="glass-section">
+                <div class="section-title">🔗 학원 바로가기 메뉴</div>
+                <div class="btn-group" style="margin-top: 10px;">
+                    <a href="./admin.html" class="btn btn-primary">
+                        ⚙️ 학원 관리자 페이지 (admin.html)
+                    </a>
+                </div>
+            </div>
+
+            <!-- 하단 돌아가기 -->
+            <div class="footer-action">
+                <a class="back-link" href="./login.html">← 이전 화면으로 돌아가기</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+            authDomain: "ksthome-76889.firebaseapp.com",
+            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+            projectId: "ksthome-76889",
+            storageBucket: "ksthome-76889.firebasestorage.app",
+            messagingSenderId: "411945142173",
+            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+            measurementId: "G-72TJ0364MJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // 파이어베이스 기본 관리자 계정 이메일 지정
+        const ADMIN_EMAIL = "admin@kst.com";
+
+        /* 관리자 비밀번호 검증 처리 */
+        function handleAdminAuth(e) {
+            e.preventDefault();
+            const inputPassword = document.getElementById('adminPassword').value.trim();
+
+            auth.signInWithEmailAndPassword(ADMIN_EMAIL, inputPassword)
+                .then((userCredential) => {
+                    // 인증 성공 시 대시보드 출력
+                    document.getElementById('authCard').classList.add('hidden');
+                    document.getElementById('dashboardCard').classList.remove('hidden');
+                })
+                .catch((error) => {
+                    alert("⚠️ 비밀번호 인증에 실패했습니다.\n비밀번호를 확인해 주세요.");
+                });
+        }
+
+        /* APK 다운로드 함수 */
+        function downloadApk() {
+            const apkUrl = "https://u2mkst.github.io/home/kst.apk";
+            window.location.href = apkUrl;
+        }
+    </script>
+</body>
+</html>

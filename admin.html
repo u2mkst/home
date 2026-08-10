@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>K&P 수학입시학원 관리자</title>
+    
+    <!-- Firebase & CryptoJS -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- 폰트 2종 적용: Plus Jakarta Sans (헤더/타이틀용), Pretendard (본문용) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root {
+            --font-title: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-body: 'Pretendard', -apple-system, sans-serif;
+
+            /* Liquid Glass Theme Colors */
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-card: rgba(255, 255, 255, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shine: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 100%);
+            
+            --primary: #4f46e5;
+            --primary-light: rgba(79, 70, 229, 0.1);
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --danger: #ef4444;
+            --success: #10b981;
+            
+            --shadow-glass: 0 16px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: var(--font-body); 
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 50%, #e2e8f0 100%);
+            margin: 0; 
+            padding: 32px 16px; 
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .header-zone {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header-zone h1 {
+            font-family: var(--font-title);
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 0 0 6px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .header-zone p {
+            font-family: var(--font-title);
+            color: var(--primary);
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* 리퀴드 글래스 대시보드 레이아웃 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* 애플 리퀴드 글래스 카스트 효과 */
+        .card { 
+            position: relative;
+            background: var(--glass-card); 
+            padding: 24px; 
+            border-radius: 24px; 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-glass);
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: var(--glass-shine);
+        }
+
+        h2 { 
+            font-family: var(--font-title);
+            margin-top: 0; 
+            color: var(--text-main); 
+            font-size: 1.1rem; 
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding-bottom: 10px;
+        }
+        
+        textarea, input[type="text"], input[type="email"], input[type="password"], select { 
+            font-family: var(--font-body);
+            width: 100%; 
+            padding: 12px 16px; 
+            border: 1px solid rgba(255, 255, 255, 0.8); 
+            border-radius: 14px; 
+            box-sizing: border-box; 
+            margin-bottom: 12px; 
+            font-size: 0.95rem; 
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            color: var(--text-main);
+            transition: all 0.25s ease;
+        }
+
+        textarea:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+        }
+
+        button { 
+            font-family: var(--font-title);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--primary); 
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 18px; 
+            border-radius: 14px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 0.95rem;
+            width: 100%; 
+            margin-bottom: 8px; 
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+        }
+        button:active { transform: translateY(0); }
+
+        .btn-delete { 
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            margin-bottom: 0; 
+            box-shadow: none;
+        }
+        .btn-delete:hover { background: var(--danger); color: #fff; }
+        
+        .btn-logout { 
+            background: rgba(255, 255, 255, 0.4); 
+            color: var(--text-sub); 
+            border: 1px solid var(--glass-border); 
+            box-shadow: none; 
+            font-size: 0.85rem; 
+            padding: 10px; 
+            margin-top: 10px;
+        }
+        .btn-logout:hover { background: rgba(255, 255, 255, 0.7); color: var(--text-main); }
+
+        .reset-teacher-zone { text-align: center; margin-top: 8px; }
+        .btn-reset-teacher { 
+            background: none; 
+            border: none; 
+            color: var(--text-sub); 
+            font-size: 0.8rem; 
+            text-decoration: underline; 
+            cursor: pointer; 
+            padding: 4px; 
+            box-shadow: none;
+            width: auto;
+        }
+        .btn-reset-teacher:hover { color: var(--primary); }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+
+        /* 👥 학생 목록 */
+        .student-list {
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding-right: 4px;
+        }
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 10px 14px;
+            border-radius: 14px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        .student-info { display: flex; flex-direction: column; }
+        .student-name { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+        .student-id { font-size: 0.78rem; color: var(--text-sub); margin-top: 2px; }
+        .btn-note {
+            width: auto; margin-bottom: 0; padding: 6px 12px; font-size: 0.8rem; border-radius: 10px;
+            background: var(--primary-light); color: var(--primary); border: none; font-weight: 700; box-shadow: none;
+        }
+        .btn-note:hover { background: var(--primary); color: white; }
+
+        /* ✉️ 플로팅 메시지 버튼 */
+        .msg-fab {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 60px; height: 60px; border-radius: 50%;
+            background: var(--primary); color: white; border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+            cursor: pointer; display: none; justify-content: center; align-items: center;
+            font-size: 1.5rem; z-index: 999; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .msg-fab:hover { transform: scale(1.1); }
+        .msg-badge {
+            position: absolute; top: -2px; right: -2px;
+            background: var(--danger); color: white;
+            font-size: 0.75rem; font-weight: bold;
+            padding: 3px 7px; border-radius: 10px;
+            border: 2px solid white; display: none;
+        }
+
+        /* 🗂️ 메시지 모달창 */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(8px); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: rgba(255, 255, 255, 0.85); width: 90%; max-width: 450px; padding: 24px;
+            border-radius: 28px; backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); box-sizing: border-box;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-title { font-family: var(--font-title); font-size: 1.15rem; font-weight: 700; color: var(--text-main); }
+        .close-modal { background: none; border: none; font-size: 1.2rem; color: var(--text-sub); cursor: pointer; width: auto; margin: 0; padding: 0; box-shadow: none; }
+        .close-modal:hover { color: var(--text-main); }
+        
+        .msg-list { max-height: 320px; overflow-y: auto; padding-right: 4px; }
+        .msg-item { background: rgba(255, 255, 255, 0.6); padding: 14px; border-radius: 16px; margin-bottom: 12px; font-size: 0.9rem; border-left: 4px solid var(--primary); border-top: 1px solid rgba(255,255,255,0.8); }
+        .msg-item.unread { background: rgba(254, 242, 242, 0.8); border-left-color: var(--danger); }
+        .msg-meta { font-size: 0.78rem; color: var(--text-sub); margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .msg-sender { font-weight: 700; color: var(--text-main); }
+        .msg-body { word-break: break-all; color: var(--text-main); line-height: 1.4; margin-bottom: 8px; }
+
+        /* 답장 폼 */
+        .reply-box { margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.1); }
+        .reply-toggle-btn { background: var(--primary-light); color: var(--primary); border: none; padding: 5px 10px; font-size: 0.75rem; border-radius: 8px; cursor: pointer; width: auto; font-weight: 700; box-shadow: none; }
+        .reply-input-zone { display: none; margin-top: 8px; }
+        .reply-mini-textarea { width: 100%; padding: 8px 10px; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; resize: none; font-size: 0.85rem; box-sizing: border-box; margin-bottom: 6px; background: rgba(255,255,255,0.8); }
+        .reply-send-btn { background: var(--success); color: white; border: none; padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; cursor: pointer; width: auto; box-shadow: none; }
+        .history-list { margin-top: 6px; background: rgba(0, 0, 0, 0.03); padding: 8px 12px; border-radius: 10px; font-size: 0.8rem; color: var(--text-sub); }
+        .history-item { margin-bottom: 4px; line-height: 1.3; }
+        .history-item:last-child { margin-bottom: 0; }
+        .history-teacher { font-weight: bold; color: var(--primary); }
+
+        .no-msg { text-align: center; color: var(--text-sub); padding: 30px 0; font-size: 0.9rem; }
+
+        /* 💬 실시간 대화방 */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 280px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 18px;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+        .chat-history-zone {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 4px;
+            margin-bottom: 10px;
+        }
+        .chat-no-data {
+            text-align: center;
+            color: var(--text-sub);
+            padding: 40px 0;
+            font-size: 0.85rem;
+            margin: auto;
+        }
+        .admin-bubble {
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            max-width: 80%;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+        .admin-bubble.student {
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-main);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .admin-bubble.teacher {
+            background: var(--primary);
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .admin-chat-meta {
+            font-size: 0.72rem;
+            color: var(--text-sub);
+            margin-bottom: 3px;
+            display: block;
+        }
+        .admin-chat-meta.teacher { text-align: right; }
+        .chat-sender-name { font-weight: 700; color: var(--text-main); }
+        .chat-sender-name.me { color: var(--primary); }
+        
+        .chat-input-row { display: flex; gap: 8px; }
+        .chat-input-row input { flex: 1; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.8); border-radius: 12px; font-size: 0.88rem; margin-bottom: 0; }
+        .chat-send-btn { width: auto; background: var(--primary); color: white; border: none; padding: 0 16px; border-radius: 12px; font-weight: bold; margin-bottom: 0; font-size: 0.85rem; box-shadow: none; }
+
+        .device-info-header {
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+
+        #loginCard { max-width: 400px; margin: 40px auto 0; }
+        #controlPanel { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-zone">
+            <h1>학생 태블릿 원격 제어</h1>
+            <p id="currentTeacherTitle">K&P 수학입시학원</p>
+        </div>
+
+        <!-- 로그인 카드 -->
+        <div id="loginCard" class="card">
+            <h2>🔒 관리자 인증</h2>
+            
+            <label>선생님 선택</label>
+            <select id="adminTeacher" required>
+                <option value="" disabled selected>선생님 선택</option>
+                <option value="김동진">김동진 선생님</option>
+                <option value="이주희">이주희 선생님</option>
+                <option value="차현준">차현준 선생님</option>
+                <option value="권준수">권준수 선생님</option>
+                <option value="박다희">박다희 선생님</option>
+                <option value="정찬호">정찬호 선생님</option>
+                <option value="김영호">김영호 선생님</option>
+            </select>
+
+            <label>이메일</label>
+            <input type="email" id="adminEmail" placeholder="example@u2m.com">
+            
+            <label>비밀번호</label>
+            <input type="password" id="adminPassword" placeholder="비밀번호 입력" onkeyup="if(window.event.keyCode==13){handleLogin()}">
+            
+            <button onclick="handleLogin()">로그인</button>
+        </div>
+
+        <!-- 메인 제어 패널 -->
+        <div id="controlPanel">
+            <div class="dashboard-grid">
+                
+                <!-- 좌측: 학생 및 대화방 -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="card">
+                        <h2>👥 담당 학생 목록</h2>
+                        <input type="text" id="studentSearchInput" placeholder="학생 이름 검색..." oninput="filterStudents()">
+                        <div id="studentListZone" class="student-list"></div>
+                    </div>
+
+                    <div class="card" id="adminChatCard">
+                        <h2>💬 1:1 대화방</h2>
+                        
+                        <div class="device-info-header">
+                            <label style="color:var(--text-main); margin-bottom:0; font-weight:bold;">선택 학생: 
+                                <span id="selectedStudentName" style="color:var(--primary);">없음</span> 
+                            </label>
+                        </div>
+
+                        <div class="chat-container">
+                            <div id="adminChatHistoryZone" class="chat-history-zone">
+                                <div class="chat-no-data">학생 목록에서 [대화방]을 선택해 주세요.</div>
+                            </div>
+                            <div class="chat-input-row">
+                                <input type="text" id="teacherReplyInput" placeholder="메시지 입력..." onkeydown="if(event.keyCode==13) sendTeacherReply()">
+                                <button class="chat-send-btn" onclick="sendTeacherReply()">전송</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 우측: 원격 제어 -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="card">
+                        <h2>📢 전체 화면 팝업</h2>
+                        <textarea id="noticeInput" rows="4" placeholder="태블릿 정중앙에 표시할 공지사항을 입력하세요. (비우고 전송 시 팝업 닫힘)"></textarea>
+                        <button onclick="publishData('notice', 'noticeInput')">즉시 팝업 전송</button>
+                    </div>
+
+                    <div class="card">
+                        <h2>🔔 하단 자막 방송</h2>
+                        <input type="text" id="reminderInput" placeholder="하단 자막 메시지 입력...">
+                        <button onclick="publishData('reminder', 'reminderInput')">자막 전송 / 갱신</button>
+                        <button class="btn-delete" onclick="clearData('reminder', 'reminderInput')">자막 방송 종료</button>
+                    </div>
+
+                    <div class="card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+                        <button class="btn-logout" onclick="handleLogout()">로그아웃</button>
+                        
+                        <div class="reset-teacher-zone">
+                            <button class="btn-reset-teacher" onclick="resetTeacherConfig()">담당 선생님 재선택</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 플로팅 메시지 버튼 -->
+    <button id="msgFabBtn" class="msg-fab" onclick="openMessageModal()">
+        ✉️
+        <span id="msgBadgeCount" class="msg-badge">0</span>
+    </button>
+
+    <!-- 메시지 모달 (중복 닫기 버튼 제거됨) -->
+    <div id="messageModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">📬 받은 메시지</div>
+                <button class="close-modal" onclick="closeMessageModal()">✕</button>
+            </div>
+            <div id="modalMsgList" class="msg-list"></div>
+        </div>
+    </div>
+
+    <!-- Firebase 및 기능 로직 (100% 동일 유지) -->
+    <script>
+        const SECRET_KEY = "u2mkst!";
+
+        function encryptAES(text) {
+            if (!text) return "";
+            return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
+        }
+
+        function decryptAES(cipherText) {
+            if (!cipherText) return "";
+            try {
+                let cleanText = String(cipherText).trim();
+                if (cleanText.startsWith('"') && cleanText.endsWith('"')) {
+                    cleanText = cleanText.slice(1, -1);
+                } else if (cleanText.startsWith("'") && cleanText.endsWith("'")) {
+                    cleanText = cleanText.slice(1, -1);
+                }
+                cleanText = cleanText.replace(/ /g, '+');
+                const bytes = CryptoJS.AES.decrypt(cleanText, SECRET_KEY);
+                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+                return decryptedText || cipherText;
+            } catch (e) {
+                console.error("복호화 예외 발생:", e);
+                return cipherText;
+            }
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+            authDomain: "ksthome-76889.firebaseapp.com",
+            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+            projectId: "ksthome-76889",
+            storageBucket: "ksthome-76889.firebasestorage.app",
+            messagingSenderId: "411945142173",
+            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+            measurementId: "G-72TJ0364MJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        
+        const auth = firebase.auth();
+        const database = firebase.database();
+        let messageListener = null; 
+        let allStudents = []; 
+
+        let currentSelectedStudentUid = null;
+        let currentSelectedStudentName = "";
+        let adminChatListeners = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTeacher = localStorage.getItem('admin_teacher');
+            const savedEmail = localStorage.getItem('admin_email');
+            const savedPassword = localStorage.getItem('admin_password');
+
+            if (savedTeacher) {
+                document.getElementById('adminTeacher').value = savedTeacher;
+            }
+            if (savedTeacher && savedEmail && savedPassword) {
+                auth.signInWithEmailAndPassword(savedEmail, savedPassword).catch((err) => {
+                    clearLocalStorageAuth();
+                });
+            }
+        });
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('loginCard').style.display = 'none';
+                document.getElementById('controlPanel').style.display = 'block';
+                document.getElementById('msgFabBtn').style.display = 'flex'; 
+                
+                const currentTeacher = localStorage.getItem('admin_teacher') || "관리자";
+                document.getElementById('currentTeacherTitle').innerText = `${currentTeacher} 선생님`;
+                
+                loadCurrentStatus();
+                fetchTeacherStudents(currentTeacher); 
+                listenToIncomingMessages(currentTeacher); 
+            } else {
+                document.getElementById('controlPanel').style.display = 'none';
+                document.getElementById('loginCard').style.display = 'block';
+                document.getElementById('msgFabBtn').style.display = 'none';
+                document.getElementById('currentTeacherTitle').innerText = "K&P 수학입시학원";
+                
+                if (messageListener) {
+                    database.ref('messages').off('value', messageListener);
+                }
+                detachAdminChatListeners();
+                resetChatRoomUI();
+            }
+        });
+
+        function fetchTeacherStudents(teacherName) {
+            database.ref('students').orderByChild('teacher').equalTo(teacherName).on('value', (snapshot) => {
+                allStudents = [];
+                const data = snapshot.val();
+                if (data) {
+                    for (let id in data) {
+                        const studentData = data[id];
+                        const decryptedName = decryptAES(studentData.name);
+                        allStudents.push({ 
+                            id, 
+                            ...studentData, 
+                            name: decryptedName 
+                        });
+                    }
+                }
+                filterStudents(); 
+            });
+        }
+
+        function filterStudents() {
+            const keyword = document.getElementById('studentSearchInput').value.trim().toLowerCase();
+            const listZone = document.getElementById('studentListZone');
+            
+            if (!listZone) return;
+            listZone.innerHTML = '';
+
+            if (allStudents.length === 0) {
+                listZone.innerHTML = '<div class="no-msg">등록된 담당 학생이 없습니다.</div>';
+                return;
+            }
+
+            const filtered = allStudents.filter(student => {
+                if (keyword === "") return true; 
+                return student.name && student.name.toLowerCase().includes(keyword); 
+            });
+
+            if (filtered.length === 0) {
+                listZone.innerHTML = '<div class="no-msg">일치하는 학생이 없습니다.</div>';
+                return;
+            }
+
+            filtered.forEach(student => {
+                const studentIdStr = student.u2mId ? student.u2mId : '없음';
+
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div class="student-info">
+                        <span class="student-name">👤 ${student.name}</span>
+                        <span class="student-id">ID: ${studentIdStr}</span>
+                    </div>
+                    <button class="btn-note" onclick="loadStudentChatRoom('${student.id}', '${student.name}')">대화방</button>
+                `;
+                listZone.appendChild(item);
+            });
+        }
+
+        function loadStudentChatRoom(studentUid, studentName) {
+            currentSelectedStudentUid = studentUid;
+            currentSelectedStudentName = studentName;
+            document.getElementById('selectedStudentName').innerText = studentName;
+            
+            detachAdminChatListeners();
+
+            let studentQuestions = [];
+            let teacherReplies = [];
+
+            const qRef = database.ref('messages').orderByChild('studentUid').equalTo(studentUid);
+            adminChatListeners.push({ ref: qRef, type: 'value' });
+            qRef.on('value', (snapshot) => {
+                studentQuestions = [];
+                const updates = {};
+                
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const val = child.val();
+                        let decryptedMsg = decryptAES(val.message); 
+                        studentQuestions.push({ id: child.key, origin: 'student', ...val, message: decryptedMsg });
+                        
+                        if (val.read === false) {
+                            updates[`/messages/${child.key}/read`] = true;
+                        }
+                    });
+                }
+                if (Object.keys(updates).length > 0) {
+                    database.ref().update(updates);
+                }
+                renderAdminChatFeed(studentQuestions, teacherReplies);
+            });
+
+            const rRef = database.ref(`student_messages/${studentUid}`);
+            adminChatListeners.push({ ref: rRef, type: 'value' });
+            rRef.on('value', (snapshot) => {
+                teacherReplies = [];
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const val = child.val();
+                        let decryptedMsg = decryptAES(val.message); 
+                        teacherReplies.push({ id: child.key, origin: 'teacher', ...val, message: decryptedMsg });
+                    });
+                }
+                renderAdminChatFeed(studentQuestions, teacherReplies);
+            });
+        }
+
+        function renderAdminChatFeed(questions, replies) {
+            const zoneEl = document.getElementById('adminChatHistoryZone');
+            if (!zoneEl) return;
+
+            const totalChat = [...questions, ...replies];
+            totalChat.sort((a, b) => {
+                const tA = (typeof a.timestamp === 'number') ? a.timestamp : Date.now();
+                const tB = (typeof b.timestamp === 'number') ? b.timestamp : Date.now();
+                return tA - tB;
+            });
+
+            if (totalChat.length === 0) {
+                zoneEl.innerHTML = '<div class="chat-no-data">주고받은 대화가 없습니다.</div>';
+                return;
+            }
+
+            zoneEl.innerHTML = '';
+
+            totalChat.forEach(chat => {
+                const ts = (typeof chat.timestamp === 'number') ? chat.timestamp : Date.now();
+                const date = new Date(ts);
+                const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column';
+                wrapper.style.width = '100%';
+
+                let rawMessage = chat.message || "";
+                if(rawMessage.startsWith("[답장완료] ")) {
+                    rawMessage = rawMessage.replace("[답장완료] ", "");
+                }
+
+                if (chat.origin === 'student') {
+                    wrapper.innerHTML = `
+                        <span class="admin-chat-meta"><span class="chat-sender-name">👤 ${currentSelectedStudentName}</span> (${timeStr})</span>
+                        <div class="admin-bubble student">${rawMessage}</div>
+                    `;
+                } else {
+                    wrapper.innerHTML = `
+                        <span class="admin-chat-meta teacher"><span class="chat-sender-name me">나 (${chat.teacher || '선생님'})</span> (${timeStr})</span>
+                        <div class="admin-bubble teacher">${rawMessage}</div>
+                    `;
+                }
+                zoneEl.appendChild(wrapper);
+            });
+
+            zoneEl.scrollTop = zoneEl.scrollHeight;
+        }
+
+        function sendTeacherReply() {
+            const replyInput = document.getElementById('teacherReplyInput');
+            const text = replyInput.value.trim();
+            const teacherName = localStorage.getItem('admin_teacher') || "선생님";
+
+            if (!currentSelectedStudentUid) {
+                alert("대화할 학생을 먼저 선택해 주세요.");
+                return;
+            }
+            if (!text) return;
+
+            const encryptedMessage = encryptAES(`[답장완료] ${text}`); 
+
+            const replyData = {
+                teacher: teacherName,
+                message: encryptedMessage,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                read: false
+            };
+
+            database.ref(`student_messages/${currentSelectedStudentUid}`).push(replyData)
+                .then(() => {
+                    replyInput.value = '';
+                })
+                .catch(err => alert("전송 실패: " + err.message));
+        }
+
+        function detachAdminChatListeners() {
+            adminChatListeners.forEach(item => item.ref.off(item.type));
+            adminChatListeners = [];
+        }
+
+        function resetChatRoomUI() {
+            currentSelectedStudentUid = null;
+            currentSelectedStudentName = "";
+            const nameEl = document.getElementById('selectedStudentName');
+            const zoneEl = document.getElementById('adminChatHistoryZone');
+            
+            if(nameEl) nameEl.innerText = "없음";
+            if(zoneEl) zoneEl.innerHTML = '<div class="chat-no-data">학생 목록에서 [대화방]을 선택해 주세요.</div>';
+        }
+
+        function listenToIncomingMessages(teacherName) {
+            messageListener = database.ref('messages').orderByChild('teacher').equalTo(teacherName).on('value', (snapshot) => {
+                const listEl = document.getElementById('modalMsgList');
+                if (!listEl) return;
+                listEl.innerHTML = '';
+                let unreadCount = 0;
+
+                if (snapshot.exists()) {
+                    const msgArray = [];
+                    snapshot.forEach(child => {
+                        msgArray.push({ id: child.key, ...child.val() });
+                    });
+                    
+                    msgArray.sort((a, b) => {
+                        const tA = (typeof a.timestamp === 'number') ? a.timestamp : Date.now();
+                        const tB = (typeof b.timestamp === 'number') ? b.timestamp : Date.now();
+                        return tB - tA;
+                    });
+
+                    msgArray.forEach(msg => {
+                        if (!msg.read) unreadCount++;
+
+                        const ts = (typeof msg.timestamp === 'number') ? msg.timestamp : Date.now();
+                        const date = new Date(ts);
+                        const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                        
+                        const msgStudentId = msg.u2mId ? msg.u2mId : '아이디 누락';
+                        let decryptedMsg = decryptAES(msg.message); 
+
+                        const item = document.createElement('div');
+                        item.className = `msg-item ${!msg.read ? 'unread' : ''}`;
+                        item.innerHTML = `
+                            <div class="msg-meta">
+                                <span class="msg-sender">👤 ${msg.studentName || '알수없음'} (${msgStudentId})</span>
+                                <span>${timeStr}</span>
+                            </div>
+                            <div class="msg-body">${decryptedMsg || ''}</div>
+                            
+                            <div class="reply-box">
+                                <button class="reply-toggle-btn" onclick="toggleReplyZone('${msg.id}')">답장하기</button>
+                                
+                                <div class="reply-input-zone" id="replyZone-${msg.id}">
+                                    <textarea class="reply-mini-textarea" id="replyInput-${msg.id}" rows="2" placeholder="답장 내용을 입력하세요."></textarea>
+                                    <button class="reply-send-btn" onclick="sendReplyFromModal('${msg.id}', '${msg.studentUid}', '${msg.teacher}')">전송 및 저장</button>
+                                </div>
+                                
+                                <div class="history-list" id="history-${msg.id}" style="display:none;"></div>
+                            </div>
+                        `;
+                        listEl.appendChild(item);
+                        
+                        listenToExistingReplies(msg.id);
+                    });
+                } else {
+                    listEl.innerHTML = '<div class="no-msg">받은 메시지가 없습니다.</div>';
+                }
+
+                const badge = document.getElementById('msgBadgeCount');
+                if (badge) {
+                    if (unreadCount > 0) {
+                        badge.innerText = unreadCount;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function toggleReplyZone(msgId) {
+            const zone = document.getElementById(`replyZone-${msgId}`);
+            zone.style.display = zone.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function sendReplyFromModal(msgId, studentUid, teacherName) {
+            const inputEl = document.getElementById(`replyInput-${msgId}`);
+            const text = inputEl.value.trim();
+
+            if (!text) {
+                alert("답장 내용을 입력해 주세요.");
+                return;
+            }
+            if (!studentUid || studentUid === "undefined") {
+                alert("❌ 학생 식별자(studentUid)를 찾을 수 없습니다.");
+                return;
+            }
+
+            const timestamp = firebase.database.ServerValue.TIMESTAMP;
+            const encryptedMessage = encryptAES(`[답장완료] ${text}`); 
+            const encryptedHistoryMessage = encryptAES(text);
+
+            database.ref(`student_messages/${studentUid}`).push({
+                teacher: teacherName,
+                message: encryptedMessage,
+                timestamp: timestamp,
+                read: false
+            })
+            .then(() => {
+                return database.ref(`messages/${msgId}/replies`).push({
+                    teacher: teacherName,
+                    message: encryptedHistoryMessage,
+                    timestamp: timestamp
+                });
+            })
+            .then(() => {
+                alert("답장이 전송되었습니다.");
+                inputEl.value = '';
+                document.getElementById(`replyZone-${msgId}`).style.display = 'none';
+            })
+            .catch(err => alert("전송 실패: " + err.message));
+        }
+
+        function listenToExistingReplies(msgId) {
+            database.ref(`messages/${msgId}/replies`).on('value', (snapshot) => {
+                const historyContainer = document.getElementById(`history-${msgId}`);
+                if (!historyContainer) return;
+                historyContainer.innerHTML = '';
+
+                if (!snapshot.exists()) {
+                    historyContainer.style.display = 'none';
+                    return;
+                }
+
+                historyContainer.style.display = 'block';
+                snapshot.forEach((child) => {
+                    const data = child.val();
+                    const ts = (typeof data.timestamp === 'number') ? data.timestamp : Date.now();
+                    const dateObj = new Date(ts);
+                    const timeStr = `${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                    
+                    let decryptedReply = decryptAES(data.message); 
+
+                    const itemHtml = `
+                        <div class="history-item">
+                            <span class="history-teacher">└ 답장:</span> ${decryptedReply} 
+                            <span style="font-size:0.7rem; color:var(--text-sub);">(${timeStr})</span>
+                        </div>
+                    `;
+                    historyContainer.insertAdjacentHTML('beforeend', itemHtml);
+                });
+            });
+        }
+
+        function openMessageModal() {
+            document.getElementById('messageModal').style.display = 'flex';
+            const currentTeacher = localStorage.getItem('admin_teacher');
+            
+            database.ref('messages').orderByChild('teacher').equalTo(currentTeacher).once('value', (snapshot) => {
+                if(snapshot.exists()) {
+                    const updates = {};
+                    snapshot.forEach(child => {
+                        const msg = child.val();
+                        if (!msg.read) {
+                            updates[`/messages/${child.key}/read`] = true;
+                        }
+                    });
+                    if (Object.keys(updates).length > 0) {
+                        database.ref().update(updates);
+                    }
+                }
+            });
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
+        function handleLogin() {
+            const teacher = document.getElementById('adminTeacher').value;
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+
+            if(!teacher) {
+                alert("선생님을 선택해 주세요.");
+                return;
+            }
+            if(!email || !password) {
+                alert("이메일과 비밀번호를 입력해주세요.");
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    localStorage.setItem('admin_teacher', teacher);
+                    localStorage.setItem('admin_email', email);
+                    localStorage.setItem('admin_password', password);
+                })
+                .catch((error) => {
+                    alert("❌ 인증 실패: " + error.message);
+                });
+        }
+
+        function handleLogout() {
+            if(confirm("로그아웃 하시겠습니까?")) {
+                auth.signOut().then(() => {
+                    alert("로그아웃되었습니다.");
+                });
+            }
+        }
+
+        function resetTeacherConfig() {
+            if(confirm("저장된 선생님 설정과 로그인 정보를 초기화하시겠습니까?")) {
+                clearLocalStorageAuth();
+                auth.signOut().then(() => {
+                    document.getElementById('adminTeacher').value = "";
+                    document.getElementById('adminEmail').value = "";
+                    document.getElementById('adminPassword').value = "";
+                    alert("초기화되었습니다.");
+                });
+            }
+        }
+
+        function clearLocalStorageAuth() {
+            localStorage.removeItem('admin_teacher');
+            localStorage.removeItem('admin_email');
+            localStorage.removeItem('admin_password');
+        }
+
+        function publishData(path, inputId) {
+            let val = document.getElementById(inputId).value;
+            if (path === 'notice') {
+                val = encryptAES(val); 
+            }
+            database.ref(path).set(val);
+            alert("전송 완료! 태블릿에 실시간 반영되었습니다.");
+        }
+        
+        function clearData(path, inputId) {
+            document.getElementById(inputId).value = "";
+            database.ref(path).remove();
+            alert("전송을 중단했습니다.");
+        }
+
+        function loadCurrentStatus() {
+            database.ref('notice').once('value', s => { 
+                if(s.val()) document.getElementById('noticeInput').value = decryptAES(s.val()); 
+            });
+            database.ref('reminder').once('value', s => { 
+                if(s.val()) document.getElementById('reminderInput').value = s.val(); 
+            });
+        }
+    </script>
+</body>
+</html>

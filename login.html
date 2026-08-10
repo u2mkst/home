@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K&P 수학입시학원 로그인</title>
+    
+    <!-- Firebase & CryptoJS -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- 프리미엄 폰트 시스템 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+    
+    <style>
+        @font-face {
+            font-family: 'FlightSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-display: swap;
+        }
+        /* style 태그 최상단에 추가 */
+@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap');
+
+        :root {
+            --font-title: 'FlightSans', 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-body: 'Pretendard', -apple-system, sans-serif;
+            /* 이모지 전용 폰트 스택 */
+            --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-glow: rgba(79, 70, 229, 0.18);
+            
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
+            
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --input-bg: rgba(255, 255, 255, 0.95);
+            --radius-lg: 24px;
+            --radius-md: 14px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: var(--font-body); 
+            background: var(--bg-gradient);
+            background-blend-mode: multiply;
+            margin: 0; padding: 24px 16px; color: var(--text-main);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .header-zone { 
+            text-align: center; 
+            margin-bottom: 18px; 
+            background: rgba(255, 255, 255, 0.72);
+            padding: 18px 20px;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.03);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; user-select: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .header-zone:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.88);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-zone .logo-wrapper {
+            width: 100%; max-width: 190px; height: 38px;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+
+        .header-zone .logo-img {
+            width: 100%; height: 110px;
+            object-fit: cover; object-position: center 48%;
+        }
+
+        .auth-card { 
+            background: rgba(255, 255, 255, 0.78); 
+            padding: 36px 28px;
+            border-radius: var(--radius-lg); 
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
+            animation: cardFadeIn 0.35s ease-out;
+        }
+
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 { 
+            font-family: var(--font-title);
+            margin-top: 0; color: var(--text-main); 
+            font-size: 1.45rem; font-weight: 700; 
+            margin-bottom: 24px; text-align: center; letter-spacing: -0.3px;
+        }
+
+        .step-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; position: relative;
+        }
+
+        .step-bar::before {
+            content: ''; position: absolute; top: 50%; left: 0; right: 0;
+            height: 2px; background: rgba(0, 0, 0, 0.08); z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .step-item {
+            width: 32px; height: 32px; border-radius: 50%; background: #ffffff;
+            border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-family: var(--font-title); font-weight: 700; color: #64748b;
+            position: relative; z-index: 2; transition: all 0.25s ease;
+        }
+
+        .step-item.active {
+            border-color: var(--primary); background: var(--primary); color: #ffffff;
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        .step-item.completed {
+            border-color: var(--primary); background: var(--primary); color: #ffffff;
+        }
+
+        .form-group { display: flex; flex-direction: column; margin-bottom: 18px; }
+        label { display: block; font-weight: 700; font-size: 0.83rem; color: #334155; margin-bottom: 6px; padding-left: 2px; }
+
+        input, select { 
+            width: 100%; padding: 13px 16px; 
+            border: 1px solid rgba(0, 0, 0, 0.1); border-radius: var(--radius-md); 
+            font-size: 0.92rem; font-family: var(--font-body);
+            background-color: var(--input-bg); color: var(--text-main); 
+            transition: all 0.2s ease;
+        }
+        input::placeholder { color: #94a3b8; }
+        input:focus, select:focus { 
+            outline: none; border-color: var(--primary); 
+            background-color: #ffffff; box-shadow: 0 0 0 4px var(--primary-glow); 
+        }
+
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .autocomplete-list {
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            background: #ffffff; border-radius: var(--radius-md); max-height: 180px; overflow-y: auto;
+            border: 1px solid rgba(79, 70, 229, 0.2); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12); z-index: 1000;
+        }
+        .autocomplete-item {
+            padding: 12px 16px; cursor: pointer; font-size: 0.88rem;
+            color: var(--text-main); border-bottom: 1px solid #f1f5f9;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: rgba(79, 70, 229, 0.06); color: var(--primary); font-weight: 600; }
+        .autocomplete-item .school-region { font-size: 0.76rem; color: var(--text-muted); }
+
+        .info-text { font-size: 0.76rem; color: var(--text-muted); margin-top: 5px; padding-left: 2px; line-height: 1.35; }
+
+        .agree-container { display: flex; align-items: center; margin: 6px 0 12px 0; padding-left: 2px; cursor: pointer; user-select: none; }
+        .agree-container input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; accent-color: var(--primary); }
+        .agree-text { font-size: 0.85rem; color: #334155; font-weight: 600; }
+        
+        .policy-text-box {
+            width: 100%; height: 140px; padding: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md);
+            background-color: rgba(255, 255, 255, 0.85); font-size: 0.76rem; line-height: 1.45;
+            color: #475569; resize: none; margin-bottom: 12px; font-family: var(--font-body); outline: none;
+        }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+
+        button { 
+            font-family: var(--font-title); display: block; 
+            background: var(--primary); color: #ffffff; border: none;
+            padding: 14px 20px; border-radius: var(--radius-md);
+            cursor: pointer; font-weight: 700; font-size: 0.98rem; width: 100%;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.28);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        button:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35); }
+        button:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2); }
+
+        button.btn-prev { background: #e2e8f0; color: #475569; box-shadow: none; width: 35%; }
+        button.btn-prev:hover { background: #cbd5e1; box-shadow: none; }
+
+        .switch-mode { text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--text-muted); }
+        .switch-link { color: var(--primary); text-decoration: none; font-weight: 700; margin-left: 4px; cursor: pointer; }
+        .switch-link:hover { text-decoration: underline; }
+
+        /* 🌟 Lite 모드 카적 스타일 */
+        .lite-mode-card {
+            margin-top: 20px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(79, 70, 229, 0.15);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .lite-mode-card:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .lite-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ⚡ 이모지 전용 폰트 스타일 적용 */
+        .emoji-icon {
+    font-family: 'Mona Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-style: normal;
+    display: inline-block;
+    /* 기존 스타일 유지 */
+}
+
+        .lite-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+        }
+
+        .lite-text-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .lite-title {
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .lite-desc {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .lite-arrow {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 로고 상단 헤더 존 -->
+        <div class="header-zone" id="logoZone">
+            <div class="logo-wrapper">
+                <img src="https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250713_196%2F1752417299448f8dDm_PNG%2FKP%25BC%25F6%25C7%25D0%25C0%25D4%25BD%25C3%25C7%25D0%25BF%25F8_%25B7%25CE%25B0%25ED-%25B0%25A1%25B7%25CE1.png" alt="K&P 수학입시학원 로고" class="logo-img">
+            </div>
+        </div>
+
+        <!-- 학생 로그인 폼 카드 -->
+        <div id="loginCard" class="auth-card">
+            <h2>학생 로그인</h2>
+            <form onsubmit="handleStudentLogin(event)">
+                <div class="form-group">
+                    <label>유투엠 아이디</label>
+                    <input type="text" id="loginId" value="ufes" inputmode="numeric" oninput="handleFixedPrefix(this)" onkeydown="protectPrefix(event, this)" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>부모님 전화번호 뒷자리</label>
+                    <input type="password" id="loginPassword" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric" required>
+                </div>
+                
+                <button type="submit" style="margin-top: 8px;">로그인하고 입장하기</button>
+            </form>
+
+            <div class="switch-mode">
+                처음 왔나요? <span class="switch-link" onclick="toggleMode('register')">회원가입 하기</span>
+            </div>
+
+            <!-- 🌟 Lite 모드 이동 카드 (로그인 상태에서만 표시) -->
+            <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
+                <div class="lite-info">
+                    <div class="lite-icon"><i class="emoji-icon">⚡</i></div>
+                    <div class="lite-text-group">
+                        <span class="lite-title">Lite 모드 이용하기</span>
+                        <span class="lite-desc">로그인 없이 빠르게 바로 사용</span>
+                    </div>
+                </div>
+                <span class="lite-arrow">➔</span>
+            </a>
+        </div>
+
+        <!-- 학생 회원가입 단계별 폼 카드 -->
+        <div id="registerCard" class="auth-card hidden">
+            <h2>학생 회원가입</h2>
+
+            <div class="step-bar">
+                <div class="step-item active" id="stepIndicator1">1</div>
+                <div class="step-item" id="stepIndicator2">2</div>
+                <div class="step-item" id="stepIndicator3">3</div>
+            </div>
+
+            <form id="registerForm" onsubmit="handleStudentRegister(event)">
+                <!-- STEP 1 -->
+                <div id="step1" class="step-content">
+                    <div class="form-group">
+                        <label>학생 이름</label>
+                        <input type="text" id="registerName" placeholder="실명을 입력하세요 (예: 홍길동)">
+                    </div>
+
+                    <div class="form-group">
+                        <label>유투엠 아이디</label>
+                        <input type="text" id="registerId" value="ufes" inputmode="numeric" oninput="handleFixedPrefix(this)" onkeydown="protectPrefix(event, this)">
+                        <div class="info-text">※ ufes 뒤에 숫자만 연속으로 입력하세요.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>부모님 전화번호 뒷자리 (4자리)</label>
+                        <input type="text" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="numeric">
+                        <div class="info-text">※ 이 번호가 앞으로 로그인할 때 비밀번호가 됩니다.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>소속 학교</label>
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="registerSchool" placeholder="예: 대치중" autocomplete="off">
+                            <div id="schoolList" class="autocomplete-list hidden"></div>
+                        </div>
+                        <input type="hidden" id="registerSchoolCode"> 
+                    </div>
+
+                    <div class="form-group">
+                        <label>담당 선생님 선택</label>
+                        <select id="registerTeacher">
+                            <option value="" disabled selected>담당 선생님을 선택해 주세요</option>
+                            <option value="김동진">김동진 선생님</option>
+                            <option value="이주희">이주희 선생님</option>
+                            <option value="차현준">차현준 선생님</option>
+                            <option value="권준수">권준수 선생님</option>
+                            <option value="박다희">박다희 선생님</option>
+                            <option value="정찬호">정찬호 선생님</option>
+                            <option value="김영호">김영호 선생님</option>
+                        </select>
+                    </div>
+
+                    <button type="button" onclick="nextStep(2)">다음</button>
+                </div>
+
+                <!-- STEP 2 -->
+                <div id="step2" class="step-content hidden">
+                    <div class="form-group">
+                        <label>매쓰플랫 아이디 (학생 휴대폰)</label>
+                        <input type="text" id="registerMathflatPhone" placeholder="하이픈(-) 없이 숫자만" inputmode="numeric">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>매쓰플랫 비밀번호</label>
+                        <input type="password" id="registerMathflatPw" placeholder="접속 비밀번호 입력">
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn-prev" onclick="prevStep(1)">이전</button>
+                        <button type="button" onclick="nextStep(3)">다음</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3 -->
+                <div id="step3" class="step-content hidden">
+                    <div class="form-group">
+                        <label>이용약관 및 개인정보처리방침</label>
+                        <textarea class="policy-text-box" readonly>[데이터 처리 방침 요약] 본 서비스는 회원가입 시 수집하는 모든 개인 식별 정보(이름, 연락처, 연동 패스워드 등)를 군사 통신 표준 규격인 AES-256 알고리즘으로 강력하게 암호화하여 저장하며, 암호화된 데이터는 승인된 관리 시스템 외에는 복호화가 불가능합니다.
+                          
+[K&P 수학입시학원 서비스 이용약관 및 개인정보처리방침]
+
+본 약관은 K&P 수학입시학원(이하 '학원')이 제공하는 학생 학습 관리 및 연동 시스템(이하 '서비스')의 이용 조건, 절차 및 회원 개인정보 보호에 관한 사항을 규정합니다.
+
+
+제 1 장 이용약관
+
+
+제 1 조 (목적)
+본 약관은 회원이 학원에서 제공하는 서비스를 이용함에 있어, 학원과 회원 간의 권리, 의무 및 책임 사항을 규정함을 목적으로 합니다.
+
+제 2 조 (이용계약의 성립)
+1. 이용계약은 회원이 본 약관 및 개인정보 수집·이용 동의서에 동의한 후, 학원이 정한 가입 양식에 따라 필수 정보를 입력하여 가입을 신청하고 학원이 이를 승인함으로써 성립합니다.
+2. 회원은 반드시 실명 및 본인의 정확한 정보(U2M ID 등)를 제공해야 하며, 허위 정보를 입력한 경우 서비스 이용이 제한되거나 계정이 삭제될 수 있습니다.
+
+제 3 조 (서비스의 제공 및 제한)
+1. 본 서비스는 학원 수강생의 학습 상태 확인, 키오스크 프로그램 이용 및 외부 학습 솔루션(매쓰플랫)과의 데이터 연동 서비스를 제공합니다.
+2. 학원은 시스템 점검, 통신 장애 등 기술적 필요가 있는 경우 사전 고지 후 서비스의 일부 또는 전부를 일시적으로 중단할 수 있습니다.
+
+
+제 2 장 개인정보처리방침
+                          
+
+학원은 회원의 개인정보를 매우 중요하게 여겨지며, 개인정보보호법 등 관련 법령에 따라 회원의 개인정보를 안전하게 보호하고 처리하기 위해 다음과 같은 조치를 취하고 있습니다.
+
+1. 수집하는 개인정보 항목
+학원은 가입 화면을 통해 아래의 7가지 항목에 한하여 최소한의 개인정보를 수집합니다.
+- 학생 이름, 유투엠(U2M) 아이디, 부모님 전화번호 뒷자리(4자리), 소속 학교명 및 학교 코드, 담당 선생님 선택 정보, 매쓰플랫 아이디(학생 휴대폰 번호), 매쓰플랫 비밀번호
+
+2. 개인정보의 수집 및 이용 목적
+수집된 개인정보는 다음의 목적 이외의 용도로는 사용되지 않습니다.
+- 학생 본인 식별 확인 및 학적 관리
+
+3. 개인정보의 강력한 암호화 및 기술적 보호 조치
+학원은 회원의 소중한 개인정보를 보호하기 위해 업계 최고 수준의 보안 조치를 적용합니다.
+- 학생 이름, 부모님 전화번호 뒷자리, 매쓰플랫 아이디(학생 휴대폰 번호), 매쓰플랫 비밀번호 등 식별 및 연동 정보는 데이터베이스 저장 즉시 AES-256 알고리즘으로 강력하게 암호화 처리합니다.
+- 암호화된 데이터는 고유 솔트(Salt) 값을 활용하여 유출 시에도 원본 복호화가 원천적으로 불가능하도록 설계되어 있습니다.
+
+4. 개인정보의 보유 및 이용 기간
+- 회원의 개인정보는 서비스 이용 기간(학원 재원 기간) 동안에 한하여 안전하게 보유 및 이용됩니다.
+- 학생이 학원을 퇴원하거나 서비스 탈퇴를 요청하는 경우, 수집된 모든 개인정보 및 암호화 데이터는 복구 불가능한 방법으로 즉시 영구 파기됩니다.
+
+5. 개인정보의 제3자 제공 및 위탁에 관한 사항
+학원은 회원의 개인정보를 외부에 무단 제공하거나 위탁하지 않으며, 가입 시 입력한 매쓰플랫 계정 정보는 오직 매쓰플랫 연동 목적의 개별 로그인 처리에만 안전하게 사용됩니다.
+
+본 약관 및 개인정보처리방침은 공시된 날로부터 즉시 적용됩니다.</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="agree-container">
+                            <input type="checkbox" id="registerAgreement">
+                            <span class="agree-text">위 이용약관 및 개인정보 보관에 동의합니다. (필수)</span>
+                        </label>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn-prev" onclick="prevStep(2)">이전</button>
+                        <button type="submit">가입 완료하기</button>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="switch-mode">
+                이미 계정이 있나요? <span class="switch-link" onclick="toggleMode('login')">로그인하러 가기</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+            authDomain: "ksthome-76889.firebaseapp.com",
+            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+            projectId: "ksthome-76889",
+            storageBucket: "ksthome-76889.firebasestorage.app",
+            messagingSenderId: "411945142173",
+            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+            measurementId: "G-72TJ0364MJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        const SECRET_SALT = "u2mkst!";
+        const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
+
+        const schoolInput = document.getElementById('registerSchool');
+        const schoolList = document.getElementById('schoolList');
+        const schoolCodeInput = document.getElementById('registerSchoolCode');
+
+        let currentStep = 1;
+
+        function handleFixedPrefix(input) {
+            let nums = input.value.replace(/[^0-9]/g, '');
+            input.value = "ufes" + nums;
+        }
+
+        function protectPrefix(event, input) {
+            if ((event.key === 'Backspace' || event.key === 'Delete') && input.selectionStart <= 4 && input.selectionEnd <= 4) {
+                event.preventDefault();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const loginIdInput = document.getElementById('loginId');
+            if(loginIdInput) {
+                loginIdInput.focus();
+                loginIdInput.setSelectionRange(loginIdInput.value.length, loginIdInput.value.length);
+            }
+        });
+
+        function updateStepView(targetStep) {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+
+            document.getElementById(`step${targetStep}`).classList.remove('hidden');
+
+            for (let i = 1; i <= 3; i++) {
+                const indicator = document.getElementById(`stepIndicator${i}`);
+                if (i === targetStep) {
+                    indicator.className = 'step-item active';
+                } else if (i < targetStep) {
+                    indicator.className = 'step-item completed';
+                } else {
+                    indicator.className = 'step-item';
+                }
+            }
+            currentStep = targetStep;
+        }
+
+        function nextStep(targetStep) {
+            if (targetStep === 2) {
+                const studentName = document.getElementById('registerName').value.trim();
+                const u2mId = document.getElementById('registerId').value.trim().toLowerCase();
+                const phoneTail = document.getElementById('registerParentPhone').value.trim();
+                const schoolName = schoolInput.value.trim();
+                const schoolCode = schoolCodeInput.value.trim();
+                const selectedTeacher = document.getElementById('registerTeacher').value;
+
+                if (!studentName) { alert('학생 이름을 입력하세요.'); return; }
+                if (u2mId.length <= 4) { alert('⚠️ ufes 뒤에 숫자를 입력해 주세요.'); return; }
+                if (!/^\d{4}$/.test(phoneTail)) { alert('부모님 전화번호 뒷자리는 숫자 4자리로 입력해주세요.'); return; }
+                if (!schoolName || !schoolCode) { alert('⚠️ 소속 학교를 입력한 후, 반드시 자동완성 리스트에서 학교를 선택해 주세요.'); return; }
+                if (!selectedTeacher) { alert('담당 선생님을 선택해 주세요.'); return; }
+            }
+
+            if (targetStep === 3) {
+                const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
+                const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
+
+                if (mathflatPhone.length < 10) { alert('올바른 매쓰플랫 아이디(휴대폰 번호)를 입력해 주세요.'); return; }
+                if (!mathflatPw) { alert('매쓰플랫 비밀번호를 입력해 주세요.'); return; }
+            }
+
+            updateStepView(targetStep);
+        }
+
+        function prevStep(targetStep) {
+            updateStepView(targetStep);
+        }
+
+        let logoClickCount = 0;
+        let logoClickTimeout;
+
+        document.getElementById('logoZone').addEventListener('click', function() {
+            logoClickCount++;
+            clearTimeout(logoClickTimeout);
+            logoClickTimeout = setTimeout(() => { logoClickCount = 0; }, 1500);
+
+            if (logoClickCount === 5) {
+                logoClickCount = 0; 
+                window.location.href = './kst.html';
+            }
+        });
+
+        schoolInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            if (query.length < 2) {
+                schoolList.innerHTML = '';
+                schoolList.classList.add('hidden');
+                schoolCodeInput.value = '';
+                return;
+            }
+
+            const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    schoolList.innerHTML = '';
+                    if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                        const rows = data.schoolInfo[1].row;
+                        schoolList.classList.remove('hidden');
+                        rows.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'autocomplete-item';
+                            div.innerHTML = `${item.SCHUL_NM} <span class="school-region">${item.ATPT_OFCDC_SC_NM}</span>`;
+                            div.addEventListener('click', () => {
+                                schoolInput.value = item.SCHUL_NM;
+                                schoolCodeInput.value = item.SD_SCHUL_CODE;
+                                schoolList.innerHTML = '';
+                                schoolList.classList.add('hidden');
+                            });
+                            schoolList.appendChild(div);
+                        });
+                    } else {
+                        schoolList.classList.add('hidden');
+                    }
+                })
+                .catch(err => console.error("API 오류:", err));
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target !== schoolInput && e.target !== schoolList) {
+                schoolList.innerHTML = '';
+                schoolList.classList.add('hidden');
+            }
+        });
+
+        /* 🌟 로그인/회원가입 전환 함수 (Lite 모드 버튼 표시/숨김 처리 추가) */
+        function toggleMode(mode) {
+            const liteBox = document.getElementById('liteModeBox');
+
+            if(mode === 'register') {
+                document.getElementById('loginCard').classList.add('hidden');
+                document.getElementById('registerCard').classList.remove('hidden');
+                
+                // 회원가입 모드일 때 Lite 모드 버튼 숨기기
+                if (liteBox) liteBox.classList.add('hidden');
+
+                updateStepView(1); 
+                
+                const regInput = document.getElementById('registerId');
+                if(!regInput.value.startsWith('ufes')) regInput.value = "ufes";
+                regInput.focus();
+                regInput.setSelectionRange(regInput.value.length, regInput.value.length);
+            } else {
+                document.getElementById('registerCard').classList.add('hidden');
+                document.getElementById('loginCard').classList.remove('hidden');
+                
+                // 로그인 모드로 돌아오면 Lite 모드 버튼 다시 표시하기
+                if (liteBox) liteBox.classList.remove('hidden');
+
+                const loginInput = document.getElementById('loginId');
+                if(!loginInput.value.startsWith('ufes')) loginInput.value = "ufes";
+                loginInput.focus();
+                loginInput.setSelectionRange(loginInput.value.length, loginInput.value.length);
+            }
+        }
+
+        function handleStudentRegister(e) {
+            e.preventDefault();
+
+            const isAgreed = document.getElementById('registerAgreement').checked;
+            if (!isAgreed) {
+                alert('이용약관 및 개인정보처리방침에 동의하셔야 회원가입이 완료됩니다.');
+                return;
+            }
+
+            const studentName = document.getElementById('registerName').value.trim();
+            const u2mId = document.getElementById('registerId').value.trim().toLowerCase();
+            const phoneTail = document.getElementById('registerParentPhone').value.trim();
+            const schoolName = schoolInput.value.trim();
+            const schoolCode = schoolCodeInput.value.trim();
+            const selectedTeacher = document.getElementById('registerTeacher').value;
+            const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
+            const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
+
+            const studentEmail = u2mId + "@kst.com"; 
+            const studentPassword = "00" + phoneTail; 
+
+            const encryptedName = CryptoJS.AES.encrypt(studentName, SECRET_SALT).toString();
+            const encryptedPhoneTail = CryptoJS.AES.encrypt(phoneTail, SECRET_SALT).toString();
+            const encryptedMfPhone = CryptoJS.AES.encrypt(mathflatPhone, SECRET_SALT).toString();
+            const encryptedMfPw = CryptoJS.AES.encrypt(mathflatPw, SECRET_SALT).toString();
+
+            auth.createUserWithEmailAndPassword(studentEmail, studentPassword)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    return user.updateProfile({ displayName: studentName }).then(() => {
+                        return database.ref('students/' + user.uid).set({
+                            name: encryptedName,                  
+                            u2mId: u2mId,                         
+                            schoolName: schoolName,               
+                            schoolCode: schoolCode,               
+                            teacher: selectedTeacher,             
+                            phone: encryptedPhoneTail,            
+                            studentPhone: encryptedMfPhone,       
+                            mathflatPw: encryptedMfPw,           
+                            mathflatId: mathflatPhone,            
+                            joinedAt: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    });
+                })
+                .then(() => {
+                    alert('🎉 회원가입이 완료되었습니다!\n유투엠 아이디와 비밀번호로 로그인해 주세요.');
+                    document.getElementById('registerForm').reset();
+                    toggleMode('login');
+                    document.getElementById('loginId').value = u2mId;
+                })
+                .catch((error) => {
+                    if(error.code === "auth/email-already-in-use") {
+                        alert("이미 등록된 유투엠 아이디입니다.");
+                    } else {
+                        alert('회원가입 실패: ' + error.message);
+                    }
+                });
+        }
+
+        function handleStudentLogin(e) {
+            e.preventDefault();
+            const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
+            const phoneTail = document.getElementById('loginPassword').value.trim();
+
+            const studentEmail = u2mId.includes('@') ? u2mId : u2mId + "@kst.com";
+            const studentPassword = "00" + phoneTail;
+
+            auth.signInWithEmailAndPassword(studentEmail, studentPassword)
+                .then((userCredential) => {
+                    const savedId = studentEmail.split('@')[0];
+                    localStorage.setItem('u2m_id', savedId);
+                    localStorage.setItem('u2m_pw', studentPassword);
+                    window.location.href = './index.html'; 
+                })
+                .catch((error) => {
+                    alert("로그인에 실패했습니다: " + error.message);
+                });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K&P 수학입시학원 My Page</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'Paperozi';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+            font-weight: 500; 
+            font-display: swap;
+        }
+        
+        body {
+            font-family: 'Paperozi', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
+                        linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
+            background-blend-mode: multiply; 
+            margin: 0; 
+            padding: 0;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh; 
+            color: #333; 
+            overflow-x: hidden; 
+            padding: 40px 0;
+            box-sizing: border-box;
+        }
+        
+        .container { 
+            width: 100%; 
+            max-width: 430px; 
+            padding: 24px; 
+            box-sizing: border-box; 
+        }
+
+        .header-zone {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .close-btn {
+            font-size: 1.6rem;
+            color: #718096;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            font-weight: bold;
+            background: none;
+            border: none;
+            padding: 5px;
+            line-height: 1;
+        }
+        .close-btn:hover {
+            color: #6c5ce7;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.4);
+            padding: 24px 20px;
+            border-radius: 24px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(149, 157, 165, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .input-wrapper {
+            text-align: left;
+            margin-bottom: 18px;
+            width: 100%;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .input-wrapper:last-child {
+            margin-bottom: 0;
+        }
+        .input-wrapper label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #4a5568;
+            margin-bottom: 6px;
+            padding-left: 4px;
+        }
+        .input-wrapper input, .input-wrapper select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 14px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+            transition: all 0.2s ease;
+            color: #2c3e50;
+        }
+        .input-wrapper input:focus, .input-wrapper select:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.1);
+        }
+
+        .section-divider {
+            border-top: 1px dashed rgba(108, 92, 231, 0.3);
+            margin: 24px 0 20px 0;
+            position: relative;
+        }
+        .section-title {
+            font-size: 0.8rem; color: #6c5ce7; font-weight: bold;
+            background: #f0eefc; padding: 4px 10px; border-radius: 20px;
+            position: absolute; top: -12px; left: 10px;
+        }
+
+        .autocomplete-list {
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 14px; 
+            max-height: 180px; 
+            overflow-y: auto;
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            z-index: 1000; 
+            margin-top: 6px;
+            padding: 0;
+            list-style: none;
+            backdrop-filter: blur(10px);
+        }
+        .autocomplete-item {
+            padding: 12px 16px; 
+            cursor: pointer; 
+            font-size: 0.9rem;
+            color: #333; 
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { 
+            background: rgba(108, 92, 231, 0.08); 
+            color: #6c5ce7; 
+            font-weight: 600; 
+        }
+        .autocomplete-item .school-region { 
+            font-size: 0.75rem; 
+            color: #7f8c8d; 
+            font-weight: normal; 
+        }
+
+        .submit-btn {
+            display: block; 
+            background-color: #6c5ce7; 
+            color: #ffffff;
+            border: none;
+            padding: 18px 20px; 
+            border-radius: 16px;
+            font-size: 1.05rem; 
+            font-weight: 600; 
+            box-shadow: 0 8px 16px rgba(108, 92, 231, 0.25);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            cursor: pointer; 
+            box-sizing: border-box; 
+            width: 100%; 
+            text-align: center; 
+            font-family: inherit;
+            margin-top: 25px;
+        }
+        .submit-btn:hover { 
+            transform: translateY(-2px); 
+            background-color: #5b4cc4; 
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.35);
+        }
+
+        .delete-account-zone {
+            margin-top: 35px;
+            text-align: center;
+        }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #a0aec0;
+            font-size: 0.85rem;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .delete-btn:hover {
+            color: #e53e3e;
+        }
+
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4); 
+            backdrop-filter: blur(4px); 
+            z-index: 1000;
+            justify-content: center; 
+            align-items: center;
+        }
+        
+        #dataLoadingOverlay {
+            display: flex; 
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+        }
+        .loading-spinner-box {
+            text-align: center;
+        }
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 5px solid rgba(108, 92, 231, 0.1);
+            border-top: 5px solid #6c5ce7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .modal-box {
+            background: #ffffff; 
+            width: 90%; 
+            max-width: 380px; 
+            padding: 30px 24px;
+            border-radius: 24px; 
+            text-align: center; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15); 
+            box-sizing: border-box;
+        }
+        .modal-title { font-size: 1.25rem; font-weight: 700; color: #6c5ce7; margin-bottom: 15px; }
+        .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: keep-all; }
+        .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
+        .btn-flex-group { display: flex; gap: 8px; }
+        .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
+        .btn-cancel:hover { background-color: #cbd5e1; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="dataLoadingOverlay" class="modal-overlay">
+        <div class="loading-spinner-box">
+            <div class="spinner"></div>
+            <div class="loading-text">학생 데이터를 안전하게 불러오는 중입니다...</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header-zone">
+            <div class="page-title">⚙️ 학생 정보 수정</div>
+            <button onclick="location.href='index.html'" class="close-btn" title="홈으로 돌아가기">✕</button>
+        </div>
+
+        <div class="form-container">
+            <div class="input-wrapper">
+                <label for="studentName">학생 이름</label>
+                <input type="text" id="studentName" placeholder="이름을 입력해 주세요.">
+            </div>
+            
+            <div class="input-wrapper">
+                <label for="schoolName">소속 학교</label>
+                <input type="text" id="schoolName" placeholder="예: 무원중" autocomplete="off">
+                <div id="schoolList" class="autocomplete-list hidden"></div>
+                <input type="hidden" id="schoolCode"> 
+            </div>
+
+            <div class="input-wrapper">
+                <label for="teacherName">담당 선생님 선택</label>
+                <select id="teacherName">
+                    <option value="" disabled selected>담당 선생님을 선택해 주세요</option>
+                    <option value="김동진">김동진 선생님</option>
+                    <option value="이주희">이주희 선생님</option>
+                    <option value="차현준">차현준 선생님</option>
+                    <option value="권준수">권준수 선생님</option>
+                    <option value="박다희">박다희 선생님</option>
+                    <option value="정찬호">정찬호 선생님</option>
+                    <option value="김영호">김영호 선생님</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <div class="input-wrapper">
+                <label for="u2mId">유투엠 아이디</label>
+                <input type="text" id="u2mId" readonly style="background-color: rgba(240,240,240,0.5); color: #7f8c8d;">
+            </div>
+            <div class="input-wrapper">
+                <label for="u2mPhone">부모님 전화번호 뒷자리 (4자리)</label>
+                <input type="password" id="u2mPhone" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric">
+            </div>
+        </div>
+
+        <div class="form-container">
+            <div class="section-divider">
+                <span class="section-title">매쓰플랫 연동 정보</span>
+            </div>
+            <div class="input-wrapper">
+                <label for="mathflatId">매쓰플랫 아이디 (학생 전화번호)</label>
+                <input type="text" id="mathflatId" placeholder="하이픈(-) 없이 숫자만 입력" inputmode="numeric">
+            </div>
+            <div class="input-wrapper">
+                <label for="mathflatPw">매쓰플랫 비밀번호</label>
+                <input type="password" id="mathflatPw" placeholder="매쓰플랫 학생용 비밀번호">
+            </div>
+        </div>
+
+        <button onclick="updateStudentProfile()" class="submit-btn">변경사항 저장하기</button>
+
+        <div class="delete-account-zone">
+            <button onclick="openDeleteModal()" class="delete-btn">학원 앱 서비스 회원 탈퇴</button>
+        </div>
+    </div>
+
+    <div id="customAlertModal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="customAlertTitle" class="modal-title">💡 알림</div>
+            <div id="customAlertContent" class="modal-content">내용</div>
+            <button class="modal-btn" onclick="closeCustomAlert()">확인</button>
+        </div>
+    </div>
+
+    <div id="deleteCheckModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" style="color: #e53e3e;">⚠️ 정말 탈퇴하시겠습니까?</div>
+            <div class="modal-content">회원 탈퇴 시 등록된 계정 정보가 영구히 삭제되며 복구할 수 없습니다.</div>
+            <div class="btn-flex-group">
+                <button class="btn-cancel" onclick="closeModal('deleteCheckModal')">취소</button>
+                <button class="modal-btn" onclick="confirmDeleteAccount()" style="background-color: #e53e3e;">탈퇴 확정</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+            authDomain: "ksthome-76889.firebaseapp.com",
+            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+            projectId: "ksthome-76889",
+            storageBucket: "ksthome-76889.firebasestorage.app",
+            messagingSenderId: "411945142173",
+            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+            measurementId: "G-72TJ0364MJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        const SECRET_SALT = "u2mkst!"; 
+        const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc"; 
+
+        let customAlertCallback = null;
+
+        function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function showCustomAlert(content, title = "💡 알림", callback = null) {
+            document.getElementById('customAlertTitle').innerText = title;
+            document.getElementById('customAlertContent').innerText = content;
+            customAlertCallback = callback;
+            showModal('customAlertModal');
+        }
+
+        function closeCustomAlert() {
+            closeModal('customAlertModal');
+            if (customAlertCallback && typeof customAlertCallback === 'function') {
+                customAlertCallback();
+                customAlertCallback = null;
+            }
+        }
+
+        // 🛡️ plainText가 숫자 형식이어도 강제 문자열 변환하여 .trim() 터짐 오류 원천 해결
+        function decryptAES(cipherText) {
+            if (!cipherText) return "";
+            try {
+                const cleanCipherText = String(cipherText).trim();
+                if (!cleanCipherText.startsWith("U2FsdGVkX1")) return cleanCipherText;
+                const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_SALT);
+                return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText; 
+            } catch (e) {
+                console.error("🚨 복호화 에러:", e);
+                return String(cipherText); 
+            }
+        }
+
+        function encryptAES(plainText) {
+            if (plainText === null || plainText === undefined) return "";
+            const textString = String(plainText).trim();
+            return CryptoJS.AES.encrypt(textString, SECRET_SALT).toString();
+        }
+
+        const schoolInput = document.getElementById('schoolName');
+        const schoolList = document.getElementById('schoolList');
+        const schoolCodeInput = document.getElementById('schoolCode');
+
+        schoolInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            if (query.length < 2) {
+                schoolList.innerHTML = '';
+                schoolList.classList.add('hidden');
+                schoolCodeInput.value = '';
+                return;
+            }
+
+            const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    schoolList.innerHTML = '';
+                    if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                        const rows = data.schoolInfo[1].row;
+                        schoolList.classList.remove('hidden');
+                        rows.forEach(item => {
+                            const li = document.createElement('li');
+                            li.className = 'autocomplete-item';
+                            li.innerHTML = `${item.SCHUL_NM} <span class="school-region">${item.ATPT_OFCDC_SC_NM}</span>`;
+                            li.addEventListener('click', () => {
+                                schoolInput.value = item.SCHUL_NM;
+                                schoolCodeInput.value = item.SD_SCHUL_CODE;
+                                schoolList.innerHTML = '';
+                                schoolList.classList.add('hidden');
+                            });
+                            schoolList.appendChild(li);
+                        });
+                    } else {
+                        schoolList.classList.add('hidden');
+                    }
+                })
+                .catch(err => { console.error(err); });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target !== schoolInput && e.target !== schoolList) {
+                schoolList.innerHTML = '';
+                schoolList.classList.add('hidden');
+            }
+        });
+
+        // 🌟 [안전 로딩 구현] 원장님 DB 규격 (studentPhone, mathflatPw 대소문자 구조) 반영
+        window.onload = function() {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    database.ref(`students/${user.uid}`).once('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            document.getElementById('studentName').value = decryptAES(data.name);
+                            document.getElementById('schoolName').value = data.schoolName || '';
+                            document.getElementById('schoolCode').value = data.schoolCode || '';
+                            
+                            if (data.teacher) {
+                                document.getElementById('teacherName').value = data.teacher;
+                            }
+                            
+                            document.getElementById('u2mId').value = data.u2mId || '';
+                            document.getElementById('u2mPhone').value = decryptAES(data.phone);
+                            
+                            // 암호화된 대문자 규격(studentPhone)을 우선하되, 없을 시 평문(mathflatId) 백업 매칭
+                            const rawMathflatId = data.studentPhone ? decryptAES(data.studentPhone) : (data.mathflatId || '');
+                            document.getElementById('mathflatId').value = rawMathflatId;
+                            
+                            // 비밀번호 대소문자 규격(mathflatPw) 매칭
+                            document.getElementById('mathflatPw').value = decryptAES(data.mathflatPw);
+                            
+                            document.getElementById('dataLoadingOverlay').style.display = 'none';
+                        } else {
+                            document.getElementById('dataLoadingOverlay').style.display = 'none';
+                            showCustomAlert("학생 데이터를 찾을 수 없습니다.", "❌ 오류", () => {
+                                window.location.replace('login.html');
+                            });
+                        }
+                    });
+                } else {
+                    window.location.replace('login.html');
+                }
+            });
+        };
+
+        // 🌟 [안전 저장 구현] 민감정보 변경 전 백그라운드 재인증(Reauthentication) 추가
+        function updateStudentProfile() {
+            const user = auth.currentUser;
+            if (!user) { showCustomAlert("세션이 만료되었습니다. 다시 로그인 해주세요."); return; }
+
+            const studentName = document.getElementById('studentName').value.trim();
+            const schoolName = document.getElementById('schoolName').value.trim();
+            const schoolCode = document.getElementById('schoolCode').value.trim();
+            const selectedTeacher = document.getElementById('teacherName').value;
+            const phoneTail = document.getElementById('u2mPhone').value.trim();
+            const mathflatPhone = document.getElementById('mathflatId').value.trim().replace(/[^0-9]/g, '');
+            const mathflatPw = document.getElementById('mathflatPw').value.trim();
+
+            if (!studentName || !schoolName || !schoolCode || !selectedTeacher || !phoneTail || !mathflatPhone || !mathflatPw) {
+                showCustomAlert("모든 항목을 빠짐없이 입력해 주세요.");
+                return;
+            }
+
+            document.getElementById('dataLoadingOverlay').style.display = 'flex';
+            const studentPassword = "00" + phoneTail; 
+            
+            const savedId = localStorage.getItem('u2m_id');
+            const savedPw = localStorage.getItem('u2m_pw');
+            
+            if (!savedId || !savedPw) {
+                document.getElementById('dataLoadingOverlay').style.display = 'none';
+                showCustomAlert("인증 정보가 유실되었습니다. 로그아웃 후 다시 로그인하여 시도해 주세요.");
+                return;
+            }
+
+            const studentEmail = savedId.includes('@') ? savedId : savedId + "@kst.com";
+            const credential = firebase.auth.EmailAuthProvider.credential(studentEmail, savedPw);
+
+            // 1단계: 보안을 위한 재인증 세션 갱신
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    // 2단계: Auth 패스워드 수정
+                    return user.updatePassword(studentPassword);
+                })
+                .then(() => {
+                    // 3단계: 원장님 DB 실 구조명(studentPhone, mathflatPw)에 맞추어 RTDB 저장
+                    const updatedObject = {
+                        name: encryptAES(studentName),                  
+                        schoolName: schoolName,               
+                        schoolCode: schoolCode,               
+                        teacher: selectedTeacher,             
+                        phone: encryptAES(phoneTail),            
+                        studentPhone: encryptAES(mathflatPhone), // 대문자 P 규격 매칭
+                        mathflatPw: encryptAES(mathflatPw),     // 대문자 P,W 규격 매칭
+                        mathflatId: mathflatPhone                // 평문 백업용 필드도 통합 갱신
+                    };
+
+                    return database.ref(`students/${user.uid}`).update(updatedObject);
+                })
+                .then(() => {
+                    // 4단계: 로컬 패스워드 갱신 후 성공 안내
+                    localStorage.setItem('u2m_pw', studentPassword);
+                    document.getElementById('dataLoadingOverlay').style.display = 'none';
+                    showCustomAlert("학생 정보가 성공적으로 수정되었습니다!", "⚙️ 완료", () => {
+                        window.location.href = 'index.html';
+                    });
+                })
+                .catch((err) => {
+                    document.getElementById('dataLoadingOverlay').style.display = 'none';
+                    console.error(err);
+                    if (err.code === "auth/sensitive-actions-require-recent-login") {
+                        showCustomAlert("보안을 위해 다시 로그인한 뒤 변경해 주세요.", "🔒 보안 알림", () => {
+                            window.location.replace('login.html');
+                        });
+                    } else {
+                        showCustomAlert("정보 수정을 실패했습니다: " + err.message);
+                    }
+                });
+        }
+
+        function openDeleteModal() { showModal('deleteCheckModal'); }
+        function confirmDeleteAccount() {
+            const user = auth.currentUser;
+            if (!user) return;
+            closeModal('deleteCheckModal');
+            document.getElementById('dataLoadingOverlay').style.display = 'flex';
+            database.ref(`students/${user.uid}`).remove()
+                .then(() => { return user.delete(); })
+                .then(() => {
+                    document.getElementById('dataLoadingOverlay').style.display = 'none';
+                    localStorage.clear();
+                    alert("회원 탈퇴가 완료되었습니다.");
+                    window.location.replace('login.html');
+                })
+                .catch((error) => {
+                    document.getElementById('dataLoadingOverlay').style.display = 'none';
+                    showCustomAlert("탈퇴 실패: " + error.message);
+                });
+        }
+    </script>
+</body>
+</html>
