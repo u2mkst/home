@@ -14,7 +14,7 @@
     <!-- Google reCAPTCHA v2 API Script -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
-    <!-- Mona12 폰트 라이브러리 추가 -->
+    <!-- Mona12 폰트 라이브러리 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
 
     <!-- 프리미엄 폰트 시스템 -->
@@ -67,7 +67,7 @@
             display: flex; justify-content: center; align-items: center;
         }
 
-        .mona12, .emoji-icon, .alert-icon {
+        .mona12, .emoji-icon {
             font-family: 'Mona12', sans-serif !important;
             font-style: normal;
         }
@@ -158,7 +158,19 @@
         }
 
         .form-group { display: flex; flex-direction: column; margin-bottom: 18px; }
+
         label { display: block; font-weight: 700; font-size: 0.83rem; color: #334155; margin-bottom: 6px; padding-left: 2px; }
+
+        .btn-sub-action {
+            background: rgba(79, 70, 229, 0.1); color: var(--primary); border: none;
+            padding: 4px 10px; border-radius: 8px; font-size: 0.73rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s ease; width: auto; box-shadow: none;
+            font-family: var(--font-body);
+        }
+
+        .btn-sub-action:hover {
+            background: rgba(79, 70, 229, 0.2); transform: none; box-shadow: none;
+        }
 
         input, select { 
             width: 100%; padding: 13px 16px; 
@@ -222,16 +234,11 @@
         .switch-link:hover { text-decoration: underline; }
 
         .lite-mode-card {
-            margin-top: 20px;
-            padding: 12px 14px;
+            margin-top: 20px; padding: 12px 14px;
             background: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(79, 70, 229, 0.15);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            text-decoration: none;
-            transition: all 0.2s ease;
+            border: 1px solid rgba(79, 70, 229, 0.15); border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: space-between;
+            text-decoration: none; transition: all 0.2s ease;
         }
 
         .lite-mode-card:hover {
@@ -264,25 +271,19 @@
             transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .captcha-overlay.active {
-            opacity: 1; visibility: visible;
-        }
+        .captcha-overlay.active { opacity: 1; visibility: visible; }
 
         .captcha-bottom-sheet {
             width: 100%; max-width: 440px; background: #ffffff;
             border-top-left-radius: 32px; border-top-right-radius: 32px;
             padding: 28px 24px 36px 24px; box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.25);
-            transform: translateY(100%);
-            transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(100%); transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .captcha-overlay.active .captcha-bottom-sheet {
-            transform: translateY(0);
-        }
+        .captcha-overlay.active .captcha-bottom-sheet { transform: translateY(0); }
 
         .sheet-handle {
-            width: 42px; height: 5px; background: #e2e8f0; border-radius: 3px;
-            margin: 0 auto 16px auto;
+            width: 42px; height: 5px; background: #e2e8f0; border-radius: 3px; margin: 0 auto 16px auto;
         }
 
         .captcha-header { text-align: center; margin-bottom: 20px; }
@@ -290,56 +291,31 @@
         .captcha-subtext { font-size: 0.82rem; color: #64748b; margin-top: 6px; margin-bottom: 0; line-height: 1.4; }
 
         .recaptcha-box {
-            display: flex; justify-content: center; align-items: center;
-            margin-top: 10px; min-height: 78px;
+            display: flex; justify-content: center; align-items: center; margin-top: 10px; min-height: 78px;
         }
 
-        /* 커스텀 알림 모달 스타일 */
-        .alert-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            z-index: 10000; display: flex; justify-content: center; align-items: center;
-            padding: 20px; opacity: 0; visibility: hidden;
-            transition: opacity 0.25s ease, visibility 0.25s ease;
+        /* 🌟 글래스모피즘 토스트(Toast) 메시지 스타일 */
+        .toast-container {
+            position: fixed; bottom: 28px; left: 50%;
+            transform: translateX(-50%) translateY(30px);
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 14px 22px; border-radius: 50px;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+            z-index: 10000; opacity: 0; pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 90%; width: max-content;
         }
 
-        .alert-overlay.active {
-            opacity: 1; visibility: visible;
+        .toast-container.show {
+            opacity: 1; pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
         }
 
-        .alert-card {
-            background: #ffffff; width: 100%; max-width: 320px;
-            border-radius: var(--radius-lg); padding: 28px 24px 24px 24px;
-            text-align: center; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
-            transform: scale(0.92);
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .alert-overlay.active .alert-card {
-            transform: scale(1);
-        }
-
-        .alert-icon {
-            font-size: 2.2rem; margin-bottom: 12px; line-height: 1;
-        }
-
-        .alert-message {
-            font-size: 0.92rem; color: var(--text-main); font-weight: 600;
-            line-height: 1.55; margin-bottom: 22px; white-space: pre-line; word-break: keep-all;
-        }
-
-        .alert-btn {
-            background: var(--primary); color: #ffffff; border: none;
-            padding: 12px; border-radius: var(--radius-md); font-weight: 700;
-            cursor: pointer; width: 100%; font-size: 0.92rem;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
-            transition: all 0.2s ease;
-        }
-
-        .alert-btn:hover {
-            background: var(--primary-hover);
-        }
+        .toast-icon { font-size: 1.25rem; line-height: 1; }
+        .toast-text { font-size: 0.88rem; font-weight: 600; white-space: pre-line; text-align: left; line-height: 1.4; }
 
         .hidden { display: none !important; }
     </style>
@@ -364,7 +340,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>부모님 전화번호 뒷자리</label>
+                    <label>유투엠 비밀번호</label>
                     <input type="password" id="loginPassword" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric" required>
                 </div>
 
@@ -413,7 +389,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>부모님 전화번호 뒷자리 (4자리)</label>
+                        <label>유투엠 비밀번호 (숫자 4자리)</label>
                         <input type="text" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="numeric">
                         <div class="info-text">※ 이 번호가 앞으로 로그인할 때 비밀번호가 됩니다.</div>
                     </div>
@@ -446,6 +422,10 @@
 
                 <!-- STEP 2 -->
                 <div id="step2" class="step-content hidden">
+                    <div style="margin-bottom: 14px; text-align: right;">
+                        <button type="button" class="btn-sub-action" onclick="skipMathflat()">잘 모르겠어요 <i class="mona12">💡</i></button>
+                    </div>
+
                     <div class="form-group">
                         <label>매쓰플랫 아이디 (학생 휴대폰)</label>
                         <input type="text" id="registerMathflatPhone" placeholder="하이픈(-) 없이 숫자만" inputmode="numeric">
@@ -500,19 +480,15 @@
             </div>
             
             <div class="recaptcha-box">
-                <!-- Google reCAPTCHA v2 위젯 영역 -->
                 <div class="g-recaptcha" data-sitekey="6LcoRYAtAAAAAP_83dJyhmTfWrTrer3QUYf8Pof1" data-callback="onCaptchaSuccess"></div>
             </div>
         </div>
     </div>
 
-    <!-- 커스텀 알림 모달 -->
-    <div id="customAlertModal" class="alert-overlay">
-        <div class="alert-card">
-            <div class="alert-icon mona12" id="customAlertIcon">💡</div>
-            <div class="alert-message" id="customAlertMessage"></div>
-            <button type="button" class="alert-btn" onclick="closeCustomAlert()">확인</button>
-        </div>
+    <!-- 🌟 글래스모피즘 토스트(Toast) 시스템 UI -->
+    <div id="toast" class="toast-container">
+        <span class="toast-icon mona12" id="toastIcon">💡</span>
+        <span class="toast-text" id="toastText">메시지가 들어갑니다.</span>
     </div>
 
     <script>
@@ -534,7 +510,7 @@
         const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
 
         let loginFailCount = 0; 
-        let alertCallback = null;
+        let toastTimeout = null;
 
         const schoolInput = document.getElementById('registerSchool');
         const schoolList = document.getElementById('schoolList');
@@ -542,21 +518,26 @@
 
         let currentStep = 1;
 
-        // 커스텀 알림 모달 제어 함수
-        function showAlert(message, icon = "💡", callback = null) {
-            document.getElementById('customAlertIcon').textContent = icon;
-            document.getElementById('customAlertMessage').textContent = message;
-            document.getElementById('customAlertModal').classList.add('active');
-            alertCallback = callback;
+        // 🌟 글래스모피즘 토스트 메세지 출력 함수
+        function showToast(message, icon = "💡", duration = 3000) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastIcon').textContent = icon;
+            document.getElementById('toastText').textContent = message;
+
+            toast.classList.add('show');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
         }
 
-        function closeCustomAlert() {
-            document.getElementById('customAlertModal').classList.remove('active');
-            if (alertCallback) {
-                const cb = alertCallback;
-                alertCallback = null;
-                cb();
-            }
+        // 매쓰플랫 잘모르겠어요 -> 빈 채로 스킵
+        function skipMathflat() {
+            document.getElementById('registerMathflatPhone').value = '';
+            document.getElementById('registerMathflatPw').value = '';
+            showToast('매쓰플랫 정보를 비워두고 다음으로 이동합니다!', '💡');
+            updateStepView(3);
         }
 
         window.addEventListener('keydown', function (e) {
@@ -564,7 +545,7 @@
                (e.ctrlKey && (e.key === 'r' || e.key === 'R')) || 
                (e.metaKey && (e.key === 'r' || e.key === 'R'))) {
                 e.preventDefault();
-                showAlert('페이지 새로고침이 제한되어 있습니다.', '🔒');
+                showToast('페이지 새로고침이 제한되어 있습니다.', '🔒');
             }
         });
 
@@ -627,19 +608,21 @@
                 const schoolCode = schoolCodeInput.value.trim();
                 const selectedTeacher = document.getElementById('registerTeacher').value;
 
-                if (!studentName) { showAlert('학생 이름을 입력하세요.', '✍️'); return; }
-                if (u2mId.length <= 4) { showAlert('ufes 뒤에 숫자를 입력해 주세요.', '⚠️'); return; }
-                if (!/^\d{4}$/.test(phoneTail)) { showAlert('부모님 전화번호 뒷자리는 숫자 4자리로 입력해주세요.', '📱'); return; }
-                if (!schoolName || !schoolCode) { showAlert('소속 학교를 입력한 후, 반드시 자동완성 리스트에서 학교를 선택해 주세요.', '🏫'); return; }
-                if (!selectedTeacher) { showAlert('담당 선생님을 선택해 주세요.', '👨‍🏫'); return; }
+                if (!studentName) { showToast('학생 이름을 입력하세요.', '✍️'); return; }
+                if (u2mId.length <= 4) { showToast('ufes 뒤에 숫자를 입력해 주세요.', '⚠️'); return; }
+                if (!/^\d{4}$/.test(phoneTail)) { showToast('유투엠 비밀번호는 숫자 4자리로 입력해주세요.', '🔑'); return; }
+                if (!schoolName || !schoolCode) { showToast('자동완성 리스트에서 학교를 선택해 주세요.', '🏫'); return; }
+                if (!selectedTeacher) { showToast('담당 선생님을 선택해 주세요.', '👨‍🏫'); return; }
             }
 
             if (targetStep === 3) {
-                const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
+                const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim();
                 const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
 
-                if (mathflatPhone.length < 10) { showAlert('올바른 매쓰플랫 아이디(휴대폰 번호)를 입력해 주세요.', '📲'); return; }
-                if (!mathflatPw) { showAlert('매쓰플랫 비밀번호를 입력해 주세요.', '🔑'); return; }
+                if (mathflatPhone && mathflatPhone.replace(/[^0-9]/g, '').length < 10) {
+                    showToast('올바른 매쓰플랫 아이디(휴대폰 번호)를 입력해 주세요.', '📲');
+                    return;
+                }
             }
 
             updateStepView(targetStep);
@@ -737,7 +720,7 @@
 
             const isAgreed = document.getElementById('registerAgreement').checked;
             if (!isAgreed) {
-                showAlert('이용약관 및 개인정보처리방침에 동의하셔야 회원가입이 완료됩니다.', '📜');
+                showToast('이용약관 및 개인정보처리방침에 동의하셔야 회원가입이 완료됩니다.', '📜');
                 return;
             }
 
@@ -755,8 +738,8 @@
 
             const encryptedName = CryptoJS.AES.encrypt(studentName, SECRET_SALT).toString();
             const encryptedPhoneTail = CryptoJS.AES.encrypt(phoneTail, SECRET_SALT).toString();
-            const encryptedMfPhone = CryptoJS.AES.encrypt(mathflatPhone, SECRET_SALT).toString();
-            const encryptedMfPw = CryptoJS.AES.encrypt(mathflatPw, SECRET_SALT).toString();
+            const encryptedMfPhone = mathflatPhone ? CryptoJS.AES.encrypt(mathflatPhone, SECRET_SALT).toString() : "";
+            const encryptedMfPw = mathflatPw ? CryptoJS.AES.encrypt(mathflatPw, SECRET_SALT).toString() : "";
 
             auth.createUserWithEmailAndPassword(studentEmail, studentPassword)
                 .then((userCredential) => {
@@ -777,17 +760,18 @@
                     });
                 })
                 .then(() => {
-                    showAlert('회원가입이 완료되었습니다!\n유투엠 아이디와 비밀번호로 로그인해 주세요.', '🎉', () => {
+                    showToast('회원가입 완료! 발급된 정보로 로그인해 주세요.', '🎉', 4000);
+                    setTimeout(() => {
                         document.getElementById('registerForm').reset();
                         toggleMode('login');
                         document.getElementById('loginId').value = u2mId;
-                    });
+                    }, 1200);
                 })
                 .catch((error) => {
                     if(error.code === "auth/email-already-in-use") {
-                        showAlert("이미 등록된 유투엠 아이디입니다.", "⚠️");
+                        showToast("이미 등록된 유투엠 아이디입니다.", "⚠️");
                     } else {
-                        showAlert('회원가입 실패: ' + error.message, '❌');
+                        showToast('회원가입 실패: ' + error.message, '❌');
                     }
                 });
         }
@@ -820,7 +804,7 @@
                 })
                 .catch((error) => {
                     loginFailCount++;
-                    showAlert("아이디 또는 비밀번호가 일치하지 않습니다.", "🔒");
+                    showToast("아이디 또는 비밀번호가 일치하지 않습니다.", "🔒");
 
                     if (loginFailCount >= 1) {
                         openCaptchaModal();
@@ -828,7 +812,6 @@
                 });
         }
 
-        // reCAPTCHA 성공 시 자동 호출되는 콜백 함수
         function onCaptchaSuccess(token) {
             loginFailCount = 0; 
             closeCaptchaModal();
@@ -837,7 +820,7 @@
             passInput.value = '';
             passInput.focus();
             
-            showAlert("보안 인증이 완료되었습니다!\n비밀번호를 다시 올바르게 입력한 후 로그인해 주세요.", "✅");
+            showToast("보안 인증 완료! 비밀번호를 다시 입력해 주세요.", "✅");
         }
     </script>
 </body>
