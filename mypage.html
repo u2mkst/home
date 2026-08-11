@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>K&P 수학입시학원 My Page</title>
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    
+    <!-- CryptoJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- Font Awesome (눈 모양 아이콘) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         /* 1. Paperozi 및 Flight Sans 폰트 */
@@ -105,6 +108,31 @@
             margin-bottom: 6px;
             padding-left: 4px;
         }
+
+        /* 비밀번호 눈모양 아이콘 인풋 스타일 */
+        .input-pw {
+            position: relative;
+            width: 100%;
+        }
+        .input-pw input {
+            padding-right: 45px !important;
+        }
+        .input-pw .eyes {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+            transition: color 0.2s;
+            user-select: none;
+        }
+        .input-pw .eyes:hover {
+            color: #6c5ce7;
+        }
+
         .input-wrapper input, .input-wrapper select {
             width: 100%;
             padding: 14px;
@@ -222,7 +250,7 @@
             transform: translateY(0);
         }
 
-        /* 2. index.html 스타일 맞춤 로딩 레이어 */
+        /* 로딩 모달 */
         .modal-overlay {
             display: none; 
             position: fixed; 
@@ -295,6 +323,65 @@
         .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
         .hidden { display: none !important; }
+
+        /* 바텀시트 UI */
+        .bottom-sheet-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .bottom-sheet-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .bottom-sheet {
+            position: fixed;
+            bottom: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 430px;
+            background: #ffffff;
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
+            padding: 24px;
+            box-sizing: border-box;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+            z-index: 9999;
+            transition: bottom 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .bottom-sheet.active {
+            bottom: 0;
+        }
+        .sheet-handle {
+            width: 40px;
+            height: 5px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin: 0 auto 16px auto;
+        }
+        .sheet-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        .sheet-desc {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .sheet-desc span {
+            color: #6c5ce7;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -349,11 +436,16 @@
         <div class="form-container">
             <div class="input-wrapper">
                 <label for="u2mId">유투엠 아이디</label>
-                <input type="text" id="u2mId" readonly style="background-color: rgba(240,240,240,0.5); color: #7f8c8d;">
+                <input type="text" id="u2mId" placeholder="유투엠 아이디 입력">
             </div>
             <div class="input-wrapper">
                 <label for="u2mPhone">부모님 전화번호 뒷자리 (4자리)</label>
-                <input type="password" id="u2mPhone" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric">
+                <div class="input-pw">
+                    <input type="password" id="u2mPhone" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric">
+                    <div class="eyes" onclick="togglePasswordVisibility('u2mPhone', this)">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -367,7 +459,12 @@
             </div>
             <div class="input-wrapper">
                 <label for="mathflatPw">매쓰플랫 비밀번호</label>
-                <input type="password" id="mathflatPw" placeholder="매쓰플랫 학생용 비밀번호">
+                <div class="input-pw">
+                    <input type="password" id="mathflatPw" placeholder="매쓰플랫 학생용 비밀번호">
+                    <div class="eyes" onclick="togglePasswordVisibility('mathflatPw', this)">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -376,6 +473,21 @@
         </div>
     </div>
 
+    <!-- 유투엠 아이디 변경 재확인 바텀시트 -->
+    <div id="u2mBottomSheetOverlay" class="bottom-sheet-overlay" onclick="cancelU2mIdChange()"></div>
+    <div id="u2mBottomSheet" class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">아이디 변경 재확인</div>
+        <div class="sheet-desc">
+            유투엠 아이디를 <span id="newU2mIdText"></span>(으)로 변경하시겠습니까?
+        </div>
+        <div class="btn-flex-group">
+            <button class="btn-cancel" onclick="cancelU2mIdChange()">취소</button>
+            <button class="modal-btn" onclick="confirmU2mIdChange()">확인 및 변경</button>
+        </div>
+    </div>
+
+    <!-- 회원 탈퇴 모달 -->
     <div id="deleteCheckModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title" style="color: #e53e3e;">⚠️ 정말 탈퇴하시겠습니까?</div>
@@ -407,9 +519,27 @@
 
         let autoSaveTimer = null;
         let isInitialLoad = true;
+        let originalU2mId = ""; // 기존 u2mId 백업용
+        let pendingU2mId = "";  // 변경 시도 u2mId
 
         function showModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // 비밀번호 보이기/숨기기 토글
+        function togglePasswordVisibility(inputId, eyeBtn) {
+            const input = document.getElementById(inputId);
+            const icon = eyeBtn.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        }
 
         function showToast(message) {
             const toast = document.getElementById('toastMessage');
@@ -502,7 +632,8 @@
                                 document.getElementById('teacherName').value = data.teacher;
                             }
                             
-                            document.getElementById('u2mId').value = data.u2mId || '';
+                            originalU2mId = data.u2mId || '';
+                            document.getElementById('u2mId').value = originalU2mId;
                             document.getElementById('u2mPhone').value = decryptAES(data.phone);
                             
                             const rawMathflatId = data.studentPhone ? decryptAES(data.studentPhone) : (data.mathflatId || '');
@@ -512,10 +643,10 @@
                             
                             document.getElementById('dataLoadingOverlay').style.display = 'none';
                             
+                            bindAutoSaveEvents();
                             setTimeout(() => {
-                                bindAutoSaveEvents();
                                 isInitialLoad = false;
-                            }, 400);
+                            }, 300);
                         } else {
                             document.getElementById('dataLoadingOverlay').style.display = 'none';
                             showToast("학생 데이터를 찾을 수 없습니다.");
@@ -528,6 +659,7 @@
             });
         };
 
+        // 입력 이벤트 바인딩
         function bindAutoSaveEvents() {
             const inputs = ['studentName', 'schoolName', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw'];
             inputs.forEach(id => {
@@ -535,8 +667,61 @@
                 if (element) {
                     element.addEventListener('input', triggerAutoSave);
                     element.addEventListener('change', triggerAutoSave);
+                    element.addEventListener('blur', triggerAutoSave);
                 }
             });
+
+            // 유투엠 아이디는 변경 시 바텀시트 확인 절차 진행
+            const u2mInput = document.getElementById('u2mId');
+            if (u2mInput) {
+                u2mInput.addEventListener('change', handleU2mIdChange);
+                u2mInput.addEventListener('blur', handleU2mIdChange);
+            }
+        }
+
+        // U2M ID 변경 감지 및 바텀시트 호출
+        function handleU2mIdChange() {
+            if (isInitialLoad) return;
+            const currentVal = document.getElementById('u2mId').value.trim();
+            if (currentVal !== originalU2mId && currentVal.length > 0) {
+                pendingU2mId = currentVal;
+                document.getElementById('newU2mIdText').innerText = `'${pendingU2mId}'`;
+                openBottomSheet();
+            }
+        }
+
+        function openBottomSheet() {
+            document.getElementById('u2mBottomSheetOverlay').classList.add('active');
+            document.getElementById('u2mBottomSheet').classList.add('active');
+        }
+
+        function closeBottomSheet() {
+            document.getElementById('u2mBottomSheetOverlay').classList.remove('active');
+            document.getElementById('u2mBottomSheet').classList.remove('active');
+        }
+
+        // 바텀시트 확인 클릭 시 실제 저장
+        function confirmU2mIdChange() {
+            closeBottomSheet();
+            const user = auth.currentUser;
+            if (!user) return;
+
+            database.ref(`students/${user.uid}`).update({ u2mId: pendingU2mId })
+                .then(() => {
+                    originalU2mId = pendingU2mId;
+                    showToast("💾 유투엠 아이디가 성공적으로 변경되었습니다.");
+                })
+                .catch((err) => {
+                    console.error(err);
+                    showToast("❌ 유투엠 아이디 변경 실패");
+                    document.getElementById('u2mId').value = originalU2mId;
+                });
+        }
+
+        // 취소 시 기존 아이디로 복원
+        function cancelU2mIdChange() {
+            closeBottomSheet();
+            document.getElementById('u2mId').value = originalU2mId;
         }
 
         function triggerAutoSave() {
@@ -544,7 +729,7 @@
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(() => {
                 updateStudentProfileAuto();
-            }, 800);
+            }, 700);
         }
 
         function updateStudentProfileAuto() {
@@ -559,29 +744,32 @@
             const mathflatPhone = document.getElementById('mathflatId').value.trim().replace(/[^0-9]/g, '');
             const mathflatPw = document.getElementById('mathflatPw').value.trim();
 
-            if (!studentName || !schoolName || !selectedTeacher || !phoneTail || !mathflatPhone || !mathflatPw) {
-                return;
-            }
+            const updatedObject = {};
 
-            const updatedObject = {
-                name: encryptAES(studentName),                  
-                schoolName: schoolName,               
-                schoolCode: schoolCode,               
-                teacher: selectedTeacher,             
-                phone: encryptAES(phoneTail),            
-                studentPhone: encryptAES(mathflatPhone),
-                mathflatPw: encryptAES(mathflatPw),     
-                mathflatId: mathflatPhone                
-            };
+            if (studentName) updatedObject.name = encryptAES(studentName);
+            if (schoolName) updatedObject.schoolName = schoolName;
+            if (schoolCode) updatedObject.schoolCode = schoolCode;
+            if (selectedTeacher) updatedObject.teacher = selectedTeacher;
+            if (phoneTail) updatedObject.phone = encryptAES(phoneTail);
+            if (mathflatPhone) {
+                updatedObject.studentPhone = encryptAES(mathflatPhone);
+                updatedObject.mathflatId = mathflatPhone;
+            }
+            if (mathflatPw) updatedObject.mathflatPw = encryptAES(mathflatPw);
+
+            if (Object.keys(updatedObject).length === 0) return;
 
             database.ref(`students/${user.uid}`).update(updatedObject)
                 .then(() => {
-                    const studentPassword = "00" + phoneTail; 
-                    localStorage.setItem('u2m_pw', studentPassword);
+                    if (phoneTail) {
+                        const studentPassword = "00" + phoneTail; 
+                        localStorage.setItem('u2m_pw', studentPassword);
+                    }
                     showToast("💾 변경사항이 자동으로 저장되었습니다.");
                 })
                 .catch((err) => {
                     console.error("자동 저장 실패:", err);
+                    showToast("❌ 저장 실패: 네트워크 상태를 확인하세요.");
                 });
         }
 
