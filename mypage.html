@@ -11,15 +11,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
+        /* 1. Paperozi 및 Flight Sans 폰트 */
         @font-face {
             font-family: 'Paperozi';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
             font-weight: 500; 
             font-display: swap;
         }
+        @font-face {
+            font-family: 'FlightSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
         
         body {
-            font-family: 'Paperozi', 'Noto Sans KR', sans-serif;
+            font-family: 'Paperozi', 'FlightSans', 'Noto Sans KR', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
                         linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; 
@@ -168,30 +175,6 @@
             font-weight: normal; 
         }
 
-        .submit-btn {
-            display: block; 
-            background-color: #6c5ce7; 
-            color: #ffffff;
-            border: none;
-            padding: 18px 20px; 
-            border-radius: 16px;
-            font-size: 1.05rem; 
-            font-weight: 600; 
-            box-shadow: 0 8px 16px rgba(108, 92, 231, 0.25);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
-            cursor: pointer; 
-            box-sizing: border-box; 
-            width: 100%; 
-            text-align: center; 
-            font-family: inherit;
-            margin-top: 25px;
-        }
-        .submit-btn:hover { 
-            transform: translateY(-2px); 
-            background-color: #5b4cc4; 
-            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.35);
-        }
-
         .delete-account-zone {
             margin-top: 35px;
             text-align: center;
@@ -211,6 +194,35 @@
             color: #e53e3e;
         }
 
+        /* 토스트 알림 UI */
+        .toast-container {
+            position: fixed;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .toast-message {
+            background: rgba(44, 62, 80, 0.92);
+            color: #ffffff;
+            padding: 12px 22px;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            white-space: nowrap;
+        }
+        .toast-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 2. index.html 스타일 맞춤 로딩 레이어 */
         .modal-overlay {
             display: none; 
             position: fixed; 
@@ -218,38 +230,52 @@
             left: 0; 
             width: 100%; 
             height: 100%;
-            background: rgba(0, 0, 0, 0.4); 
-            backdrop-filter: blur(4px); 
-            z-index: 1000;
+            background: rgba(245, 247, 250, 0.65); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 9999;
             justify-content: center; 
             align-items: center;
         }
         
         #dataLoadingOverlay {
-            display: flex; 
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
+            display: flex;
         }
-        .loading-spinner-box {
+
+        .loading-card {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 28px;
+            padding: 35px 30px;
             text-align: center;
+            box-shadow: 0 15px 35px rgba(108, 92, 231, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+            width: 80%;
         }
+
         .spinner {
-            width: 45px;
-            height: 45px;
-            border: 5px solid rgba(108, 92, 231, 0.1);
-            border-top: 5px solid #6c5ce7;
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(108, 92, 231, 0.15);
+            border-top: 4px solid #6c5ce7;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px auto;
+            animation: spin 0.85s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+            margin: 0 auto 18px auto;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
         .loading-text {
-            font-size: 1.05rem;
-            font-weight: bold;
-            color: #4a5568;
+            font-size: 0.98rem;
+            font-weight: 600;
+            color: #2c3e50;
+            letter-spacing: -0.2px;
+            word-break: keep-all;
+            line-height: 1.45;
         }
 
         .modal-box {
@@ -273,11 +299,17 @@
 </head>
 <body>
 
+    <!-- index.html 스타일 맞춤 로딩 화면 -->
     <div id="dataLoadingOverlay" class="modal-overlay">
-        <div class="loading-spinner-box">
+        <div class="loading-card">
             <div class="spinner"></div>
-            <div class="loading-text">학생 데이터를 안전하게 불러오는 중입니다...</div>
+            <div class="loading-text">학생 데이터를 안전하게<br>불러오는 중입니다...</div>
         </div>
+    </div>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast-container">
+        <div id="toastMessage" class="toast-message"></div>
     </div>
 
     <div class="container">
@@ -339,18 +371,8 @@
             </div>
         </div>
 
-        <button onclick="updateStudentProfile()" class="submit-btn">변경사항 저장하기</button>
-
         <div class="delete-account-zone">
             <button onclick="openDeleteModal()" class="delete-btn">학원 앱 서비스 회원 탈퇴</button>
-        </div>
-    </div>
-
-    <div id="customAlertModal" class="modal-overlay">
-        <div class="modal-box">
-            <div id="customAlertTitle" class="modal-title">💡 알림</div>
-            <div id="customAlertContent" class="modal-content">내용</div>
-            <button class="modal-btn" onclick="closeCustomAlert()">확인</button>
         </div>
     </div>
 
@@ -383,27 +405,21 @@
         const SECRET_SALT = "u2mkst!"; 
         const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc"; 
 
-        let customAlertCallback = null;
+        let autoSaveTimer = null;
+        let isInitialLoad = true;
 
         function showModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        function showCustomAlert(content, title = "💡 알림", callback = null) {
-            document.getElementById('customAlertTitle').innerText = title;
-            document.getElementById('customAlertContent').innerText = content;
-            customAlertCallback = callback;
-            showModal('customAlertModal');
+        function showToast(message) {
+            const toast = document.getElementById('toastMessage');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2200);
         }
 
-        function closeCustomAlert() {
-            closeModal('customAlertModal');
-            if (customAlertCallback && typeof customAlertCallback === 'function') {
-                customAlertCallback();
-                customAlertCallback = null;
-            }
-        }
-
-        // 🛡️ plainText가 숫자 형식이어도 강제 문자열 변환하여 .trim() 터짐 오류 원천 해결
         function decryptAES(cipherText) {
             if (!cipherText) return "";
             try {
@@ -454,6 +470,7 @@
                                 schoolCodeInput.value = item.SD_SCHUL_CODE;
                                 schoolList.innerHTML = '';
                                 schoolList.classList.add('hidden');
+                                triggerAutoSave();
                             });
                             schoolList.appendChild(li);
                         });
@@ -471,7 +488,6 @@
             }
         });
 
-        // 🌟 [안전 로딩 구현] 원장님 DB 규격 (studentPhone, mathflatPw 대소문자 구조) 반영
         window.onload = function() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -489,19 +505,21 @@
                             document.getElementById('u2mId').value = data.u2mId || '';
                             document.getElementById('u2mPhone').value = decryptAES(data.phone);
                             
-                            // 암호화된 대문자 규격(studentPhone)을 우선하되, 없을 시 평문(mathflatId) 백업 매칭
                             const rawMathflatId = data.studentPhone ? decryptAES(data.studentPhone) : (data.mathflatId || '');
                             document.getElementById('mathflatId').value = rawMathflatId;
                             
-                            // 비밀번호 대소문자 규격(mathflatPw) 매칭
                             document.getElementById('mathflatPw').value = decryptAES(data.mathflatPw);
                             
                             document.getElementById('dataLoadingOverlay').style.display = 'none';
+                            
+                            setTimeout(() => {
+                                bindAutoSaveEvents();
+                                isInitialLoad = false;
+                            }, 400);
                         } else {
                             document.getElementById('dataLoadingOverlay').style.display = 'none';
-                            showCustomAlert("학생 데이터를 찾을 수 없습니다.", "❌ 오류", () => {
-                                window.location.replace('login.html');
-                            });
+                            showToast("학생 데이터를 찾을 수 없습니다.");
+                            setTimeout(() => { window.location.replace('login.html'); }, 1500);
                         }
                     });
                 } else {
@@ -510,10 +528,28 @@
             });
         };
 
-        // 🌟 [안전 저장 구현] 민감정보 변경 전 백그라운드 재인증(Reauthentication) 추가
-        function updateStudentProfile() {
+        function bindAutoSaveEvents() {
+            const inputs = ['studentName', 'schoolName', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw'];
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', triggerAutoSave);
+                    element.addEventListener('change', triggerAutoSave);
+                }
+            });
+        }
+
+        function triggerAutoSave() {
+            if (isInitialLoad) return;
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                updateStudentProfileAuto();
+            }, 800);
+        }
+
+        function updateStudentProfileAuto() {
             const user = auth.currentUser;
-            if (!user) { showCustomAlert("세션이 만료되었습니다. 다시 로그인 해주세요."); return; }
+            if (!user) return;
 
             const studentName = document.getElementById('studentName').value.trim();
             const schoolName = document.getElementById('schoolName').value.trim();
@@ -523,65 +559,29 @@
             const mathflatPhone = document.getElementById('mathflatId').value.trim().replace(/[^0-9]/g, '');
             const mathflatPw = document.getElementById('mathflatPw').value.trim();
 
-            if (!studentName || !schoolName || !schoolCode || !selectedTeacher || !phoneTail || !mathflatPhone || !mathflatPw) {
-                showCustomAlert("모든 항목을 빠짐없이 입력해 주세요.");
+            if (!studentName || !schoolName || !selectedTeacher || !phoneTail || !mathflatPhone || !mathflatPw) {
                 return;
             }
 
-            document.getElementById('dataLoadingOverlay').style.display = 'flex';
-            const studentPassword = "00" + phoneTail; 
-            
-            const savedId = localStorage.getItem('u2m_id');
-            const savedPw = localStorage.getItem('u2m_pw');
-            
-            if (!savedId || !savedPw) {
-                document.getElementById('dataLoadingOverlay').style.display = 'none';
-                showCustomAlert("인증 정보가 유실되었습니다. 로그아웃 후 다시 로그인하여 시도해 주세요.");
-                return;
-            }
+            const updatedObject = {
+                name: encryptAES(studentName),                  
+                schoolName: schoolName,               
+                schoolCode: schoolCode,               
+                teacher: selectedTeacher,             
+                phone: encryptAES(phoneTail),            
+                studentPhone: encryptAES(mathflatPhone),
+                mathflatPw: encryptAES(mathflatPw),     
+                mathflatId: mathflatPhone                
+            };
 
-            const studentEmail = savedId.includes('@') ? savedId : savedId + "@kst.com";
-            const credential = firebase.auth.EmailAuthProvider.credential(studentEmail, savedPw);
-
-            // 1단계: 보안을 위한 재인증 세션 갱신
-            user.reauthenticateWithCredential(credential)
+            database.ref(`students/${user.uid}`).update(updatedObject)
                 .then(() => {
-                    // 2단계: Auth 패스워드 수정
-                    return user.updatePassword(studentPassword);
-                })
-                .then(() => {
-                    // 3단계: 원장님 DB 실 구조명(studentPhone, mathflatPw)에 맞추어 RTDB 저장
-                    const updatedObject = {
-                        name: encryptAES(studentName),                  
-                        schoolName: schoolName,               
-                        schoolCode: schoolCode,               
-                        teacher: selectedTeacher,             
-                        phone: encryptAES(phoneTail),            
-                        studentPhone: encryptAES(mathflatPhone), // 대문자 P 규격 매칭
-                        mathflatPw: encryptAES(mathflatPw),     // 대문자 P,W 규격 매칭
-                        mathflatId: mathflatPhone                // 평문 백업용 필드도 통합 갱신
-                    };
-
-                    return database.ref(`students/${user.uid}`).update(updatedObject);
-                })
-                .then(() => {
-                    // 4단계: 로컬 패스워드 갱신 후 성공 안내
+                    const studentPassword = "00" + phoneTail; 
                     localStorage.setItem('u2m_pw', studentPassword);
-                    document.getElementById('dataLoadingOverlay').style.display = 'none';
-                    showCustomAlert("학생 정보가 성공적으로 수정되었습니다!", "⚙️ 완료", () => {
-                        window.location.href = 'index.html';
-                    });
+                    showToast("💾 변경사항이 자동으로 저장되었습니다.");
                 })
                 .catch((err) => {
-                    document.getElementById('dataLoadingOverlay').style.display = 'none';
-                    console.error(err);
-                    if (err.code === "auth/sensitive-actions-require-recent-login") {
-                        showCustomAlert("보안을 위해 다시 로그인한 뒤 변경해 주세요.", "🔒 보안 알림", () => {
-                            window.location.replace('login.html');
-                        });
-                    } else {
-                        showCustomAlert("정보 수정을 실패했습니다: " + err.message);
-                    }
+                    console.error("자동 저장 실패:", err);
                 });
         }
 
@@ -601,7 +601,7 @@
                 })
                 .catch((error) => {
                     document.getElementById('dataLoadingOverlay').style.display = 'none';
-                    showCustomAlert("탈퇴 실패: " + error.message);
+                    showToast("탈퇴 실패: " + error.message);
                 });
         }
     </script>
