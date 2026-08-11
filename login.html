@@ -14,6 +14,9 @@
     <!-- Google reCAPTCHA v2 API Script -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
+    <!-- Mona12 폰트 라이브러리 추가 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
+
     <!-- 프리미엄 폰트 시스템 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,18 +24,20 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
     
     <style>
+        @import url("https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css");
+        @import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap');
+
         @font-face {
             font-family: 'FlightSans';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Bold.woff2') format('woff2');
             font-weight: 700;
             font-display: swap;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap');
 
         :root {
-            --font-title: 'FlightSans', 'Plus Jakarta Sans', -apple-system, sans-serif;
-            --font-body: 'Pretendard', -apple-system, sans-serif;
-            --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+            --font-emoji: 'Mona12', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+            --font-title: 'FlightSans', 'Plus Jakarta Sans', var(--font-emoji), -apple-system, sans-serif;
+            --font-body: 'Pretendard', var(--font-emoji), -apple-system, sans-serif;
 
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -60,6 +65,11 @@
             margin: 0; padding: 24px 16px; color: var(--text-main);
             min-height: 100vh;
             display: flex; justify-content: center; align-items: center;
+        }
+
+        .mona12, .emoji-icon, .alert-icon {
+            font-family: 'Mona12', sans-serif !important;
+            font-style: normal;
         }
 
         .container {
@@ -232,7 +242,6 @@
         }
 
         .lite-info { display: flex; align-items: center; gap: 10px; }
-        .emoji-icon { font-family: 'Mona Sans', -apple-system, sans-serif; font-style: normal; display: inline-block; }
 
         .lite-icon {
             width: 32px; height: 32px;
@@ -245,7 +254,7 @@
         .lite-desc { font-size: 0.72rem; color: var(--text-muted); }
         .lite-arrow { font-size: 0.85rem; color: var(--primary); font-weight: bold; }
 
-        /* 바텀시트 모달 스타일 */
+        /* reCAPTCHA 바텀시트 모달 스타일 */
         .captcha-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.65);
@@ -262,7 +271,7 @@
         .captcha-bottom-sheet {
             width: 100%; max-width: 440px; background: #ffffff;
             border-top-left-radius: 32px; border-top-right-radius: 32px;
-            padding: 28px 24px 32px 24px; box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.25);
+            padding: 28px 24px 36px 24px; box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.25);
             transform: translateY(100%);
             transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -278,11 +287,58 @@
 
         .captcha-header { text-align: center; margin-bottom: 20px; }
         .captcha-title { font-size: 1.15rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; }
-        .captcha-subtext { font-size: 0.82rem; color: #64748b; margin-top: 6px; margin-bottom: 0; }
+        .captcha-subtext { font-size: 0.82rem; color: #64748b; margin-top: 6px; margin-bottom: 0; line-height: 1.4; }
 
         .recaptcha-box {
             display: flex; justify-content: center; align-items: center;
-            margin-bottom: 20px; min-height: 78px;
+            margin-top: 10px; min-height: 78px;
+        }
+
+        /* 커스텀 알림 모달 스타일 */
+        .alert-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 10000; display: flex; justify-content: center; align-items: center;
+            padding: 20px; opacity: 0; visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .alert-overlay.active {
+            opacity: 1; visibility: visible;
+        }
+
+        .alert-card {
+            background: #ffffff; width: 100%; max-width: 320px;
+            border-radius: var(--radius-lg); padding: 28px 24px 24px 24px;
+            text-align: center; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+            transform: scale(0.92);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .alert-overlay.active .alert-card {
+            transform: scale(1);
+        }
+
+        .alert-icon {
+            font-size: 2.2rem; margin-bottom: 12px; line-height: 1;
+        }
+
+        .alert-message {
+            font-size: 0.92rem; color: var(--text-main); font-weight: 600;
+            line-height: 1.55; margin-bottom: 22px; white-space: pre-line; word-break: keep-all;
+        }
+
+        .alert-btn {
+            background: var(--primary); color: #ffffff; border: none;
+            padding: 12px; border-radius: var(--radius-md); font-weight: 700;
+            cursor: pointer; width: 100%; font-size: 0.92rem;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .alert-btn:hover {
+            background: var(--primary-hover);
         }
 
         .hidden { display: none !important; }
@@ -322,7 +378,7 @@
             <!-- Lite 모드 이동 카드 -->
             <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
                 <div class="lite-info">
-                    <div class="lite-icon"><i class="emoji-icon">⚡</i></div>
+                    <div class="lite-icon"><i class="emoji-icon mona12">⚡</i></div>
                     <div class="lite-text-group">
                         <span class="lite-title">Lite 모드 이용하기</span>
                         <span class="lite-desc">로그인 없이 빠르게 바로 사용</span>
@@ -439,16 +495,23 @@
             <div class="sheet-handle"></div>
             
             <div class="captcha-header">
-                <div class="captcha-title">비밀번호 확인 인증</div>
-                <p class="captcha-subtext">보안을 위해 아래 체크박스를 클릭해 주세요.</p>
+                <div class="captcha-title">보안 인증 진행</div>
+                <p class="captcha-subtext">비밀번호 오류로 인해 인증이 필요합니다.<br>아래 체크박스를 클릭해 주세요.</p>
             </div>
             
             <div class="recaptcha-box">
                 <!-- Google reCAPTCHA v2 위젯 영역 -->
                 <div class="g-recaptcha" data-sitekey="6LcoRYAtAAAAAP_83dJyhmTfWrTrer3QUYf8Pof1" data-callback="onCaptchaSuccess"></div>
             </div>
+        </div>
+    </div>
 
-            <button type="button" onclick="closeCaptchaModal()" style="background:#cbd5e1; color:#334155;">취소</button>
+    <!-- 커스텀 알림 모달 -->
+    <div id="customAlertModal" class="alert-overlay">
+        <div class="alert-card">
+            <div class="alert-icon mona12" id="customAlertIcon">💡</div>
+            <div class="alert-message" id="customAlertMessage"></div>
+            <button type="button" class="alert-btn" onclick="closeCustomAlert()">확인</button>
         </div>
     </div>
 
@@ -471,6 +534,7 @@
         const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
 
         let loginFailCount = 0; 
+        let alertCallback = null;
 
         const schoolInput = document.getElementById('registerSchool');
         const schoolList = document.getElementById('schoolList');
@@ -478,18 +542,35 @@
 
         let currentStep = 1;
 
+        // 커스텀 알림 모달 제어 함수
+        function showAlert(message, icon = "💡", callback = null) {
+            document.getElementById('customAlertIcon').textContent = icon;
+            document.getElementById('customAlertMessage').textContent = message;
+            document.getElementById('customAlertModal').classList.add('active');
+            alertCallback = callback;
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('customAlertModal').classList.remove('active');
+            if (alertCallback) {
+                const cb = alertCallback;
+                alertCallback = null;
+                cb();
+            }
+        }
+
         window.addEventListener('keydown', function (e) {
             if (e.key === 'F5' || 
                (e.ctrlKey && (e.key === 'r' || e.key === 'R')) || 
                (e.metaKey && (e.key === 'r' || e.key === 'R'))) {
                 e.preventDefault();
-                alert('페이지 새로고침이 제한되어 있습니다.');
+                showAlert('페이지 새로고침이 제한되어 있습니다.', '🔒');
             }
         });
 
         function openCaptchaModal() {
             if (window.grecaptcha) {
-                grecaptcha.reset(); // reCAPTCHA 상태 초기화
+                grecaptcha.reset(); 
             }
             document.getElementById('captchaModal').classList.add('active');
         }
@@ -546,19 +627,19 @@
                 const schoolCode = schoolCodeInput.value.trim();
                 const selectedTeacher = document.getElementById('registerTeacher').value;
 
-                if (!studentName) { alert('학생 이름을 입력하세요.'); return; }
-                if (u2mId.length <= 4) { alert('⚠️ ufes 뒤에 숫자를 입력해 주세요.'); return; }
-                if (!/^\d{4}$/.test(phoneTail)) { alert('부모님 전화번호 뒷자리는 숫자 4자리로 입력해주세요.'); return; }
-                if (!schoolName || !schoolCode) { alert('⚠️ 소속 학교를 입력한 후, 반드시 자동완성 리스트에서 학교를 선택해 주세요.'); return; }
-                if (!selectedTeacher) { alert('담당 선생님을 선택해 주세요.'); return; }
+                if (!studentName) { showAlert('학생 이름을 입력하세요.', '✍️'); return; }
+                if (u2mId.length <= 4) { showAlert('ufes 뒤에 숫자를 입력해 주세요.', '⚠️'); return; }
+                if (!/^\d{4}$/.test(phoneTail)) { showAlert('부모님 전화번호 뒷자리는 숫자 4자리로 입력해주세요.', '📱'); return; }
+                if (!schoolName || !schoolCode) { showAlert('소속 학교를 입력한 후, 반드시 자동완성 리스트에서 학교를 선택해 주세요.', '🏫'); return; }
+                if (!selectedTeacher) { showAlert('담당 선생님을 선택해 주세요.', '👨‍🏫'); return; }
             }
 
             if (targetStep === 3) {
                 const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
                 const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
 
-                if (mathflatPhone.length < 10) { alert('올바른 매쓰플랫 아이디(휴대폰 번호)를 입력해 주세요.'); return; }
-                if (!mathflatPw) { alert('매쓰플랫 비밀번호를 입력해 주세요.'); return; }
+                if (mathflatPhone.length < 10) { showAlert('올바른 매쓰플랫 아이디(휴대폰 번호)를 입력해 주세요.', '📲'); return; }
+                if (!mathflatPw) { showAlert('매쓰플랫 비밀번호를 입력해 주세요.', '🔑'); return; }
             }
 
             updateStepView(targetStep);
@@ -656,7 +737,7 @@
 
             const isAgreed = document.getElementById('registerAgreement').checked;
             if (!isAgreed) {
-                alert('이용약관 및 개인정보처리방침에 동의하셔야 회원가입이 완료됩니다.');
+                showAlert('이용약관 및 개인정보처리방침에 동의하셔야 회원가입이 완료됩니다.', '📜');
                 return;
             }
 
@@ -696,16 +777,17 @@
                     });
                 })
                 .then(() => {
-                    alert('🎉 회원가입이 완료되었습니다!\n유투엠 아이디와 비밀번호로 로그인해 주세요.');
-                    document.getElementById('registerForm').reset();
-                    toggleMode('login');
-                    document.getElementById('loginId').value = u2mId;
+                    showAlert('회원가입이 완료되었습니다!\n유투엠 아이디와 비밀번호로 로그인해 주세요.', '🎉', () => {
+                        document.getElementById('registerForm').reset();
+                        toggleMode('login');
+                        document.getElementById('loginId').value = u2mId;
+                    });
                 })
                 .catch((error) => {
                     if(error.code === "auth/email-already-in-use") {
-                        alert("이미 등록된 유투엠 아이디입니다.");
+                        showAlert("이미 등록된 유투엠 아이디입니다.", "⚠️");
                     } else {
-                        alert('회원가입 실패: ' + error.message);
+                        showAlert('회원가입 실패: ' + error.message, '❌');
                     }
                 });
         }
@@ -738,7 +820,7 @@
                 })
                 .catch((error) => {
                     loginFailCount++;
-                    alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+                    showAlert("아이디 또는 비밀번호가 일치하지 않습니다.", "🔒");
 
                     if (loginFailCount >= 1) {
                         openCaptchaModal();
@@ -746,16 +828,16 @@
                 });
         }
 
-        // 🌟 reCAPTCHA 성공 시 자동 호출되는 콜백 함수
+        // reCAPTCHA 성공 시 자동 호출되는 콜백 함수
         function onCaptchaSuccess(token) {
-            loginFailCount = 0; // 비밀번호 실패 카운트 리셋
+            loginFailCount = 0; 
             closeCaptchaModal();
             
             const passInput = document.getElementById('loginPassword');
             passInput.value = '';
             passInput.focus();
             
-            alert("보안 인증이 완료되었습니다!\n비밀번호를 다시 올바르게 입력한 후 로그인해 주세요.");
+            showAlert("보안 인증이 완료되었습니다!\n비밀번호를 다시 올바르게 입력한 후 로그인해 주세요.", "✅");
         }
     </script>
 </body>
