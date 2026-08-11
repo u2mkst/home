@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* 1. Paperozi 및 Flight Sans 폰트 */
+        /* 폰트 설정 */
         @font-face {
             font-family: 'Paperozi';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
@@ -306,25 +306,14 @@
             line-height: 1.45;
         }
 
-        .modal-box {
-            background: #ffffff; 
-            width: 90%; 
-            max-width: 380px; 
-            padding: 30px 24px;
-            border-radius: 24px; 
-            text-align: center; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15); 
-            box-sizing: border-box;
-        }
-        .modal-title { font-size: 1.25rem; font-weight: 700; color: #6c5ce7; margin-bottom: 15px; }
-        .modal-content { font-size: 1rem; color: #4a5568; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-break: keep-all; }
-        .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 12px 30px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
-        .btn-flex-group { display: flex; gap: 8px; }
-        .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 12px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
+        .btn-flex-group { display: flex; gap: 8px; margin-top: 15px; }
+        .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 14px 20px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .modal-btn:hover { background-color: #5b4bc4; }
+        .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 14px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
         .btn-cancel:hover { background-color: #cbd5e1; }
         .hidden { display: none !important; }
 
-        /* 바텀시트 UI */
+        /* 공통 바텀시트 UI */
         .bottom-sheet-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -373,9 +362,9 @@
             margin-bottom: 8px;
         }
         .sheet-desc {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: #718096;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             line-height: 1.5;
         }
         .sheet-desc span {
@@ -386,11 +375,11 @@
 </head>
 <body>
 
-    <!-- index.html 스타일 맞춤 로딩 화면 -->
+    <!-- 로딩 화면 -->
     <div id="dataLoadingOverlay" class="modal-overlay">
         <div class="loading-card">
             <div class="spinner"></div>
-            <div class="loading-text">학생 데이터를 안전하게<br>불러오는 중입니다...</div>
+            <div class="loading-text" id="loadingText">학생 데이터를 안전하게<br>불러오는 중입니다...</div>
         </div>
     </div>
 
@@ -469,7 +458,7 @@
         </div>
 
         <div class="delete-account-zone">
-            <button onclick="openDeleteModal()" class="delete-btn">학원 앱 서비스 회원 탈퇴</button>
+            <button onclick="openDeleteBottomSheet()" class="delete-btn">학원 앱 서비스 회원 탈퇴</button>
         </div>
     </div>
 
@@ -487,15 +476,33 @@
         </div>
     </div>
 
-    <!-- 회원 탈퇴 모달 -->
-    <div id="deleteCheckModal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-title" style="color: #e53e3e;">⚠️ 정말 탈퇴하시겠습니까?</div>
-            <div class="modal-content">회원 탈퇴 시 등록된 계정 정보가 영구히 삭제되며 복구할 수 없습니다.</div>
-            <div class="btn-flex-group">
-                <button class="btn-cancel" onclick="closeModal('deleteCheckModal')">취소</button>
-                <button class="modal-btn" onclick="confirmDeleteAccount()" style="background-color: #e53e3e;">탈퇴 확정</button>
+    <!-- 🔒 회원 탈퇴용 아이디/비밀번호 입력 바텀시트 -->
+    <div id="reauthBottomSheetOverlay" class="bottom-sheet-overlay" onclick="closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet')"></div>
+    <div id="reauthBottomSheet" class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" style="color: #e53e3e;">⚠️ 학원 앱 회원 탈퇴</div>
+        <div class="sheet-desc">
+            본인 확인을 위해 **유투엠 아이디**와 **비밀번호**를 입력해 주세요.<br>
+            탈퇴 시 모든 데이터가 영구적으로 삭제됩니다.
+        </div>
+        
+        <div class="input-wrapper">
+            <label for="reauthId">유투엠 아이디</label>
+            <input type="text" id="reauthId" placeholder="아이디 입력">
+        </div>
+        <div class="input-wrapper">
+            <label for="reauthPw">비밀번호</label>
+            <div class="input-pw">
+                <input type="password" id="reauthPw" placeholder="비밀번호 입력">
+                <div class="eyes" onclick="togglePasswordVisibility('reauthPw', this)">
+                    <i class="fa-regular fa-eye-slash"></i>
+                </div>
             </div>
+        </div>
+
+        <div class="btn-flex-group">
+            <button class="btn-cancel" onclick="closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet')">취소</button>
+            <button class="modal-btn" onclick="processReauthAndDelete()" style="background-color: #e53e3e;">본인 인증 후 탈퇴</button>
         </div>
     </div>
 
@@ -519,11 +526,8 @@
 
         let autoSaveTimer = null;
         let isInitialLoad = true;
-        let originalU2mId = ""; // 기존 u2mId 백업용
-        let pendingU2mId = "";  // 변경 시도 u2mId
-
-        function showModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        let originalU2mId = ""; 
+        let pendingU2mId = "";  
 
         // 비밀번호 보이기/숨기기 토글
         function togglePasswordVisibility(inputId, eyeBtn) {
@@ -659,7 +663,6 @@
             });
         };
 
-        // 입력 이벤트 바인딩
         function bindAutoSaveEvents() {
             const inputs = ['studentName', 'schoolName', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw'];
             inputs.forEach(id => {
@@ -671,7 +674,6 @@
                 }
             });
 
-            // 유투엠 아이디는 변경 시 바텀시트 확인 절차 진행
             const u2mInput = document.getElementById('u2mId');
             if (u2mInput) {
                 u2mInput.addEventListener('change', handleU2mIdChange);
@@ -679,30 +681,28 @@
             }
         }
 
-        // U2M ID 변경 감지 및 바텀시트 호출
         function handleU2mIdChange() {
             if (isInitialLoad) return;
             const currentVal = document.getElementById('u2mId').value.trim();
             if (currentVal !== originalU2mId && currentVal.length > 0) {
                 pendingU2mId = currentVal;
                 document.getElementById('newU2mIdText').innerText = `'${pendingU2mId}'`;
-                openBottomSheet();
+                openBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
             }
         }
 
-        function openBottomSheet() {
-            document.getElementById('u2mBottomSheetOverlay').classList.add('active');
-            document.getElementById('u2mBottomSheet').classList.add('active');
+        function openBottomSheet(overlayId, sheetId) {
+            document.getElementById(overlayId).classList.add('active');
+            document.getElementById(sheetId).classList.add('active');
         }
 
-        function closeBottomSheet() {
-            document.getElementById('u2mBottomSheetOverlay').classList.remove('active');
-            document.getElementById('u2mBottomSheet').classList.remove('active');
+        function closeBottomSheet(overlayId, sheetId) {
+            document.getElementById(overlayId).classList.remove('active');
+            document.getElementById(sheetId).classList.remove('active');
         }
 
-        // 바텀시트 확인 클릭 시 실제 저장
         function confirmU2mIdChange() {
-            closeBottomSheet();
+            closeBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
             const user = auth.currentUser;
             if (!user) return;
 
@@ -718,9 +718,8 @@
                 });
         }
 
-        // 취소 시 기존 아이디로 복원
         function cancelU2mIdChange() {
-            closeBottomSheet();
+            closeBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
             document.getElementById('u2mId').value = originalU2mId;
         }
 
@@ -773,23 +772,70 @@
                 });
         }
 
-        function openDeleteModal() { showModal('deleteCheckModal'); }
-        function confirmDeleteAccount() {
+        // 탈퇴 바텀시트 열기
+        function openDeleteBottomSheet() {
+            // 기존 등록된 u2mId 값을 재인증 입력란에 미리 세팅
+            document.getElementById('reauthId').value = originalU2mId;
+            document.getElementById('reauthPw').value = '';
+            openBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet');
+        }
+
+        // 바텀시트 내에서 아이디, 비번으로 자체 재인증 후 탈퇴 수행
+        function processReauthAndDelete() {
             const user = auth.currentUser;
-            if (!user) return;
-            closeModal('deleteCheckModal');
+            if (!user) {
+                showToast("로그인 사용자 정보를 찾을 수 없습니다.");
+                return;
+            }
+
+            const inputId = document.getElementById('reauthId').value.trim();
+            const inputPw = document.getElementById('reauthPw').value.trim();
+
+            if (!inputId) {
+                showToast("유투엠 아이디를 입력해 주세요.");
+                return;
+            }
+            if (!inputPw) {
+                showToast("비밀번호를 입력해 주세요.");
+                return;
+            }
+
+            // 계정 도메인이 u2m아이디@knp.com 형식으로 관리된다면 매핑, 아닐 경우 입력값 사용
+            const email = inputId.includes('@') ? inputId : `${inputId}@knp.com`;
+            const credential = firebase.auth.EmailAuthProvider.credential(email, inputPw);
+
+            closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet');
+            document.getElementById('loadingText').innerHTML = "본인 인증 확인 및 회원 탈퇴를<br>진행하는 중입니다...";
             document.getElementById('dataLoadingOverlay').style.display = 'flex';
-            database.ref(`students/${user.uid}`).remove()
-                .then(() => { return user.delete(); })
+
+            // 1. Firebase Auth 재인증 진행
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    // 2. Realtime Database 데이터 삭제
+                    return database.ref(`students/${user.uid}`).remove();
+                })
+                .then(() => {
+                    // 3. 계정 최종 삭제
+                    return user.delete();
+                })
                 .then(() => {
                     document.getElementById('dataLoadingOverlay').style.display = 'none';
                     localStorage.clear();
-                    alert("회원 탈퇴가 완료되었습니다.");
+                    alert("회원 탈퇴가 안전하게 처리되었습니다.");
                     window.location.replace('login.html');
                 })
                 .catch((error) => {
                     document.getElementById('dataLoadingOverlay').style.display = 'none';
-                    showToast("탈퇴 실패: " + error.message);
+                    console.error("재인증 및 탈퇴 실패:", error);
+                    
+                    if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                        alert("아이디 또는 비밀번호가 올바르지 않습니다. 다시 시도해 주세요.");
+                    } else if (error.code === 'auth/invalid-email') {
+                        alert("올바르지 않은 아이디 형식입니다.");
+                    } else {
+                        alert("인증 실패: " + error.message);
+                    }
+                    openDeleteBottomSheet(); // 실패 시 바텀시트 다시 열기
                 });
         }
     </script>
