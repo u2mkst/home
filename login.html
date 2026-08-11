@@ -428,12 +428,12 @@
 
                     <div class="form-group">
                         <label>매쓰플랫 아이디 (학생 휴대폰)</label>
-                        <input type="text" id="registerMathflatPhone" placeholder="하이픈(-) 없이 숫자만" inputmode="numeric">
+                        <input type="text" id="registerMathflatPhone" placeholder="하이픈(-) 없이 숫자만" inputmode="numeric" oninput="resetMathflatSkip()">
                     </div>
                     
                     <div class="form-group">
                         <label>매쓰플랫 비밀번호</label>
-                        <input type="password" id="registerMathflatPw" placeholder="접속 비밀번호 입력">
+                        <input type="password" id="registerMathflatPw" placeholder="접속 비밀번호 입력" oninput="resetMathflatSkip()">
                     </div>
 
                     <div class="btn-group">
@@ -511,6 +511,7 @@
 
         let loginFailCount = 0; 
         let toastTimeout = null;
+        let isMathflatSkipped = false; // 🌟 매쓰플랫 스킵 처리 플래그
 
         const schoolInput = document.getElementById('registerSchool');
         const schoolList = document.getElementById('schoolList');
@@ -532,12 +533,18 @@
             }, duration);
         }
 
-        // 매쓰플랫 잘모르겠어요 -> 빈 채로 스킵
+        // 매쓰플랫 '잘 모르겠어요' 버튼 클릭 시
         function skipMathflat() {
+            isMathflatSkipped = true;
             document.getElementById('registerMathflatPhone').value = '';
             document.getElementById('registerMathflatPw').value = '';
-            showToast('매쓰플랫 정보를 비워두고 다음으로 이동합니다!', '💡');
+            showToast('매쓰플랫 정보를 스킵하고 다음으로 이동합니다!', '💡');
             updateStepView(3);
+        }
+
+        // 직접 입력 시작 시 스킵 상태 리셋
+        function resetMathflatSkip() {
+            isMathflatSkipped = false;
         }
 
         window.addEventListener('keydown', function (e) {
@@ -616,12 +623,20 @@
             }
 
             if (targetStep === 3) {
-                const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim();
-                const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
+                // 🌟 스킵 버튼을 누르지 않은 상태라면 입력을 강제검증
+                if (!isMathflatSkipped) {
+                    const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim();
+                    const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
 
-                if (mathflatPhone && mathflatPhone.replace(/[^0-9]/g, '').length < 10) {
-                    showToast('올바른 매쓰플랫 아이디(휴대폰 번호)를 입력해 주세요.', '📲');
-                    return;
+                    if (!mathflatPhone || !mathflatPw) {
+                        showToast('매쓰플랫 정보를 입력하시거나,\n모르시는 경우 [잘 모르겠어요 💡] 버튼을 눌러주세요!', '⚠️', 3500);
+                        return;
+                    }
+
+                    if (mathflatPhone.replace(/[^0-9]/g, '').length < 10) {
+                        showToast('올바른 매쓰플랫 아이디(휴대폰 번호)를 입력해 주세요.', '📲');
+                        return;
+                    }
                 }
             }
 
@@ -697,6 +712,7 @@
                 document.getElementById('loginCard').classList.add('hidden');
                 document.getElementById('registerCard').classList.remove('hidden');
                 if (liteBox) liteBox.classList.add('hidden');
+                isMathflatSkipped = false; // 회원가입 초기화시 스킵 플래그 리셋
                 updateStepView(1); 
                 
                 const regInput = document.getElementById('registerId');
