@@ -371,6 +371,38 @@
             color: #6c5ce7;
             font-weight: bold;
         }
+
+        /* 🤖 로봇 확인 체크박스 박스 스타일 */
+        .robot-check-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .robot-check-box:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        .robot-check-box input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #6c5ce7;
+        }
+        .robot-check-box label {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -462,7 +494,7 @@
         </div>
     </div>
 
-    <!-- 유투엠 아이디 변경 재확인 바텀시트 -->
+    <!-- 🤖 유투엠 아이디 변경 재확인 바텀시트 (+ 로봇 확인 추가) -->
     <div id="u2mBottomSheetOverlay" class="bottom-sheet-overlay" onclick="cancelU2mIdChange()"></div>
     <div id="u2mBottomSheet" class="bottom-sheet">
         <div class="sheet-handle"></div>
@@ -470,6 +502,13 @@
         <div class="sheet-desc">
             유투엠 아이디를 <span id="newU2mIdText"></span>(으)로 변경하시겠습니까?
         </div>
+
+        <!-- 🤖 로봇이 아닙니다 체크박스 추가 -->
+        <div class="robot-check-box" onclick="document.getElementById('robotCheckU2m').click();">
+            <input type="checkbox" id="robotCheckU2m" onclick="event.stopPropagation();">
+            <label for="robotCheckU2m">🤖 로봇이 아닙니다</label>
+        </div>
+
         <div class="btn-flex-group">
             <button class="btn-cancel" onclick="cancelU2mIdChange()">취소</button>
             <button class="modal-btn" onclick="confirmU2mIdChange()">확인 및 변경</button>
@@ -482,8 +521,7 @@
         <div class="sheet-handle"></div>
         <div class="sheet-title" style="color: #e53e3e;">⚠️ 학원 앱 회원 탈퇴</div>
         <div class="sheet-desc">
-            본인 확인을 위해 **유투엠 아이디**와 **비밀번호**를 입력해 주세요.<br>
-            탈퇴 시 모든 데이터가 영구적으로 삭제됩니다.
+            본인 확인을 위해 **유투엠 아이디**와 **전화번호 뒷자리 4자리**를 입력해 주세요.
         </div>
         
         <div class="input-wrapper">
@@ -491,9 +529,9 @@
             <input type="text" id="reauthId" placeholder="아이디 입력">
         </div>
         <div class="input-wrapper">
-            <label for="reauthPw">비밀번호</label>
+            <label for="reauthPw">부모님 전화번호 뒷자리 4자리</label>
             <div class="input-pw">
-                <input type="password" id="reauthPw" placeholder="비밀번호 입력">
+                <input type="password" id="reauthPw" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric">
                 <div class="eyes" onclick="togglePasswordVisibility('reauthPw', this)">
                     <i class="fa-regular fa-eye-slash"></i>
                 </div>
@@ -529,7 +567,6 @@
         let originalU2mId = ""; 
         let pendingU2mId = "";  
 
-        // 비밀번호 보이기/숨기기 토글
         function togglePasswordVisibility(inputId, eyeBtn) {
             const input = document.getElementById(inputId);
             const icon = eyeBtn.querySelector('i');
@@ -686,7 +723,12 @@
             const currentVal = document.getElementById('u2mId').value.trim();
             if (currentVal !== originalU2mId && currentVal.length > 0) {
                 pendingU2mId = currentVal;
-                document.getElementById('newU2mIdText').innerText = `'${pendingU2mId}'`;
+                // 구분을 위해 @knp.com이 안 붙어 있으면 같이 표시
+                const displayId = pendingU2mId.includes('@') ? pendingU2mId : `${pendingU2mId}@knp.com`;
+                document.getElementById('newU2mIdText').innerText = `'${displayId}'`;
+                
+                // 로봇 체크박스 리셋 후 바텀시트 열기
+                document.getElementById('robotCheckU2m').checked = false;
                 openBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
             }
         }
@@ -701,7 +743,14 @@
             document.getElementById(sheetId).classList.remove('active');
         }
 
+        // 🤖 아이디 변경 시 로봇이 아닙니다 체크 여부 확인
         function confirmU2mIdChange() {
+            const isNotRobot = document.getElementById('robotCheckU2m').checked;
+            if (!isNotRobot) {
+                showToast("🤖 '로봇이 아닙니다'에 체크해 주세요.");
+                return;
+            }
+
             closeBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
             const user = auth.currentUser;
             if (!user) return;
@@ -721,6 +770,7 @@
         function cancelU2mIdChange() {
             closeBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
             document.getElementById('u2mId').value = originalU2mId;
+            document.getElementById('robotCheckU2m').checked = false;
         }
 
         function triggerAutoSave() {
@@ -774,9 +824,9 @@
 
         // 탈퇴 바텀시트 열기
         function openDeleteBottomSheet() {
-            // 기존 등록된 u2mId 값을 재인증 입력란에 미리 세팅
             document.getElementById('reauthId').value = originalU2mId;
-            document.getElementById('reauthPw').value = '';
+            const phoneTail = document.getElementById('u2mPhone').value.trim();
+            document.getElementById('reauthPw').value = (phoneTail && phoneTail.length === 4) ? phoneTail : '';
             openBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet');
         }
 
@@ -789,19 +839,25 @@
             }
 
             const inputId = document.getElementById('reauthId').value.trim();
-            const inputPw = document.getElementById('reauthPw').value.trim();
+            let inputPw = document.getElementById('reauthPw').value.trim();
 
             if (!inputId) {
                 showToast("유투엠 아이디를 입력해 주세요.");
                 return;
             }
             if (!inputPw) {
-                showToast("비밀번호를 입력해 주세요.");
+                showToast("비밀번호(전화번호 뒷자리 4자리)를 입력해 주세요.");
                 return;
             }
 
-            // 계정 도메인이 u2m아이디@knp.com 형식으로 관리된다면 매핑, 아닐 경우 입력값 사용
+            // 1. 아이디 자동 변환: @가 없으면 @knp.com 자동 접두/접미 연동
             const email = inputId.includes('@') ? inputId : `${inputId}@knp.com`;
+
+            // 2. 비밀번호 자동 변환: 숫자 4자리만 입력한 경우 앞에 '00' 자동 부착
+            if (/^\d{4}$/.test(inputPw)) {
+                inputPw = "00" + inputPw;
+            }
+
             const credential = firebase.auth.EmailAuthProvider.credential(email, inputPw);
 
             closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet');
@@ -815,27 +871,30 @@
                     return database.ref(`students/${user.uid}`).remove();
                 })
                 .then(() => {
-                    // 3. 계정 최종 삭제
+                    // 3. Firebase Auth 계정 최종 삭제
                     return user.delete();
                 })
                 .then(() => {
                     document.getElementById('dataLoadingOverlay').style.display = 'none';
                     localStorage.clear();
-                    alert("회원 탈퇴가 안전하게 처리되었습니다.");
+                    alert("회원 탈퇴가 안전하게 완료되었습니다.");
                     window.location.replace('login.html');
                 })
                 .catch((error) => {
                     document.getElementById('dataLoadingOverlay').style.display = 'none';
                     console.error("재인증 및 탈퇴 실패:", error);
                     
-                    if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-                        alert("아이디 또는 비밀번호가 올바르지 않습니다. 다시 시도해 주세요.");
+                    const errStr = JSON.stringify(error);
+                    if (error.code === 'auth/wrong-password' || 
+                        error.code === 'auth/user-not-found' || 
+                        errStr.includes('INVALID_LOGIN_CREDENTIALS')) {
+                        alert("아이디 또는 부모님 전화번호 뒷자리 4자리가 올바르지 않습니다.");
                     } else if (error.code === 'auth/invalid-email') {
                         alert("올바르지 않은 아이디 형식입니다.");
                     } else {
-                        alert("인증 실패: " + error.message);
+                        alert("인증 실패: " + (error.message || "입력 정보를 다시 확인해 주세요."));
                     }
-                    openDeleteBottomSheet(); // 실패 시 바텀시트 다시 열기
+                    openDeleteBottomSheet(); // 실패 시 입력창 다시 열기
                 });
         }
     </script>
