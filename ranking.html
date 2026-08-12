@@ -84,7 +84,7 @@
         .rank-2 { background: #c0c0c0; color: #1d1d1f; }
         .rank-3 { background: #cd7f32; color: #fff; }
 
-        /* 학생 상세 정보 태그 */
+        /* 학생 상세 정보 태그 (학교, 담당선생님) */
         .student-info-sub {
             font-size: 0.75rem; color: #666; font-weight: 500; margin-top: 2px;
         }
@@ -326,7 +326,7 @@
             const allData = snapshot.val() || {};
             let rankArray = [];
 
-            // 전 학생 정보(이름, 학교, 선생님) 매핑
+            // 학생 정보 (이름, 학교, 담당 선생님) 매핑
             database.ref('students').once('value', (stdSnap) => {
                 const stds = stdSnap.val() || {};
 
@@ -432,12 +432,12 @@
         const rate = Math.round((attCount / daysInMonth) * 100);
         document.getElementById('myAttRate').innerText = `${rate}%`;
 
-        // 빈 칸 채우기
+        // 달력 시작 전 빈 칸
         for (let i = 0; i < firstDayIndex; i++) {
             daysContainer.innerHTML += `<div></div>`;
         }
 
-        // 날짜 채우기
+        // 달력 날짜 채우기
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const isAttended = !!attendedDays[dateStr];
@@ -450,19 +450,24 @@
 
     /* --- [2. 로또 관련 로직] --- */
     function loadLottoData() {
-        // 지난주 당첨 번호 조회
+        // 지난주 당첨 번호 크롤링 서버 파싱
         fetch("https://lotto-vzqu.onrender.com/")
             .then(res => res.json())
-            .then(data => {
-                if(data && data.numbers) {
-                    renderLottoWinningBalls(data.numbers, data.bonus);
+            .then(resData => {
+                if (resData && resData.status === "success" && resData.data) {
+                    const numbers = resData.data.numbers;
+                    const bonus = resData.data.bonusNo;
+                    renderLottoWinningBalls(numbers, bonus);
+                } else {
+                    throw new Error("데이터 구조 상이");
                 }
             })
-            .catch(() => {
-                document.getElementById('lottoWinningBox').innerHTML = `<span class="text-xs text-gray-500">당첨 번호를 불러오지 못했습니다.</span>`;
+            .catch(err => {
+                console.error("로또 번호 조회 실패:", err);
+                document.getElementById('lottoWinningBox').innerHTML = `<span class="text-xs text-red-500 font-bold">당첨 번호를 불러오지 못했습니다.</span>`;
             });
 
-        // 로또 예측 랭킹 & 내 예측 로드
+        // 랭킹 & 내 예측 데이터 조회
         database.ref('lotto_predictions').once('value', (snapshot) => {
             const predictions = snapshot.val() || {};
             renderLottoRank(predictions);
