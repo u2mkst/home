@@ -78,11 +78,16 @@
         }
         .rank-badge {
             width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fff; background: #a1a1a6;
+            justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fff; background: #a1a1a6; flex-shrink: 0;
         }
         .rank-1 { background: #ffd700; color: #1d1d1f; }
         .rank-2 { background: #c0c0c0; color: #1d1d1f; }
         .rank-3 { background: #cd7f32; color: #fff; }
+
+        /* 학생 상세 정보 태그 */
+        .student-info-sub {
+            font-size: 0.75rem; color: #666; font-weight: 500; margin-top: 2px;
+        }
 
         /* 달력 디자인 */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; margin-top: 12px; }
@@ -99,9 +104,9 @@
 
         /* 로또 공 디자인 */
         .lotto-ball {
-            width: 36px; height: 36px; border-radius: 50%; display: inline-flex;
+            width: 32px; height: 32px; border-radius: 50%; display: inline-flex;
             align-items: center; justify-content: center; font-weight: 700; color: #fff;
-            font-size: 0.9rem; box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            font-size: 0.85rem; box-shadow: 0 3px 6px rgba(0,0,0,0.15); flex-shrink: 0;
         }
         .ball-yellow { background: #fbc531; color: #1d1d1f; }
         .ball-blue { background: #00a8ff; }
@@ -195,7 +200,7 @@
             </div>
         </div>
 
-        <!-- 2. [이주의 로또] 영역 (기본 숨김) -->
+        <!-- 2. [이주의 로또] 영역 -->
         <div id="view-lotto" class="content-grid" style="display: none;">
             <!-- 좌측: 맞힌 개수 랭킹 -->
             <div class="glass-card">
@@ -321,7 +326,7 @@
             const allData = snapshot.val() || {};
             let rankArray = [];
 
-            // 전 학생 이름 매핑용
+            // 전 학생 정보(이름, 학교, 선생님) 매핑
             database.ref('students').once('value', (stdSnap) => {
                 const stds = stdSnap.val() || {};
 
@@ -329,17 +334,25 @@
                     const monthInfo = allData[uid][yearMonth];
                     if (monthInfo) {
                         const count = monthInfo.count || 0;
-                        const rawName = stds[uid]?.name || stds[uid]?.studentName || "학생";
+                        const std = stds[uid] || {};
+                        
+                        const rawName = std.name || std.studentName || std.userName;
+                        const name = rawName ? decryptAES(rawName) : "학생";
+                        const school = std.schoolName || "학교 미기재";
+                        const teacher = std.teacher ? `${std.teacher} 선생님` : "선생님 미기재";
+
                         rankArray.push({
                             uid: uid,
-                            name: decryptAES(rawName),
+                            name: name,
+                            school: school,
+                            teacher: teacher,
                             count: count,
                             days: monthInfo.days || {}
                         });
                     }
                 });
 
-                // 내림차순 정렬
+                // 출석 일수 내림차순 정렬
                 rankArray.sort((a, b) => b.count - a.count);
 
                 renderAttendanceRank(rankArray);
@@ -375,7 +388,10 @@
                     <div class="rank-item ${isMe ? 'my-rank' : ''}">
                         <div class="flex items-center gap-3">
                             <div class="rank-badge ${badgeClass}">${idx + 1}</div>
-                            <span class="font-bold">${item.name} ${isMe ? '(나)' : ''}</span>
+                            <div>
+                                <div class="font-bold">${item.name} ${isMe ? '(나)' : ''}</div>
+                                <div class="student-info-sub">🏫 ${item.school} | 👨‍🏫 ${item.teacher}</div>
+                            </div>
                         </div>
                         <span class="font-extrabold text-indigo-600">${item.count}일</span>
                     </div>`;
@@ -388,7 +404,10 @@
                 <div class="rank-item my-rank">
                     <div class="flex items-center gap-3">
                         <span class="text-xs bg-indigo-600 text-white font-bold px-2 py-1 rounded-md">내 순위</span>
-                        <span class="font-bold">${myRankIndex}위 (${myRankInfo.name})</span>
+                        <div>
+                            <div class="font-bold">${myRankIndex}위 (${myRankInfo.name})</div>
+                            <div class="student-info-sub">🏫 ${myRankInfo.school} | 👨‍🏫 ${myRankInfo.teacher}</div>
+                        </div>
                     </div>
                     <span class="font-extrabold text-indigo-600">${myRankInfo.count}일</span>
                 </div>`;
@@ -431,7 +450,7 @@
 
     /* --- [2. 로또 관련 로직] --- */
     function loadLottoData() {
-        // 지난주 당첨 번호 크롤링 서버 조회
+        // 지난주 당첨 번호 조회
         fetch("https://lotto-vzqu.onrender.com/")
             .then(res => res.json())
             .then(data => {
@@ -443,7 +462,7 @@
                 document.getElementById('lottoWinningBox').innerHTML = `<span class="text-xs text-gray-500">당첨 번호를 불러오지 못했습니다.</span>`;
             });
 
-        // 랭킹 & 내 예측 로드
+        // 로또 예측 랭킹 & 내 예측 로드
         database.ref('lotto_predictions').once('value', (snapshot) => {
             const predictions = snapshot.val() || {};
             renderLottoRank(predictions);
@@ -479,14 +498,23 @@
             
             Object.keys(predictions).forEach(uid => {
                 const item = predictions[uid];
-                const rawName = stds[uid]?.name || stds[uid]?.studentName || "학생";
+                const std = stds[uid] || {};
+
+                const rawName = std.name || std.studentName || std.userName;
+                const name = rawName ? decryptAES(rawName) : "학생";
+                const school = std.schoolName || "학교 미기재";
+                const teacher = std.teacher ? `${std.teacher} 선생님` : "선생님 미기재";
+
                 rankArray.push({
                     uid: uid,
-                    name: decryptAES(rawName),
+                    name: name,
+                    school: school,
+                    teacher: teacher,
                     matchedCount: item.matchedCount || 0
                 });
             });
 
+            // 맞힌 개수 내림차순 정렬
             rankArray.sort((a, b) => b.matchedCount - a.matchedCount);
 
             if (rankArray.length === 0) {
@@ -501,7 +529,10 @@
                     <div class="rank-item ${isMe ? 'my-rank' : ''}">
                         <div class="flex items-center gap-3">
                             <div class="rank-badge ${badgeClass}">${idx + 1}</div>
-                            <span class="font-bold">${item.name} ${isMe ? '(나)' : ''}</span>
+                            <div>
+                                <div class="font-bold">${item.name} ${isMe ? '(나)' : ''}</div>
+                                <div class="student-info-sub">🏫 ${item.school} | 👨‍🏫 ${item.teacher}</div>
+                            </div>
                         </div>
                         <span class="font-extrabold text-indigo-600">${item.matchedCount}개 적중</span>
                     </div>`;
