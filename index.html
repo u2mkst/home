@@ -90,6 +90,44 @@
         .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
         .btn-secondary:hover { background-color: #cbd5e1; }
 
+        /* 우측 하단 플로팅 버튼 (FAB) 스타일 */
+        .fab-chat-btn {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: #6c5ce7;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 999;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .fab-chat-btn:hover {
+            transform: scale(1.1) translateY(-2px);
+            background: #5b4bc4;
+            box-shadow: 0 14px 30px rgba(108, 92, 231, 0.5);
+        }
+        .fab-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ff453a;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 10px;
+            border: 2px solid #ffffff;
+        }
+
         .sub-utility-zone { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; width: 100%; box-sizing: border-box; }
         @media (max-width: 650px) { .sub-utility-zone { grid-template-columns: repeat(2, 1fr); } body { padding: 30px 6vw; } }
 
@@ -156,6 +194,12 @@
 </head>
 <body>
 
+    <!-- 우측 하단 선생님 메시지 플로팅 버튼 (FAB) -->
+    <button id="open-chat-btn" class="fab-chat-btn" title="선생님 메시지">
+        <span class="emoji-font">💬</span>
+        <span id="chat-badge" class="fab-badge" style="display: none;">0</span>
+    </button>
+
     <!-- 토스트 알림 UI -->
     <div id="toastNotification" class="toast-container">
         <span id="toastMessage">알림 내용</span>
@@ -216,9 +260,8 @@
 
         <!-- 하단 버튼 존 -->
         <div class="sub-utility-zone">
-            <button id="open-chat-btn" class="btn-base btn-glass">
-                <span class="emoji-font">💬</span> 선생님 메시지
-                <span id="chat-badge" style="display: none; background: #ff453a; color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto;">0</span>
+            <button onclick="window.location.href='ranking.html'" class="btn-base btn-glass">
+                <span class="emoji-font">🏆</span> 나의 순위
             </button>
             <button onclick="openUnifiedInquiryModal()" class="btn-base btn-glass"><span class="emoji-font">🛠️</span> 관리자 문의</button>
             <button onclick="goToMyPage()" class="btn-base btn-glass"><span class="emoji-font">👤</span> 마이페이지</button>
@@ -405,6 +448,32 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
+    /* 📌 파이어베이스 한 달 출석 기록 저장 함수 */
+    function recordMonthlyAttendance(studentUid) {
+        const now = new Date();
+        const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const todayStr = `${yearMonth}-${String(now.getDate()).padStart(2, '0')}`;
+
+        const attRef = database.ref(`attendance/${studentUid}/${yearMonth}`);
+        
+        attRef.once('value', (snapshot) => {
+            let attData = snapshot.val() || { count: 0, days: {} };
+            
+            // 오늘 날짜 출석 기록이 없으면 추가
+            if (!attData.days || !attData.days[todayStr]) {
+                const updatedDays = attData.days || {};
+                updatedDays[todayStr] = true;
+                const newCount = Object.keys(updatedDays).length;
+
+                attRef.update({
+                    count: newCount,
+                    days: updatedDays,
+                    lastAttendance: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+        });
+    }
+
     function logoutUser() { showModal('logoutCheckModal'); }
 
     function confirmLogoutAction() {
@@ -420,6 +489,7 @@
         auth.onAuthStateChanged((user) => {
             if (user) {
                 startIdleTracking();
+                recordMonthlyAttendance(user.uid); // 출석 체크 실행
                 
                 database.ref(".info/serverTimeOffset").on("value", function(snapshot) {
                     serverTimeOffset = snapshot.val() || 0;
@@ -432,8 +502,6 @@
                         const rawName = data.name || data.studentName || data.userName;
                         const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
                         document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
-                        
-                        // 누락 경고 및 자동 리다이렉트 완전 제거됨
 
                         if (data.schoolName && !data.schoolName.includes('초등')) {
                             fetchExamDateFromNeis(data.schoolName);
@@ -668,10 +736,8 @@
         const mPw = decryptAES(currentStudentData.mathflatPw || '').trim();
 
         if (!mId || !mPw) {
-            // 정보가 없으면 바텀 시트 노출
             openMathflatBottomSheet();
         } else {
-            // 정상 데이터 존재 시 즉시 이동
             transmitBridgeCredentials();
             showToast("🚀 매쓰플랫 페이지로 이동합니다...");
             setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 800);
@@ -690,7 +756,6 @@
         if (sheet) sheet.classList.remove('active');
     }
 
-    // 바깥 어두운 배경 터치 시 자동 취소/닫기
     function handleBottomSheetOverlayClick(event) {
         if (event.target.id === 'mathflatBottomSheet') {
             closeMathflatBottomSheet();
@@ -922,7 +987,7 @@
                 const count = snapshot.numChildren();
                 if (badge) {
                     badge.innerText = count > 99 ? '99+' : count;
-                    badge.style.display = 'inline-block';
+                    badge.style.display = 'block';
                 }
             } else {
                 if (badge) badge.style.display = 'none';
