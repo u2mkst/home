@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 순위 & 랭킹 - K&P 수학입시학원</title>
+    
+    <!-- 에셋 및 라이브러리 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'Paperlogy';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+            font-weight: 500; font-display: swap;
+        }
+        @font-face {
+            font-family: 'FlightSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Bold.woff2') format('woff2');
+            font-weight: 700; font-display: swap;
+        }
+        
+        html { font-size: 13.5px; }
+        * { font-family: 'FlightSans', 'Paperlogy', 'Noto Sans KR', 'Mona12', sans-serif; }
+        .emoji-font { font-family: 'Mona12', sans-serif !important; font-weight: normal !important; }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
+                        linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
+            background-blend-mode: multiply; margin: 0; display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; color: #1d1d1f; box-sizing: border-box; padding: 40px 8vw; overflow-x: hidden;
+        }
+        
+        .container { width: 100%; max-width: 880px; margin: 0 auto; }
+        
+        .header-zone { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 8px; }
+        .page-title { font-family: 'Paperlogy', sans-serif; font-size: 1.6rem; font-weight: 700; color: #1d1d1f; margin: 0; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.42); 
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            border-radius: 20px; padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            box-sizing: border-box;
+        }
+
+        /* 탭 버튼 스타일 */
+        .tab-menu { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn {
+            flex: 1; padding: 14px 20px; border-radius: 14px; font-family: 'Paperlogy', sans-serif;
+            font-size: 1rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.3); color: #666; transition: all 0.25s ease; text-align: center;
+        }
+        .tab-btn.active {
+            background: #6c5ce7; color: #ffffff; border-color: #6c5ce7;
+            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3);
+        }
+
+        /* 레이아웃 분할 */
+        .content-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 768px) { .content-grid { grid-template-columns: 1fr 1fr; } }
+
+        /* 랭킹 리스트 */
+        .rank-list { display: flex; flex-direction: column; gap: 8px; }
+        .rank-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; background: rgba(255, 255, 255, 0.5); border-radius: 12px;
+            font-size: 0.95rem; border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .rank-item.my-rank {
+            background: rgba(108, 92, 231, 0.12); border: 1.5px solid #6c5ce7; font-weight: 700;
+        }
+        .rank-badge {
+            width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fff; background: #a1a1a6;
+        }
+        .rank-1 { background: #ffd700; color: #1d1d1f; }
+        .rank-2 { background: #c0c0c0; color: #1d1d1f; }
+        .rank-3 { background: #cd7f32; color: #fff; }
+
+        /* 달력 디자인 */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; margin-top: 12px; }
+        .calendar-day-head { font-size: 0.75rem; font-weight: 700; color: #86868b; padding: 4px 0; }
+        .calendar-day {
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; font-size: 0.85rem; background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4); position: relative;
+        }
+        .calendar-day.attended {
+            background: #6c5ce7; color: #ffffff; font-weight: 700;
+            box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
+        }
+
+        /* 로또 공 디자인 */
+        .lotto-ball {
+            width: 36px; height: 36px; border-radius: 50%; display: inline-flex;
+            align-items: center; justify-content: center; font-weight: 700; color: #fff;
+            font-size: 0.9rem; box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+        .ball-yellow { background: #fbc531; color: #1d1d1f; }
+        .ball-blue { background: #00a8ff; }
+        .ball-red { background: #e84118; }
+        .ball-gray { background: #718093; }
+        .ball-green { background: #4cd137; }
+
+        .btn-base {
+            font-family: 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 600;
+            padding: 12px 16px; border-radius: 12px; transition: all 0.2s ease;
+            cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-primary { background-color: #6c5ce7; color: #ffffff; }
+        .btn-primary:hover { background-color: #5b4bc4; }
+        .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
+        .btn-secondary:hover { background-color: #cbd5e1; }
+
+        .toast-container {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: rgba(29, 29, 31, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            color: #ffffff; padding: 12px 24px; border-radius: 30px; font-family: 'Paperlogy', sans-serif;
+            font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 100000;
+            opacity: 0; visibility: hidden; transition: all 0.35s ease; pointer-events: none;
+        }
+        .toast-container.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div id="toastNotification" class="toast-container"><span id="toastMessage"></span></div>
+
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header-zone">
+            <h1 class="page-title">🏆 나의 순위 & 랭킹</h1>
+            <button onclick="window.location.href='index.html'" class="btn-base btn-secondary">
+                <span class="emoji-font">🏠</span> 홈으로
+            </button>
+        </div>
+
+        <!-- 탭 상단 선택 -->
+        <div class="tab-menu">
+            <button id="tab-attendance" class="tab-btn active" onclick="switchTab('attendance')">📅 이달의 출석</button>
+            <button id="tab-lotto" class="tab-btn" onclick="switchTab('lotto')">🎰 이주의 로또</button>
+        </div>
+
+        <!-- 1. [이달의 출석] 영역 -->
+        <div id="view-attendance" class="content-grid">
+            <!-- 좌측: 출석 랭킹 Top 10 -->
+            <div class="glass-card">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span class="emoji-font">🥇</span> 이달의 출석 랭킹 (Top 10)
+                </h2>
+                <div id="attendanceRankList" class="rank-list">
+                    <div class="text-center py-8 text-gray-400">랭킹 불러오는 중...</div>
+                </div>
+                <div id="myAttendanceRankCard" class="mt-4 pt-3 border-t border-gray-200/50">
+                    <!-- 나의 순위 별도 표시 -->
+                </div>
+            </div>
+
+            <!-- 우측: 나의 출석 정보 & 달력 -->
+            <div class="glass-card flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
+                        <span class="emoji-font">📊</span> 나의 이번 달 출석 통계
+                    </h2>
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="bg-white/50 p-4 rounded-xl border border-white/60 text-center">
+                            <div class="text-xs text-gray-500 font-bold mb-1">출석 일수</div>
+                            <div id="myAttDays" class="text-2xl font-extrabold text-indigo-600">0일</div>
+                        </div>
+                        <div class="bg-white/50 p-4 rounded-xl border border-white/60 text-center">
+                            <div class="text-xs text-gray-500 font-bold mb-1">출석 비율</div>
+                            <div id="myAttRate" class="text-2xl font-extrabold text-indigo-600">0%</div>
+                        </div>
+                    </div>
+
+                    <h3 id="currentMonthTitle" class="text-md font-bold mb-2 text-gray-700">2026년 8월</h3>
+                    <div class="calendar-grid">
+                        <div class="calendar-day-head text-red-500">일</div>
+                        <div class="calendar-day-head">월</div>
+                        <div class="calendar-day-head">화</div>
+                        <div class="calendar-day-head">수</div>
+                        <div class="calendar-day-head">목</div>
+                        <div class="calendar-day-head">금</div>
+                        <div class="calendar-day-head text-blue-500">토</div>
+                    </div>
+                    <div id="calendarDays" class="calendar-grid mt-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. [이주의 로또] 영역 (기본 숨김) -->
+        <div id="view-lotto" class="content-grid" style="display: none;">
+            <!-- 좌측: 맞힌 개수 랭킹 -->
+            <div class="glass-card">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span class="emoji-font">🎯</span> 로또 예측 랭킹 (Top 10)
+                </h2>
+                <div id="lottoRankList" class="rank-list">
+                    <div class="text-center py-8 text-gray-400">랭킹 불러오는 중...</div>
+                </div>
+            </div>
+
+            <!-- 우측: 당첨 번호 & 나의 예측 -->
+            <div class="glass-card flex flex-col justify-between">
+                <div>
+                    <!-- 저번 주 로또 번호 -->
+                    <div class="mb-6">
+                        <h2 class="text-lg font-bold mb-2 flex items-center gap-2">
+                            <span class="emoji-font">🎉</span> 지난 주 당첨 번호
+                        </h2>
+                        <div id="lottoWinningBox" class="flex items-center gap-1.5 mt-3 justify-center bg-white/40 p-3 rounded-xl">
+                            <span class="text-xs text-gray-400">번호를 당겨오는 중...</span>
+                        </div>
+                    </div>
+
+                    <!-- 이번주 나의 예측 -->
+                    <div class="pt-4 border-t border-gray-200/50">
+                        <h2 class="text-lg font-bold mb-2 flex items-center gap-2">
+                            <span class="emoji-font">🔮</span> 이번 주 나의 예측
+                        </h2>
+                        <p class="text-xs text-gray-500 mb-3">* 한 주에 단 한 번만 제출 가능합니다.</p>
+
+                        <div id="myLottoStatus">
+                            <!-- 예측 선택 / 제출 UI -->
+                            <div class="flex gap-2 mb-3">
+                                <button onclick="generateAutoLotto()" class="btn-base btn-secondary text-xs flex-1">🎲 자동 번호 생성</button>
+                            </div>
+                            <div class="grid grid-cols-6 gap-2 mb-4" id="lottoInputs">
+                                <input type="number" min="1" max="45" class="lotto-in w-full text-center py-2 bg-white/70 border border-gray-300 rounded-lg text-sm font-bold">
+                                <input type="number" min="1" max="45" class="lotto-in w-full text-center py-2 bg-white/70 border border-gray-300 rounded-lg text-sm font-bold">
+                                <input type="number" min="1" max="45" class="lotto-in w-full text-center py-2 bg-white/70 border border-gray-300 rounded-lg text-sm font-bold">
+                                <input type="number" min="1" max="45" class="lotto-in w-full text-center py-2 bg-white/70 border border-gray-300 rounded-lg text-sm font-bold">
+                                <input type="number" min="1" max="45" class="lotto-in w-full text-center py-2 bg-white/70 border border-gray-300 rounded-lg text-sm font-bold">
+                                <input type="number" min="1" max="45" class="lotto-in w-full text-center py-2 bg-white/70 border border-gray-300 rounded-lg text-sm font-bold">
+                            </div>
+                            <button onclick="submitLottoPrediction()" class="btn-base btn-primary w-full">제출하기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    const SECRET_KEY = "u2mkst!";
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+        authDomain: "ksthome-76889.firebaseapp.com",
+        databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+        projectId: "ksthome-76889",
+        storageBucket: "ksthome-76889.firebasestorage.app",
+        messagingSenderId: "411945142173",
+        appId: "1:411945142173:web:c6fdb499040b2a5a4f9174"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    let currentUserUid = null;
+    let currentStudentName = "학생";
+
+    function decryptAES(cipherText) {
+        if (!cipherText) return "";
+        try {
+            const clean = cipherText.toString().trim();
+            if (!clean.startsWith("U2FsdGVkX1")) return clean;
+            const bytes = CryptoJS.AES.decrypt(clean, SECRET_KEY);
+            return bytes.toString(CryptoJS.enc.Utf8) || clean;
+        } catch (e) { return cipherText; }
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toastNotification');
+        document.getElementById('toastMessage').innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    /* 탭 전환 */
+    function switchTab(tab) {
+        document.getElementById('tab-attendance').classList.toggle('active', tab === 'attendance');
+        document.getElementById('tab-lotto').classList.toggle('active', tab === 'lotto');
+        document.getElementById('view-attendance').style.display = tab === 'attendance' ? 'grid' : 'none';
+        document.getElementById('view-lotto').style.display = tab === 'lotto' ? 'grid' : 'none';
+    }
+
+    /* 인증 확인 및 데이터 로드 */
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            currentUserUid = user.uid;
+            database.ref(`students/${user.uid}`).once('value', snap => {
+                const data = snap.val();
+                if(data) {
+                    const rawName = data.name || data.studentName || data.userName;
+                    currentStudentName = rawName ? decryptAES(rawName) : "학생";
+                }
+                loadAttendanceData();
+                loadLottoData();
+            });
+        } else {
+            window.location.replace('login.html');
+        }
+    });
+
+    /* --- [1. 출석 관련 로직] --- */
+    function loadAttendanceData() {
+        const now = new Date();
+        const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('currentMonthTitle').innerText = `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
+
+        database.ref('attendance').once('value', (snapshot) => {
+            const allData = snapshot.val() || {};
+            let rankArray = [];
+
+            // 전 학생 이름 매핑용
+            database.ref('students').once('value', (stdSnap) => {
+                const stds = stdSnap.val() || {};
+
+                Object.keys(allData).forEach(uid => {
+                    const monthInfo = allData[uid][yearMonth];
+                    if (monthInfo) {
+                        const count = monthInfo.count || 0;
+                        const rawName = stds[uid]?.name || stds[uid]?.studentName || "학생";
+                        rankArray.push({
+                            uid: uid,
+                            name: decryptAES(rawName),
+                            count: count,
+                            days: monthInfo.days || {}
+                        });
+                    }
+                });
+
+                // 내림차순 정렬
+                rankArray.sort((a, b) => b.count - a.count);
+
+                renderAttendanceRank(rankArray);
+                renderMyCalendar(allData[currentUserUid] ? allData[currentUserUid][yearMonth] : null, now);
+            });
+        });
+    }
+
+    function renderAttendanceRank(rankArray) {
+        const container = document.getElementById('attendanceRankList');
+        const myRankContainer = document.getElementById('myAttendanceRankCard');
+        container.innerHTML = '';
+
+        if (rankArray.length === 0) {
+            container.innerHTML = '<div class="text-center py-8 text-gray-400">이번 달 출석 기록이 없습니다.</div>';
+            return;
+        }
+
+        let myRankInfo = null;
+        let myRankIndex = -1;
+
+        rankArray.forEach((item, idx) => {
+            if (item.uid === currentUserUid) {
+                myRankInfo = item;
+                myRankIndex = idx + 1;
+            }
+
+            if (idx < 10) {
+                const isMe = item.uid === currentUserUid;
+                const badgeClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+                
+                const html = `
+                    <div class="rank-item ${isMe ? 'my-rank' : ''}">
+                        <div class="flex items-center gap-3">
+                            <div class="rank-badge ${badgeClass}">${idx + 1}</div>
+                            <span class="font-bold">${item.name} ${isMe ? '(나)' : ''}</span>
+                        </div>
+                        <span class="font-extrabold text-indigo-600">${item.count}일</span>
+                    </div>`;
+                container.innerHTML += html;
+            }
+        });
+
+        if (myRankInfo) {
+            myRankContainer.innerHTML = `
+                <div class="rank-item my-rank">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs bg-indigo-600 text-white font-bold px-2 py-1 rounded-md">내 순위</span>
+                        <span class="font-bold">${myRankIndex}위 (${myRankInfo.name})</span>
+                    </div>
+                    <span class="font-extrabold text-indigo-600">${myRankInfo.count}일</span>
+                </div>`;
+        } else {
+            myRankContainer.innerHTML = `<div class="text-xs text-gray-400 text-center">이번 달 나의 출석 정보가 없습니다.</div>`;
+        }
+    }
+
+    function renderMyCalendar(myMonthData, now) {
+        const daysContainer = document.getElementById('calendarDays');
+        daysContainer.innerHTML = '';
+
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDayIndex = new Date(year, month, 1).getDay();
+
+        const attendedDays = myMonthData && myMonthData.days ? myMonthData.days : {};
+        const attCount = Object.keys(attendedDays).length;
+
+        document.getElementById('myAttDays').innerText = `${attCount}일`;
+        const rate = Math.round((attCount / daysInMonth) * 100);
+        document.getElementById('myAttRate').innerText = `${rate}%`;
+
+        // 빈 칸 채우기
+        for (let i = 0; i < firstDayIndex; i++) {
+            daysContainer.innerHTML += `<div></div>`;
+        }
+
+        // 날짜 채우기
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const isAttended = !!attendedDays[dateStr];
+            daysContainer.innerHTML += `
+                <div class="calendar-day ${isAttended ? 'attended' : ''}">
+                    ${d}
+                </div>`;
+        }
+    }
+
+    /* --- [2. 로또 관련 로직] --- */
+    function loadLottoData() {
+        // 지난주 당첨 번호 크롤링 서버 조회
+        fetch("https://lotto-vzqu.onrender.com/")
+            .then(res => res.json())
+            .then(data => {
+                if(data && data.numbers) {
+                    renderLottoWinningBalls(data.numbers, data.bonus);
+                }
+            })
+            .catch(() => {
+                document.getElementById('lottoWinningBox').innerHTML = `<span class="text-xs text-gray-500">당첨 번호를 불러오지 못했습니다.</span>`;
+            });
+
+        // 랭킹 & 내 예측 로드
+        database.ref('lotto_predictions').once('value', (snapshot) => {
+            const predictions = snapshot.val() || {};
+            renderLottoRank(predictions);
+            checkMyLottoSubmission(predictions[currentUserUid]);
+        });
+    }
+
+    function getBallColorClass(num) {
+        if (num <= 10) return 'ball-yellow';
+        if (num <= 20) return 'ball-blue';
+        if (num <= 30) return 'ball-red';
+        if (num <= 40) return 'ball-gray';
+        return 'ball-green';
+    }
+
+    function renderLottoWinningBalls(numbers, bonus) {
+        const box = document.getElementById('lottoWinningBox');
+        box.innerHTML = '';
+        numbers.forEach(n => {
+            box.innerHTML += `<div class="lotto-ball ${getBallColorClass(n)}">${n}</div>`;
+        });
+        box.innerHTML += `<span class="font-bold text-gray-400 mx-1">+</span>`;
+        box.innerHTML += `<div class="lotto-ball ${getBallColorClass(bonus)}">${bonus}</div>`;
+    }
+
+    function renderLottoRank(predictions) {
+        const container = document.getElementById('lottoRankList');
+        container.innerHTML = '';
+
+        let rankArray = [];
+        database.ref('students').once('value', (stdSnap) => {
+            const stds = stdSnap.val() || {};
+            
+            Object.keys(predictions).forEach(uid => {
+                const item = predictions[uid];
+                const rawName = stds[uid]?.name || stds[uid]?.studentName || "학생";
+                rankArray.push({
+                    uid: uid,
+                    name: decryptAES(rawName),
+                    matchedCount: item.matchedCount || 0
+                });
+            });
+
+            rankArray.sort((a, b) => b.matchedCount - a.matchedCount);
+
+            if (rankArray.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400">이번 주 예측 참여자가 없습니다.</div>';
+                return;
+            }
+
+            rankArray.slice(0, 10).forEach((item, idx) => {
+                const isMe = item.uid === currentUserUid;
+                const badgeClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+                container.innerHTML += `
+                    <div class="rank-item ${isMe ? 'my-rank' : ''}">
+                        <div class="flex items-center gap-3">
+                            <div class="rank-badge ${badgeClass}">${idx + 1}</div>
+                            <span class="font-bold">${item.name} ${isMe ? '(나)' : ''}</span>
+                        </div>
+                        <span class="font-extrabold text-indigo-600">${item.matchedCount}개 적중</span>
+                    </div>`;
+            });
+        });
+    }
+
+    function checkMyLottoSubmission(myPrediction) {
+        const statusBox = document.getElementById('myLottoStatus');
+        if (myPrediction) {
+            const balls = myPrediction.numbers.map(n => `<div class="lotto-ball ${getBallColorClass(n)}">${n}</div>`).join(' ');
+            statusBox.innerHTML = `
+                <div class="bg-indigo-50/60 p-4 rounded-xl border border-indigo-100 text-center">
+                    <div class="text-xs text-indigo-600 font-bold mb-2">✅ 이번 주 예측 제출 완료</div>
+                    <div class="flex justify-center gap-1 mt-2">${balls}</div>
+                </div>`;
+        }
+    }
+
+    function generateAutoLotto() {
+        let nums = new Set();
+        while(nums.size < 6) {
+            nums.add(Math.floor(Math.random() * 45) + 1);
+        }
+        const sorted = Array.from(nums).sort((a,b) => a-b);
+        const inputs = document.querySelectorAll('.lotto-in');
+        inputs.forEach((input, idx) => input.value = sorted[idx]);
+    }
+
+    function submitLottoPrediction() {
+        const inputs = document.querySelectorAll('.lotto-in');
+        let selected = [];
+        for (let input of inputs) {
+            const val = parseInt(input.value);
+            if (isNaN(val) || val < 1 || val > 45) {
+                showToast("1~45 사이의 숫자를 올바르게 입력해주세요.");
+                return;
+            }
+            selected.push(val);
+        }
+
+        if (new Set(selected).size !== 6) {
+            showToast("중복되지 않은 6개 숫자를 선택해야 합니다.");
+            return;
+        }
+
+        selected.sort((a,b) => a-b);
+
+        database.ref(`lotto_predictions/${currentUserUid}`).set({
+            studentName: currentStudentName,
+            numbers: selected,
+            matchedCount: 0,
+            submittedAt: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+            showToast("🎉 로또 예측이 완료되었습니다!");
+            loadLottoData();
+        }).catch(err => showToast("제출 실패: " + err.message));
+    }
+    </script>
+</body>
+</html>
