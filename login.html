@@ -11,6 +11,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
+    <!-- Font Awesome (눈모양 아이콘용) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <!-- Google reCAPTCHA v2 API Script -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
@@ -185,6 +188,30 @@
             background-color: #ffffff; box-shadow: 0 0 0 4px var(--primary-glow); 
         }
 
+        /* 👁️ 비밀번호 토글 아이콘 스타일 추가 */
+        .input-pw-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .input-pw-wrapper input {
+            padding-right: 45px !important;
+        }
+        .input-pw-wrapper .eyes {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+            transition: color 0.2s ease;
+            user-select: none;
+        }
+        .input-pw-wrapper .eyes:hover {
+            color: var(--primary);
+        }
+
         .autocomplete-wrapper { position: relative; width: 100%; }
         .autocomplete-list {
             position: absolute; top: calc(100% + 4px); left: 0; right: 0;
@@ -294,7 +321,7 @@
             display: flex; justify-content: center; align-items: center; margin-top: 10px; min-height: 78px;
         }
 
-        /* 🌟 글래스모피즘 토스트(Toast) 메시지 스타일 */
+        /* 토스트(Toast) 메시지 스타일 */
         .toast-container {
             position: fixed; bottom: 28px; left: 50%;
             transform: translateX(-50%) translateY(30px);
@@ -341,7 +368,12 @@
                 
                 <div class="form-group">
                     <label>유투엠 비밀번호</label>
-                    <input type="password" id="loginPassword" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric" required>
+                    <div class="input-pw-wrapper">
+                        <input type="password" id="loginPassword" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric" required>
+                        <div class="eyes" onclick="togglePasswordVisibility('loginPassword', this)">
+                            <i class="fa-regular fa-eye-slash"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit" style="margin-top: 8px;">로그인하고 입장하기</button>
@@ -390,7 +422,12 @@
 
                     <div class="form-group">
                         <label>유투엠 비밀번호 (숫자 4자리)</label>
-                        <input type="text" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="numeric">
+                        <div class="input-pw-wrapper">
+                            <input type="password" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="numeric">
+                            <div class="eyes" onclick="togglePasswordVisibility('registerParentPhone', this)">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </div>
+                        </div>
                         <div class="info-text">※ 이 번호가 앞으로 로그인할 때 비밀번호가 됩니다.</div>
                     </div>
                     
@@ -433,7 +470,12 @@
                     
                     <div class="form-group">
                         <label>매쓰플랫 비밀번호</label>
-                        <input type="password" id="registerMathflatPw" placeholder="접속 비밀번호 입력" oninput="resetMathflatSkip()">
+                        <div class="input-pw-wrapper">
+                            <input type="password" id="registerMathflatPw" placeholder="접속 비밀번호 입력" oninput="resetMathflatSkip()">
+                            <div class="eyes" onclick="togglePasswordVisibility('registerMathflatPw', this)">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="btn-group">
@@ -485,7 +527,7 @@
         </div>
     </div>
 
-    <!-- 🌟 글래스모피즘 토스트(Toast) 시스템 UI -->
+    <!-- 토스트(Toast) 시스템 UI -->
     <div id="toast" class="toast-container">
         <span class="toast-icon mona12" id="toastIcon">💡</span>
         <span class="toast-text" id="toastText">메시지가 들어갑니다.</span>
@@ -511,7 +553,7 @@
 
         let loginFailCount = 0; 
         let toastTimeout = null;
-        let isMathflatSkipped = false; // 🌟 매쓰플랫 스킵 처리 플래그
+        let isMathflatSkipped = false; 
 
         const schoolInput = document.getElementById('registerSchool');
         const schoolList = document.getElementById('schoolList');
@@ -519,7 +561,23 @@
 
         let currentStep = 1;
 
-        // 🌟 글래스모피즘 토스트 메세지 출력 함수
+        // 👁️ 비밀번호 눈모양 토글 함수
+        function togglePasswordVisibility(inputId, eyeBtn) {
+            const input = document.getElementById(inputId);
+            const icon = eyeBtn.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        }
+
+        // 글래스모피즘 토스트 메세지 출력 함수
         function showToast(message, icon = "💡", duration = 3000) {
             const toast = document.getElementById('toast');
             document.getElementById('toastIcon').textContent = icon;
@@ -623,7 +681,6 @@
             }
 
             if (targetStep === 3) {
-                // 🌟 스킵 버튼을 누르지 않은 상태라면 입력을 강제검증
                 if (!isMathflatSkipped) {
                     const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim();
                     const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
@@ -712,7 +769,7 @@
                 document.getElementById('loginCard').classList.add('hidden');
                 document.getElementById('registerCard').classList.remove('hidden');
                 if (liteBox) liteBox.classList.add('hidden');
-                isMathflatSkipped = false; // 회원가입 초기화시 스킵 플래그 리셋
+                isMathflatSkipped = false; 
                 updateStepView(1); 
                 
                 const regInput = document.getElementById('registerId');
