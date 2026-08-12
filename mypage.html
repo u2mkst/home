@@ -545,7 +545,6 @@
         const RECAPTCHA_SITE_KEY = "6LcoRYAtAAAAAP_83dJyhmTfWrTrer3QUYf8Pof1";
         let recaptchaWidgetId = null;
 
-        // Google reCAPTCHA SDK 로드 후 동적 렌더링
         window.onloadCallback = function() {
             if (document.getElementById('recaptchaWidget')) {
                 recaptchaWidgetId = grecaptcha.render('recaptchaWidget', {
@@ -558,6 +557,7 @@
         let isInitialLoad = true;
         let originalU2mId = ""; 
         let pendingU2mId = "";  
+        let originalPhoneTail = ""; // 💡 전화번호 뒷자리(비밀번호) 변경 감지용 변수 추가
 
         function togglePasswordVisibility(inputId, eyeBtn) {
             const input = document.getElementById(inputId);
@@ -667,7 +667,10 @@
                             
                             originalU2mId = data.u2mId || '';
                             document.getElementById('u2mId').value = originalU2mId;
-                            document.getElementById('u2mPhone').value = decryptAES(data.phone);
+                            
+                            // 💡 부모님 전화번호 뒷자리 및 originalPhoneTail 초기화
+                            originalPhoneTail = decryptAES(data.phone) || '';
+                            document.getElementById('u2mPhone').value = originalPhoneTail;
                             
                             const rawMathflatId = data.studentPhone ? decryptAES(data.studentPhone) : (data.mathflatId || '');
                             document.getElementById('mathflatId').value = rawMathflatId;
@@ -710,17 +713,13 @@
             }
         }
 
-        // 아이디 입력 변경 감지
         function handleU2mIdChange() {
             if (isInitialLoad) return;
             const currentVal = document.getElementById('u2mId').value.trim();
             if (currentVal !== originalU2mId && currentVal.length > 0) {
                 pendingU2mId = currentVal;
-                
-                // 💡 학생 화면에는 도메인 주소(@kst.com 등)를 안 붙이고 입력한 순수 아이디만 표시
                 document.getElementById('newU2mIdText').innerText = `'${pendingU2mId}'`;
                 
-                // reCAPTCHA 초기화
                 if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
                     grecaptcha.reset(recaptchaWidgetId);
                 }
@@ -738,7 +737,6 @@
             document.getElementById(sheetId).classList.remove('active');
         }
 
-        // 🤖 reCAPTCHA 캡차 확인 완료 후 아이디 변경
         function confirmU2mIdChange() {
             if (typeof grecaptcha === 'undefined') {
                 showToast("reCAPTCHA 로드에 실패했습니다. 페이지를 새로고침해 주세요.");
@@ -783,6 +781,7 @@
             }, 700);
         }
 
+        // 💡 Firebase Auth 비밀번호 변경 연동이 포함된 자동 저장 함수
         function updateStudentProfileAuto() {
             const user = auth.currentUser;
             if (!user) return;
@@ -794,6 +793,9 @@
             const phoneTail = document.getElementById('u2mPhone').value.trim();
             const mathflatPhone = document.getElementById('mathflatId').value.trim().replace(/[^0-9]/g, '');
             const mathflatPw = document.getElementById('mathflatPw').value.trim();
+
+            // 🔑 전화번호 뒷자리가 변경되었는지 감지
+            const isPhoneChanged = (phoneTail !== originalPhoneTail) && (/^\d{4}$/.test(phoneTail));
 
             const updatedObject = {};
 
@@ -810,18 +812,39 @@
 
             if (Object.keys(updatedObject).length === 0) return;
 
-            database.ref(`students/${user.uid}`).update(updatedObject)
-                .then(() => {
-                    if (phoneTail) {
-                        const studentPassword = "00" + phoneTail; 
-                        localStorage.setItem('u2m_pw', studentPassword);
-                    }
-                    showToast("💾 변경사항이 자동으로 저장되었습니다.");
-                })
-                .catch((err) => {
-                    console.error("자동 저장 실패:", err);
-                    showToast("❌ 저장 실패: 네트워크 상태를 확인하세요.");
-                });
+            // 💡 전화번호 뒷자리가 새로 변경된 경우 -> Firebase Auth 실제 비밀번호도 함께 변경
+            if (isPhoneChanged) {
+                const newAuthPw = "00" + phoneTail;
+                user.updatePassword(newAuthPw)
+                    .then(() => {
+                        originalPhoneTail = phoneTail;
+                        localStorage.setItem('u2m_pw', newAuthPw);
+                        return database.ref(`students/${user.uid}`).update(updatedObject);
+                    })
+                    .then(() => {
+                        showToast("💾 부모님 전화번호 및 로그인 비밀번호가 변경되었습니다.");
+                    })
+                    .catch((err) => {
+                        console.error("비밀번호 변경 실패:", err);
+                        if (err.code === 'auth/requires-recent-login') {
+                            showToast("⚠️ 보안을 위해 다시 로그인한 후 변경해 주세요.");
+                        } else {
+                            showToast("❌ 비밀번호 변경 실패: " + (err.message || "입력값을 확인해 주세요."));
+                        }
+                        // 실패 시 입력값 복원
+                        document.getElementById('u2mPhone').value = originalPhoneTail;
+                    });
+            } else {
+                // 일반 프로필 정보만 변경된 경우
+                database.ref(`students/${user.uid}`).update(updatedObject)
+                    .then(() => {
+                        showToast("💾 변경사항이 자동으로 저장되었습니다.");
+                    })
+                    .catch((err) => {
+                        console.error("자동 저장 실패:", err);
+                        showToast("❌ 저장 실패: 네트워크 상태를 확인하세요.");
+                    });
+            }
         }
 
         function openDeleteBottomSheet() {
@@ -850,10 +873,8 @@
                 return;
             }
 
-            // 💡 @kst.com 도메인 정정
             const email = inputId.includes('@') ? inputId : `${inputId}@kst.com`;
 
-            // 💡 비밀번호 4자리일 경우 00 접두사 추가
             if (/^\d{4}$/.test(inputPw)) {
                 inputPw = "00" + inputPw;
             }
