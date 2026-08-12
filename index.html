@@ -91,7 +91,12 @@
         .btn-secondary:hover { background-color: #cbd5e1; }
 
         .sub-utility-zone { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; width: 100%; box-sizing: border-box; }
-        @media (max-width: 650px) { .sub-utility-zone { grid-template-columns: repeat(2, 1fr); } body { padding: 30px 6vw; } }
+        .lotto-utility-zone { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; width: 100%; box-sizing: border-box; }
+        @media (max-width: 650px) { 
+            .sub-utility-zone { grid-template-columns: repeat(2, 1fr); } 
+            .lotto-utility-zone { grid-template-columns: repeat(1, 1fr); }
+            body { padding: 30px 6vw; } 
+        }
 
         .marquee-container { margin-top: 20px; background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 50px; padding: 8px 24px; overflow: hidden; display: none; }
         .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.8rem; font-weight: 600; color: #515154; white-space: nowrap; }
@@ -112,6 +117,15 @@
 
         .history-zone { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px; margin-bottom: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-sizing: border-box; text-align: left; }
         .no-data { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.85rem; width: 100%; }
+
+        /* 로또 볼 스타일 */
+        .lotto-ball-container { display: flex; justify-content: center; gap: 6px; margin: 12px 0; flex-wrap: wrap; }
+        .lotto-ball { width: 34px; height: 34px; border-radius: 50%; color: #fff; font-weight: bold; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        .ball-yellow { background: #fbc531; color: #2f3640; }
+        .ball-blue { background: #00a8ff; }
+        .ball-red { background: #e84118; }
+        .ball-gray { background: #718093; }
+        .ball-green { background: #4cd137; }
 
         /* 로딩 오버레이 */
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(245, 247, 250, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.4s ease, visibility 0.4s ease; }
@@ -214,7 +228,7 @@
             </div>
         </div>
 
-        <!-- 하단 버튼 존 -->
+        <!-- 하단 기본 유틸리티 존 -->
         <div class="sub-utility-zone">
             <button id="open-chat-btn" class="btn-base btn-glass">
                 <span class="emoji-font">💬</span> 선생님 메시지
@@ -223,6 +237,13 @@
             <button onclick="openUnifiedInquiryModal()" class="btn-base btn-glass"><span class="emoji-font">🛠️</span> 관리자 문의</button>
             <button onclick="goToMyPage()" class="btn-base btn-glass"><span class="emoji-font">👤</span> 마이페이지</button>
             <button onclick="logoutUser()" class="btn-base btn-glass danger"><span class="emoji-font">🔓</span> 로그아웃</button>
+        </div>
+
+        <!-- 🌟 새로 추가된 기능 존 (출석 체크 / 로또 예측 / 예측 내역) -->
+        <div class="lotto-utility-zone">
+            <button onclick="checkAttendance()" class="btn-base btn-glass"><span class="emoji-font">📅</span> 출석 체크하기</button>
+            <button onclick="predictLottoNumbers()" class="btn-base btn-glass"><span class="emoji-font">🎱</span> 로또 번호 예측</button>
+            <button onclick="openLottoHistoryModal()" class="btn-base btn-glass"><span class="emoji-font">📋</span> 로또 예측 내역</button>
         </div>
 
         <div class="marquee-container" id="reminderBar">
@@ -237,7 +258,7 @@
         </div>
     </div>
 
-    <!-- 📲 매쓰플랫 전용 바텀 시트 (외부 영역 클릭 시 자동 취소/닫기) -->
+    <!-- 📲 매쓰플랫 전용 바텀 시트 -->
     <div id="mathflatBottomSheet" class="bottom-sheet-overlay" onclick="handleBottomSheetOverlayClick(event)">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()">
             <div class="sheet-drag-handle"></div>
@@ -251,6 +272,32 @@
                 <button type="button" class="btn-base btn-secondary" onclick="closeMathflatBottomSheet()">취소</button>
                 <button type="button" class="btn-base btn-primary" onclick="saveMathflatCredentials()">등록 및 이동</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 🎱 로또 번호 예측 모달 -->
+    <div id="lottoModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">🎱 행운의 로또 예측 번호</div>
+            <div class="modal-content" style="margin-bottom: 10px;">오늘의 행운을 담은 6개 번호입니다!</div>
+            
+            <div id="lottoBallBox" class="lotto-ball-container"></div>
+            
+            <div style="margin-top: 20px;" class="btn-flex-group">
+                <button class="btn-base btn-secondary" onclick="closeModal('lottoModal')">닫기</button>
+                <button class="btn-base btn-primary" onclick="predictLottoNumbers()">다시 뽑기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📋 로또 예측 내역 확인 모달 -->
+    <div id="lottoHistoryModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 420px;">
+            <div class="modal-title">📋 나의 로또 예측 기록</div>
+            <div id="lottoHistoryZone" class="history-zone" style="max-height: 300px; padding: 12px;">
+                <div class="no-data">저장된 로또 예측 내역이 없습니다.</div>
+            </div>
+            <button class="btn-base btn-secondary" onclick="closeModal('lottoHistoryModal')">닫기</button>
         </div>
     </div>
 
@@ -432,8 +479,6 @@
                         const rawName = data.name || data.studentName || data.userName;
                         const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
                         document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
-                        
-                        // 누락 경고 및 자동 리다이렉트 완전 제거됨
 
                         if (data.schoolName && !data.schoolName.includes('초등')) {
                             fetchExamDateFromNeis(data.schoolName);
@@ -488,6 +533,164 @@
 
     function goToMyPage() { window.location.href = 'mypage.html'; }
 
+    /* ===================================================
+       📅 1. 출석 체크 (Firebase 저장) 로직
+       =================================================== */
+    function checkAttendance() {
+        const user = auth.currentUser;
+        if (!user) {
+            showToast("로그인이 필요한 기능입니다.");
+            return;
+        }
+
+        const now = new Date(Date.now() + serverTimeOffset);
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const todayKey = `${year}-${month}-${day}`;
+
+        const attRef = database.ref(`attendance/${user.uid}/${todayKey}`);
+
+        attRef.once('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const attData = snapshot.val();
+                showToast(`이미 오늘 출석 체크를 완료하셨습니다! (${attData.time || ''})`);
+            } else {
+                const rawName = currentStudentData ? (currentStudentData.name || currentStudentData.studentName) : '';
+                const realName = rawName ? decryptAES(rawName) : '학생';
+                const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+                attRef.set({
+                    studentName: realName,
+                    date: todayKey,
+                    time: timeStr,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    showToast(`🎉 ${todayKey} 출석 체크 완료!`);
+                }).catch((err) => {
+                    showToast("출석 체크 실패: " + err.message);
+                });
+            }
+        });
+    }
+
+    /* ===================================================
+       🎱 2. 로또 번호 예측 및 Firebase 저장 로직
+       =================================================== */
+    function predictLottoNumbers() {
+        const user = auth.currentUser;
+        if (!user) {
+            showToast("로그인이 필요한 기능입니다.");
+            return;
+        }
+
+        // 1~45 중 중복 없는 6개 숫자 추천
+        const numbers = [];
+        while (numbers.length < 6) {
+            const rand = Math.floor(Math.random() * 45) + 1;
+            if (!numbers.includes(rand)) numbers.push(rand);
+        }
+        numbers.sort((a, b) => a - b);
+
+        // UI에 공 렌더링
+        const ballBox = document.getElementById('lottoBallBox');
+        if (ballBox) {
+            ballBox.innerHTML = '';
+            numbers.forEach(num => {
+                let ballColorClass = 'ball-gray';
+                if (num <= 10) ballColorClass = 'ball-yellow';
+                else if (num <= 20) ballColorClass = 'ball-blue';
+                else if (num <= 30) ballColorClass = 'ball-red';
+                else if (num <= 40) ballColorClass = 'ball-gray';
+                else ballColorClass = 'ball-green';
+
+                const ball = document.createElement('div');
+                ball.className = `lotto-ball ${ballColorClass}`;
+                ball.innerText = num;
+                ballBox.appendChild(ball);
+            });
+        }
+
+        // Firebase에 예측 번호 저장
+        const lottoRef = database.ref(`lotto_predictions/${user.uid}`);
+        lottoRef.push({
+            numbers: numbers,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+            showModal('lottoModal');
+            showToast("🎱 로또 번호가 생성되어 저장이 완료되었습니다!");
+        }).catch((err) => {
+            showToast("번호 저장 실패: " + err.message);
+        });
+    }
+
+    /* ===================================================
+       📋 3. 로또 예측 내역 확인 모달 로직
+       =================================================== */
+    function openLottoHistoryModal() {
+        const user = auth.currentUser;
+        if (!user) { showToast("로그인이 필요합니다."); return; }
+
+        showModal('lottoHistoryModal');
+        const historyZone = document.getElementById('lottoHistoryZone');
+        historyZone.innerHTML = '<div class="no-data">예측 기록을 불러오는 중...</div>';
+
+        database.ref(`lotto_predictions/${user.uid}`).orderByChild('timestamp').once('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                historyZone.innerHTML = '<div class="no-data">저장된 로또 예측 내역이 없습니다.</div>';
+                return;
+            }
+
+            historyZone.innerHTML = '';
+            const items = [];
+            snapshot.forEach(child => {
+                items.unshift({ id: child.key, ...child.val() });
+            });
+
+            items.forEach(item => {
+                const dateObj = new Date(item.timestamp);
+                const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                
+                const card = document.createElement('div');
+                card.className = "p-3 bg-white rounded-xl shadow-sm border border-gray-100 mb-2 flex flex-col gap-2";
+
+                let ballsHtml = '<div class="lotto-ball-container" style="margin:0; justify-start: flex-start;">';
+                (item.numbers || []).forEach(num => {
+                    let ballColorClass = 'ball-gray';
+                    if (num <= 10) ballColorClass = 'ball-yellow';
+                    else if (num <= 20) ballColorClass = 'ball-blue';
+                    else if (num <= 30) ballColorClass = 'ball-red';
+                    else if (num <= 40) ballColorClass = 'ball-gray';
+                    else ballColorClass = 'ball-green';
+
+                    ballsHtml += `<div class="lotto-ball ${ballColorClass}" style="width:26px; height:26px; font-size:0.75rem;">${num}</div>`;
+                });
+                ballsHtml += '</div>';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center text-xs text-gray-500 font-medium">
+                        <span>📅 ${dateStr}</span>
+                        <button onclick="deleteLottoPrediction('${item.id}')" class="text-red-500 hover:underline">삭제</button>
+                    </div>
+                    ${ballsHtml}
+                `;
+                historyZone.appendChild(card);
+            });
+        });
+    }
+
+    function deleteLottoPrediction(itemId) {
+        const user = auth.currentUser;
+        if (!user || !itemId) return;
+
+        database.ref(`lotto_predictions/${user.uid}/${itemId}`).remove()
+            .then(() => {
+                showToast("🗑️ 기록이 삭제되었습니다.");
+                openLottoHistoryModal();
+            }).catch(err => showToast("삭제 실패: " + err.message));
+    }
+
+    /* 이하 자동 세션 및 유틸리티 스크립트 */
     function startIdleTracking() {
         const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
         events.forEach(event => { window.addEventListener(event, resetIdleTimer); });
@@ -657,7 +860,6 @@
         setTimeout(() => { window.location.href = "https://www.u2math.co.kr/Login/Index"; }, 800);
     }
 
-    /* 💡 [매쓰플랫 클릭 / 바텀시트 제어 로직] */
     function handleMathflatClick() {
         if (!currentStudentData) {
             showToast("⌛ 학생 정보를 불러오는 중입니다...");
@@ -668,10 +870,8 @@
         const mPw = decryptAES(currentStudentData.mathflatPw || '').trim();
 
         if (!mId || !mPw) {
-            // 정보가 없으면 바텀 시트 노출
             openMathflatBottomSheet();
         } else {
-            // 정상 데이터 존재 시 즉시 이동
             transmitBridgeCredentials();
             showToast("🚀 매쓰플랫 페이지로 이동합니다...");
             setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 800);
@@ -690,7 +890,6 @@
         if (sheet) sheet.classList.remove('active');
     }
 
-    // 바깥 어두운 배경 터치 시 자동 취소/닫기
     function handleBottomSheetOverlayClick(event) {
         if (event.target.id === 'mathflatBottomSheet') {
             closeMathflatBottomSheet();
