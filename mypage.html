@@ -717,7 +717,7 @@
             if (currentVal !== originalU2mId && currentVal.length > 0) {
                 pendingU2mId = currentVal;
                 
-                // 💡 학생 화면에는 도메인 주소(@knp.com 등)를 안 붙이고 입력한 순수 아이디만 표시
+                // 💡 학생 화면에는 도메인 주소(@kst.com 등)를 안 붙이고 입력한 순수 아이디만 표시
                 document.getElementById('newU2mIdText').innerText = `'${pendingU2mId}'`;
                 
                 // reCAPTCHA 초기화
@@ -850,9 +850,10 @@
                 return;
             }
 
-            // 시스템 연동 처리 (내부 처리용 접미사 연동)
-            const email = inputId.includes('@') ? inputId : `${inputId}@knp.com`;
+            // 💡 @kst.com 도메인 정정
+            const email = inputId.includes('@') ? inputId : `${inputId}@kst.com`;
 
+            // 💡 비밀번호 4자리일 경우 00 접두사 추가
             if (/^\d{4}$/.test(inputPw)) {
                 inputPw = "00" + inputPw;
             }
@@ -873,8 +874,10 @@
                 .then(() => {
                     document.getElementById('dataLoadingOverlay').style.display = 'none';
                     localStorage.clear();
-                    alert("회원 탈퇴가 안전하게 완료되었습니다.");
-                    window.location.replace('login.html');
+                    showToast("회원 탈퇴가 안전하게 완료되었습니다.");
+                    setTimeout(() => {
+                        window.location.replace('login.html');
+                    }, 1500);
                 })
                 .catch((error) => {
                     document.getElementById('dataLoadingOverlay').style.display = 'none';
@@ -884,11 +887,11 @@
                     if (error.code === 'auth/wrong-password' || 
                         error.code === 'auth/user-not-found' || 
                         errStr.includes('INVALID_LOGIN_CREDENTIALS')) {
-                        alert("아이디 또는 부모님 전화번호 뒷자리 4자리가 올바르지 않습니다.");
+                        showToast("아이디 또는 부모님 전화번호 뒷자리 4자리가 올바르지 않습니다.");
                     } else if (error.code === 'auth/invalid-email') {
-                        alert("올바르지 않은 아이디 형식입니다.");
+                        showToast("올바르지 않은 아이디 형식입니다.");
                     } else {
-                        alert("인증 실패: " + (error.message || "입력 정보를 다시 확인해 주세요."));
+                        showToast("인증 실패: " + (error.message || "입력 정보를 다시 확인해 주세요."));
                     }
                     openDeleteBottomSheet();
                 });
