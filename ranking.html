@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나의 순위 & 랭킹 - K&P 수학입시학원</title>
+    <title>K&P 수학입시학원 순위</title>
     
     <!-- 에셋 및 라이브러리 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
@@ -228,7 +228,7 @@
             <!-- 우측: 고정된 출석 랭킹 순위표 (Top 10 스크롤 적용) -->
             <div class="glass-card fixed-rank-card">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <span class="emoji-font">🥇</span> 이달의 출석 명예의 전당 (Top 10)
+                    <span class="emoji-font">🥇</span> 이달의 출석 횟수 Top 10
                 </h2>
                 <div class="rank-scroll-area">
                     <div id="attendanceRankList" class="space-y-2.5">
@@ -291,7 +291,7 @@
             <!-- 우측: 고정된 로또 예측 랭킹 (Top 10 스크롤 적용) -->
             <div class="glass-card fixed-rank-card">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <span class="emoji-font">🎯</span> 로또 예측 적중 랭킹 (Top 10)
+                    <span class="emoji-font">🎯</span> 로또 적중 랭킹 Top 10
                 </h2>
                 <div class="rank-scroll-area">
                     <div id="lottoRankList" class="space-y-2.5">
@@ -305,10 +305,10 @@
     <!-- 📱 하단 불투명 플로팅 바 (Glassmorphic Tablet Dock) -->
     <div class="floating-bottom-bar">
         <button id="nav-btn-attendance" class="nav-dock-btn active" onclick="switchNav('attendance')">
-            <span class="emoji-font">📅</span> 이달의 출석 대시보드
+            <span class="emoji-font">📅</span> 이달의 출석
         </button>
         <button id="nav-btn-lotto" class="nav-dock-btn" onclick="switchNav('lotto')">
-            <span class="emoji-font">🎰</span> 이주의 로또 대시보드
+            <span class="emoji-font">🎰</span> 이주의 로또
         </button>
     </div>
 
