@@ -33,7 +33,7 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
                         linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; margin: 0; display: flex; justify-content: center; align-items: flex-start;
-            min-height: 100vh; color: #1d1d1f; box-sizing: border-box; padding: 32px 36px 120px 36px; overflow-x: hidden;
+            min-height: 100vh; color: #1d1d1f; box-sizing: border-box; padding: 40px 36px 120px 36px; overflow-x: hidden;
         }
         
         .container { width: 100%; max-width: 1100px; margin: 0 auto; }
@@ -52,7 +52,7 @@
             border: 1.5px solid rgba(255, 255, 255, 0.85); 
             border-radius: 28px; padding: 28px;
             box-shadow: 0 16px 40px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(255, 255, 255, 0.9);
-            box-sizing: border-box; height: 100%;
+            box-sizing: border-box;
         }
 
         /* 📱 하단 불투명 플로팅 바 (Dock Bar) */
@@ -82,8 +82,27 @@
         }
 
         /* 태블릿 그리드 분할 */
-        .tablet-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; }
+        .tablet-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: stretch; }
         @media (max-width: 820px) { .tablet-grid { grid-template-columns: 1fr; } }
+
+        /* 📌 탑 10 고정 박스 및 내부 커스텀 스크롤 */
+        .fixed-rank-card {
+            height: 520px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rank-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        /* 스크롤바 커스텀 */
+        .rank-scroll-area::-webkit-scrollbar { width: 6px; }
+        .rank-scroll-area::-webkit-scrollbar-thumb { background: rgba(108, 92, 231, 0.25); border-radius: 10px; }
+        .rank-scroll-area::-webkit-scrollbar-thumb:hover { background: rgba(108, 92, 231, 0.5); }
+        .rank-scroll-area::-webkit-scrollbar-track { background: transparent; }
 
         /* 랭킹 아이템 */
         .rank-item {
@@ -128,7 +147,7 @@
         .ball-gray { background: #718093; }
         .ball-green { background: #4cd137; }
 
-        /* 입력 번호 공 (태블릿 맞춤 시원한 사이즈) */
+        /* 입력 번호 공 */
         .lotto-ball-input {
             width: 48px; height: 48px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.95);
@@ -154,7 +173,6 @@
         }
         .btn-primary { background-color: #6c5ce7; color: #ffffff; box-shadow: 0 8px 24px rgba(108, 92, 231, 0.3); }
         .btn-primary:hover { background-color: #5b4bc4; transform: translateY(-2px); }
-        .btn-secondary { background-color: rgba(255, 255, 255, 0.8); color: #4a5568; border: 1px solid rgba(255,255,255,0.9); }
 
         .toast-container {
             position: fixed; top: 28px; left: 50%; transform: translateX(-50%) translateY(-20px);
@@ -171,22 +189,6 @@
     <div id="toastNotification" class="toast-container"><span id="toastMessage"></span></div>
 
     <div class="container">
-        <!-- 태블릿 헤더 프로필 영역 -->
-        <div class="glass-card mb-6 flex justify-between items-center py-5 px-8">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-md">
-                    🎓
-                </div>
-                <div>
-                    <h1 class="text-2xl font-black text-gray-900 tracking-tight">대시보드 & 랭킹</h1>
-                    <p class="text-xs text-gray-500 font-bold mt-0.5" id="welcomeStudent">학생 정보를 불러오는 중...</p>
-                </div>
-            </div>
-            <button onclick="window.location.href='index.html'" class="btn-base btn-secondary py-2.5 px-5 text-sm">
-                <span class="emoji-font">🏠</span> 메인 홈으로
-            </button>
-        </div>
-
         <!-- 1. [이달의 출석] 태블릿 대시보드 뷰 -->
         <div id="view-attendance" class="tablet-grid animate-tab-switch">
             <!-- 좌측: 출석 달력 및 통계 -->
@@ -223,15 +225,17 @@
                 </div>
             </div>
 
-            <!-- 우측: 출석 랭킹 순위표 -->
-            <div class="glass-card flex flex-col">
+            <!-- 우측: 고정된 출석 랭킹 순위표 (Top 10 스크롤 적용) -->
+            <div class="glass-card fixed-rank-card">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
                     <span class="emoji-font">🥇</span> 이달의 출석 명예의 전당 (Top 10)
                 </h2>
-                <div id="attendanceRankList" class="space-y-2.5 flex-1 overflow-y-auto max-h-[480px] pr-1">
-                    <div class="text-center py-10 text-gray-400">랭킹 불러오는 중...</div>
+                <div class="rank-scroll-area">
+                    <div id="attendanceRankList" class="space-y-2.5">
+                        <div class="text-center py-10 text-gray-400">랭킹 불러오는 중...</div>
+                    </div>
                 </div>
-                <div id="myAttendanceRankCard" class="mt-4 pt-3 border-t border-gray-200/60"></div>
+                <div id="myAttendanceRankCard" class="mt-3 pt-3 border-t border-gray-200/60"></div>
             </div>
         </div>
 
@@ -284,13 +288,15 @@
                 </div>
             </div>
 
-            <!-- 우측: 로또 예측 랭킹 -->
-            <div class="glass-card flex flex-col">
+            <!-- 우측: 고정된 로또 예측 랭킹 (Top 10 스크롤 적용) -->
+            <div class="glass-card fixed-rank-card">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
                     <span class="emoji-font">🎯</span> 로또 예측 적중 랭킹 (Top 10)
                 </h2>
-                <div id="lottoRankList" class="space-y-2.5 flex-1 overflow-y-auto max-h-[480px] pr-1">
-                    <div class="text-center py-10 text-gray-400">랭킹 불러오는 중...</div>
+                <div class="rank-scroll-area">
+                    <div id="lottoRankList" class="space-y-2.5">
+                        <div class="text-center py-10 text-gray-400">랭킹 불러오는 중...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -373,7 +379,6 @@
                 if(data) {
                     const rawName = data.name || data.studentName || data.userName;
                     currentStudentName = rawName ? decryptAES(rawName) : "학생";
-                    document.getElementById('welcomeStudent').innerText = `${currentStudentName} 학생의 개인 대시보드입니다.`;
                 }
                 loadAttendanceData();
                 loadLottoData();
