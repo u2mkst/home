@@ -33,89 +33,112 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
                         linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; margin: 0; display: flex; justify-content: center; align-items: flex-start;
-            min-height: 100vh; color: #1d1d1f; box-sizing: border-box; padding: 24px 20px 110px 20px; overflow-x: hidden;
+            min-height: 100vh; color: #1d1d1f; box-sizing: border-box; padding: 20px 16px 120px 16px; overflow-x: hidden;
         }
         
-        .container { width: 100%; max-width: 960px; margin: 0 auto; }
+        .container { width: 100%; max-width: 720px; margin: 0 auto; }
         
-        .header-zone { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .page-title { font-family: 'Paperlogy', sans-serif; font-size: 1.65rem; font-weight: 700; color: #1d1d1f; margin: 0; }
+        /* 🫧 애니메이션 키프레임 정의 */
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            80% { transform: scale(1.03); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-slide-up { animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-pop-in { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.52); 
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.65); 
-            border-radius: 22px; padding: 22px 24px;
-            box-shadow: 0 10px 36px rgba(0, 0, 0, 0.03), inset 0 1px 2px rgba(255, 255, 255, 0.7);
-            box-sizing: border-box; transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.55); 
+            backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+            border: 1.5px solid rgba(255, 255, 255, 0.75); 
+            border-radius: 28px; padding: 24px;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.035), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+            box-sizing: border-box; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* 📱 바텀시트 컨테이너 */
+        .bottom-sheet-card {
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 32px 32px 24px 24px;
+            padding: 24px; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        .sheet-handle {
+            width: 42px; height: 5px; background: rgba(0, 0, 0, 0.15);
+            border-radius: 10px; margin: 0 auto 18px auto;
         }
 
         /* 📱 하단 불투명 플로팅 바 (Dock Bar) */
         .floating-bottom-bar {
-            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-            width: calc(100% - 40px); max-width: 460px;
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 30px; padding: 6px;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 32px); max-width: 420px;
+            background: rgba(255, 255, 255, 0.68);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 36px; padding: 6px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
             display: flex; gap: 6px; z-index: 9999;
         }
 
         .nav-dock-btn {
-            flex: 1; padding: 12px 16px; border-radius: 24px;
+            flex: 1; padding: 12px 18px; border-radius: 28px;
             font-family: 'Paperlogy', sans-serif; font-size: 0.95rem; font-weight: 700;
-            color: #666; border: none; background: transparent; cursor: pointer;
+            color: #777; border: none; background: transparent; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .nav-dock-btn.active {
             background: #6c5ce7; color: #ffffff;
-            box-shadow: 0 6px 18px rgba(108, 92, 231, 0.35);
+            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.38);
+            transform: translateY(-2px);
         }
 
-        /* 레이아웃 분할 (태블릿 이상일 때 2컬럼) */
-        .content-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media (min-width: 768px) { .content-grid { grid-template-columns: 1fr 1fr; } }
-
-        /* 랭킹 리스트 */
-        .rank-list { display: flex; flex-direction: column; gap: 8px; }
+        /* 랭킹 아이템 */
         .rank-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 11px 15px; background: rgba(255, 255, 255, 0.6); border-radius: 14px;
-            font-size: 0.92rem; border: 1px solid rgba(255, 255, 255, 0.75);
+            padding: 12px 16px; background: rgba(255, 255, 255, 0.65); border-radius: 16px;
+            font-size: 0.92rem; border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.2s ease;
         }
+        .rank-item:hover { transform: scale(1.01); background: rgba(255, 255, 255, 0.85); }
         .rank-item.my-rank {
-            background: rgba(108, 92, 231, 0.12); border: 1.5px solid #6c5ce7; font-weight: 700;
+            background: rgba(108, 92, 231, 0.12); border: 2px solid #6c5ce7; font-weight: 700;
         }
         .rank-badge {
-            width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center;
+            width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center;
             justify-content: center; font-size: 0.8rem; font-weight: 700; color: #fff; background: #a1a1a6; flex-shrink: 0;
         }
-        .rank-1 { background: #ffd700; color: #1d1d1f; }
+        .rank-1 { background: #ffd700; color: #1d1d1f; box-shadow: 0 3px 10px rgba(255, 215, 0, 0.4); }
         .rank-2 { background: #c0c0c0; color: #1d1d1f; }
         .rank-3 { background: #cd7f32; color: #fff; }
 
-        .student-info-sub { font-size: 0.75rem; color: #666; font-weight: 500; margin-top: 2px; }
-
-        /* 슬림 달력 디자인 */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        /* 모듈형 슬림 달력 */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
         .calendar-day-head { font-size: 0.72rem; font-weight: 700; color: #86868b; padding: 2px 0; }
         .calendar-day {
-            padding: 6px 0; font-size: 0.82rem; border-radius: 9px; background: rgba(255, 255, 255, 0.35);
-            border: 1px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center;
+            padding: 7px 0; font-size: 0.82rem; border-radius: 12px; background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.6); transition: all 0.2s ease;
         }
         .calendar-day.attended {
             background: #6c5ce7; color: #ffffff; font-weight: 700;
-            box-shadow: 0 3px 8px rgba(108, 92, 231, 0.3); border-color: #6c5ce7;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.35); border-color: #6c5ce7;
+            transform: scale(1.05);
         }
 
-        /* 로또 공 디자인 */
+        /* 로또 공 */
         .lotto-ball {
             width: 32px; height: 32px; border-radius: 50%; display: inline-flex;
             align-items: center; justify-content: center; font-weight: 700; color: #fff;
-            font-size: 0.85rem; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.08); flex-shrink: 0;
+            font-size: 0.85rem; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1); flex-shrink: 0;
         }
         .ball-yellow { background: #fbc531; color: #1d1d1f; }
         .ball-blue { background: #00a8ff; }
@@ -123,14 +146,14 @@
         .ball-gray { background: #718093; }
         .ball-green { background: #4cd137; }
 
-        /* 3D 번호 입력 볼 */
+        /* 3D 번호 입력 인풋 */
         .lotto-ball-input {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.88);
-            border: 2px solid rgba(220, 220, 230, 0.85);
-            text-align: center; font-weight: 800; font-size: 1rem; color: #333;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.03);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 42px; height: 42px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(210, 210, 225, 0.8);
+            text-align: center; font-weight: 800; font-size: 1.05rem; color: #333;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05), 0 3px 8px rgba(0,0,0,0.04);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
             -moz-appearance: textfield;
         }
         .lotto-ball-input::-webkit-outer-spin-button,
@@ -138,24 +161,24 @@
 
         .lotto-ball-input:focus {
             outline: none; border-color: #6c5ce7; background: #ffffff;
-            transform: scale(1.08); box-shadow: 0 0 12px rgba(108, 92, 231, 0.35);
+            transform: scale(1.15) translateY(-2px); box-shadow: 0 0 16px rgba(108, 92, 231, 0.4);
         }
         .lotto-ball-input.bonus-style {
-            border-color: #a29bfe; background: rgba(243, 240, 255, 0.9);
+            border-color: #a29bfe; background: rgba(240, 236, 255, 0.95);
         }
 
         .btn-base {
             font-family: 'Paperlogy', sans-serif; font-size: 0.95rem; font-weight: 700;
-            padding: 12px 18px; border-radius: 14px; transition: all 0.25s ease;
+            padding: 14px 20px; border-radius: 16px; transition: all 0.25s ease;
             cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
         }
-        .btn-primary { background-color: #6c5ce7; color: #ffffff; box-shadow: 0 6px 16px rgba(108, 92, 231, 0.25); }
-        .btn-primary:hover { background-color: #5b4bc4; transform: translateY(-1px); }
-        .btn-secondary { background-color: rgba(255, 255, 255, 0.7); color: #4a5568; border: 1px solid rgba(255,255,255,0.85); }
+        .btn-primary { background-color: #6c5ce7; color: #ffffff; box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3); }
+        .btn-primary:hover { background-color: #5b4bc4; transform: translateY(-2px); }
+        .btn-secondary { background-color: rgba(255, 255, 255, 0.75); color: #4a5568; border: 1px solid rgba(255,255,255,0.9); }
 
         .toast-container {
-            position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px);
-            background: rgba(29, 29, 31, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: rgba(29, 29, 31, 0.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
             color: #ffffff; padding: 12px 24px; border-radius: 30px; font-family: 'Paperlogy', sans-serif;
             font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 100000;
             opacity: 0; visibility: hidden; transition: all 0.35s ease; pointer-events: none;
@@ -168,118 +191,123 @@
     <div id="toastNotification" class="toast-container"><span id="toastMessage"></span></div>
 
     <div class="container">
-        <!-- 상단 헤더 -->
-        <div class="header-zone">
-            <h1 class="page-title">🏆 나의 순위 & 랭킹</h1>
-            <button onclick="window.location.href='index.html'" class="btn-base btn-secondary">
+        <!-- 상단 미니 프로필 바 -->
+        <div class="flex justify-between items-center mb-5 animate-slide-up">
+            <div>
+                <span id="welcomeStudent" class="text-xs font-extrabold text-indigo-600 bg-indigo-100/80 px-2.5 py-1 rounded-full">학생 페이지</span>
+                <h1 class="page-title text-xl font-bold mt-1">나의 순위 & 대시보드</h1>
+            </div>
+            <button onclick="window.location.href='index.html'" class="btn-base btn-secondary py-2 px-3 text-xs">
                 <span class="emoji-font">🏠</span> 홈으로
             </button>
         </div>
 
-        <!-- 1. [이달의 출석] 뷰 -->
-        <div id="view-attendance" class="content-grid">
+        <!-- 1. [이달의 출석] 시트 -->
+        <div id="view-attendance" class="space-y-4 animate-pop-in">
+            <!-- 요약 카드 -->
             <div class="glass-card">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-base font-bold flex items-center gap-2">
+                        <span class="emoji-font">📊</span> 이번 달 나의 출석 상태
+                    </h2>
+                    <span id="currentMonthTitle" class="text-xs font-bold text-gray-500">2026년 8월</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-white/70 p-3.5 rounded-2xl border border-white text-center shadow-sm">
+                        <div class="text-xs text-gray-400 font-bold mb-0.5">총 출석일</div>
+                        <div id="myAttDays" class="text-2xl font-extrabold text-indigo-600">0일</div>
+                    </div>
+                    <div class="bg-white/70 p-3.5 rounded-2xl border border-white text-center shadow-sm">
+                        <div class="text-xs text-gray-400 font-bold mb-0.5">달성률</div>
+                        <div id="myAttRate" class="text-2xl font-extrabold text-indigo-600">0%</div>
+                    </div>
+                </div>
+
+                <!-- 모듈형 출석 달력 -->
+                <div class="calendar-grid">
+                    <div class="calendar-day-head text-red-500">일</div>
+                    <div class="calendar-day-head">월</div>
+                    <div class="calendar-day-head">화</div>
+                    <div class="calendar-day-head">수</div>
+                    <div class="calendar-day-head">목</div>
+                    <div class="calendar-day-head">금</div>
+                    <div class="calendar-day-head text-blue-500">토</div>
+                </div>
+                <div id="calendarDays" class="calendar-grid mt-1"></div>
+            </div>
+
+            <!-- 바텀시트 스타일 랭킹 카드 -->
+            <div class="bottom-sheet-card">
+                <div class="sheet-handle"></div>
                 <h2 class="text-base font-bold mb-3 flex items-center gap-2">
-                    <span class="emoji-font">🥇</span> 이달의 출석 랭킹 (Top 10)
+                    <span class="emoji-font">🥇</span> 이달의 출석 Top 10
                 </h2>
-                <div id="attendanceRankList" class="rank-list">
+                <div id="attendanceRankList" class="space-y-2">
                     <div class="text-center py-6 text-gray-400">랭킹 불러오는 중...</div>
                 </div>
                 <div id="myAttendanceRankCard" class="mt-3 pt-2 border-t border-gray-200/50"></div>
             </div>
-
-            <div class="glass-card flex flex-col justify-between">
-                <div>
-                    <h2 class="text-base font-bold mb-3 flex items-center gap-2">
-                        <span class="emoji-font">📊</span> 나의 이번 달 출석 통계
-                    </h2>
-                    <div class="grid grid-cols-2 gap-2.5 mb-3">
-                        <div class="bg-white/60 p-3 rounded-xl border border-white/80 text-center shadow-sm">
-                            <div class="text-xs text-gray-500 font-bold mb-0.5">출석 일수</div>
-                            <div id="myAttDays" class="text-xl font-extrabold text-indigo-600">0일</div>
-                        </div>
-                        <div class="bg-white/60 p-3 rounded-xl border border-white/80 text-center shadow-sm">
-                            <div class="text-xs text-gray-500 font-bold mb-0.5">출석 달성률</div>
-                            <div id="myAttRate" class="text-xl font-extrabold text-indigo-600">0%</div>
-                        </div>
-                    </div>
-
-                    <h3 id="currentMonthTitle" class="text-xs font-bold mb-1.5 text-gray-600">2026년 8월</h3>
-                    <div class="calendar-grid">
-                        <div class="calendar-day-head text-red-500">일</div>
-                        <div class="calendar-day-head">월</div>
-                        <div class="calendar-day-head">화</div>
-                        <div class="calendar-day-head">수</div>
-                        <div class="calendar-day-head">목</div>
-                        <div class="calendar-day-head">금</div>
-                        <div class="calendar-day-head text-blue-500">토</div>
-                    </div>
-                    <div id="calendarDays" class="calendar-grid mt-1"></div>
-                </div>
-            </div>
         </div>
 
-        <!-- 2. [이주의 로또] 뷰 -->
-        <div id="view-lotto" class="content-grid" style="display: none;">
+        <!-- 2. [이주의 로또] 시트 -->
+        <div id="view-lotto" class="space-y-4 animate-pop-in" style="display: none;">
+            <!-- 당첨 번호 카드 -->
             <div class="glass-card">
-                <h2 class="text-base font-bold mb-3 flex items-center gap-2">
-                    <span class="emoji-font">🎯</span> 로또 예측 랭킹 (Top 10)
+                <h2 class="text-base font-bold mb-2 flex items-center gap-2">
+                    <span class="emoji-font">🎉</span> 지난 주 당첨 번호
                 </h2>
-                <div id="lottoRankList" class="rank-list">
-                    <div class="text-center py-6 text-gray-400">랭킹 불러오는 중...</div>
+                <div id="lottoWinningBox" class="min-h-[64px] flex items-center justify-center gap-1.5 bg-white/60 p-3 rounded-2xl border border-white shadow-sm">
+                    <span class="text-xs text-gray-400">번호 불러오는 중...</span>
                 </div>
             </div>
 
-            <div class="glass-card flex flex-col justify-between">
-                <div>
-                    <!-- 지난주 당첨 번호 -->
-                    <div class="mb-5">
-                        <h2 class="text-base font-bold mb-2 flex items-center gap-2">
-                            <span class="emoji-font">🎉</span> 지난 주 당첨 번호
-                        </h2>
-                        <div id="lottoWinningBox" class="min-h-[64px] flex items-center justify-center gap-1.5 bg-white/50 p-3 rounded-2xl border border-white/80 shadow-sm transition-all">
-                            <span class="text-xs text-gray-400">번호를 당겨오는 중...</span>
+            <!-- 예측 작성 폼 카드 -->
+            <div class="glass-card">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-base font-bold flex items-center gap-1.5">
+                        <span class="emoji-font">🔮</span> 이번 주 나의 예측
+                    </h2>
+                    <button onclick="generateAutoLotto()" class="text-xs text-indigo-600 font-bold hover:underline bg-indigo-50 px-2.5 py-1 rounded-full">
+                        🎲 자동 생성
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mb-4">* 중복 없이 7개 번호를 채워주세요.</p>
+
+                <div id="myLottoStatus">
+                    <!-- 3D 인터랙티브 공 입력 -->
+                    <div class="flex flex-col items-center gap-3.5 mb-4 bg-white/50 p-4 rounded-2xl border border-white/70">
+                        <div class="flex justify-center gap-2 w-full">
+                            <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                            <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                            <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                            <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                            <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                            <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                        </div>
+                        <div class="flex items-center gap-2 pt-2 border-t border-dashed border-gray-300/80 w-full justify-center">
+                            <span class="text-xs font-bold text-indigo-600">+ 보너스</span>
+                            <input type="number" id="lottoBonusInput" min="1" max="45" class="lotto-ball-input bonus-style">
                         </div>
                     </div>
 
-                    <!-- 이번주 예측 -->
-                    <div class="pt-4 border-t border-gray-200/50">
-                        <div class="flex justify-between items-center mb-1">
-                            <h2 class="text-base font-bold flex items-center gap-1.5">
-                                <span class="emoji-font">🔮</span> 이번 주 나의 예측
-                            </h2>
-                            <button onclick="generateAutoLotto()" class="text-xs text-indigo-600 font-bold hover:underline bg-indigo-50 px-2.5 py-1 rounded-lg">
-                                🎲 자동 생성
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-500 mb-4">* 한 주에 1회 참여 가능 (중복 없는 7개 번호)</p>
+                    <button onclick="submitLottoPrediction()" class="btn-base btn-primary w-full">예측 번호 제출하기</button>
+                </div>
+            </div>
 
-                        <div id="myLottoStatus">
-                            <!-- 3D 볼 형태의 번호 입력 폼 -->
-                            <div class="flex flex-col items-center gap-3 mb-5 bg-white/40 p-4 rounded-2xl border border-white/60">
-                                <div class="flex justify-center gap-2 w-full">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                </div>
-                                <div class="flex items-center gap-2 pt-2.5 border-t border-dashed border-gray-300/80 w-full justify-center">
-                                    <span class="text-xs font-bold text-indigo-600">+ 보너스</span>
-                                    <input type="number" id="lottoBonusInput" min="1" max="45" class="lotto-ball-input bonus-style">
-                                </div>
-                            </div>
-
-                            <button onclick="submitLottoPrediction()" class="btn-base btn-primary w-full">예측 번호 제출하기</button>
-                        </div>
-                    </div>
+            <!-- 로또 랭킹 바텀시트 -->
+            <div class="bottom-sheet-card">
+                <div class="sheet-handle"></div>
+                <h2 class="text-base font-bold mb-3 flex items-center gap-2">
+                    <span class="emoji-font">🎯</span> 로또 예측 Top 10
+                </h2>
+                <div id="lottoRankList" class="space-y-2">
+                    <div class="text-center py-6 text-gray-400">랭킹 불러오는 중...</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 📱 하단 불투명 플로팅 바 (Glassmorphic Dock) -->
+    <!-- 📱 하단 불투명 플로팅 바 (Glassmorphic Dock Bar) -->
     <div class="floating-bottom-bar">
         <button id="nav-btn-attendance" class="nav-dock-btn active" onclick="switchNav('attendance')">
             <span class="emoji-font">📅</span> 이달의 출석
@@ -325,12 +353,27 @@
         setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    /* 하단 불투명 플로팅 바 내비게이션 전환 */
+    /* 애니메이션 포함 하단 불투명 바 탭 전환 */
     function switchNav(tab) {
         document.getElementById('nav-btn-attendance').classList.toggle('active', tab === 'attendance');
         document.getElementById('nav-btn-lotto').classList.toggle('active', tab === 'lotto');
-        document.getElementById('view-attendance').style.display = tab === 'attendance' ? 'grid' : 'none';
-        document.getElementById('view-lotto').style.display = tab === 'lotto' ? 'grid' : 'none';
+        
+        const attView = document.getElementById('view-attendance');
+        const lottoView = document.getElementById('view-lotto');
+
+        if(tab === 'attendance') {
+            lottoView.style.display = 'none';
+            attView.style.display = 'block';
+            attView.classList.remove('animate-pop-in');
+            void attView.offsetWidth; // Trigger Reflow
+            attView.classList.add('animate-pop-in');
+        } else {
+            attView.style.display = 'none';
+            lottoView.style.display = 'block';
+            lottoView.classList.remove('animate-pop-in');
+            void lottoView.offsetWidth; // Trigger Reflow
+            lottoView.classList.add('animate-pop-in');
+        }
     }
 
     auth.onAuthStateChanged((user) => {
@@ -341,6 +384,7 @@
                 if(data) {
                     const rawName = data.name || data.studentName || data.userName;
                     currentStudentName = rawName ? decryptAES(rawName) : "학생";
+                    document.getElementById('welcomeStudent').innerText = `${currentStudentName} 학생`;
                 }
                 loadAttendanceData();
                 loadLottoData();
@@ -559,7 +603,7 @@
             const bonusBall = myPrediction.bonus ? `<div class="lotto-ball ${getBallColorClass(myPrediction.bonus)}">${myPrediction.bonus}</div>` : '';
             
             statusBox.innerHTML = `
-                <div class="bg-indigo-50/70 p-4 rounded-2xl border border-indigo-100/80 text-center shadow-sm">
+                <div class="bg-indigo-50/80 p-4 rounded-2xl border border-indigo-100 text-center shadow-sm">
                     <div class="text-xs text-indigo-600 font-bold mb-2">✅ 이번 주 예측 제출 완료</div>
                     <div class="flex justify-center items-center gap-1.5 mt-2 flex-wrap">
                         ${balls}
