@@ -13,6 +13,18 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
+    <!-- 4. MathJax 수식 렌더링 라이브러리 (오늘의 문제 바텀시트용) -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
         @font-face {
             font-family: 'Paperlogy';
@@ -128,6 +140,33 @@
             border: 2px solid #ffffff;
         }
 
+        /* 우측 하단 "오늘의 문제" 플로팅 버튼 (채팅 FAB 위에 쌓임) */
+        .fab-math-btn {
+            position: fixed;
+            bottom: 100px;
+            right: 28px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: #ffffff;
+            color: #6c5ce7;
+            border: 1px solid rgba(108, 92, 231, 0.25);
+            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 999;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .fab-math-btn:hover {
+            transform: scale(1.1) translateY(-2px);
+            background: #6c5ce7;
+            color: #ffffff;
+            box-shadow: 0 14px 30px rgba(108, 92, 231, 0.35);
+        }
+
         .sub-utility-zone { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; width: 100%; box-sizing: border-box; }
         @media (max-width: 650px) { .sub-utility-zone { grid-template-columns: repeat(2, 1fr); } body { padding: 30px 6vw; } }
 
@@ -190,6 +229,20 @@
         .sheet-subtitle { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; margin-bottom: 20px; text-align: center; }
         .sheet-input { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 0.95rem; font-family: inherit; background: #f8fafc; margin-bottom: 10px; box-sizing: border-box; }
         .sheet-input:focus { outline: none; border-color: #6c5ce7; background: #fff; }
+
+        /* 오늘의 문제 바텀시트 전용 */
+        .mathq-select { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 0.95rem; font-family: inherit; background: #f8fafc; margin-bottom: 14px; box-sizing: border-box; cursor: pointer; }
+        .mathq-card { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+        .mathq-card-title { font-size: 0.8rem; color: #7f8c8d; margin-bottom: 6px; font-weight: 700; font-family: 'Paperlogy', sans-serif; }
+        .mathq-card-text { font-size: 1.1rem; color: #1d1d1f; margin-bottom: 12px; font-weight: 700; line-height: 1.6; }
+        .mathq-input-group { display: flex; gap: 8px; }
+        .mathq-input-group input { flex: 1; padding: 10px 12px; font-size: 0.95rem; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; min-width: 0; }
+        .mathq-input-group button { padding: 10px 16px; font-size: 0.9rem; font-weight: 700; border-radius: 10px; border: none; background: #2ecc71; color: #fff; cursor: pointer; white-space: nowrap; }
+        .mathq-input-group button:hover { background: #27ae60; }
+        .mathq-feedback { margin-top: 8px; font-weight: 700; font-size: 0.9rem; }
+        .mathq-feedback.correct { color: #27ae60; }
+        .mathq-feedback.incorrect { color: #e74c3c; }
+        .mathq-more-link { display: block; text-align: center; margin-top: 6px; color: #6c5ce7; font-weight: 700; font-size: 0.85rem; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -198,6 +251,11 @@
     <button id="open-chat-btn" class="fab-chat-btn" title="선생님 메시지">
         <span class="emoji-font">💬</span>
         <span id="chat-badge" class="fab-badge" style="display: none;">0</span>
+    </button>
+
+    <!-- 우측 하단 "오늘의 문제" 플로팅 버튼 (FAB) -->
+    <button id="open-math-btn" class="fab-math-btn" title="오늘의 문제" onclick="openMathQuizBottomSheet()">
+        <span class="emoji-font">🧮</span>
     </button>
 
     <!-- 토스트 알림 UI -->
@@ -293,6 +351,41 @@
             <div class="btn-flex-group" style="margin-top: 10px;">
                 <button type="button" class="btn-base btn-secondary" onclick="closeMathflatBottomSheet()">취소</button>
                 <button type="button" class="btn-base btn-primary" onclick="saveMathflatCredentials()">등록 및 이동</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🧮 오늘의 문제 바텀 시트 -->
+    <div id="mathQuizBottomSheet" class="bottom-sheet-overlay" onclick="handleMathQuizOverlayClick(event)">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()" style="max-height: 82vh; overflow-y: auto;">
+            <div class="sheet-drag-handle"></div>
+
+            <!-- 학년 정보가 없을 때: 학년 입력 화면 -->
+            <div id="mathqGradeInputSection" style="display:none;">
+                <div class="sheet-title">🧮 오늘의 문제</div>
+                <div class="sheet-subtitle">학년을 알려주시면 오늘의 문제를 준비해 드릴게요.</div>
+                <select id="mathqGradeSelect" class="mathq-select">
+                    <option value="p3">초등학교 3학년</option>
+                    <option value="p4">초등학교 4학년</option>
+                    <option value="p5">초등학교 5학년</option>
+                    <option value="p6">초등학교 6학년</option>
+                    <option value="m1">중학교 1학년</option>
+                    <option value="m2">중학교 2학년</option>
+                    <option value="m3">중학교 3학년</option>
+                </select>
+                <div class="btn-flex-group" style="margin-top: 4px;">
+                    <button type="button" class="btn-base btn-secondary" onclick="closeMathQuizBottomSheet()">취소</button>
+                    <button type="button" class="btn-base btn-primary" onclick="confirmMathGradeAndShowQuiz()">확인하고 문제 풀기</button>
+                </div>
+            </div>
+
+            <!-- 학년 정보가 있을 때: 오늘의 문제 화면 -->
+            <div id="mathqQuizSection" style="display:none;">
+                <div class="sheet-title">🧮 오늘의 문제</div>
+                <div class="sheet-subtitle" id="mathqQuizSubtitle"></div>
+                <div id="mathqQuizContainer"></div>
+                <a href="#" id="mathqMoreLink" class="mathq-more-link" onclick="return false;">더 많은 문제 연습하기 →</a>
+                <button type="button" class="btn-base btn-secondary" style="margin-top: 12px;" onclick="closeMathQuizBottomSheet()">닫기</button>
             </div>
         </div>
     </div>
@@ -793,6 +886,215 @@
         }).catch(err => {
             showToast("저장 실패: " + err.message);
         });
+    }
+
+    /* ======================= 🧮 오늘의 문제 (바텀시트) ======================= */
+
+    const MATHQ_GRADE_LABELS = {
+        p3: "초등학교 3학년", p4: "초등학교 4학년", p5: "초등학교 5학년", p6: "초등학교 6학년",
+        m1: "중학교 1학년", m2: "중학교 2학년", m3: "중학교 3학년"
+    };
+
+    // 학년별 문제 생성기. 각 함수는 (rng: 0~1 난수 생성 함수)를 받아 문제를 만듭니다.
+    const mathqGenerators = {
+        p3: [
+            (rng) => { const a = mathqRand(rng,100,899), b = mathqRand(rng,100,899); return { title: "3자리 수의 덧셈", text: `$${a} + ${b} = ?$`, ans: a + b }; },
+            (rng) => { const a = mathqRand(rng,300,999), b = mathqRand(rng,100,a-1); return { title: "3자리 수의 뺄셈", text: `$${a} - ${b} = ?$`, ans: a - b }; },
+            (rng) => { const a = mathqRand(rng,10,99), b = mathqRand(rng,2,9); return { title: "(두 자리 수) × (한 자리 수)", text: `$${a} \\times ${b} = ?$`, ans: a * b }; }
+        ],
+        p4: [
+            (rng) => { const b = mathqRand(rng,3,9), ans = mathqRand(rng,10,99), a = b * ans; return { title: "나눗셈 (몫 구하기)", text: `$${a} \\div ${b} = ?$`, ans: ans }; },
+            (rng) => { const a = mathqRand(rng,10,50), b = mathqRand(rng,2,9), c = mathqRand(rng,5,20); return { title: "혼합 계산", text: `$${a} + ${b} \\times ${c} = ?$`, ans: a + (b * c) }; },
+            (rng) => { const first = mathqRand(rng,2,10), diff = mathqRand(rng,3,8), n = mathqRand(rng,5,8); return { title: "규칙 찾기", text: `$${first}, ${first+diff}, ${first+diff*2}, \\dots$ 이 수열의 ${n}번째 수는?`, ans: first + (n-1)*diff }; }
+        ],
+        p5: [
+            (rng) => { const d1 = mathqRand(rng,2,5), d2 = mathqRand(rng,6,9); return { title: "분수의 덧셈 (통분)", text: `$\\frac{1}{${d1}} + \\frac{1}{${d2}}$ 의 분자값은? (단, 분모를 $${d1*d2}$로 통분했을 때)`, ans: d1 + d2 }; },
+            (rng) => { const a = mathqRand(rng,11,99)/10, b = mathqRand(rng,2,9); const ans = Math.round(a*b*10)/10; return { title: "소수와 자연수의 곱셈", text: `$${a} \\times ${b} = ?$`, ans: ans }; },
+            (rng) => { const w = mathqRand(rng,2,9), l = mathqRand(rng,2,9), h = mathqRand(rng,2,9); return { title: "직육면체의 부피", text: `가로 ${w}cm, 세로 ${l}cm, 높이 ${h}cm인 직육면체의 부피($\\text{cm}^3$)는?`, ans: w*l*h }; }
+        ],
+        p6: [
+            (rng) => { const a = mathqRand(rng,2,9), b = mathqRand(rng,2,9); return { title: "분수 ÷ 자연수", text: `$\\frac{${a*b}}{7} \\div ${b}$ 의 분자값은?`, ans: a }; },
+            (rng) => { const a = mathqRand(rng,2,9), b = mathqRand(rng,2,9), k = mathqRand(rng,2,5); return { title: "비례식", text: `$${a} : ${b} = ${a*k} : x$ 일 때, $x$의 값은?`, ans: b*k }; },
+            (rng) => { const r = mathqRand(rng,2,10); return { title: "원의 넓이 (원주율: 3)", text: `반지름이 ${r}cm인 원의 넓이($\\text{cm}^2$)는? (원주율 = 3)`, ans: 3*r*r }; }
+        ],
+        m1: [
+            (rng) => { const a = mathqRand(rng,-15,-2), b = mathqRand(rng,3,15); return { title: "정수와 유리수의 연산", text: `($${a}$) + ($${b}$) = ?`, ans: a + b }; },
+            (rng) => { const a = mathqRand(rng,2,6), ans = mathqRand(rng,-5,9), b = mathqRand(rng,1,10); const c = a*ans+b; return { title: "일차방정식", text: `$${a}x + ${b} = ${c}$ 일 때, $x$의 값은?`, ans: ans }; },
+            (rng) => { const x = mathqRand(rng,-9,9), y = mathqRand(rng,-9,9); return { title: "좌표평면 (x좌표 + y좌표)", text: `점 $P(${x}, ${y})$의 $x$좌표와 $y$좌표의 합은?`, ans: x + y }; }
+        ],
+        m2: [
+            (rng) => { const a = mathqRand(rng,2,5), b = mathqRand(rng,2,5); return { title: "지수법칙", text: `$x^{${a}} \\times x^{${b}} = x^N$ 일 때, $N$의 값은?`, ans: a + b }; },
+            (rng) => { const x = mathqRand(rng,1,5), y = mathqRand(rng,1,5); const val = x + y; return { title: "연립방정식 기초", text: `$x + y = ${val}$, $x - y = ${x-y}$ 일 때, $x$의 값은?`, ans: x }; },
+            (rng) => { const m = mathqRand(rng,-5,5), n = mathqRand(rng,-9,9); return { title: "일차함수 기울기", text: `$y = ${m}x + (${n})$ 의 기울기는?`, ans: m }; }
+        ],
+        m3: [
+            (rng) => { const a = mathqRand(rng,2,9); return { title: "제곱근 계산", text: `$\\sqrt{${a*a}} + \\sqrt{${(a*2)*(a*2)}} = ?$`, ans: a + (a*2) }; },
+            (rng) => { const a = mathqRand(rng,1,7), b = mathqRand(rng,1,7); return { title: "다항식의 전개", text: `$(x + ${a})(x + ${b}) = x^2 + Ax + ${a*b}$ 일 때, $A$의 값은?`, ans: a + b }; },
+            (rng) => {
+                const r1 = mathqRand(rng,1,5), r2 = mathqRand(rng,-5,-1);
+                const p = -(r1+r2), q = r1*r2;
+                const pStr = p >= 0 ? `+ ${p}` : `- ${Math.abs(p)}`;
+                const qStr = q >= 0 ? `+ ${q}` : `- ${Math.abs(q)}`;
+                return { title: "이차방정식의 해", text: `$x^2 ${pStr}x ${qStr} = 0$ 의 두 근의 합은?`, ans: r1 + r2 };
+            }
+        ]
+    };
+
+    function mathqRand(rng, min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
+
+    // mulberry32: 시드값으로 항상 같은 순서의 난수를 만들어주는 PRNG
+    function mulberry32(seed) {
+        return function() {
+            seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+            let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    }
+
+    // 오늘 날짜 + 학생 uid + 학년코드로 시드를 만들어 "오늘의 문제"가 하루 동안은 항상 같도록 합니다.
+    function mathqTodaySeed(gradeCode) {
+        const now = new Date();
+        const todayKey = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+        const uid = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : "guest";
+        const hashHex = CryptoJS.SHA256(`${todayKey}-${uid}-${gradeCode}`).toString();
+        return parseInt(hashHex.substring(0, 8), 16);
+    }
+
+    // 학년 코드 추정: mathGradeCode(바텀시트에서 저장한 값)를 최우선으로 사용하고,
+    // 없으면 schoolName + grade류 필드를 조합해 추정합니다. 그래도 없으면 null.
+    function getMathQuizGradeCode() {
+        if (!currentStudentData) return null;
+        if (currentStudentData.mathGradeCode && MATHQ_GRADE_LABELS[currentStudentData.mathGradeCode]) {
+            return currentStudentData.mathGradeCode;
+        }
+
+        const schoolName = currentStudentData.schoolName || "";
+        let schoolType = null;
+        if (schoolName.includes('초등')) schoolType = 'p';
+        else if (schoolName.includes('중학교') || schoolName.includes('중등')) schoolType = 'm';
+
+        const rawCandidates = [
+            currentStudentData.grade, currentStudentData.studentGrade,
+            currentStudentData.gradeLevel, currentStudentData.schoolGrade, currentStudentData.grade_level
+        ];
+        let gradeNum = null;
+        for (const candidate of rawCandidates) {
+            if (candidate === undefined || candidate === null || candidate === "") continue;
+            const match = String(candidate).match(/\d+/);
+            if (match) { gradeNum = parseInt(match[0], 10); break; }
+        }
+
+        if (!schoolType || !gradeNum) return null;
+        if (schoolType === 'p' && gradeNum >= 3 && gradeNum <= 6) return `p${gradeNum}`;
+        if (schoolType === 'm' && gradeNum >= 1 && gradeNum <= 3) return `m${gradeNum}`;
+        return null;
+    }
+
+    function openMathQuizBottomSheet() {
+        const sheet = document.getElementById('mathQuizBottomSheet');
+        if (!sheet) return;
+
+        const gradeCode = getMathQuizGradeCode();
+        const gradeInputSection = document.getElementById('mathqGradeInputSection');
+        const quizSection = document.getElementById('mathqQuizSection');
+
+        if (!currentStudentData) {
+            // 로그인/데이터 동기화 전이어도 일단 학년을 입력받아 풀어볼 수 있게 합니다.
+            gradeInputSection.style.display = 'block';
+            quizSection.style.display = 'none';
+        } else if (gradeCode) {
+            gradeInputSection.style.display = 'none';
+            quizSection.style.display = 'block';
+            renderTodayMathQuiz(gradeCode);
+        } else {
+            gradeInputSection.style.display = 'block';
+            quizSection.style.display = 'none';
+        }
+
+        sheet.classList.add('active');
+    }
+
+    function closeMathQuizBottomSheet() {
+        const sheet = document.getElementById('mathQuizBottomSheet');
+        if (sheet) sheet.classList.remove('active');
+    }
+
+    function handleMathQuizOverlayClick(event) {
+        if (event.target.id === 'mathQuizBottomSheet') closeMathQuizBottomSheet();
+    }
+
+    function confirmMathGradeAndShowQuiz() {
+        const gradeCode = document.getElementById('mathqGradeSelect').value;
+        const currentUser = auth.currentUser;
+
+        // 로그인 상태라면 다음에도 자동으로 뜨도록 학년을 저장해 둡니다.
+        if (currentUser) {
+            database.ref(`students/${currentUser.uid}`).update({ mathGradeCode: gradeCode })
+                .catch(err => console.error("학년 저장 실패:", err));
+            if (currentStudentData) currentStudentData.mathGradeCode = gradeCode;
+        }
+
+        document.getElementById('mathqGradeInputSection').style.display = 'none';
+        document.getElementById('mathqQuizSection').style.display = 'block';
+        renderTodayMathQuiz(gradeCode);
+    }
+
+    function renderTodayMathQuiz(gradeCode) {
+        const container = document.getElementById('mathqQuizContainer');
+        const subtitle = document.getElementById('mathqQuizSubtitle');
+        const moreLink = document.getElementById('mathqMoreLink');
+        if (!container) return;
+
+        const now = new Date();
+        const dateLabel = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+        subtitle.textContent = `${MATHQ_GRADE_LABELS[gradeCode] || ''} · ${dateLabel} 오늘의 문제`;
+        if (moreLink) moreLink.href = `math.html?grade=${gradeCode}`;
+
+        const seed = mathqTodaySeed(gradeCode);
+        const rng = mulberry32(seed);
+        const generators = mathqGenerators[gradeCode] || [];
+
+        container.innerHTML = '';
+        generators.forEach((gen, index) => {
+            const q = gen(rng);
+            const card = document.createElement('div');
+            card.className = 'mathq-card';
+            card.innerHTML = `
+                <div class="mathq-card-title">유형 ${index + 1}. ${q.title}</div>
+                <div class="mathq-card-text">${q.text}</div>
+                <div class="mathq-input-group">
+                    <input type="number" id="mathq-ans-${index}" placeholder="정답 입력" onkeydown="if(event.key==='Enter') checkMathQuizAnswer(${index}, ${q.ans})">
+                    <button onclick="checkMathQuizAnswer(${index}, ${q.ans})">확인</button>
+                </div>
+                <div class="mathq-feedback" id="mathq-feedback-${index}"></div>
+            `;
+            container.appendChild(card);
+        });
+
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([container]);
+        }
+    }
+
+    function checkMathQuizAnswer(index, correctAns) {
+        const inputEl = document.getElementById(`mathq-ans-${index}`);
+        const feedbackEl = document.getElementById(`mathq-feedback-${index}`);
+        if (!inputEl || !feedbackEl) return;
+
+        const userAns = parseFloat(inputEl.value);
+        if (isNaN(userAns)) {
+            feedbackEl.textContent = "답을 입력해주세요.";
+            feedbackEl.className = "mathq-feedback incorrect";
+            return;
+        }
+        if (Math.abs(userAns - correctAns) < 0.01) {
+            feedbackEl.textContent = "정답입니다! 👏";
+            feedbackEl.className = "mathq-feedback correct";
+        } else {
+            feedbackEl.textContent = `틀렸습니다. (정답: ${correctAns})`;
+            feedbackEl.className = "mathq-feedback incorrect";
+        }
     }
 
     function startDeviceStatusReporting(studentUid) {
