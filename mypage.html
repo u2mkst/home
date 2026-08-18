@@ -112,6 +112,17 @@
             padding-left: 4px;
         }
 
+        /* 2열 배치용 그리드 패널 */
+        .input-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .input-row .input-wrapper {
+            margin-bottom: 0;
+            flex: 1;
+        }
+
         /* 비밀번호 눈모양 아이콘 인풋 스타일 */
         .input-pw {
             position: relative;
@@ -419,6 +430,32 @@
                 <input type="hidden" id="schoolCode"> 
             </div>
 
+            <!-- 💡 학년 및 반 입력 칸 추가 -->
+            <div class="input-row">
+                <div class="input-wrapper">
+                    <label for="studentGrade">학년</label>
+                    <select id="studentGrade">
+                        <option value="" disabled selected>학년 선택</option>
+                        <option value="초1">초1</option>
+                        <option value="초2">초2</option>
+                        <option value="초3">초3</option>
+                        <option value="초4">초4</option>
+                        <option value="초5">초5</option>
+                        <option value="초6">초6</option>
+                        <option value="중1">중1</option>
+                        <option value="중2">중2</option>
+                        <option value="중3">중3</option>
+                        <option value="고1">고1</option>
+                        <option value="고2">고2</option>
+                        <option value="고3">고3</option>
+                    </select>
+                </div>
+                <div class="input-wrapper">
+                    <label for="studentClass">반</label>
+                    <input type="text" id="studentClass" placeholder="예: A반, S반">
+                </div>
+            </div>
+
             <div class="input-wrapper">
                 <label for="teacherName">담당 선생님 선택</label>
                 <select id="teacherName">
@@ -557,7 +594,7 @@
         let isInitialLoad = true;
         let originalU2mId = ""; 
         let pendingU2mId = "";  
-        let originalPhoneTail = ""; // 💡 전화번호 뒷자리(비밀번호) 변경 감지용 변수 추가
+        let originalPhoneTail = "";
 
         function togglePasswordVisibility(inputId, eyeBtn) {
             const input = document.getElementById(inputId);
@@ -661,6 +698,12 @@
                             document.getElementById('schoolName').value = data.schoolName || '';
                             document.getElementById('schoolCode').value = data.schoolCode || '';
                             
+                            // 💡 학년 및 반 불러오기
+                            if (data.grade) {
+                                document.getElementById('studentGrade').value = data.grade;
+                            }
+                            document.getElementById('studentClass').value = data.className || data.class || '';
+
                             if (data.teacher) {
                                 document.getElementById('teacherName').value = data.teacher;
                             }
@@ -668,7 +711,6 @@
                             originalU2mId = data.u2mId || '';
                             document.getElementById('u2mId').value = originalU2mId;
                             
-                            // 💡 부모님 전화번호 뒷자리 및 originalPhoneTail 초기화
                             originalPhoneTail = decryptAES(data.phone) || '';
                             document.getElementById('u2mPhone').value = originalPhoneTail;
                             
@@ -696,7 +738,8 @@
         };
 
         function bindAutoSaveEvents() {
-            const inputs = ['studentName', 'schoolName', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw'];
+            // 💡 학년(studentGrade), 반(studentClass) 이벤트 바인딩 추가
+            const inputs = ['studentName', 'schoolName', 'studentGrade', 'studentClass', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw'];
             inputs.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
@@ -781,7 +824,6 @@
             }, 700);
         }
 
-        // 💡 Firebase Auth 비밀번호 변경 연동이 포함된 자동 저장 함수
         function updateStudentProfileAuto() {
             const user = auth.currentUser;
             if (!user) return;
@@ -789,12 +831,13 @@
             const studentName = document.getElementById('studentName').value.trim();
             const schoolName = document.getElementById('schoolName').value.trim();
             const schoolCode = document.getElementById('schoolCode').value.trim();
+            const grade = document.getElementById('studentGrade').value;
+            const studentClass = document.getElementById('studentClass').value.trim();
             const selectedTeacher = document.getElementById('teacherName').value;
             const phoneTail = document.getElementById('u2mPhone').value.trim();
             const mathflatPhone = document.getElementById('mathflatId').value.trim().replace(/[^0-9]/g, '');
             const mathflatPw = document.getElementById('mathflatPw').value.trim();
 
-            // 🔑 전화번호 뒷자리가 변경되었는지 감지
             const isPhoneChanged = (phoneTail !== originalPhoneTail) && (/^\d{4}$/.test(phoneTail));
 
             const updatedObject = {};
@@ -802,6 +845,14 @@
             if (studentName) updatedObject.name = encryptAES(studentName);
             if (schoolName) updatedObject.schoolName = schoolName;
             if (schoolCode) updatedObject.schoolCode = schoolCode;
+            
+            // 💡 학년 및 반 저장 항목 추가
+            if (grade) updatedObject.grade = grade;
+            if (studentClass !== undefined) {
+                updatedObject.className = studentClass;
+                updatedObject.class = studentClass;
+            }
+
             if (selectedTeacher) updatedObject.teacher = selectedTeacher;
             if (phoneTail) updatedObject.phone = encryptAES(phoneTail);
             if (mathflatPhone) {
@@ -812,7 +863,6 @@
 
             if (Object.keys(updatedObject).length === 0) return;
 
-            // 💡 전화번호 뒷자리가 새로 변경된 경우 -> Firebase Auth 실제 비밀번호도 함께 변경
             if (isPhoneChanged) {
                 const newAuthPw = "00" + phoneTail;
                 user.updatePassword(newAuthPw)
@@ -831,11 +881,9 @@
                         } else {
                             showToast("❌ 비밀번호 변경 실패: " + (err.message || "입력값을 확인해 주세요."));
                         }
-                        // 실패 시 입력값 복원
                         document.getElementById('u2mPhone').value = originalPhoneTail;
                     });
             } else {
-                // 일반 프로필 정보만 변경된 경우
                 database.ref(`students/${user.uid}`).update(updatedObject)
                     .then(() => {
                         showToast("💾 변경사항이 자동으로 저장되었습니다.");
