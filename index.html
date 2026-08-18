@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
-    <!-- 4. MathJax 수식 렌더링 라이브러리 (오늘의 문제 바텀시트용) -->
+    <!-- MathJax 수식 렌더링 라이브러리 (오늘의 문제 바텀시트용) -->
     <script>
       window.MathJax = {
         tex: {
@@ -45,7 +45,7 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
                         linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; margin: 0; display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; color: #1d1d1f; box-sizing: border-box; padding: 40px 8vw; overflow-x: hidden;
+            min-height: 100vh; color: #1d1d1f; box-sizing: border-box; padding: 40px 8vw 100px 8vw; overflow-x: hidden;
         }
         
         .container { width: 100%; max-width: 740px; margin: 0 auto; }
@@ -102,73 +102,89 @@
         .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
         .btn-secondary:hover { background-color: #cbd5e1; }
 
-        /* 우측 하단 플로팅 버튼 (FAB) 스타일 */
+        /* 📱 신규 하단 스마트 네비게이션 바 스타일 */
+        .bottom-nav-bar {
+            position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 32px); max-width: 740px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 24px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+            padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; box-sizing: border-box; gap: 6px;
+        }
+
+        .nav-group { display: flex; align-items: center; gap: 4px; }
+
+        .nav-btn {
+            display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 14px;
+            background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.8);
+            color: #1d1d1f; font-family: 'Paperlogy', sans-serif; font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s ease; white-space: nowrap;
+        }
+        .nav-btn:hover { background: rgba(108, 92, 231, 0.12); color: #6c5ce7; transform: translateY(-1px); }
+        .nav-btn.danger:hover { background: rgba(255, 69, 58, 0.12); color: #ff453a; }
+
+        .nav-hub-group {
+            display: flex; align-items: center; background: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 16px; padding: 4px 8px; gap: 2px;
+        }
+        .nav-hub-item {
+            background: none; border: none; font-family: 'Paperlogy', sans-serif; font-size: 0.78rem;
+            font-weight: 600; color: #4a4a4c; cursor: pointer; padding: 4px 6px; border-radius: 8px;
+            transition: all 0.2s ease; display: flex; align-items: center; gap: 3px; white-space: nowrap;
+        }
+        .nav-hub-item:hover { background: rgba(108, 92, 231, 0.12); color: #6c5ce7; }
+        .nav-hub-divider { color: #d1d1d6; font-size: 0.7rem; margin: 0 1px; }
+
+        .nav-fab-add {
+            width: 36px; height: 36px; border-radius: 12px; background: #6c5ce7; color: #ffffff;
+            border: none; display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.35); transition: all 0.2s ease; margin-left: 4px;
+        }
+        .nav-fab-add:hover { transform: scale(1.08) translateY(-1px); background: #5b4bc4; box-shadow: 0 6px 16px rgba(108, 92, 231, 0.45); }
+
+        @media (max-width: 600px) {
+            .nav-btn span:not(.emoji-font), .nav-hub-item span:not(.emoji-font) { font-size: 0.75rem; }
+            .bottom-nav-bar { padding: 6px 8px; }
+            .nav-group { gap: 2px; }
+        }
+
+        /* 플로팅 버튼 (FAB) 위치 하단바 위로 조정 */
         .fab-chat-btn {
-            position: fixed;
-            bottom: 28px;
-            right: 28px;
-            width: 60px;
-            height: 60px;
-            border-radius: 30px;
-            background: #6c5ce7;
-            color: #ffffff;
+            position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px;
+            border-radius: 28px; background: #6c5ce7; color: #ffffff;
             border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            z-index: 999;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; cursor: pointer; z-index: 999;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .fab-chat-btn:hover {
-            transform: scale(1.1) translateY(-2px);
-            background: #5b4bc4;
-            box-shadow: 0 14px 30px rgba(108, 92, 231, 0.5);
-        }
+        .fab-chat-btn:hover { transform: scale(1.1) translateY(-2px); background: #5b4bc4; box-shadow: 0 14px 30px rgba(108, 92, 231, 0.5); }
         .fab-badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            background: #ff453a;
-            color: white;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 10px;
-            border: 2px solid #ffffff;
+            position: absolute; top: -2px; right: -2px; background: #ff453a; color: white;
+            font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 2px solid #ffffff;
         }
 
-        /* 우측 하단 "오늘의 문제" 플로팅 버튼 (채팅 FAB 위에 쌓임) */
         .fab-math-btn {
-            position: fixed;
-            bottom: 100px;
-            right: 28px;
-            width: 60px;
-            height: 60px;
-            border-radius: 30px;
-            background: #ffffff;
-            color: #6c5ce7;
-            border: 1px solid rgba(108, 92, 231, 0.25);
+            position: fixed; bottom: 150px; right: 20px; width: 56px; height: 56px;
+            border-radius: 28px; background: linear-gradient(135deg, #ffffff 0%, #f0eeef 100%);
+            color: #6c5ce7; border: 1px solid rgba(108, 92, 231, 0.3);
             box-shadow: 0 10px 25px rgba(108, 92, 231, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            z-index: 999;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; cursor: pointer; z-index: 999;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .fab-math-btn::after {
+            content: ''; position: absolute; top: 0px; right: 0px; width: 12px; height: 12px;
+            background-color: #6c5ce7; border: 2px solid #ffffff; border-radius: 50%;
         }
         .fab-math-btn:hover {
-            transform: scale(1.1) translateY(-2px);
-            background: #6c5ce7;
-            color: #ffffff;
-            box-shadow: 0 14px 30px rgba(108, 92, 231, 0.35);
+            transform: scale(1.1) translateY(-3px);
+            background: linear-gradient(135deg, #6c5ce7 0%, #5b4bc4 100%);
+            color: #ffffff; box-shadow: 0 14px 30px rgba(108, 92, 231, 0.4);
         }
-
-        .sub-utility-zone { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; width: 100%; box-sizing: border-box; }
-        @media (max-width: 650px) { .sub-utility-zone { grid-template-columns: repeat(2, 1fr); } body { padding: 30px 6vw; } }
 
         .marquee-container { margin-top: 20px; background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 50px; padding: 8px 24px; overflow: hidden; display: none; }
         .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.8rem; font-weight: 600; color: #515154; white-space: nowrap; }
@@ -204,7 +220,7 @@
         .toast-container { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(29, 29, 31, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #ffffff; padding: 12px 24px; border-radius: 30px; font-family: 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.15); z-index: 100000; opacity: 0; visibility: hidden; transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); pointer-events: none; max-width: 90vw; text-align: center; }
         .toast-container.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 
-        /* 📱 바텀 시트 (Bottom Sheet) 스타일 */
+        /* 바텀 시트 (Bottom Sheet) 공통 스타일 */
         .bottom-sheet-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
@@ -215,7 +231,7 @@
         .bottom-sheet-overlay.active { opacity: 1; visibility: visible; }
         
         .bottom-sheet-container {
-            width: 100%; max-width: 500px; background: #ffffff;
+            width: 100%; max-width: 520px; background: #ffffff;
             border-top-left-radius: 28px; border-top-right-radius: 28px;
             padding: 24px 28px 36px; box-sizing: border-box;
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
@@ -230,19 +246,64 @@
         .sheet-input { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 0.95rem; font-family: inherit; background: #f8fafc; margin-bottom: 10px; box-sizing: border-box; }
         .sheet-input:focus { outline: none; border-color: #6c5ce7; background: #fff; }
 
-        /* 오늘의 문제 바텀시트 전용 */
-        .mathq-select { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 0.95rem; font-family: inherit; background: #f8fafc; margin-bottom: 14px; box-sizing: border-box; cursor: pointer; }
-        .mathq-card { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 14px; padding: 18px; margin-bottom: 12px; }
-        .mathq-card-title { font-size: 0.8rem; color: #7f8c8d; margin-bottom: 6px; font-weight: 700; font-family: 'Paperlogy', sans-serif; }
-        .mathq-card-text { font-size: 1.1rem; color: #1d1d1f; margin-bottom: 12px; font-weight: 700; line-height: 1.6; }
-        .mathq-input-group { display: flex; gap: 8px; }
-        .mathq-input-group input { flex: 1; padding: 10px 12px; font-size: 0.95rem; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; min-width: 0; }
-        .mathq-input-group button { padding: 10px 16px; font-size: 0.9rem; font-weight: 700; border-radius: 10px; border: none; background: #2ecc71; color: #fff; cursor: pointer; white-space: nowrap; }
-        .mathq-input-group button:hover { background: #27ae60; }
-        .mathq-feedback { margin-top: 8px; font-weight: 700; font-size: 0.9rem; }
-        .mathq-feedback.correct { color: #27ae60; }
-        .mathq-feedback.incorrect { color: #e74c3c; }
-        .mathq-more-link { display: block; text-align: center; margin-top: 6px; color: #6c5ce7; font-weight: 700; font-size: 0.85rem; text-decoration: none; }
+        /* 🧮 오늘의 문제 바텀시트 전용 디자이너 스타일 */
+        .mathq-select {
+            width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 16px;
+            font-size: 0.95rem; font-family: inherit; background: #f8fafc; margin-bottom: 16px;
+            box-sizing: border-box; cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .mathq-select:focus { outline: none; border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); background: #ffffff; }
+        
+        .mathq-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(108, 92, 231, 0.15); border-radius: 18px; padding: 20px;
+            margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .mathq-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108, 92, 231, 0.08); }
+        
+        .mathq-card-title {
+            display: inline-block; font-size: 0.78rem; color: #6c5ce7;
+            background: rgba(108, 92, 231, 0.08); padding: 4px 10px; border-radius: 20px;
+            margin-bottom: 10px; font-weight: 700; font-family: 'Paperlogy', sans-serif; letter-spacing: -0.2px;
+        }
+        .mathq-card-text {
+            font-size: 1.15rem; color: #1d1d1f; margin-bottom: 16px; font-weight: 700; line-height: 1.6;
+            padding: 10px 14px; background: rgba(255, 255, 255, 0.9); border-radius: 12px;
+            border: 1px dashed rgba(108, 92, 231, 0.2);
+        }
+        
+        .mathq-input-group { display: flex; gap: 10px; }
+        .mathq-input-group input {
+            flex: 1; padding: 12px 14px; font-size: 0.95rem; border: 1px solid #e2e8f0;
+            border-radius: 12px; box-sizing: border-box; min-width: 0; background: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .mathq-input-group input:focus { outline: none; border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); }
+        .mathq-input-group button {
+            padding: 12px 20px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, #6c5ce7 0%, #5b4bc4 100%); color: #ffffff;
+            cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(108, 92, 231, 0.25);
+            transition: all 0.2s ease;
+        }
+        .mathq-input-group button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(108, 92, 231, 0.35); }
+        
+        .mathq-feedback {
+            margin-top: 10px; font-weight: 700; font-size: 0.9rem; padding: 8px 12px;
+            border-radius: 10px; display: none; align-items: center; gap: 6px;
+            animation: mathqFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes mathqFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+        .mathq-feedback.correct { display: flex; background: #e8f8f0; color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .mathq-feedback.incorrect { display: flex; background: #fef2f2; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        
+        .mathq-more-link {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-top: 14px; padding: 12px; color: #6c5ce7; font-weight: 700; font-size: 0.9rem;
+            text-decoration: none; background: rgba(108, 92, 231, 0.06); border-radius: 14px;
+            transition: all 0.2s ease;
+        }
+        .mathq-more-link:hover { background: rgba(108, 92, 231, 0.12); transform: translateX(2px); }
     </style>
 </head>
 <body>
@@ -316,16 +377,6 @@
             </div>
         </div>
 
-        <!-- 하단 버튼 존 -->
-        <div class="sub-utility-zone">
-            <button onclick="window.location.href='ranking.html'" class="btn-base btn-glass">
-                <span class="emoji-font">🏆</span> 나의 순위
-            </button>
-            <button onclick="openUnifiedInquiryModal()" class="btn-base btn-glass"><span class="emoji-font">🛠️</span> 관리자 문의</button>
-            <button onclick="goToMyPage()" class="btn-base btn-glass"><span class="emoji-font">👤</span> 마이페이지</button>
-            <button onclick="logoutUser()" class="btn-base btn-glass danger"><span class="emoji-font">🔓</span> 로그아웃</button>
-        </div>
-
         <div class="marquee-container" id="reminderBar">
             <div style="white-space: nowrap; overflow: hidden;">
                 <span class="marquee-text mona12" id="reminderText"></span>
@@ -338,7 +389,50 @@
         </div>
     </div>
 
-    <!-- 📲 매쓰플랫 전용 바텀 시트 (외부 영역 클릭 시 자동 취소/닫기) -->
+    <!-- 📱 하단 고정 스마트 네비게이션 바 -->
+    <nav class="bottom-nav-bar">
+        <!-- 좌측: 개인 활동 -->
+        <div class="nav-group">
+            <button onclick="window.location.href='ranking.html'" class="nav-btn">
+                <span class="emoji-font">🏆</span> <span>순위</span>
+            </button>
+            <button onclick="openUnifiedInquiryModal()" class="nav-btn">
+                <span class="emoji-font">🛠️</span> <span>문의</span>
+            </button>
+        </div>
+
+        <!-- 중앙: 메인 Hub & 빠른 실행 -->
+        <div class="nav-group">
+            <div class="nav-hub-group">
+                <button onclick="showToast('⏱️ 시간표 서비스 준비 중입니다.')" class="nav-hub-item">
+                    <span class="emoji-font">⏱️</span> <span>시간표</span>
+                </button>
+                <span class="nav-hub-divider">|</span>
+                <button onclick="showToast('🏫 학교 정보 서비스 준비 중입니다.')" class="nav-hub-item">
+                    <span class="emoji-font">🏫</span> <span>학교</span>
+                </button>
+                <span class="nav-hub-divider">|</span>
+                <button onclick="showToast('🍱 급식 서비스 준비 중입니다.')" class="nav-hub-item">
+                    <span class="emoji-font">🍱</span> <span>급식</span>
+                </button>
+            </div>
+            <button onclick="openMathQuizBottomSheet()" class="nav-fab-add" title="오늘의 문제">
+                <span class="emoji-font">➕</span>
+            </button>
+        </div>
+
+        <!-- 우측: 계정/시스템 -->
+        <div class="nav-group">
+            <button onclick="goToMyPage()" class="nav-btn">
+                <span class="emoji-font">👤</span> <span>마이</span>
+            </button>
+            <button onclick="logoutUser()" class="nav-btn danger">
+                <span class="emoji-font">🔓</span> <span>로그아웃</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 📲 매쓰플랫 전용 바텀 시트 -->
     <div id="mathflatBottomSheet" class="bottom-sheet-overlay" onclick="handleBottomSheetOverlayClick(event)">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()">
             <div class="sheet-drag-handle"></div>
@@ -363,7 +457,7 @@
             <!-- 학년 정보가 없을 때: 학년 입력 화면 -->
             <div id="mathqGradeInputSection" style="display:none;">
                 <div class="sheet-title">🧮 오늘의 문제</div>
-                <div class="sheet-subtitle">학년을 알려주시면 오늘의 문제를 준비해 드릴게요.</div>
+                <div class="sheet-subtitle">학년을 알려주시면 맞춤형 문제를 준비해 드릴게요!</div>
                 <select id="mathqGradeSelect" class="mathq-select">
                     <option value="p3">초등학교 3학년</option>
                     <option value="p4">초등학교 4학년</option>
@@ -390,7 +484,7 @@
         </div>
     </div>
 
-    <!-- 기존 모달 세트 -->
+    <!-- 모달 세트 -->
     <div id="unifiedInquiryModal" class="modal-overlay">
         <div class="modal-box" style="padding: 24px 20px;">
             <div class="modal-title">📝 문의 및 제안 선택</div>
@@ -541,7 +635,7 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
-    /* 📌 파이어베이스 한 달 출석 기록 저장 함수 */
+    /* 파이어베이스 한 달 출석 기록 저장 함수 */
     function recordMonthlyAttendance(studentUid) {
         const now = new Date();
         const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -552,7 +646,6 @@
         attRef.once('value', (snapshot) => {
             let attData = snapshot.val() || { count: 0, days: {} };
             
-            // 오늘 날짜 출석 기록이 없으면 추가
             if (!attData.days || !attData.days[todayStr]) {
                 const updatedDays = attData.days || {};
                 updatedDays[todayStr] = true;
@@ -582,7 +675,7 @@
         auth.onAuthStateChanged((user) => {
             if (user) {
                 startIdleTracking();
-                recordMonthlyAttendance(user.uid); // 출석 체크 실행
+                recordMonthlyAttendance(user.uid);
                 
                 database.ref(".info/serverTimeOffset").on("value", function(snapshot) {
                     serverTimeOffset = snapshot.val() || 0;
@@ -818,7 +911,6 @@
         setTimeout(() => { window.location.href = "https://www.u2math.co.kr/Login/Index"; }, 800);
     }
 
-    /* 💡 [매쓰플랫 클릭 / 바텀시트 제어 로직] */
     function handleMathflatClick() {
         if (!currentStudentData) {
             showToast("⌛ 학생 정보를 불러오는 중입니다...");
@@ -895,7 +987,6 @@
         m1: "중학교 1학년", m2: "중학교 2학년", m3: "중학교 3학년"
     };
 
-    // 학년별 문제 생성기. 각 함수는 (rng: 0~1 난수 생성 함수)를 받아 문제를 만듭니다.
     const mathqGenerators = {
         p3: [
             (rng) => { const a = mathqRand(rng,100,899), b = mathqRand(rng,100,899); return { title: "3자리 수의 덧셈", text: `$${a} + ${b} = ?$`, ans: a + b }; },
@@ -942,7 +1033,6 @@
 
     function mathqRand(rng, min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
 
-    // mulberry32: 시드값으로 항상 같은 순서의 난수를 만들어주는 PRNG
     function mulberry32(seed) {
         return function() {
             seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
@@ -952,7 +1042,6 @@
         };
     }
 
-    // 오늘 날짜 + 학생 uid + 학년코드로 시드를 만들어 "오늘의 문제"가 하루 동안은 항상 같도록 합니다.
     function mathqTodaySeed(gradeCode) {
         const now = new Date();
         const todayKey = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
@@ -961,8 +1050,6 @@
         return parseInt(hashHex.substring(0, 8), 16);
     }
 
-    // 학년 코드 추정: mathGradeCode(바텀시트에서 저장한 값)를 최우선으로 사용하고,
-    // 없으면 schoolName + grade류 필드를 조합해 추정합니다. 그래도 없으면 null.
     function getMathQuizGradeCode() {
         if (!currentStudentData) return null;
         if (currentStudentData.mathGradeCode && MATHQ_GRADE_LABELS[currentStudentData.mathGradeCode]) {
@@ -1000,7 +1087,6 @@
         const quizSection = document.getElementById('mathqQuizSection');
 
         if (!currentStudentData) {
-            // 로그인/데이터 동기화 전이어도 일단 학년을 입력받아 풀어볼 수 있게 합니다.
             gradeInputSection.style.display = 'block';
             quizSection.style.display = 'none';
         } else if (gradeCode) {
@@ -1028,7 +1114,6 @@
         const gradeCode = document.getElementById('mathqGradeSelect').value;
         const currentUser = auth.currentUser;
 
-        // 로그인 상태라면 다음에도 자동으로 뜨도록 학년을 저장해 둡니다.
         if (currentUser) {
             database.ref(`students/${currentUser.uid}`).update({ mathGradeCode: gradeCode })
                 .catch(err => console.error("학년 저장 실패:", err));
@@ -1084,15 +1169,15 @@
 
         const userAns = parseFloat(inputEl.value);
         if (isNaN(userAns)) {
-            feedbackEl.textContent = "답을 입력해주세요.";
+            feedbackEl.innerHTML = `<span>⚠️</span> 답을 입력해주세요.`;
             feedbackEl.className = "mathq-feedback incorrect";
             return;
         }
         if (Math.abs(userAns - correctAns) < 0.01) {
-            feedbackEl.textContent = "정답입니다! 👏";
+            feedbackEl.innerHTML = `<span>🎉</span> 정답입니다! 아주 잘했어요.`;
             feedbackEl.className = "mathq-feedback correct";
         } else {
-            feedbackEl.textContent = `틀렸습니다. (정답: ${correctAns})`;
+            feedbackEl.innerHTML = `<span>❌</span> 틀렸습니다. (정답: ${correctAns})`;
             feedbackEl.className = "mathq-feedback incorrect";
         }
     }
