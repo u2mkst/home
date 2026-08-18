@@ -161,6 +161,7 @@
         }
 
         .form-group { display: flex; flex-direction: column; margin-bottom: 18px; }
+        .form-row { display: flex; gap: 10px; }
 
         label { display: block; font-weight: 700; font-size: 0.83rem; color: #334155; margin-bottom: 6px; padding-left: 2px; }
 
@@ -188,7 +189,7 @@
             background-color: #ffffff; box-shadow: 0 0 0 4px var(--primary-glow); 
         }
 
-        /* 👁️ 비밀번호 토글 아이콘 스타일 추가 */
+        /* 👁️ 비밀번호 토글 아이콘 스타일 */
         .input-pw-wrapper {
             position: relative;
             width: 100%;
@@ -440,6 +441,40 @@
                         <input type="hidden" id="registerSchoolCode"> 
                     </div>
 
+                    <!-- 추가: 학년 및 반 선택 기능 -->
+                    <div class="form-group">
+                        <label>학년 / 반</label>
+                        <div class="form-row">
+                            <select id="registerGrade">
+                                <option value="" disabled selected>학년 선택</option>
+                                <option value="1학년">1학년</option>
+                                <option value="2학년">2학년</option>
+                                <option value="3학년">3학년</option>
+                                <option value="4학년">4학년</option>
+                                <option value="5학년">5학년</option>
+                                <option value="6학년">6학년</option>
+                            </select>
+                            <select id="registerClass">
+                                <option value="선택 안함">반 선택 (선택사항)</option>
+                                <option value="1반">1반</option>
+                                <option value="2반">2반</option>
+                                <option value="3반">3반</option>
+                                <option value="4반">4반</option>
+                                <option value="5반">5반</option>
+                                <option value="6반">6반</option>
+                                <option value="7반">7반</option>
+                                <option value="8반">8반</option>
+                                <option value="9반">9반</option>
+                                <option value="10반">10반</option>
+                                <option value="11반">11반</option>
+                                <option value="12반">12반</option>
+                                <option value="13반">13반</option>
+                                <option value="14반">14반</option>
+                                <option value="15반">15반</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label>담당 선생님 선택</label>
                         <select id="registerTeacher">
@@ -558,8 +593,33 @@
         const schoolInput = document.getElementById('registerSchool');
         const schoolList = document.getElementById('schoolList');
         const schoolCodeInput = document.getElementById('registerSchoolCode');
+        const gradeSelect = document.getElementById('registerGrade');
 
         let currentStep = 1;
+
+        // 학교명 변경 또는 자동완성 선택 시 학년 목록 조정하는 함수
+        function updateGradeOptions(schoolName) {
+            const currentSelectedGrade = gradeSelect.value;
+            gradeSelect.innerHTML = '<option value="" disabled selected>학년 선택</option>';
+            
+            let maxGrade = 6;
+            if (schoolName.includes("중학교") || schoolName.includes("중")) {
+                maxGrade = 3;
+            } else if (schoolName.includes("초등학교") || schoolName.includes("초")) {
+                maxGrade = 6;
+            }
+
+            for (let i = 1; i <= maxGrade; i++) {
+                const opt = document.createElement('option');
+                opt.value = `${i}학년`;
+                opt.textContent = `${i}학년`;
+                gradeSelect.appendChild(opt);
+            }
+
+            if (currentSelectedGrade && parseInt(currentSelectedGrade) <= maxGrade) {
+                gradeSelect.value = currentSelectedGrade;
+            }
+        }
 
         // 👁️ 비밀번호 눈모양 토글 함수
         function togglePasswordVisibility(inputId, eyeBtn) {
@@ -671,12 +731,14 @@
                 const phoneTail = document.getElementById('registerParentPhone').value.trim();
                 const schoolName = schoolInput.value.trim();
                 const schoolCode = schoolCodeInput.value.trim();
+                const studentGrade = gradeSelect.value;
                 const selectedTeacher = document.getElementById('registerTeacher').value;
 
                 if (!studentName) { showToast('학생 이름을 입력하세요.', '✍️'); return; }
                 if (u2mId.length <= 4) { showToast('ufes 뒤에 숫자를 입력해 주세요.', '⚠️'); return; }
                 if (!/^\d{4}$/.test(phoneTail)) { showToast('유투엠 비밀번호는 숫자 4자리로 입력해주세요.', '🔑'); return; }
                 if (!schoolName || !schoolCode) { showToast('자동완성 리스트에서 학교를 선택해 주세요.', '🏫'); return; }
+                if (!studentGrade) { showToast('학년을 선택해 주세요.', '🎓'); return; }
                 if (!selectedTeacher) { showToast('담당 선생님을 선택해 주세요.', '👨‍🏫'); return; }
             }
 
@@ -720,6 +782,8 @@
 
         schoolInput.addEventListener('input', function() {
             const query = this.value.trim();
+            updateGradeOptions(query);
+
             if (query.length < 2) {
                 schoolList.innerHTML = '';
                 schoolList.classList.add('hidden');
@@ -743,6 +807,7 @@
                             div.addEventListener('click', () => {
                                 schoolInput.value = item.SCHUL_NM;
                                 schoolCodeInput.value = item.SD_SCHUL_CODE;
+                                updateGradeOptions(item.SCHUL_NM);
                                 schoolList.innerHTML = '';
                                 schoolList.classList.add('hidden');
                             });
@@ -802,6 +867,8 @@
             const phoneTail = document.getElementById('registerParentPhone').value.trim();
             const schoolName = schoolInput.value.trim();
             const schoolCode = schoolCodeInput.value.trim();
+            const studentGrade = gradeSelect.value;
+            const studentClass = document.getElementById('registerClass').value;
             const selectedTeacher = document.getElementById('registerTeacher').value;
             const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
             const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
@@ -823,6 +890,8 @@
                             u2mId: u2mId,                         
                             schoolName: schoolName,               
                             schoolCode: schoolCode,               
+                            grade: studentGrade,                  
+                            class: studentClass,                  
                             teacher: selectedTeacher,             
                             phone: encryptedPhoneTail,            
                             studentPhone: encryptedMfPhone,       
