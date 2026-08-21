@@ -102,58 +102,44 @@
         .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
         .btn-secondary:hover { background-color: #cbd5e1; }
 
-        /* 📱 신규 하단 스마트 네비게이션 바 스타일 */
+        /* 📱 하단 스마트 네비게이션 바 스타일 */
         .bottom-nav-bar {
             position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-            width: calc(100% - 32px); max-width: 740px;
+            width: calc(100% - 32px); max-width: 520px;
             background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 26px;
             box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.5);
-            padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
-            z-index: 1000; box-sizing: border-box; gap: 6px;
+            padding: 10px 6px; display: flex; justify-content: space-around; align-items: stretch;
+            z-index: 1000; box-sizing: border-box; gap: 2px;
         }
 
-        .nav-group { display: flex; align-items: center; gap: 4px; }
-
-        .nav-btn {
-            display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 14px;
-            background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.8);
-            color: #1d1d1f; font-family: 'Paperlogy', sans-serif; font-size: 0.82rem; font-weight: 600;
-            cursor: pointer; transition: all 0.2s ease; white-space: nowrap;
+        .tab-item {
+            position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 3px; background: none; border: none; cursor: pointer; flex: 1; min-width: 0;
+            padding: 7px 2px; border-radius: 16px; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            color: #86868b;
         }
-        .nav-btn:hover { background: rgba(108, 92, 231, 0.12); color: #6c5ce7; transform: translateY(-1px); }
-        .nav-btn.danger:hover { background: rgba(255, 69, 58, 0.12); color: #ff453a; }
-
-        .nav-hub-group {
-            display: flex; align-items: center; background: rgba(255, 255, 255, 0.65);
-            border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 16px; padding: 4px 8px; gap: 2px;
+        .tab-item .tab-icon { font-size: 1.3rem; line-height: 1; transition: transform 0.2s ease; }
+        .tab-item .tab-label { font-family: 'Paperlogy', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; }
+        .tab-item:hover, .tab-item:active { color: #6c5ce7; background: rgba(108, 92, 231, 0.1); }
+        .tab-item:hover .tab-icon { transform: translateY(-2px); }
+        .tab-item.danger:hover { color: #ff453a; background: rgba(255, 69, 58, 0.1); }
+        .tab-item .tab-badge {
+            position: absolute; top: 2px; right: 16%; background: #ff453a; color: #ffffff;
+            font-size: 0.6rem; font-weight: 700; padding: 1px 5px; border-radius: 8px;
+            border: 1.5px solid #ffffff; line-height: 1.3;
         }
-        .nav-hub-item {
-            background: none; border: none; font-family: 'Paperlogy', sans-serif; font-size: 0.78rem;
-            font-weight: 600; color: #4a4a4c; cursor: pointer; padding: 4px 6px; border-radius: 8px;
-            transition: all 0.2s ease; display: flex; align-items: center; gap: 3px; white-space: nowrap;
-        }
-        .nav-hub-item:hover { background: rgba(108, 92, 231, 0.12); color: #6c5ce7; }
-        .nav-hub-divider { color: #d1d1d6; font-size: 0.7rem; margin: 0 1px; }
 
-        .nav-fab-add {
-            width: 36px; height: 36px; border-radius: 12px; background: #6c5ce7; color: #ffffff;
-            border: none; display: flex; align-items: center; justify-content: center;
-            font-size: 0.85rem; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.35); transition: all 0.2s ease; margin-left: 4px;
-        }
-        .nav-fab-add:hover { transform: scale(1.08) translateY(-1px); background: #5b4bc4; box-shadow: 0 6px 16px rgba(108, 92, 231, 0.45); }
-
-        @media (max-width: 600px) {
-            .nav-btn span:not(.emoji-font), .nav-hub-item span:not(.emoji-font) { font-size: 0.75rem; }
-            .bottom-nav-bar { padding: 6px 8px; }
-            .nav-group { gap: 2px; }
+        @media (max-width: 400px) {
+            .tab-item .tab-label { font-size: 0.62rem; }
+            .tab-item .tab-icon { font-size: 1.2rem; }
+            .bottom-nav-bar { padding: 8px 4px; }
         }
 
         /* 플로팅 버튼 (FAB) 위치 하단바 위로 조정 */
         .fab-chat-btn {
-            position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px;
+            position: fixed; bottom: 92px; right: 20px; width: 56px; height: 56px;
             border-radius: 28px; background: #6c5ce7; color: #ffffff;
             border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
@@ -165,25 +151,6 @@
         .fab-badge {
             position: absolute; top: -2px; right: -2px; background: #ff453a; color: white;
             font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 2px solid #ffffff;
-        }
-
-        .fab-math-btn {
-            position: fixed; bottom: 150px; right: 20px; width: 56px; height: 56px;
-            border-radius: 28px; background: linear-gradient(135deg, #ffffff 0%, #f0eeef 100%);
-            color: #6c5ce7; border: 1px solid rgba(108, 92, 231, 0.3);
-            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.2);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem; cursor: pointer; z-index: 999;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .fab-math-btn::after {
-            content: ''; position: absolute; top: 0px; right: 0px; width: 12px; height: 12px;
-            background-color: #6c5ce7; border: 2px solid #ffffff; border-radius: 50%;
-        }
-        .fab-math-btn:hover {
-            transform: scale(1.1) translateY(-3px);
-            background: linear-gradient(135deg, #6c5ce7 0%, #5b4bc4 100%);
-            color: #ffffff; box-shadow: 0 14px 30px rgba(108, 92, 231, 0.4);
         }
 
         .marquee-container { margin-top: 20px; background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 50px; padding: 8px 24px; overflow: hidden; display: none; }
@@ -314,11 +281,6 @@
         <span id="chat-badge" class="fab-badge" style="display: none;">0</span>
     </button>
 
-    <!-- 우측 하단 "오늘의 문제" 플로팅 버튼 (FAB) -->
-    <button id="open-math-btn" class="fab-math-btn" title="오늘의 문제" onclick="openMathQuizBottomSheet()">
-        <span class="emoji-font">🧮</span>
-    </button>
-
     <!-- 토스트 알림 UI -->
     <div id="toastNotification" class="toast-container">
         <span id="toastMessage">알림 내용</span>
@@ -391,45 +353,26 @@
 
     <!-- 📱 하단 고정 스마트 네비게이션 바 -->
     <nav class="bottom-nav-bar">
-        <!-- 좌측: 개인 활동 -->
-        <div class="nav-group">
-            <button onclick="window.location.href='ranking.html'" class="nav-btn">
-                <span class="emoji-font">🏆</span> <span>순위</span>
-            </button>
-            <button onclick="openUnifiedInquiryModal()" class="nav-btn">
-                <span class="emoji-font">🛠️</span> <span>문의</span>
-            </button>
-        </div>
-
-        <!-- 중앙: 메인 Hub & 빠른 실행 -->
-        <div class="nav-group">
-            <div class="nav-hub-group">
-                <button onclick="showToast('⏱️ 시간표 서비스 준비 중입니다.')" class="nav-hub-item">
-                    <span class="emoji-font">⏱️</span> <span>시간표</span>
-                </button>
-                <span class="nav-hub-divider">|</span>
-                <button onclick="showToast('🏫 학교 정보 서비스 준비 중입니다.')" class="nav-hub-item">
-                    <span class="emoji-font">🏫</span> <span>학교</span>
-                </button>
-                <span class="nav-hub-divider">|</span>
-                <button onclick="showToast('🍱 급식 서비스 준비 중입니다.')" class="nav-hub-item">
-                    <span class="emoji-font">🍱</span> <span>급식</span>
-                </button>
-            </div>
-            <button onclick="openMathQuizBottomSheet()" class="nav-fab-add" title="오늘의 문제">
-                <span class="emoji-font">➕</span>
-            </button>
-        </div>
-
-        <!-- 우측: 계정/시스템 -->
-        <div class="nav-group">
-            <button onclick="goToMyPage()" class="nav-btn">
-                <span class="emoji-font">👤</span> <span>마이</span>
-            </button>
-            <button onclick="logoutUser()" class="nav-btn danger">
-                <span class="emoji-font">🔓</span> <span>로그아웃</span>
-            </button>
-        </div>
+        <button onclick="window.location.href='ranking.html'" class="tab-item">
+            <span class="tab-icon emoji-font">🏆</span>
+            <span class="tab-label">순위</span>
+        </button>
+        <button onclick="openUnifiedInquiryModal()" class="tab-item">
+            <span class="tab-icon emoji-font">🛠️</span>
+            <span class="tab-label">문의</span>
+        </button>
+        <button onclick="openMathQuizBottomSheet()" class="tab-item">
+            <span class="tab-icon emoji-font">🧮</span>
+            <span class="tab-label">오늘의 문제</span>
+        </button>
+        <button onclick="goToMyPage()" class="tab-item">
+            <span class="tab-icon emoji-font">👤</span>
+            <span class="tab-label">마이</span>
+        </button>
+        <button onclick="logoutUser()" class="tab-item danger">
+            <span class="tab-icon emoji-font">🔓</span>
+            <span class="tab-label">로그아웃</span>
+        </button>
     </nav>
 
     <!-- 📲 매쓰플랫 전용 바텀 시트 -->
