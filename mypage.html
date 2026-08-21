@@ -3,418 +3,714 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K&P 수학입시학원 My Page</title>
-    <!-- Firebase SDK -->
+    <title>K&P 수학입시학원</title>
+
+    <!-- 에셋 및 라이브러리 (3개 파일 공통, 중복 제거) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <!-- CryptoJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- 🤖 Google reCAPTCHA v2 API -->
+    <!-- 🤖 Google reCAPTCHA v2 (마이페이지 전용) -->
     <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 
+    <!-- MathJax 수식 렌더링 (오늘의 문제 바텀시트용, 대시보드 전용) -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* 폰트 설정 */
+        /* ================= 공통 폰트 (3개 파일 통합, 중복 제거) ================= */
+        @font-face {
+            font-family: 'Paperlogy';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+            font-weight: 500; font-display: swap;
+        }
+        @font-face {
+            font-family: 'FlightSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Bold.woff2') format('woff2');
+            font-weight: 700; font-display: swap;
+        }
         @font-face {
             font-family: 'Paperozi';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
-            font-weight: 500; 
-            font-display: swap;
+            font-weight: 500; font-display: swap;
         }
         @font-face {
             font-family: 'FlightSans';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Regular.woff2') format('woff2');
-            font-weight: normal;
-            font-style: normal;
+            font-weight: normal; font-style: normal;
         }
-        
+
+        * { font-family: 'FlightSans', 'Paperlogy', 'Noto Sans KR', 'Mona12', sans-serif; }
+        /* 마이페이지만 원래 폰트 스택(Paperozi 우선) 유지 */
+        #view-mypage, #view-mypage * { font-family: 'Paperozi', 'FlightSans', 'Noto Sans KR', sans-serif; }
+        .emoji-font { font-family: 'Mona12', sans-serif !important; font-weight: normal !important; }
+
         body {
-            font-family: 'Paperozi', 'FlightSans', 'Noto Sans KR', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%),
                         linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
-            background-blend-mode: multiply; 
-            margin: 0; 
-            padding: 0;
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            min-height: 100vh; 
-            color: #333; 
-            overflow-x: hidden; 
-            padding: 40px 0;
-            box-sizing: border-box;
-        }
-        
-        .container { 
-            width: 100%; 
-            max-width: 430px; 
-            padding: 24px; 
-            box-sizing: border-box; 
+            background-blend-mode: multiply; margin: 0; display: flex; justify-content: center; align-items: flex-start;
+            min-height: 100vh; color: #1d1d1f; box-sizing: border-box; padding: 40px 8vw 120px 8vw; overflow-x: hidden;
         }
 
-        .header-zone {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            width: 100%;
+        /* 화면별 컨테이너 (원래 세 파일 모두 .container를 썼기 때문에 뷰별로 분리) */
+        #view-index.container { width: 100%; max-width: 740px; margin: 0 auto; }
+        #view-ranking.container-ranking { width: 100%; max-width: 1100px; margin: 0 auto; }
+        #view-mypage.container-mypage { width: 100%; max-width: 430px; margin: 0 auto; padding: 24px; box-sizing: border-box; }
+
+        .back-home-btn {
+            display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px;
+            font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; font-weight: 700; color: #6c5ce7;
+            background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 20px; padding: 8px 16px; cursor: pointer; backdrop-filter: blur(8px);
         }
-        .page-title {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        .close-btn {
-            font-size: 1.6rem;
-            color: #718096;
-            text-decoration: none;
-            cursor: pointer;
-            transition: color 0.2s ease;
-            font-weight: bold;
-            background: none;
-            border: none;
-            padding: 5px;
-            line-height: 1;
-        }
-        .close-btn:hover {
-            color: #6c5ce7;
+        .back-home-btn:hover { background: #6c5ce7; color: #fff; }
+
+        /* ================= 대시보드(index) 전용 스타일 ================= */
+        .header-zone { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; padding: 0 8px; }
+        .welcome-text { font-family: 'Paperlogy', sans-serif; font-size: 1.6rem; font-weight: 700; color: #1d1d1f; margin: 0; letter-spacing: -0.8px; }
+        .dday-badge { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 700; color: #ff453a; letter-spacing: -0.3px; }
+
+        .main-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
+        @media (min-width: 768px) { .main-grid { grid-template-columns: 1fr 1fr; align-items: stretch; } }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.38);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 20px; padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            box-sizing: border-box; display: flex; flex-direction: column;
         }
 
-        .form-container {
-            background: rgba(255, 255, 255, 0.4);
-            padding: 24px 20px;
-            border-radius: 24px;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px rgba(149, 157, 165, 0.08);
-            margin-bottom: 20px;
-        }
+        .info-card { justify-content: space-between; min-height: 200px; }
+        .weather-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 0, 0, 0.04); padding-bottom: 12px; }
+        .weather-status { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; font-weight: 600; color: #4a4a4c; display: flex; align-items: center; gap: 6px; }
+        .weather-temp { font-family: 'FlightSans', sans-serif; font-size: 1.1rem; font-weight: 700; color: #1d1d1f; }
+        .weather-details-text { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.75rem; color: #86868b; font-weight: 600; display: flex; gap: 8px; }
 
-        .input-wrapper {
-            text-align: left;
-            margin-bottom: 18px;
-            width: 100%;
-            box-sizing: border-box;
-            position: relative;
-        }
-        .input-wrapper:last-child {
-            margin-bottom: 0;
-        }
-        .input-wrapper label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #4a5568;
-            margin-bottom: 6px;
-            padding-left: 4px;
-        }
+        .clock-row { padding: 12px 0; }
+        .clock-date { font-family: 'Paperlogy', sans-serif; font-size: 1rem; color: #86868b; font-weight: 600; margin-bottom: 4px; }
+        .clock-time { font-family: 'FlightSans', sans-serif; font-size: 3.4rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; line-height: 1; margin: 0; }
 
-        /* 2열 배치용 그리드 패널 */
-        .input-row {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-        .input-row .input-wrapper {
-            margin-bottom: 0;
-            flex: 1;
-        }
+        .quote-row { border-top: 1px solid rgba(0, 0, 0, 0.04); padding-top: 14px; font-size: 0.95rem; line-height: 1.4; color: #4a4a4c; font-weight: 600; }
+        .quote-row span { font-family: 'Paperlogy', sans-serif; }
+        .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; margin-top: 6px; }
 
-        /* 비밀번호 눈모양 아이콘 인풋 스타일 */
-        .input-pw {
-            position: relative;
-            width: 100%;
-        }
-        .input-pw input {
-            padding-right: 45px !important;
-        }
-        .input-pw .eyes {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a0aec0;
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 5px;
-            transition: color 0.2s;
-            user-select: none;
-        }
-        .input-pw .eyes:hover {
-            color: #6c5ce7;
-        }
+        .menu-card { padding: 12px 0; justify-content: center; min-height: 230px; gap: 0; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; text-decoration: none; color: #1d1d1f; transition: all 0.25s ease; cursor: pointer; }
+        .menu-item:not(:last-child) { border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
+        .menu-item:hover { background: rgba(255, 255, 255, 0.35); padding-left: 36px; }
+        .menu-item-text { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.3px; }
+        .arrow-icon { font-family: 'FlightSans', sans-serif; font-size: 0.9rem; color: #86868b; transition: transform 0.2s ease, color 0.2s ease; }
+        .menu-item:hover .arrow-icon { transform: translateX(4px); color: #0071e3; }
 
-        .input-wrapper input, .input-wrapper select {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            border-radius: 14px;
-            box-sizing: border-box;
-            font-size: 0.95rem;
-            font-family: inherit;
-            background: rgba(255, 255, 255, 0.7);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.01);
-            transition: all 0.2s ease;
-            color: #2c3e50;
+        .btn-base {
+            font-family: 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 600; text-decoration: none;
+            padding: 14px 16px; border-radius: 14px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; letter-spacing: -0.3px; white-space: nowrap; cursor: pointer; border: none; width: 100%;
         }
-        .input-wrapper input:focus, .input-wrapper select:focus {
-            outline: none;
-            border-color: #6c5ce7;
-            background: #ffffff;
-            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.1);
-        }
+        .btn-glass { color: #1d1d1f !important; background: rgba(255, 255, 255, 0.45) !important; border: 1px solid rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02); }
+        .btn-glass:hover { background: #6c5ce7 !important; color: #ffffff !important; border-color: #6c5ce7; transform: translateY(-4px); box-shadow: 0 12px 24px rgba(108, 92, 231, 0.25); }
+        .btn-glass.danger { color: #e53e3e !important; }
+        .btn-glass.danger:hover { background: #ff453a !important; color: #ffffff !important; border-color: #ff453a; box-shadow: 0 12px 24px rgba(255, 69, 58, 0.25); }
+        .btn-primary { background-color: #6c5ce7; color: #ffffff; }
+        .btn-primary:hover { background-color: #5b4bc4; }
+        .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
+        .btn-secondary:hover { background-color: #cbd5e1; }
 
-        .section-divider {
-            border-top: 1px dashed rgba(108, 92, 231, 0.3);
-            margin: 24px 0 20px 0;
-            position: relative;
-        }
-        .section-title {
-            font-size: 0.8rem; color: #6c5ce7; font-weight: bold;
-            background: #f0eefc; padding: 4px 10px; border-radius: 20px;
-            position: absolute; top: -12px; left: 10px;
-        }
-
-        .autocomplete-list {
-            position: absolute; 
-            top: 100%; 
-            left: 0; 
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 14px; 
-            max-height: 180px; 
-            overflow-y: auto;
-            border: 1px solid rgba(108, 92, 231, 0.3);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            z-index: 1000; 
-            margin-top: 6px;
-            padding: 0;
-            list-style: none;
-            backdrop-filter: blur(10px);
-        }
-        .autocomplete-item {
-            padding: 12px 16px; 
-            cursor: pointer; 
-            font-size: 0.9rem;
-            color: #333; 
-            border-bottom: 1px solid rgba(0,0,0,0.03);
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-        }
-        .autocomplete-item:last-child { border-bottom: none; }
-        .autocomplete-item:hover { 
-            background: rgba(108, 92, 231, 0.08); 
-            color: #6c5ce7; 
-            font-weight: 600; 
-        }
-        .autocomplete-item .school-region { 
-            font-size: 0.75rem; 
-            color: #7f8c8d; 
-            font-weight: normal; 
-        }
-
-        .delete-account-zone {
-            margin-top: 35px;
-            text-align: center;
-        }
-        .delete-btn {
-            background: none;
-            border: none;
-            color: #a0aec0;
-            font-size: 0.85rem;
-            font-family: inherit;
-            cursor: pointer;
-            text-decoration: underline;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        .delete-btn:hover {
-            color: #e53e3e;
-        }
-
-        /* 토스트 알림 UI */
-        .toast-container {
-            position: fixed;
-            bottom: 35px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            pointer-events: none;
-        }
-        .toast-message {
-            background: rgba(44, 62, 80, 0.92);
-            color: #ffffff;
-            padding: 12px 22px;
-            border-radius: 30px;
-            font-size: 0.88rem;
-            font-weight: 500;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(8px);
-            opacity: 0;
-            transform: translateY(15px);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            white-space: nowrap;
-        }
-        .toast-message.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* 로딩 모달 */
-        .modal-overlay {
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%;
-            background: rgba(245, 247, 250, 0.65); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
-            z-index: 9999;
-            justify-content: center; 
-            align-items: center;
-        }
-        
-        #dataLoadingOverlay {
-            display: flex;
-        }
-
-        .loading-card {
+        .bottom-nav-bar {
+            position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 32px); max-width: 520px;
             background: rgba(255, 255, 255, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 28px;
-            padding: 35px 30px;
-            text-align: center;
-            box-shadow: 0 15px 35px rgba(108, 92, 231, 0.1);
-            backdrop-filter: blur(10px);
-            max-width: 300px;
-            width: 80%;
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 26px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+            padding: 10px 6px; display: flex; justify-content: space-around; align-items: stretch;
+            z-index: 1000; box-sizing: border-box; gap: 2px;
         }
 
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid rgba(108, 92, 231, 0.15);
-            border-top: 4px solid #6c5ce7;
-            border-radius: 50%;
-            animation: spin 0.85s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
-            margin: 0 auto 18px auto;
+        .tab-item {
+            position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 3px; background: none; border: none; cursor: pointer; flex: 1; min-width: 0;
+            padding: 7px 2px; border-radius: 16px; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            color: #86868b;
+        }
+        .tab-item .tab-icon { font-size: 1.3rem; line-height: 1; transition: transform 0.2s ease; }
+        .tab-item .tab-label { font-family: 'Paperlogy', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; }
+        .tab-item:hover, .tab-item:active { color: #6c5ce7; background: rgba(108, 92, 231, 0.1); }
+        .tab-item:hover .tab-icon { transform: translateY(-2px); }
+        .tab-item.danger:hover { color: #ff453a; background: rgba(255, 69, 58, 0.1); }
+        .tab-item.active-view { color: #6c5ce7; background: rgba(108, 92, 231, 0.14); }
+        .tab-item .tab-badge {
+            position: absolute; top: 2px; right: 16%; background: #ff453a; color: #ffffff;
+            font-size: 0.6rem; font-weight: 700; padding: 1px 5px; border-radius: 8px;
+            border: 1.5px solid #ffffff; line-height: 1.3;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @media (max-width: 400px) {
+            .tab-item .tab-label { font-size: 0.62rem; }
+            .tab-item .tab-icon { font-size: 1.2rem; }
+            .bottom-nav-bar { padding: 8px 4px; }
         }
 
-        .loading-text {
-            font-size: 0.98rem;
-            font-weight: 600;
-            color: #2c3e50;
-            letter-spacing: -0.2px;
-            word-break: keep-all;
-            line-height: 1.45;
+        .fab-chat-btn {
+            position: fixed; bottom: 92px; right: 20px; width: 56px; height: 56px;
+            border-radius: 28px; background: #6c5ce7; color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; cursor: pointer; z-index: 999;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .fab-chat-btn:hover { transform: scale(1.1) translateY(-2px); background: #5b4bc4; box-shadow: 0 14px 30px rgba(108, 92, 231, 0.5); }
+        .fab-badge {
+            position: absolute; top: -2px; right: -2px; background: #ff453a; color: white;
+            font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 2px solid #ffffff;
         }
 
-        .btn-flex-group { display: flex; gap: 8px; margin-top: 15px; }
-        .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 14px 20px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; transition: background 0.2s; }
-        .modal-btn:hover { background-color: #5b4bc4; }
-        .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 14px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
-        .btn-cancel:hover { background-color: #cbd5e1; }
-        .hidden { display: none !important; }
+        .marquee-container { margin-top: 20px; background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 50px; padding: 8px 24px; overflow: hidden; display: none; }
+        .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.8rem; font-weight: 600; color: #515154; white-space: nowrap; }
+        @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
-        /* 공통 바텀시트 UI */
+        .footer { margin-top: 40px; text-align: center; }
+        .footer-brand { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.3px; margin-bottom: 6px; }
+        .footer-brand span { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-weight: 700; }
+        .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.75rem; color: #a1a1a6; letter-spacing: 0.5px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-box { background: #ffffff; width: 90%; max-width: 360px; padding: 28px 24px; border-radius: 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box; }
+        .modal-title { font-size: 1.15rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px; }
+        .modal-content { font-size: 0.95rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px; white-space: pre-wrap; word-break: break-all; }
+        .modal-box textarea, .modal-box input[type="text"], .modal-box input[type="password"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; margin-bottom: 12px; font-size: 0.9rem; font-family: inherit; background: #f8f9fa; }
+        .modal-box textarea:focus, .modal-box input:focus { outline: none; border-color: #6c5ce7; background: #fff; }
+        .btn-flex-group { display: flex; gap: 8px; }
+
+        .history-zone { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px; margin-bottom: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-sizing: border-box; text-align: left; }
+        .no-data { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 0.85rem; width: 100%; }
+
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(245, 247, 250, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.4s ease, visibility 0.4s ease; }
+        .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .brand-logo { font-family: 'FlightSans', sans-serif; font-size: 2.2rem; font-weight: 700; color: #1d1d1f; margin-bottom: 24px; letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 6px; }
+        .brand-logo .sub-kst { font-family: 'Paperlogy', sans-serif; font-size: 0.95rem; font-weight: 600; color: #6c5ce7; letter-spacing: -0.3px; }
+        .progress-bar { width: 180px; height: 4px; background: rgba(108, 92, 231, 0.15); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+        .progress-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #6c5ce7, #a29bfe); animation: progress 1.4s infinite ease-in-out; transform-origin: left; }
+        @keyframes progress { 0% { transform: scaleX(0); } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); opacity: 0; } }
+        .loading-subtext { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; font-weight: 600; }
+
+        .toast-container { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(29, 29, 31, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #ffffff; padding: 12px 24px; border-radius: 30px; font-family: 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.15); z-index: 100000; opacity: 0; visibility: hidden; transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); pointer-events: none; max-width: 90vw; text-align: center; }
+        .toast-container.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
         .bottom-sheet-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px);
-            z-index: 9998;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
+            z-index: 9999; opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            display: flex; justify-content: center; align-items: flex-end;
         }
-        .bottom-sheet-overlay.active {
-            opacity: 1;
-            visibility: visible;
+        .bottom-sheet-overlay.active { opacity: 1; visibility: visible; }
+
+        .bottom-sheet-container {
+            width: 100%; max-width: 520px; background: #ffffff;
+            border-top-left-radius: 28px; border-top-right-radius: 28px;
+            padding: 24px 28px 36px; box-sizing: border-box;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bottom-sheet-overlay.active .bottom-sheet-container { transform: translateY(0); }
+
+        .sheet-drag-handle { width: 36px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 0 auto 18px; }
+        .sheet-title { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 700; color: #1d1d1f; margin-bottom: 6px; text-align: center; }
+        .sheet-subtitle { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: #86868b; margin-bottom: 20px; text-align: center; }
+        .sheet-input { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 0.95rem; font-family: inherit; background: #f8fafc; margin-bottom: 10px; box-sizing: border-box; }
+        .sheet-input:focus { outline: none; border-color: #6c5ce7; background: #fff; }
+
+        .mathq-select {
+            width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 16px;
+            font-size: 0.95rem; font-family: inherit; background: #f8fafc; margin-bottom: 16px;
+            box-sizing: border-box; cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .mathq-select:focus { outline: none; border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); background: #ffffff; }
+
+        .mathq-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(108, 92, 231, 0.15); border-radius: 18px; padding: 20px;
+            margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .mathq-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108, 92, 231, 0.08); }
+
+        .mathq-card-title {
+            display: inline-block; font-size: 0.78rem; color: #6c5ce7;
+            background: rgba(108, 92, 231, 0.08); padding: 4px 10px; border-radius: 20px;
+            margin-bottom: 10px; font-weight: 700; font-family: 'Paperlogy', sans-serif; letter-spacing: -0.2px;
+        }
+        .mathq-card-text {
+            font-size: 1.15rem; color: #1d1d1f; margin-bottom: 16px; font-weight: 700; line-height: 1.6;
+            padding: 10px 14px; background: rgba(255, 255, 255, 0.9); border-radius: 12px;
+            border: 1px dashed rgba(108, 92, 231, 0.2);
         }
 
-        .bottom-sheet {
-            position: fixed;
-            bottom: -100%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 430px;
-            background: #ffffff;
-            border-top-left-radius: 28px;
-            border-top-right-radius: 28px;
-            padding: 24px;
+        .mathq-input-group { display: flex; gap: 10px; }
+        .mathq-input-group input {
+            flex: 1; padding: 12px 14px; font-size: 0.95rem; border: 1px solid #e2e8f0;
+            border-radius: 12px; box-sizing: border-box; min-width: 0; background: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .mathq-input-group input:focus { outline: none; border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); }
+        .mathq-input-group button {
+            padding: 12px 20px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, #6c5ce7 0%, #5b4bc4 100%); color: #ffffff;
+            cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(108, 92, 231, 0.25);
+            transition: all 0.2s ease;
+        }
+        .mathq-input-group button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(108, 92, 231, 0.35); }
+
+        .mathq-feedback {
+            margin-top: 10px; font-weight: 700; font-size: 0.9rem; padding: 8px 12px;
+            border-radius: 10px; display: none; align-items: center; gap: 6px;
+            animation: mathqFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes mathqFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+        .mathq-feedback.correct { display: flex; background: #e8f8f0; color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .mathq-feedback.incorrect { display: flex; background: #fef2f2; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+        .mathq-more-link {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-top: 14px; padding: 12px; color: #6c5ce7; font-weight: 700; font-size: 0.9rem;
+            text-decoration: none; background: rgba(108, 92, 231, 0.06); border-radius: 14px;
+            transition: all 0.2s ease;
+        }
+        .mathq-more-link:hover { background: rgba(108, 92, 231, 0.12); transform: translateX(2px); }
+
+        /* ================= 순위(ranking) 전용 스타일 - #view-ranking 으로 스코프 ================= */
+        @keyframes scaleIn {
+            0% { opacity: 0; transform: scale(0.97) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        #view-ranking .animate-tab-switch { animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        #view-ranking .glass-card-rk {
+            background: rgba(255, 255, 255, 0.62);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1.5px solid rgba(255, 255, 255, 0.85);
+            border-radius: 28px; padding: 28px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(255, 255, 255, 0.9);
             box-sizing: border-box;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
-            z-index: 9999;
+        }
+
+        /* 원래는 화면 하단 고정바였지만, 대시보드용 하단 네비게이션과 겹치므로 상단 고정형 서브 탭으로 변경 */
+        #view-ranking .rank-sub-nav {
+            position: relative; width: 100%; max-width: 520px; margin: 0 auto 20px auto;
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1.5px solid rgba(255, 255, 255, 0.9);
+            border-radius: 40px; padding: 8px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            display: flex; gap: 8px; box-sizing: border-box;
+        }
+
+        #view-ranking .nav-dock-btn-rk {
+            flex: 1; padding: 14px 24px; border-radius: 32px;
+            font-family: 'Paperlogy', sans-serif; font-size: 1.05rem; font-weight: 700;
+            color: #666; border: none; background: transparent; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #view-ranking .nav-dock-btn-rk.active {
+            background: #6c5ce7; color: #ffffff;
+            box-shadow: 0 10px 24px rgba(108, 92, 231, 0.35);
+            transform: translateY(-2px);
+        }
+
+        #view-ranking .tablet-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: stretch; }
+        @media (max-width: 820px) { #view-ranking .tablet-grid { grid-template-columns: 1fr; } }
+
+        #view-ranking .fixed-rank-card { height: 520px; display: flex; flex-direction: column; }
+
+        #view-ranking .rank-scroll-area { flex: 1; overflow-y: auto; padding-right: 6px; }
+        #view-ranking .rank-scroll-area::-webkit-scrollbar { width: 6px; }
+        #view-ranking .rank-scroll-area::-webkit-scrollbar-thumb { background: rgba(108, 92, 231, 0.25); border-radius: 10px; }
+        #view-ranking .rank-scroll-area::-webkit-scrollbar-thumb:hover { background: rgba(108, 92, 231, 0.5); }
+        #view-ranking .rank-scroll-area::-webkit-scrollbar-track { background: transparent; }
+
+        #view-ranking .rank-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 18px; background: rgba(255, 255, 255, 0.7); border-radius: 18px;
+            font-size: 1rem; border: 1px solid rgba(255, 255, 255, 0.9);
+            transition: transform 0.2s ease;
+        }
+        #view-ranking .rank-item:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.9); }
+        #view-ranking .rank-item.my-rank { background: rgba(108, 92, 231, 0.12); border: 2px solid #6c5ce7; font-weight: 700; }
+        #view-ranking .rank-badge {
+            width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 0.9rem; font-weight: 800; color: #fff; background: #a1a1a6; flex-shrink: 0;
+        }
+        #view-ranking .rank-1 { background: #ffd700; color: #1d1d1f; box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4); }
+        #view-ranking .rank-2 { background: #c0c0c0; color: #1d1d1f; }
+        #view-ranking .rank-3 { background: #cd7f32; color: #fff; }
+
+        #view-ranking .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        #view-ranking .calendar-day-head { font-size: 0.85rem; font-weight: 700; color: #86868b; padding: 4px 0; }
+        #view-ranking .calendar-day {
+            padding: 10px 0; font-size: 0.95rem; border-radius: 14px; background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.7); transition: all 0.2s ease;
+        }
+        #view-ranking .calendar-day.attended {
+            background: #6c5ce7; color: #ffffff; font-weight: 800;
+            box-shadow: 0 6px 16px rgba(108, 92, 231, 0.35); border-color: #6c5ce7;
+        }
+
+        #view-ranking .lotto-ball {
+            width: 38px; height: 38px; border-radius: 50%; display: inline-flex;
+            align-items: center; justify-content: center; font-weight: 800; color: #fff;
+            font-size: 0.95rem; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.08); flex-shrink: 0;
+        }
+        #view-ranking .ball-yellow { background: #fbc531; color: #1d1d1f; }
+        #view-ranking .ball-blue { background: #00a8ff; }
+        #view-ranking .ball-red { background: #e84118; }
+        #view-ranking .ball-gray { background: #718093; }
+        #view-ranking .ball-green { background: #4cd137; }
+
+        #view-ranking .lotto-ball-input {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(210, 210, 225, 0.85);
+            text-align: center; font-weight: 800; font-size: 1.15rem; color: #222;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.04), 0 4px 10px rgba(0,0,0,0.03);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            -moz-appearance: textfield;
+        }
+        #view-ranking .lotto-ball-input::-webkit-outer-spin-button,
+        #view-ranking .lotto-ball-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        #view-ranking .lotto-ball-input:focus {
+            outline: none; border-color: #6c5ce7; background: #ffffff;
+            transform: scale(1.1); box-shadow: 0 0 18px rgba(108, 92, 231, 0.4);
+        }
+        #view-ranking .lotto-ball-input.bonus-style { border-color: #a29bfe; background: rgba(240, 236, 255, 0.95); }
+
+        #view-ranking .btn-base-rk {
+            font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700;
+            padding: 14px 22px; border-radius: 18px; transition: all 0.25s ease;
+            cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        #view-ranking .btn-primary-rk { background-color: #6c5ce7; color: #ffffff; box-shadow: 0 8px 24px rgba(108, 92, 231, 0.3); }
+        #view-ranking .btn-primary-rk:hover { background-color: #5b4bc4; transform: translateY(-2px); }
+
+        /* ================= 마이페이지(mypage) 전용 스타일 - #view-mypage 로 스코프 ================= */
+        #view-mypage .header-zone { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; width: 100%; }
+        #view-mypage .page-title { font-size: 1.4rem; font-weight: bold; color: #2c3e50; }
+        #view-mypage .close-btn { font-size: 1.6rem; color: #718096; text-decoration: none; cursor: pointer; transition: color 0.2s ease; font-weight: bold; background: none; border: none; padding: 5px; line-height: 1; }
+        #view-mypage .close-btn:hover { color: #6c5ce7; }
+
+        #view-mypage .form-container {
+            background: rgba(255, 255, 255, 0.4); padding: 24px 20px; border-radius: 24px;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(149, 157, 165, 0.08); margin-bottom: 20px;
+        }
+
+        #view-mypage .input-wrapper { text-align: left; margin-bottom: 18px; width: 100%; box-sizing: border-box; position: relative; }
+        #view-mypage .input-wrapper:last-child { margin-bottom: 0; }
+        #view-mypage .input-wrapper label { display: block; font-size: 0.85rem; font-weight: 700; color: #4a5568; margin-bottom: 6px; padding-left: 4px; }
+
+        #view-mypage .input-row { display: flex; gap: 12px; margin-bottom: 18px; }
+        #view-mypage .input-row .input-wrapper { margin-bottom: 0; flex: 1; }
+
+        #view-mypage .input-pw { position: relative; width: 100%; }
+        #view-mypage .input-pw input { padding-right: 45px !important; }
+        #view-mypage .input-pw .eyes {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            color: #a0aec0; cursor: pointer; font-size: 1.1rem; padding: 5px; transition: color 0.2s; user-select: none;
+        }
+        #view-mypage .input-pw .eyes:hover { color: #6c5ce7; }
+
+        #view-mypage .input-wrapper input, #view-mypage .input-wrapper select {
+            width: 100%; padding: 14px; border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 14px;
+            box-sizing: border-box; font-size: 0.95rem; font-family: inherit; background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.01); transition: all 0.2s ease; color: #2c3e50;
+        }
+        #view-mypage .input-wrapper input:focus, #view-mypage .input-wrapper select:focus {
+            outline: none; border-color: #6c5ce7; background: #ffffff; box-shadow: 0 4px 12px rgba(108, 92, 231, 0.1);
+        }
+
+        #view-mypage .section-divider { border-top: 1px dashed rgba(108, 92, 231, 0.3); margin: 24px 0 20px 0; position: relative; }
+        #view-mypage .section-title { font-size: 0.8rem; color: #6c5ce7; font-weight: bold; background: #f0eefc; padding: 4px 10px; border-radius: 20px; position: absolute; top: -12px; left: 10px; }
+
+        #view-mypage .autocomplete-list {
+            position: absolute; top: 100%; left: 0; right: 0; background: rgba(255, 255, 255, 0.95);
+            border-radius: 14px; max-height: 180px; overflow-y: auto; border: 1px solid rgba(108, 92, 231, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); z-index: 1000; margin-top: 6px; padding: 0; list-style: none;
+            backdrop-filter: blur(10px);
+        }
+        #view-mypage .autocomplete-item { padding: 12px 16px; cursor: pointer; font-size: 0.9rem; color: #333; border-bottom: 1px solid rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
+        #view-mypage .autocomplete-item:last-child { border-bottom: none; }
+        #view-mypage .autocomplete-item:hover { background: rgba(108, 92, 231, 0.08); color: #6c5ce7; font-weight: 600; }
+        #view-mypage .autocomplete-item .school-region { font-size: 0.75rem; color: #7f8c8d; font-weight: normal; }
+
+        #view-mypage .delete-account-zone { margin-top: 35px; text-align: center; }
+        #view-mypage .delete-btn { background: none; border: none; color: #a0aec0; font-size: 0.85rem; font-family: inherit; cursor: pointer; text-decoration: underline; font-weight: 500; transition: color 0.2s; }
+        #view-mypage .delete-btn:hover { color: #e53e3e; }
+
+        #view-mypage .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(245, 247, 250, 0.65); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 9999; justify-content: center; align-items: center;
+        }
+        #dataLoadingOverlay { display: none; }
+
+        #view-mypage .loading-card {
+            background: rgba(255, 255, 255, 0.75); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 28px;
+            padding: 35px 30px; text-align: center; box-shadow: 0 15px 35px rgba(108, 92, 231, 0.1);
+            backdrop-filter: blur(10px); max-width: 300px; width: 80%;
+        }
+        #view-mypage .spinner {
+            width: 48px; height: 48px; border: 4px solid rgba(108, 92, 231, 0.15); border-top: 4px solid #6c5ce7;
+            border-radius: 50%; animation: spin 0.85s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite; margin: 0 auto 18px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #view-mypage .loading-text { font-size: 0.98rem; font-weight: 600; color: #2c3e50; letter-spacing: -0.2px; word-break: keep-all; line-height: 1.45; }
+
+        #view-mypage .btn-flex-group { display: flex; gap: 8px; margin-top: 15px; }
+        #view-mypage .modal-btn { background-color: #6c5ce7; color: #ffffff; border: none; padding: 14px 20px; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        #view-mypage .modal-btn:hover { background-color: #5b4bc4; }
+        #view-mypage .btn-cancel { background-color: #e2e8f0; color: #4a5568; width: 100%; border: none; padding: 14px 0; font-size: 0.95rem; font-weight: 600; border-radius: 12px; cursor: pointer; }
+        #view-mypage .btn-cancel:hover { background-color: #cbd5e1; }
+        #view-mypage .hidden { display: none !important; }
+
+        #view-mypage .bottom-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 9998; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        #view-mypage .bottom-sheet-overlay.active { opacity: 1; visibility: visible; }
+        #view-mypage .bottom-sheet {
+            position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px;
+            background: #ffffff; border-top-left-radius: 28px; border-top-right-radius: 28px; padding: 24px;
+            box-sizing: border-box; box-shadow: 0 -10px 30px rgba(0,0,0,0.15); z-index: 9999;
             transition: bottom 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .bottom-sheet.active {
-            bottom: 0;
-        }
-        .sheet-handle {
-            width: 40px;
-            height: 5px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            margin: 0 auto 16px auto;
-        }
-        .sheet-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 8px;
-        }
-        .sheet-desc {
-            font-size: 0.88rem;
-            color: #718096;
-            margin-bottom: 18px;
-            line-height: 1.5;
-        }
-        .sheet-desc span {
-            color: #6c5ce7;
-            font-weight: bold;
-        }
-
-        /* 🤖 reCAPTCHA 중앙 정렬 박스 */
-        .recaptcha-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 15px 0;
-            width: 100%;
-        }
+        #view-mypage .bottom-sheet.active { bottom: 0; }
+        #view-mypage .sheet-handle { width: 40px; height: 5px; background: #e2e8f0; border-radius: 10px; margin: 0 auto 16px auto; }
+        #view-mypage .sheet-title { font-size: 1.15rem; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }
+        #view-mypage .sheet-desc { font-size: 0.88rem; color: #718096; margin-bottom: 18px; line-height: 1.5; }
+        #view-mypage .sheet-desc span { color: #6c5ce7; font-weight: bold; }
+        #view-mypage .recaptcha-wrapper { display: flex; justify-content: center; align-items: center; margin: 15px 0; width: 100%; }
     </style>
 </head>
 <body>
 
-    <!-- 로딩 화면 -->
-    <div id="dataLoadingOverlay" class="modal-overlay">
-        <div class="loading-card">
-            <div class="spinner"></div>
-            <div class="loading-text" id="loadingText">학생 데이터를 안전하게<br>불러오는 중입니다...</div>
+    <!-- 로딩 화면 오버레이 (전역, 최초 로그인/데이터 로딩 시 1회 노출) -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="brand-logo">K&P <span class="sub-kst">with KST</span></div>
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+        <div class="loading-subtext">학생 정보를 불러오는 중...</div>
+    </div>
+
+    <!-- 토스트 알림 UI (전역, 3개 화면 공용) -->
+    <div id="toastNotification" class="toast-container"><span id="toastMessage">알림 내용</span></div>
+
+    <!-- ============================================================= -->
+    <!-- 1) 대시보드 (index) -->
+    <!-- ============================================================= -->
+    <div id="view-index" class="container">
+        <div class="header-zone">
+            <h1 class="welcome-text" id="welcome-message">학생 정보를 불러오는 중...</h1>
+            <div class="dday-badge" id="ddayText">확인 중...</div>
+        </div>
+
+        <div class="main-grid">
+            <div class="glass-card info-card">
+                <div class="weather-row" style="align-items: flex-start; flex-direction: column; gap: 4px;">
+                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                        <span class="weather-status" id="weatherStatus">
+                            <span style="font-size:1rem;" id="weatherIcon" class="emoji-font">⏳</span> 위치 확인 중...
+                        </span>
+                        <span class="weather-temp" id="weatherTemp">--°C</span>
+                    </div>
+                    <div id="weatherDetails" class="weather-details-text"></div>
+                </div>
+
+                <div class="clock-row">
+                    <div class="clock-date" id="dateText">동기화 중...</div>
+                    <div class="clock-time" id="timeText">00:00:00</div>
+                </div>
+
+                <div class="quote-row">
+                    <b id="quote-header">오늘의 한마디:</b> <span id="quoteText">문구를 불러오는 중...</span>
+                    <span id="quoteAuthor" class="quote-author"></span>
+                </div>
+            </div>
+
+            <div class="glass-card menu-card">
+                <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
+                    <span class="menu-item-text">유투엠 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </a>
+                <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
+                    <span class="menu-item-text">매쓰플랫 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="marquee-container" id="reminderBar">
+            <div style="white-space: nowrap; overflow: hidden;">
+                <span class="marquee-text mona12" id="reminderText"></span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-brand">K&P 수학입시학원 <span>with KST</span></div>
+            <div class="footer-copyright">© 2026 KST</div>
         </div>
     </div>
 
-    <!-- 토스트 메시지 -->
-    <div class="toast-container">
-        <div id="toastMessage" class="toast-message"></div>
+    <!-- ============================================================= -->
+    <!-- 2) 순위 (ranking) -->
+    <!-- ============================================================= -->
+    <div id="view-ranking" class="container-ranking" style="display:none;">
+        <button class="back-home-btn" onclick="switchMainView('index')">← 홈으로</button>
+
+        <div class="rank-sub-nav">
+            <button id="nav-btn-attendance" class="nav-dock-btn-rk active" onclick="switchRankingSubNav('attendance')">
+                <span class="emoji-font">📅</span> 이달의 출석
+            </button>
+            <button id="nav-btn-lotto" class="nav-dock-btn-rk" onclick="switchRankingSubNav('lotto')">
+                <span class="emoji-font">🎰</span> 이주의 로또
+            </button>
+        </div>
+
+        <!-- 2-1. 이달의 출석 -->
+        <div id="rk-view-attendance" class="tablet-grid animate-tab-switch">
+            <div class="glass-card-rk flex flex-col justify-between space-y-6">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold flex items-center gap-2">
+                            <span class="emoji-font">📊</span> 나의 이번 달 출석현황
+                        </h2>
+                        <span id="currentMonthTitle" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">2026년 8월</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-white/80 p-5 rounded-2xl border border-white text-center shadow-sm">
+                            <div class="text-xs text-gray-400 font-bold mb-1">총 출석일</div>
+                            <div id="myAttDays" class="text-3xl font-black text-indigo-600">0일</div>
+                        </div>
+                        <div class="bg-white/80 p-5 rounded-2xl border border-white text-center shadow-sm">
+                            <div class="text-xs text-gray-400 font-bold mb-1">출석 달성률</div>
+                            <div id="myAttRate" class="text-3xl font-black text-indigo-600">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="calendar-grid">
+                        <div class="calendar-day-head text-red-500">일</div>
+                        <div class="calendar-day-head">월</div>
+                        <div class="calendar-day-head">화</div>
+                        <div class="calendar-day-head">수</div>
+                        <div class="calendar-day-head">목</div>
+                        <div class="calendar-day-head">금</div>
+                        <div class="calendar-day-head text-blue-500">토</div>
+                    </div>
+                    <div id="calendarDays" class="calendar-grid mt-2"></div>
+                </div>
+            </div>
+
+            <div class="glass-card-rk fixed-rank-card">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span class="emoji-font">🥇</span> 이달의 출석 횟수 Top 10
+                </h2>
+                <div class="rank-scroll-area">
+                    <div id="attendanceRankList" class="space-y-2.5">
+                        <div class="text-center py-10 text-gray-400">랭킹 불러오는 중...</div>
+                    </div>
+                </div>
+                <div id="myAttendanceRankCard" class="mt-3 pt-3 border-t border-gray-200/60"></div>
+            </div>
+        </div>
+
+        <!-- 2-2. 이주의 로또 -->
+        <div id="rk-view-lotto" class="tablet-grid animate-tab-switch" style="display: none;">
+            <div class="glass-card-rk flex flex-col justify-between space-y-6">
+                <div>
+                    <div class="mb-6">
+                        <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
+                            <span class="emoji-font">🎉</span> 지난 주 당첨 번호
+                        </h2>
+                        <div id="lottoWinningBox" class="min-h-[72px] flex items-center justify-center gap-2 bg-white/70 p-4 rounded-2xl border border-white shadow-sm">
+                            <span class="text-sm text-gray-400">당첨 번호를 불러오는 중...</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-200/60">
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-lg font-bold flex items-center gap-2">
+                                <span class="emoji-font">🔮</span> 이번 주 나의 예측
+                            </h2>
+                            <button onclick="generateAutoLotto()" class="text-xs text-indigo-600 font-bold hover:underline bg-indigo-50 px-3 py-1.5 rounded-full">
+                                🎲 번호 자동 생성
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-5">* 1~45 사이의 중복 없는 7개 번호를 채워주세요.</p>
+
+                        <div id="myLottoStatus">
+                            <div class="flex flex-col items-center gap-4 mb-6 bg-white/60 p-5 rounded-2xl border border-white/80">
+                                <div class="flex justify-center gap-2.5 w-full">
+                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                </div>
+                                <div class="flex items-center gap-3 pt-3 border-t border-dashed border-gray-300 w-full justify-center">
+                                    <span class="text-sm font-bold text-indigo-600">+ 보너스</span>
+                                    <input type="number" id="lottoBonusInput" min="1" max="45" class="lotto-ball-input bonus-style">
+                                </div>
+                            </div>
+                            <button onclick="submitLottoPrediction()" class="btn-base-rk btn-primary-rk w-full py-4 text-base">예측 번호 제출하기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card-rk fixed-rank-card">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span class="emoji-font">🎯</span> 로또 적중 랭킹 Top 10
+                </h2>
+                <div class="rank-scroll-area">
+                    <div id="lottoRankList" class="space-y-2.5">
+                        <div class="text-center py-10 text-gray-400">랭킹 불러오는 중...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="container">
+    <!-- ============================================================= -->
+    <!-- 3) 마이페이지 (mypage) -->
+    <!-- ============================================================= -->
+    <div id="view-mypage" class="container-mypage" style="display:none;">
+        <button class="back-home-btn" onclick="switchMainView('index')">← 홈으로</button>
+
+        <!-- 마이페이지 전용 로딩(탈퇴 처리 등) -->
+        <div id="dataLoadingOverlay" class="modal-overlay">
+            <div class="loading-card">
+                <div class="spinner"></div>
+                <div class="loading-text" id="loadingText">처리 중입니다...</div>
+            </div>
+        </div>
+
         <div class="header-zone">
             <div class="page-title">⚙️ 학생 정보 수정</div>
-            <button onclick="location.href='index.html'" class="close-btn" title="홈으로 돌아가기">✕</button>
+            <button onclick="switchMainView('index')" class="close-btn" title="홈으로 돌아가기">✕</button>
         </div>
 
         <div class="form-container">
@@ -422,15 +718,14 @@
                 <label for="studentName">학생 이름</label>
                 <input type="text" id="studentName" placeholder="이름을 입력해 주세요.">
             </div>
-            
+
             <div class="input-wrapper">
                 <label for="schoolName">소속 학교</label>
                 <input type="text" id="schoolName" placeholder="예: 무원중" autocomplete="off">
                 <div id="schoolList" class="autocomplete-list hidden"></div>
-                <input type="hidden" id="schoolCode"> 
+                <input type="hidden" id="schoolCode">
             </div>
 
-            <!-- 💡 학년 및 반 입력 칸 추가 -->
             <div class="input-row">
                 <div class="input-wrapper">
                     <label for="studentGrade">학년</label>
@@ -509,462 +804,1667 @@
         <div class="delete-account-zone">
             <button onclick="openDeleteBottomSheet()" class="delete-btn">학원 앱 서비스 회원 탈퇴</button>
         </div>
-    </div>
 
-    <!-- 🤖 유투엠 아이디 변경 reCAPTCHA 바텀시트 -->
-    <div id="u2mBottomSheetOverlay" class="bottom-sheet-overlay" onclick="cancelU2mIdChange()"></div>
-    <div id="u2mBottomSheet" class="bottom-sheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-title">아이디 변경 보안 확인</div>
-        <div class="sheet-desc">
-            유투엠 아이디를 <span id="newU2mIdText"></span>(으)로 변경하시겠습니까?
-        </div>
-
-        <!-- 🤖 Google reCAPTCHA v2 박스 -->
-        <div class="recaptcha-wrapper">
-            <div id="recaptchaWidget"></div>
-        </div>
-
-        <div class="btn-flex-group">
-            <button class="btn-cancel" onclick="cancelU2mIdChange()">취소</button>
-            <button class="modal-btn" onclick="confirmU2mIdChange()">확인 및 변경</button>
-        </div>
-    </div>
-
-    <!-- 🔒 회원 탈퇴용 바텀시트 -->
-    <div id="reauthBottomSheetOverlay" class="bottom-sheet-overlay" onclick="closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet')"></div>
-    <div id="reauthBottomSheet" class="bottom-sheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-title" style="color: #e53e3e;">⚠️ 학원 앱 회원 탈퇴</div>
-        <div class="sheet-desc">
-            본인 확인을 위해 **유투엠 아이디**와 **전화번호 뒷자리 4자리**를 입력해 주세요.
-        </div>
-        
-        <div class="input-wrapper">
-            <label for="reauthId">유투엠 아이디</label>
-            <input type="text" id="reauthId" placeholder="아이디 입력">
-        </div>
-        <div class="input-wrapper">
-            <label for="reauthPw">부모님 전화번호 뒷자리 4자리</label>
-            <div class="input-pw">
-                <input type="password" id="reauthPw" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric">
-                <div class="eyes" onclick="togglePasswordVisibility('reauthPw', this)">
-                    <i class="fa-regular fa-eye-slash"></i>
-                </div>
+        <!-- 🤖 유투엠 아이디 변경 reCAPTCHA 바텀시트 -->
+        <div id="u2mBottomSheetOverlay" class="bottom-sheet-overlay" onclick="cancelU2mIdChange()"></div>
+        <div id="u2mBottomSheet" class="bottom-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">아이디 변경 보안 확인</div>
+            <div class="sheet-desc">유투엠 아이디를 <span id="newU2mIdText"></span>(으)로 변경하시겠습니까?</div>
+            <div class="recaptcha-wrapper"><div id="recaptchaWidget"></div></div>
+            <div class="btn-flex-group">
+                <button class="btn-cancel" onclick="cancelU2mIdChange()">취소</button>
+                <button class="modal-btn" onclick="confirmU2mIdChange()">확인 및 변경</button>
             </div>
         </div>
 
-        <div class="btn-flex-group">
-            <button class="btn-cancel" onclick="closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet')">취소</button>
-            <button class="modal-btn" onclick="processReauthAndDelete()" style="background-color: #e53e3e;">본인 인증 후 탈퇴</button>
+        <!-- 🔒 회원 탈퇴용 바텀시트 -->
+        <div id="reauthBottomSheetOverlay" class="bottom-sheet-overlay" onclick="closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet')"></div>
+        <div id="reauthBottomSheet" class="bottom-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title" style="color: #e53e3e;">⚠️ 학원 앱 회원 탈퇴</div>
+            <div class="sheet-desc">본인 확인을 위해 <span>유투엠 아이디</span>와 <span>전화번호 뒷자리 4자리</span>를 입력해 주세요.</div>
+            <div class="input-wrapper">
+                <label for="reauthId">유투엠 아이디</label>
+                <input type="text" id="reauthId" placeholder="아이디 입력">
+            </div>
+            <div class="input-wrapper">
+                <label for="reauthPw">부모님 전화번호 뒷자리 4자리</label>
+                <div class="input-pw">
+                    <input type="password" id="reauthPw" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric">
+                    <div class="eyes" onclick="togglePasswordVisibility('reauthPw', this)">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-flex-group">
+                <button class="btn-cancel" onclick="closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet')">취소</button>
+                <button class="modal-btn" onclick="processReauthAndDelete()" style="background-color: #e53e3e;">본인 인증 후 탈퇴</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- 전역 하단 네비게이션 & FAB (모든 화면 공용) -->
+    <!-- ============================================================= -->
+    <button id="open-chat-btn" class="fab-chat-btn" title="선생님 메시지">
+        <span class="emoji-font">💬</span>
+        <span id="chat-badge" class="fab-badge" style="display: none;">0</span>
+    </button>
+
+    <nav class="bottom-nav-bar">
+        <button id="nav-main-ranking" onclick="switchMainView('ranking')" class="tab-item">
+            <span class="tab-icon emoji-font">🏆</span>
+            <span class="tab-label">순위</span>
+        </button>
+        <button onclick="openUnifiedInquiryModal()" class="tab-item">
+            <span class="tab-icon emoji-font">🛠️</span>
+            <span class="tab-label">문의</span>
+        </button>
+        <button onclick="openMathQuizBottomSheet()" class="tab-item">
+            <span class="tab-icon emoji-font">🧮</span>
+            <span class="tab-label">오늘의 문제</span>
+        </button>
+        <button id="nav-main-mypage" onclick="switchMainView('mypage')" class="tab-item">
+            <span class="tab-icon emoji-font">👤</span>
+            <span class="tab-label">마이</span>
+        </button>
+        <button onclick="logoutUser()" class="tab-item danger">
+            <span class="tab-icon emoji-font">🔓</span>
+            <span class="tab-label">로그아웃</span>
+        </button>
+    </nav>
+
+    <!-- ============================================================= -->
+    <!-- 전역 모달 (대시보드 기능들, 모든 화면에서 접근 가능) -->
+    <!-- ============================================================= -->
+    <div id="mathflatBottomSheet" class="bottom-sheet-overlay" onclick="handleBottomSheetOverlayClick(event)">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
+            <div class="sheet-drag-handle"></div>
+            <div class="sheet-title">등록된 아이디 비번이 없습니다.</div>
+            <div class="sheet-subtitle">매쓰플랫 이용을 위해 계정을 입력해 주세요.</div>
+            <input type="text" id="bsMathflatId" class="sheet-input" placeholder="매쓰플랫 아이디 (또는 학생 휴대폰 번호)">
+            <input type="password" id="bsMathflatPw" class="sheet-input" placeholder="매쓰플랫 비밀번호">
+            <div class="btn-flex-group" style="margin-top: 10px;">
+                <button type="button" class="btn-base btn-secondary" onclick="closeMathflatBottomSheet()">취소</button>
+                <button type="button" class="btn-base btn-primary" onclick="saveMathflatCredentials()">등록 및 이동</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mathQuizBottomSheet" class="bottom-sheet-overlay" onclick="handleMathQuizOverlayClick(event)">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()" style="max-height: 82vh; overflow-y: auto;">
+            <div class="sheet-drag-handle"></div>
+
+            <div id="mathqGradeInputSection" style="display:none;">
+                <div class="sheet-title">🧮 오늘의 문제</div>
+                <div class="sheet-subtitle">학년을 알려주시면 맞춤형 문제를 준비해 드릴게요!</div>
+                <select id="mathqGradeSelect" class="mathq-select">
+                    <option value="p3">초등학교 3학년</option>
+                    <option value="p4">초등학교 4학년</option>
+                    <option value="p5">초등학교 5학년</option>
+                    <option value="p6">초등학교 6학년</option>
+                    <option value="m1">중학교 1학년</option>
+                    <option value="m2">중학교 2학년</option>
+                    <option value="m3">중학교 3학년</option>
+                </select>
+                <div class="btn-flex-group" style="margin-top: 4px;">
+                    <button type="button" class="btn-base btn-secondary" onclick="closeMathQuizBottomSheet()">취소</button>
+                    <button type="button" class="btn-base btn-primary" onclick="confirmMathGradeAndShowQuiz()">확인하고 문제 풀기</button>
+                </div>
+            </div>
+
+            <div id="mathqQuizSection" style="display:none;">
+                <div class="sheet-title">🧮 오늘의 문제</div>
+                <div class="sheet-subtitle" id="mathqQuizSubtitle"></div>
+                <div id="mathqQuizContainer"></div>
+                <a href="#" id="mathqMoreLink" class="mathq-more-link" onclick="return false;">더 많은 문제 연습하기 →</a>
+                <button type="button" class="btn-base btn-secondary" style="margin-top: 12px;" onclick="closeMathQuizBottomSheet()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="unifiedInquiryModal" class="modal-overlay">
+        <div class="modal-box" style="padding: 24px 20px;">
+            <div class="modal-title">📝 문의 및 제안 선택</div>
+            <div class="modal-content" style="margin-bottom: 20px;">원하시는 항목을 선택해 주세요.</div>
+            <button class="btn-base btn-glass" style="margin-bottom: 12px;" onclick="triggerSuggestionFromUnified()">💡 오늘의 한마디 제안하기</button>
+            <button class="btn-base btn-glass" style="margin-bottom: 20px;" onclick="triggerInquiryFromUnified()">🏫 학원에 문의하기</button>
+            <button class="btn-base btn-secondary" onclick="closeModal('unifiedInquiryModal')">닫기</button>
+        </div>
+    </div>
+
+    <div id="suggestionModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">💡 오늘의 한마디 제안</div>
+            <textarea id="suggestContent" rows="3" placeholder="기억에 남는 명언이나 하고 싶은 말(내용)을 입력해 주세요."></textarea>
+            <input type="text" id="suggestAuthor" placeholder="말한 사람 (닉네임)">
+            <input type="text" id="suggestProfile" placeholder="그 사람 설명 (예: 3학년, 과학자, 소설가 등)">
+            <div class="btn-flex-group">
+                <button class="btn-base btn-secondary" onclick="closeSuggestionModal()">취소</button>
+                <button class="btn-base btn-primary" onclick="submitSuggestion()">제안하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="academyInquiryModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">🏫 학원에 문의하기</div>
+            <textarea id="inquiryContent" rows="5" placeholder="학원에 궁금한 점이나 건의사항을 자유롭게 적어주세요. 원장님께 직접 전달됩니다."></textarea>
+            <div class="btn-flex-group">
+                <button class="btn-base btn-secondary" onclick="closeAcademyInquiryModal()">취소</button>
+                <button class="btn-base btn-primary" onclick="submitAcademyInquiry()">문의하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box" style="max-width: 400px; padding: 0; display: flex; flex-direction: column; height: 80vh; max-height: 600px; overflow: hidden;">
+            <div class="bg-white px-5 py-4 flex justify-between items-center border-b border-gray-100 z-10 shadow-sm">
+                <div class="text-[1.1rem] font-bold text-indigo-600 flex items-center gap-2 tracking-tight" style="font-family: 'Paperlogy', sans-serif;">
+                    <span class="emoji-font">💬</span> 선생님께 메시지
+                </div>
+                <button id="close-chat-btn" class="text-gray-400 hover:text-gray-600 text-xl focus:outline-none transition-colors">✖</button>
+            </div>
+            <div id="messageHistoryZone" class="history-zone flex-1 overflow-y-auto p-4 bg-slate-50" style="max-height: none; margin-bottom: 0; border: none; border-radius: 0;">
+                <div class="no-data">메시지 내역을 불러오는 중입니다...</div>
+            </div>
+            <div class="bg-white p-3 border-t border-gray-100 flex gap-2 z-10">
+                <input type="text" id="chat-input" class="flex-1 bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all font-medium text-gray-800" placeholder="메시지를 입력하세요...">
+                <button id="send-btn" class="btn-base btn-primary" style="width: auto; padding: 12px 20px;">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="noticeModal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modalTitle" class="modal-title">📢 안내 말씀 드립니다</div>
+            <div id="modalNoticeContent" class="modal-content">공지사항을 불러오는 중...</div>
+            <button class="btn-base btn-primary" onclick="document.getElementById('noticeModal').style.display='none'">확인</button>
+        </div>
+    </div>
+
+    <div id="logoutCheckModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" style="color: #6c5ce7;">🔓 로그아웃</div>
+            <div class="modal-content">정말로 안전하게 로그아웃 하시겠습니까?</div>
+            <div class="btn-flex-group">
+                <button class="btn-base btn-secondary" onclick="closeModal('logoutCheckModal')">취소</button>
+                <button class="btn-base btn-primary" onclick="confirmLogoutAction()">로그아웃</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="idleWarningModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(6px); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: #ffffff; width: 90%; max-width: 360px; padding: 28px 24px; border-radius: 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px;">⏳ 장시간 미사용 알림</div>
+            <div style="font-size: 0.95rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px; word-break: keep-all;">
+                약 30분 동안 활동이 감지되지 않았습니다.<br>
+                보안을 위해 잠시 후 <span id="idleCountdown" style="color: #e53e3e; font-weight: bold;">60</span>초 뒤 자동으로 로그아웃됩니다.
+            </div>
+            <div class="btn-flex-group">
+                <button onclick="extendSession()" class="btn-base btn-primary">로그인 유지</button>
+                <button onclick="triggerAutoLogout()" class="btn-base btn-secondary" style="width: auto; flex: none; padding: 14px 24px;">로그아웃</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
-            authDomain: "ksthome-76889.firebaseapp.com",
-            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
-            projectId: "ksthome-76889",
-            storageBucket: "ksthome-76889.firebasestorage.app",
-            messagingSenderId: "411945142173",
-            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
-            measurementId: "G-72TJ0364MJ"
+    /* ============================================================
+       공통 전역 상태 / 상수 (3개 파일 중복 제거하여 하나로 통합)
+       ============================================================ */
+    let toastTimeout = null;
+    function showToast(message, duration = 2500) {
+        const toast = document.getElementById('toastNotification');
+        const toastMsg = document.getElementById('toastMessage');
+        if (!toast || !toastMsg) return;
+        toastMsg.innerText = message;
+        toast.classList.add('show');
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, duration);
+    }
+
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.classList.add('hidden');
+    }
+
+    let currentStudentData = null;
+    let currentUserUid = null;
+    let currentStudentName = "학생";
+    let noteListener = null;
+    let historyListeners = [];
+    let rebootListener = null;
+    let serverTimeOffset = 0;
+    let rankingDataLoaded = false;
+
+    let idleTimer;
+    let countdownTimer;
+    let remainingSeconds = 60;
+
+    const THIRTY_MINUTES = 30 * 60 * 1000;
+    const SECRET_KEY = "u2mkst!";
+    const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
+
+    const BANNED_KEYWORDS = [
+        "시발", "씨발", "개새끼", "새끼", "존나", "좆", "지랄", "병신", "개세끼", "썅", "미친놈", "미친년",
+        "새키", "뒤져", "닥쳐", "쓰벌", "씨벌", "엠창", "凸", "fuck", "shibal", "ssibal", "bbyungshin"
+    ];
+
+    const advices = [
+        { author: "익명", authorProfile: "학생들의 현실", message: "내일의 나는 오늘의 나보다 공부를 잘할 거라 믿었다. 그리고 내일도 그렇게 믿었다." },
+        { author: "익명", authorProfile: "시험 전날", message: "공부는 미리 하는 것이다. 나는 늘 그 사실을 시험 전날 깨닫는다." },
+        { author: "익명", authorProfile: "수학 문제집", message: "답지를 보면 이해가 된다. 덮는 순간 다시 모른다." },
+        { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
+        { author: "아리스토텔레스", authorProfile: "철학자", message: "교육의 뿌리는 쓰지만 그 열매는 달다." },
+        { author: "알베르트 아인슈타인", authorProfile: "물리학자", message: "배움을 멈추는 순간 늙기 시작한다." },
+        { author: "손흥민", authorProfile: "축구선수", message: "노력은 절대 배신하지 않는다." }
+    ];
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+        authDomain: "ksthome-76889.firebaseapp.com",
+        databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
+        projectId: "ksthome-76889",
+        storageBucket: "ksthome-76889.firebasestorage.app",
+        messagingSenderId: "411945142173",
+        appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
+        measurementId: "G-72TJ0364MJ"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    function decryptAES(cipherText) {
+        if (!cipherText) return "";
+        try {
+            const cleanCipherText = String(cipherText).trim();
+            if (!cleanCipherText.startsWith("U2FsdGVkX1")) return cleanCipherText;
+            const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
+            return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText;
+        } catch (e) { return String(cipherText); }
+    }
+
+    function encryptAES(plainText) {
+        if (plainText === null || plainText === undefined) return "";
+        return CryptoJS.AES.encrypt(String(plainText).trim(), SECRET_KEY).toString();
+    }
+
+    function showModal(id) { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }
+    function closeModal(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+
+    /* ============================================================
+       화면 전환 (index / ranking / mypage)
+       ============================================================ */
+    function switchMainView(view) {
+        const indexEl = document.getElementById('view-index');
+        const rankingEl = document.getElementById('view-ranking');
+        const mypageEl = document.getElementById('view-mypage');
+        const navRanking = document.getElementById('nav-main-ranking');
+        const navMypage = document.getElementById('nav-main-mypage');
+
+        const current = document.body.getAttribute('data-view') || 'index';
+        const target = (current === view) ? 'index' : view; // 같은 탭 다시 누르면 홈으로
+
+        indexEl.style.display = (target === 'index') ? '' : 'none';
+        rankingEl.style.display = (target === 'ranking') ? '' : 'none';
+        mypageEl.style.display = (target === 'mypage') ? '' : 'none';
+
+        navRanking.classList.toggle('active-view', target === 'ranking');
+        navMypage.classList.toggle('active-view', target === 'mypage');
+
+        document.body.setAttribute('data-view', target);
+        window.scrollTo(0, 0);
+
+        if (target === 'ranking') {
+            loadAttendanceData();
+            loadLottoData();
+        }
+    }
+
+    /* ============================================================
+       통합 인증 흐름 (기존 index/ranking/mypage 각각의
+       auth.onAuthStateChanged를 하나로 통합)
+       ============================================================ */
+    function cleanStudentSystemSession() {
+        detachAllHistoryListeners();
+        if (noteListener) noteListener.off();
+        if (rebootListener) rebootListener.off();
+        auth.signOut().then(() => {
+            localStorage.removeItem('u2m_id');
+            localStorage.removeItem('u2m_pw');
+            if (window.location.pathname.indexOf('login.html') === -1) {
+                window.location.replace('login.html');
+            }
+        });
+    }
+
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            currentUserUid = user.uid;
+            startIdleTracking();
+            recordMonthlyAttendance(user.uid);
+
+            database.ref(".info/serverTimeOffset").on("value", (snapshot) => {
+                serverTimeOffset = snapshot.val() || 0;
+            });
+
+            database.ref(`students/${user.uid}`).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    currentStudentData = data;
+                    const rawName = data.name || data.studentName || data.userName;
+                    currentStudentName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
+                    document.getElementById('welcome-message').innerText = `안녕하세요, ${currentStudentName}님`;
+
+                    if (data.schoolName && !data.schoolName.includes('초등')) {
+                        fetchExamDateFromNeis(data.schoolName);
+                    } else { renderDDayBadge(null); }
+
+                    listenToTeacherNotes(user.uid);
+                    startLiveChatHistory(user.uid);
+                    startDeviceStatusReporting(user.uid);
+                    listenToRemoteCommands(user.uid);
+                    populateMyPageForm(data);
+
+                    hideLoading();
+                } else {
+                    cleanStudentSystemSession();
+                    hideLoading();
+                }
+            }).catch((error) => {
+                console.error("데이터 불러오기 실패:", error);
+                hideLoading();
+            });
+        } else {
+            cleanStudentSystemSession();
+            hideLoading();
+        }
+    });
+
+    function recordMonthlyAttendance(studentUid) {
+        const now = new Date();
+        const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const todayStr = `${yearMonth}-${String(now.getDate()).padStart(2, '0')}`;
+        const attRef = database.ref(`attendance/${studentUid}/${yearMonth}`);
+        attRef.once('value', (snapshot) => {
+            let attData = snapshot.val() || { count: 0, days: {} };
+            if (!attData.days || !attData.days[todayStr]) {
+                const updatedDays = attData.days || {};
+                updatedDays[todayStr] = true;
+                const newCount = Object.keys(updatedDays).length;
+                attRef.update({ count: newCount, days: updatedDays, lastAttendance: firebase.database.ServerValue.TIMESTAMP });
+            }
+        });
+    }
+
+    function logoutUser() { showModal('logoutCheckModal'); }
+    function confirmLogoutAction() {
+        closeModal('logoutCheckModal');
+        auth.signOut().then(() => {
+            localStorage.removeItem('u2m_id');
+            localStorage.removeItem('u2m_pw');
+            window.location.href = 'login.html';
+        }).catch(() => { showToast("로그아웃 오류가 발생했습니다."); });
+    }
+
+    function goToMyPage() { switchMainView('mypage'); }
+
+    function startIdleTracking() {
+        const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
+        events.forEach(event => { window.addEventListener(event, resetIdleTimer); });
+        resetIdleTimer();
+    }
+    function stopIdleTracking() {
+        const events = ['mousemove', 'keypress', 'touchstart', 'scroll', 'click'];
+        events.forEach(event => { window.removeEventListener(event, resetIdleTimer); });
+    }
+    function resetIdleTimer() {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(showIdleWarning, THIRTY_MINUTES);
+    }
+    function showIdleWarning() {
+        stopIdleTracking();
+        showModal('idleWarningModal');
+        remainingSeconds = 60;
+        document.getElementById('idleCountdown').innerText = remainingSeconds;
+        countdownTimer = setInterval(() => {
+            remainingSeconds--;
+            document.getElementById('idleCountdown').innerText = remainingSeconds;
+            if (remainingSeconds <= 0) { clearInterval(countdownTimer); triggerAutoLogout(); }
+        }, 1000);
+    }
+    function extendSession() { clearInterval(countdownTimer); closeModal('idleWarningModal'); startIdleTracking(); }
+    function triggerAutoLogout() {
+        clearInterval(countdownTimer);
+        clearTimeout(idleTimer);
+        auth.signOut().then(() => {
+            localStorage.removeItem('u2m_id');
+            localStorage.removeItem('u2m_pw');
+            if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') { window.AndroidApp.logoutAll(); }
+            window.location.replace('login.html');
+        }).catch(() => { window.location.replace('login.html'); });
+    }
+
+    function openUnifiedInquiryModal() { showModal('unifiedInquiryModal'); }
+    function triggerSuggestionFromUnified() { closeModal('unifiedInquiryModal'); openSuggestionModal(); }
+    function triggerInquiryFromUnified() { closeModal('unifiedInquiryModal'); openAcademyInquiryModal(); }
+
+    function openSuggestionModal() {
+        document.getElementById('suggestContent').value = '';
+        document.getElementById('suggestAuthor').value = '';
+        document.getElementById('suggestProfile').value = '';
+        showModal('suggestionModal');
+    }
+    function closeSuggestionModal() { closeModal('suggestionModal'); }
+
+    function submitSuggestion() {
+        const contentText = document.getElementById('suggestContent').value.trim();
+        const authorText = document.getElementById('suggestAuthor').value.trim();
+        const profileText = document.getElementById('suggestProfile').value.trim();
+        if (!contentText) { showToast("💡 명언 내용을 입력해 주세요."); return; }
+        if (!authorText) { showToast("💡 말한 사람(닉네임)을 입력해 주세요."); return; }
+        if (!currentStudentData) { showToast("⌛ 학생 정보 동기화 중입니다."); return; }
+
+        const combinedText = contentText + authorText + profileText;
+        const cleanText = combinedText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
+        if (BANNED_KEYWORDS.some(word => cleanText.includes(word))) {
+            showToast("🚨 비속어 및 욕설이 감지되어 제출할 수 없습니다.");
+            return;
+        }
+
+        const currentUser = auth.currentUser;
+        const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
+        const realName = decryptAES(rawName);
+
+        const suggestData = {
+            studentName: realName,
+            studentUid: currentUser ? currentUser.uid : "익명",
+            schoolName: currentStudentData.schoolName || "미지정",
+            category: "오늘의 한마디 제안",
+            content: encryptAES(contentText),
+            author: encryptAES(authorText),
+            authorProfile: encryptAES(profileText),
+            timestamp: firebase.database.ServerValue.TIMESTAMP
         };
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const auth = firebase.auth();
 
-        const SECRET_SALT = "u2mkst!"; 
-        const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc"; 
+        database.ref('suggestions').push(suggestData)
+            .then(() => { showToast("🎉 원장님께 한마디 제안이 접수되었습니다."); closeSuggestionModal(); })
+            .catch(err => showToast('전송 실패: ' + err.message));
+    }
 
-        // 🤖 Google reCAPTCHA v2 사이트 키 적용
-        const RECAPTCHA_SITE_KEY = "6LcoRYAtAAAAAP_83dJyhmTfWrTrer3QUYf8Pof1";
-        let recaptchaWidgetId = null;
+    function openAcademyInquiryModal() { document.getElementById('inquiryContent').value = ''; showModal('academyInquiryModal'); }
+    function closeAcademyInquiryModal() { closeModal('academyInquiryModal'); }
 
-        window.onloadCallback = function() {
-            if (document.getElementById('recaptchaWidget')) {
-                recaptchaWidgetId = grecaptcha.render('recaptchaWidget', {
-                    'sitekey': RECAPTCHA_SITE_KEY
+    function submitAcademyInquiry() {
+        const contentText = document.getElementById('inquiryContent').value.trim();
+        if (!contentText) { showToast("🏫 문의사항 내용을 입력해 주세요."); return; }
+        if (!currentStudentData) { showToast("⌛ 학생 정보 동기화 중입니다."); return; }
+        const cleanText = contentText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
+        if (BANNED_KEYWORDS.some(word => cleanText.includes(word))) {
+            showToast("🚨 비속어 및 욕설이 감지되어 등록할 수 없습니다.");
+            return;
+        }
+        const currentUser = auth.currentUser;
+        const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
+        const realName = decryptAES(rawName);
+        const inquiryData = {
+            studentName: realName,
+            studentUid: currentUser ? currentUser.uid : "익명",
+            schoolName: currentStudentData.schoolName || "미지정",
+            category: "학원에 문의하기",
+            content: encryptAES(contentText),
+            author: "",
+            authorProfile: "",
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        database.ref('suggestions').push(inquiryData)
+            .then(() => { showToast("🏫 원장님께 문의가 접수되었습니다."); closeAcademyInquiryModal(); })
+            .catch(err => showToast('전송 실패: ' + err.message));
+    }
+
+    function transmitBridgeCredentials() {
+        if (!currentStudentData) return;
+        try {
+            const u2mId = localStorage.getItem('u2m_id') || currentStudentData.u2mId || '';
+            const u2mPw = decryptAES(currentStudentData.phone || '').trim();
+            const mathflatId = decryptAES(currentStudentData.mathflatId || currentStudentData.studentPhone || '').trim();
+            const decryptedMathflatPw = decryptAES(currentStudentData.mathflatPw || '').trim();
+            if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
+                window.AndroidApp.loginToU2M(u2mId, u2mPw, decryptedMathflatPw, mathflatId);
+            }
+        } catch (err) { console.error("크레덴셜 앱 전달 오류:", err); }
+    }
+
+    function goToU2MWithCredentials() {
+        transmitBridgeCredentials();
+        showToast("🚀 유투엠 페이지로 이동합니다...");
+        setTimeout(() => { window.location.href = "https://www.u2math.co.kr/Login/Index"; }, 800);
+    }
+
+    function handleMathflatClick() {
+        if (!currentStudentData) { showToast("⌛ 학생 정보를 불러오는 중입니다..."); return; }
+        const mId = decryptAES(currentStudentData.mathflatId || currentStudentData.studentPhone || '').trim();
+        const mPw = decryptAES(currentStudentData.mathflatPw || '').trim();
+        if (!mId || !mPw) {
+            openMathflatBottomSheet();
+        } else {
+            transmitBridgeCredentials();
+            showToast("🚀 매쓰플랫 페이지로 이동합니다...");
+            setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 800);
+        }
+    }
+
+    function openMathflatBottomSheet() {
+        document.getElementById('bsMathflatId').value = '';
+        document.getElementById('bsMathflatPw').value = '';
+        const sheet = document.getElementById('mathflatBottomSheet');
+        if (sheet) sheet.classList.add('active');
+    }
+    function closeMathflatBottomSheet() {
+        const sheet = document.getElementById('mathflatBottomSheet');
+        if (sheet) sheet.classList.remove('active');
+    }
+    function handleBottomSheetOverlayClick(event) {
+        if (event.target.id === 'mathflatBottomSheet') closeMathflatBottomSheet();
+    }
+
+    function saveMathflatCredentials() {
+        const inputId = document.getElementById('bsMathflatId').value.trim();
+        const inputPw = document.getElementById('bsMathflatPw').value.trim();
+        if (!inputId || !inputPw) { showToast("아이디와 비밀번호를 모두 입력해 주세요."); return; }
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
+        const encId = encryptAES(inputId);
+        const encPw = encryptAES(inputPw);
+        database.ref(`students/${currentUser.uid}`).update({ mathflatId: encId, mathflatPw: encPw, studentPhone: encId })
+            .then(() => {
+                currentStudentData.mathflatId = encId;
+                currentStudentData.mathflatPw = encPw;
+                currentStudentData.studentPhone = encId;
+                closeMathflatBottomSheet();
+                transmitBridgeCredentials();
+                showToast("✅ 등록 완료! 매쓰플랫으로 이동합니다...");
+                setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 1000);
+            }).catch(err => { showToast("저장 실패: " + err.message); });
+    }
+
+    /* ======================= 🧮 오늘의 문제 ======================= */
+    const MATHQ_GRADE_LABELS = {
+        p3: "초등학교 3학년", p4: "초등학교 4학년", p5: "초등학교 5학년", p6: "초등학교 6학년",
+        m1: "중학교 1학년", m2: "중학교 2학년", m3: "중학교 3학년"
+    };
+
+    const mathqGenerators = {
+        p3: [
+            (rng) => { const a = mathqRand(rng,100,899), b = mathqRand(rng,100,899); return { title: "3자리 수의 덧셈", text: `$${a} + ${b} = ?$`, ans: a + b }; },
+            (rng) => { const a = mathqRand(rng,300,999), b = mathqRand(rng,100,a-1); return { title: "3자리 수의 뺄셈", text: `$${a} - ${b} = ?$`, ans: a - b }; },
+            (rng) => { const a = mathqRand(rng,10,99), b = mathqRand(rng,2,9); return { title: "(두 자리 수) × (한 자리 수)", text: `$${a} \\times ${b} = ?$`, ans: a * b }; }
+        ],
+        p4: [
+            (rng) => { const b = mathqRand(rng,3,9), ans = mathqRand(rng,10,99), a = b * ans; return { title: "나눗셈 (몫 구하기)", text: `$${a} \\div ${b} = ?$`, ans: ans }; },
+            (rng) => { const a = mathqRand(rng,10,50), b = mathqRand(rng,2,9), c = mathqRand(rng,5,20); return { title: "혼합 계산", text: `$${a} + ${b} \\times ${c} = ?$`, ans: a + (b * c) }; },
+            (rng) => { const first = mathqRand(rng,2,10), diff = mathqRand(rng,3,8), n = mathqRand(rng,5,8); return { title: "규칙 찾기", text: `$${first}, ${first+diff}, ${first+diff*2}, \\dots$ 이 수열의 ${n}번째 수는?`, ans: first + (n-1)*diff }; }
+        ],
+        p5: [
+            (rng) => { const d1 = mathqRand(rng,2,5), d2 = mathqRand(rng,6,9); return { title: "분수의 덧셈 (통분)", text: `$\\frac{1}{${d1}} + \\frac{1}{${d2}}$ 의 분자값은? (단, 분모를 $${d1*d2}$로 통분했을 때)`, ans: d1 + d2 }; },
+            (rng) => { const a = mathqRand(rng,11,99)/10, b = mathqRand(rng,2,9); const ans = Math.round(a*b*10)/10; return { title: "소수와 자연수의 곱셈", text: `$${a} \\times ${b} = ?$`, ans: ans }; },
+            (rng) => { const w = mathqRand(rng,2,9), l = mathqRand(rng,2,9), h = mathqRand(rng,2,9); return { title: "직육면체의 부피", text: `가로 ${w}cm, 세로 ${l}cm, 높이 ${h}cm인 직육면체의 부피($\\text{cm}^3$)는?`, ans: w*l*h }; }
+        ],
+        p6: [
+            (rng) => { const a = mathqRand(rng,2,9), b = mathqRand(rng,2,9); return { title: "분수 ÷ 자연수", text: `$\\frac{${a*b}}{7} \\div ${b}$ 의 분자값은?`, ans: a }; },
+            (rng) => { const a = mathqRand(rng,2,9), b = mathqRand(rng,2,9), k = mathqRand(rng,2,5); return { title: "비례식", text: `$${a} : ${b} = ${a*k} : x$ 일 때, $x$의 값은?`, ans: b*k }; },
+            (rng) => { const r = mathqRand(rng,2,10); return { title: "원의 넓이 (원주율: 3)", text: `반지름이 ${r}cm인 원의 넓이($\\text{cm}^2$)는? (원주율 = 3)`, ans: 3*r*r }; }
+        ],
+        m1: [
+            (rng) => { const a = mathqRand(rng,-15,-2), b = mathqRand(rng,3,15); return { title: "정수와 유리수의 연산", text: `($${a}$) + ($${b}$) = ?`, ans: a + b }; },
+            (rng) => { const a = mathqRand(rng,2,6), ans = mathqRand(rng,-5,9), b = mathqRand(rng,1,10); const c = a*ans+b; return { title: "일차방정식", text: `$${a}x + ${b} = ${c}$ 일 때, $x$의 값은?`, ans: ans }; },
+            (rng) => { const x = mathqRand(rng,-9,9), y = mathqRand(rng,-9,9); return { title: "좌표평면 (x좌표 + y좌표)", text: `점 $P(${x}, ${y})$의 $x$좌표와 $y$좌표의 합은?`, ans: x + y }; }
+        ],
+        m2: [
+            (rng) => { const a = mathqRand(rng,2,5), b = mathqRand(rng,2,5); return { title: "지수법칙", text: `$x^{${a}} \\times x^{${b}} = x^N$ 일 때, $N$의 값은?`, ans: a + b }; },
+            (rng) => { const x = mathqRand(rng,1,5), y = mathqRand(rng,1,5); const val = x + y; return { title: "연립방정식 기초", text: `$x + y = ${val}$, $x - y = ${x-y}$ 일 때, $x$의 값은?`, ans: x }; },
+            (rng) => { const m = mathqRand(rng,-5,5), n = mathqRand(rng,-9,9); return { title: "일차함수 기울기", text: `$y = ${m}x + (${n})$ 의 기울기는?`, ans: m }; }
+        ],
+        m3: [
+            (rng) => { const a = mathqRand(rng,2,9); return { title: "제곱근 계산", text: `$\\sqrt{${a*a}} + \\sqrt{${(a*2)*(a*2)}} = ?$`, ans: a + (a*2) }; },
+            (rng) => { const a = mathqRand(rng,1,7), b = mathqRand(rng,1,7); return { title: "다항식의 전개", text: `$(x + ${a})(x + ${b}) = x^2 + Ax + ${a*b}$ 일 때, $A$의 값은?`, ans: a + b }; },
+            (rng) => {
+                const r1 = mathqRand(rng,1,5), r2 = mathqRand(rng,-5,-1);
+                const p = -(r1+r2), q = r1*r2;
+                const pStr = p >= 0 ? `+ ${p}` : `- ${Math.abs(p)}`;
+                const qStr = q >= 0 ? `+ ${q}` : `- ${Math.abs(q)}`;
+                return { title: "이차방정식의 해", text: `$x^2 ${pStr}x ${qStr} = 0$ 의 두 근의 합은?`, ans: r1 + r2 };
+            }
+        ]
+    };
+
+    function mathqRand(rng, min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
+    function mulberry32(seed) {
+        return function() {
+            seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+            let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    }
+    function mathqTodaySeed(gradeCode) {
+        const now = new Date();
+        const todayKey = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+        const uid = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : "guest";
+        const hashHex = CryptoJS.SHA256(`${todayKey}-${uid}-${gradeCode}`).toString();
+        return parseInt(hashHex.substring(0, 8), 16);
+    }
+    function getMathQuizGradeCode() {
+        if (!currentStudentData) return null;
+        if (currentStudentData.mathGradeCode && MATHQ_GRADE_LABELS[currentStudentData.mathGradeCode]) {
+            return currentStudentData.mathGradeCode;
+        }
+        const schoolName = currentStudentData.schoolName || "";
+        let schoolType = null;
+        if (schoolName.includes('초등')) schoolType = 'p';
+        else if (schoolName.includes('중학교') || schoolName.includes('중등')) schoolType = 'm';
+
+        const rawCandidates = [currentStudentData.grade, currentStudentData.studentGrade, currentStudentData.gradeLevel, currentStudentData.schoolGrade, currentStudentData.grade_level];
+        let gradeNum = null;
+        for (const candidate of rawCandidates) {
+            if (candidate === undefined || candidate === null || candidate === "") continue;
+            const match = String(candidate).match(/\d+/);
+            if (match) { gradeNum = parseInt(match[0], 10); break; }
+        }
+        if (!schoolType || !gradeNum) return null;
+        if (schoolType === 'p' && gradeNum >= 3 && gradeNum <= 6) return `p${gradeNum}`;
+        if (schoolType === 'm' && gradeNum >= 1 && gradeNum <= 3) return `m${gradeNum}`;
+        return null;
+    }
+
+    function openMathQuizBottomSheet() {
+        const sheet = document.getElementById('mathQuizBottomSheet');
+        if (!sheet) return;
+        const gradeCode = getMathQuizGradeCode();
+        const gradeInputSection = document.getElementById('mathqGradeInputSection');
+        const quizSection = document.getElementById('mathqQuizSection');
+
+        if (!currentStudentData) {
+            gradeInputSection.style.display = 'block'; quizSection.style.display = 'none';
+        } else if (gradeCode) {
+            gradeInputSection.style.display = 'none'; quizSection.style.display = 'block';
+            renderTodayMathQuiz(gradeCode);
+        } else {
+            gradeInputSection.style.display = 'block'; quizSection.style.display = 'none';
+        }
+        sheet.classList.add('active');
+    }
+    function closeMathQuizBottomSheet() { const sheet = document.getElementById('mathQuizBottomSheet'); if (sheet) sheet.classList.remove('active'); }
+    function handleMathQuizOverlayClick(event) { if (event.target.id === 'mathQuizBottomSheet') closeMathQuizBottomSheet(); }
+
+    function confirmMathGradeAndShowQuiz() {
+        const gradeCode = document.getElementById('mathqGradeSelect').value;
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+            database.ref(`students/${currentUser.uid}`).update({ mathGradeCode: gradeCode }).catch(err => console.error("학년 저장 실패:", err));
+            if (currentStudentData) currentStudentData.mathGradeCode = gradeCode;
+        }
+        document.getElementById('mathqGradeInputSection').style.display = 'none';
+        document.getElementById('mathqQuizSection').style.display = 'block';
+        renderTodayMathQuiz(gradeCode);
+    }
+
+    function renderTodayMathQuiz(gradeCode) {
+        const container = document.getElementById('mathqQuizContainer');
+        const subtitle = document.getElementById('mathqQuizSubtitle');
+        const moreLink = document.getElementById('mathqMoreLink');
+        if (!container) return;
+
+        const now = new Date();
+        const dateLabel = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+        subtitle.textContent = `${MATHQ_GRADE_LABELS[gradeCode] || ''} · ${dateLabel} 오늘의 문제`;
+        if (moreLink) moreLink.href = `math.html?grade=${gradeCode}`;
+
+        const seed = mathqTodaySeed(gradeCode);
+        const rng = mulberry32(seed);
+        const generators = mathqGenerators[gradeCode] || [];
+
+        container.innerHTML = '';
+        generators.forEach((gen, index) => {
+            const q = gen(rng);
+            const card = document.createElement('div');
+            card.className = 'mathq-card';
+            card.innerHTML = `
+                <div class="mathq-card-title">유형 ${index + 1}. ${q.title}</div>
+                <div class="mathq-card-text">${q.text}</div>
+                <div class="mathq-input-group">
+                    <input type="number" id="mathq-ans-${index}" placeholder="정답 입력" onkeydown="if(event.key==='Enter') checkMathQuizAnswer(${index}, ${q.ans})">
+                    <button onclick="checkMathQuizAnswer(${index}, ${q.ans})">확인</button>
+                </div>
+                <div class="mathq-feedback" id="mathq-feedback-${index}"></div>
+            `;
+            container.appendChild(card);
+        });
+
+        if (window.MathJax && window.MathJax.typesetPromise) { window.MathJax.typesetPromise([container]); }
+    }
+
+    function checkMathQuizAnswer(index, correctAns) {
+        const inputEl = document.getElementById(`mathq-ans-${index}`);
+        const feedbackEl = document.getElementById(`mathq-feedback-${index}`);
+        if (!inputEl || !feedbackEl) return;
+        const userAns = parseFloat(inputEl.value);
+        if (isNaN(userAns)) {
+            feedbackEl.innerHTML = `<span>⚠️</span> 답을 입력해주세요.`;
+            feedbackEl.className = "mathq-feedback incorrect";
+            return;
+        }
+        if (Math.abs(userAns - correctAns) < 0.01) {
+            feedbackEl.innerHTML = `<span>🎉</span> 정답입니다! 아주 잘했어요.`;
+            feedbackEl.className = "mathq-feedback correct";
+        } else {
+            feedbackEl.innerHTML = `<span>❌</span> 틀렸습니다. (정답: ${correctAns})`;
+            feedbackEl.className = "mathq-feedback incorrect";
+        }
+    }
+
+    function startDeviceStatusReporting(studentUid) {
+        setInterval(() => {
+            if (window.AndroidApp && typeof window.AndroidApp.getBatteryLevel === 'function') {
+                try {
+                    const level = window.AndroidApp.getBatteryLevel();
+                    if (level !== undefined && level !== null) {
+                        database.ref(`device_status/${studentUid}`).set({ battery: parseInt(level), lastUpdated: firebase.database.ServerValue.TIMESTAMP });
+                    }
+                } catch (e) { console.error("배터리 텔레메트리 에러:", e); }
+            } else if (navigator.getBattery) {
+                navigator.getBattery().then(battery => {
+                    database.ref(`device_status/${studentUid}`).set({ battery: Math.round(battery.level * 100), lastUpdated: firebase.database.ServerValue.TIMESTAMP });
                 });
             }
+        }, 60000);
+    }
+
+    function listenToRemoteCommands(studentUid) {
+        if (rebootListener) rebootListener.off();
+        rebootListener = database.ref(`commands/${studentUid}`);
+        rebootListener.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const cmd = snapshot.val();
+                if (cmd && cmd.reboot === true) {
+                    database.ref(`commands/${studentUid}`).remove();
+                    if (window.AndroidApp && typeof window.AndroidApp.rebootDevice === 'function') {
+                        window.AndroidApp.rebootDevice();
+                    } else {
+                        showToast("🔄 원격 시스템 강제 재부팅 신호가 수신되었습니다.");
+                        setTimeout(() => { window.location.reload(); }, 1500);
+                    }
+                }
+            }
+        });
+    }
+
+    function updateClock() {
+        const serverTimeMillis = Date.now() + serverTimeOffset;
+        const now = new Date(serverTimeMillis);
+        const formatter = new Intl.DateTimeFormat('ko-KR', {
+            timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+            weekday: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        });
+        const parts = formatter.formatToParts(now);
+        let month, day, weekday, hour, minute, second;
+        for (const part of parts) {
+            if (part.type === 'month') month = part.value;
+            if (part.type === 'day') day = part.value;
+            if (part.type === 'weekday') weekday = part.value;
+            if (part.type === 'hour') hour = part.value;
+            if (part.type === 'minute') minute = part.value;
+            if (part.type === 'second') second = part.value;
+        }
+        document.getElementById('timeText').innerText = `${hour}:${minute}:${second}`;
+        document.getElementById('dateText').innerText = `${parseInt(month)}월 ${parseInt(day)}일 ${weekday}`;
+    }
+    setInterval(updateClock, 1000);
+
+    function fetchExamDateFromNeis(schoolName) {
+        if (!schoolName) { renderDDayBadge(null); return; }
+        const schoolInfoUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
+        fetch(schoolInfoUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.schoolInfo) { renderDDayBadge(null); return; }
+                const row = data.schoolInfo[1].row[0];
+                const officeCode = row.ATPT_OFCDC_SC_CODE;
+                const schoolCode = row.SD_SCHUL_CODE;
+                const currentYear = new Date().getFullYear();
+                const fromYmd = `${currentYear}0301`;
+                const toYmd = `${currentYear + 1}0228`;
+                const scheduleUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=800`;
+                return fetch(scheduleUrl);
+            })
+            .then(res => res ? res.json() : null)
+            .then(data => {
+                if (!data || !data.SchoolSchedule) { renderDDayBadge(null); return; }
+                const rows = data.SchoolSchedule[1].row;
+                const now = new Date();
+                const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+                let upcomingExamDates = [];
+                rows.forEach(item => {
+                    const eventName = item.EVENT_NM || "";
+                    const eventDate = item.AA_YMD;
+                    if (eventDate >= todayStr) {
+                        if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") ||
+                            eventName.includes("지필") || eventName.includes("시험") || eventName.includes("정규")) {
+                            upcomingExamDates.push({ date: eventDate, name: eventName });
+                        }
+                    }
+                });
+                if (upcomingExamDates.length > 0) {
+                    upcomingExamDates.sort((a,b) => a.date.localeCompare(b.date));
+                    const closest = upcomingExamDates[0];
+                    const finalDateForm = `${closest.date.substring(0,4)}-${closest.date.substring(4,6)}-${closest.date.substring(6,8)}`;
+                    renderDDayBadge(finalDateForm, closest.name);
+                } else { renderDDayBadge(null); }
+            }).catch(() => renderDDayBadge(null));
+    }
+
+    function renderDDayBadge(examDate, examName = "정기고사") {
+        const ddayZone = document.getElementById('ddayText');
+        if (!ddayZone) return;
+        if (currentStudentData && currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) {
+            ddayZone.style.display = 'none'; return;
+        }
+        if (!examDate) { ddayZone.innerText = "학사 일정 분석불가"; return; }
+
+        const targetDate = new Date(examDate + "T00:00:00");
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); targetDate.setHours(0, 0, 0, 0);
+        const diffTime = targetDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        let schoolTag = currentStudentData.schoolName ? currentStudentData.schoolName.replace("대한민국", "").substring(0,5) : "학교";
+
+        if (diffDays > 0) { ddayZone.innerText = `${schoolTag} [${examName}] D-${diffDays}`; }
+        else if (diffDays === 0) { ddayZone.innerHTML = `⚠️ [${examName}] 오늘 D-DAY 🎉`; }
+        else { ddayZone.innerText = "예정된 시험 없음"; }
+    }
+
+    function displayDefaultAdvice() {
+        if (advices.length === 0) return;
+        const now = new Date();
+        const dateValue = now.getFullYear() + (now.getMonth() + 1) + now.getDate();
+        const dailyData = advices[dateValue % advices.length];
+        document.getElementById('quote-header').innerText = "오늘의 한마디:";
+        document.getElementById('quoteText').innerText = `"${dailyData.message}"`;
+        const profileStr = dailyData.authorProfile && dailyData.authorProfile !== "-" ? ` (${dailyData.authorProfile})` : "";
+        document.getElementById('quoteAuthor').innerText = `- ${dailyData.author}${profileStr}`;
+    }
+
+    function openChatModal() {
+        const modal = document.getElementById('chat-modal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        const zoneEl = document.getElementById('messageHistoryZone');
+        if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
+        const inputEl = document.getElementById('chat-input');
+        if (inputEl) inputEl.focus();
+
+        if (auth.currentUser) {
+            startLiveChatHistory(auth.currentUser.uid);
+            database.ref(`student_messages/${auth.currentUser.uid}`).orderByChild('read').equalTo(false).once('value', (snapshot) => {
+                if (snapshot.exists()) { snapshot.forEach(child => { child.ref.update({ read: true }); }); }
+            });
+        }
+    }
+    function closeChatModal() { const modal = document.getElementById('chat-modal'); if (modal) modal.style.display = 'none'; }
+
+    function listenToTeacherNotes(uid) {
+        let isInitialLoad = true;
+        const unreadRef = database.ref(`student_messages/${uid}`).orderByChild('read').equalTo(false);
+        unreadRef.on('value', (snapshot) => {
+            const badge = document.getElementById('chat-badge');
+            if (snapshot.exists()) {
+                const count = snapshot.numChildren();
+                if (badge) { badge.innerText = count > 99 ? '99+' : count; badge.style.display = 'block'; }
+            } else { if (badge) badge.style.display = 'none'; }
+        });
+        unreadRef.limitToLast(1).on('child_added', (snapshot) => {
+            if (isInitialLoad) return;
+            const note = snapshot.val();
+            if (note) {
+                let decryptedMsg = decryptAES(note.message);
+                if (decryptedMsg.startsWith("[답장완료] ")) { decryptedMsg = decryptedMsg.replace("[답장완료] ", ""); }
+                showToast(`✉️ 선생님 쪽지: ${decryptedMsg.substring(0, 20)}...`);
+                document.getElementById('modalTitle').innerText = "✉️ 선생님의 전송 쪽지";
+                document.getElementById('modalNoticeContent').innerText = `[${note.teacher} 선생님]\n\n${decryptedMsg}`;
+                showModal('noticeModal');
+            }
+        });
+        setTimeout(() => { isInitialLoad = false; }, 2000);
+    }
+
+    function startLiveChatHistory(studentUid) {
+        detachAllHistoryListeners();
+        let myQuestions = [];
+        let teacherNotes = [];
+
+        const qRef = database.ref('messages').orderByChild('studentUid').equalTo(studentUid);
+        historyListeners.push({ ref: qRef, type: 'value' });
+        qRef.on('value', (snapshot) => {
+            myQuestions = [];
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const val = child.val();
+                    myQuestions.push({ id: child.key, isMine: true, ...val, message: decryptAES(val.message) });
+                });
+            }
+            renderCombinedChat(myQuestions, teacherNotes);
+        });
+
+        const nRef = database.ref(`student_messages/${studentUid}`);
+        historyListeners.push({ ref: nRef, type: 'value' });
+        nRef.on('value', (snapshot) => {
+            teacherNotes = [];
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const val = child.val();
+                    teacherNotes.push({ id: child.key, isMine: false, ...val, message: decryptAES(val.message) });
+                });
+            }
+            renderCombinedChat(myQuestions, teacherNotes);
+        });
+    }
+
+    function renderCombinedChat(questions, notes) {
+        const zoneEl = document.getElementById('messageHistoryZone');
+        if (!zoneEl) return;
+        const combined = [...questions, ...notes].sort((a, b) => a.timestamp - b.timestamp);
+        if (combined.length === 0) {
+            zoneEl.innerHTML = '<div class="text-center text-gray-400 text-sm py-8">선생님과 주고받은 메시지 내역이 없습니다.</div>';
+            return;
+        }
+        zoneEl.innerHTML = '';
+        let lastDateStr = "";
+        combined.forEach(chat => {
+            const date = new Date(chat.timestamp);
+            const currentDateStr = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+            if (currentDateStr !== lastDateStr) {
+                const dateBar = document.createElement('div');
+                dateBar.className = 'flex justify-center my-3';
+                dateBar.innerHTML = `<span class="bg-gray-200 text-gray-500 text-[11px] px-3 py-0.5 rounded-full font-medium">${currentDateStr}</span>`;
+                zoneEl.appendChild(dateBar);
+                lastDateStr = currentDateStr;
+            }
+            const timeStr = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full flex flex-col';
+            let rawMessage = chat.message || "";
+            if (rawMessage.startsWith("[답장완료] ")) { rawMessage = rawMessage.replace("[답장완료] ", ""); }
+
+            if (chat.isMine) {
+                wrapper.innerHTML = `
+                    <div class="flex justify-end items-end gap-1.5 my-1.5">
+                        <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
+                        <div class="bg-indigo-600 text-white text-[13px] font-medium p-3 rounded-2xl rounded-tr-none max-w-[240px] shadow-sm whitespace-pre-line break-all">
+                            ${escapeHTML(rawMessage)}
+                        </div>
+                    </div>`;
+            } else {
+                wrapper.innerHTML = `
+                    <div class="flex items-start gap-2.5 my-1.5">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[11px] font-bold shrink-0 select-none shadow-sm">선</div>
+                        <div>
+                            <div class="text-[11px] font-bold text-gray-500 mb-0.5 select-none ml-1">${chat.teacher || '담당교사'}</div>
+                            <div class="flex items-end gap-1.5">
+                                <div class="bg-white text-gray-800 text-[13px] font-medium p-3 rounded-2xl rounded-tl-none max-w-[240px] shadow-sm border border-gray-200 whitespace-pre-line break-all">
+                                    ${escapeHTML(rawMessage)}
+                                </div>
+                                <span class="text-[9px] text-gray-400 select-none">${timeStr}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            zoneEl.appendChild(wrapper);
+        });
+        zoneEl.scrollTop = zoneEl.scrollHeight;
+    }
+
+    function detachAllHistoryListeners() {
+        historyListeners.forEach(item => item.ref.off(item.type));
+        historyListeners = [];
+    }
+
+    function sendMessageToTeacher() {
+        const msgInput = document.getElementById('chat-input');
+        if (!msgInput) return;
+        const text = msgInput.value.trim();
+        if (!text) return;
+        if (!currentStudentData || !currentStudentData.teacher) { showToast('선생님 정보 동기화에 실패했습니다.'); return; }
+        const currentUser = auth.currentUser;
+        const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
+        const realName = decryptAES(rawName);
+
+        const msgData = {
+            studentName: realName,
+            u2mId: currentStudentData.u2mId || '',
+            studentUid: currentUser.uid,
+            teacher: currentStudentData.teacher,
+            message: encryptAES(text),
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            read: false
         };
 
-        let autoSaveTimer = null;
-        let isInitialLoad = true;
-        let originalU2mId = ""; 
-        let pendingU2mId = "";  
-        let originalPhoneTail = "";
+        database.ref('messages').push(msgData)
+            .then(() => {
+                msgInput.value = '';
+                showToast("💬 메시지가 성공적으로 전송되었습니다.");
+                const zoneEl = document.getElementById('messageHistoryZone');
+                if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
+            }).catch(err => showToast('전송 오류: ' + err.message));
+    }
 
-        function togglePasswordVisibility(inputId, eyeBtn) {
-            const input = document.getElementById(inputId);
-            const icon = eyeBtn.querySelector('i');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const openBtn = document.getElementById('open-chat-btn');
+        const closeBtn = document.getElementById('close-chat-btn');
+        const sendBtn = document.getElementById('send-btn');
+        const inputEl = document.getElementById('chat-input');
+
+        if (openBtn) openBtn.addEventListener('click', openChatModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeChatModal);
+        if (sendBtn) sendBtn.addEventListener('click', sendMessageToTeacher);
+        if (inputEl) {
+            inputEl.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessageToTeacher(); }
+            });
+        }
+    });
+
+    function listenToFirebase() {
+        database.ref('notice').on('value', (snapshot) => {
+            const text = snapshot.val() || "";
+            if (text.trim() !== "") {
+                document.getElementById('modalTitle').innerText = "📢 안내 말씀 드립니다";
+                document.getElementById('modalNoticeContent').innerText = text;
+                showModal('noticeModal');
+            } else { closeModal('noticeModal'); }
+        });
+
+        const now = new Date();
+        const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        database.ref('dailyQuotes/' + todayKey).on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const quoteData = snapshot.val();
+                document.getElementById('quote-header').innerText = "오늘의 명언:";
+                document.getElementById('quoteText').innerText = `"${quoteData.message}"`;
+                document.getElementById('quoteAuthor').innerText = quoteData.author ? `- ${quoteData.author}` : "";
+            } else { displayDefaultAdvice(); }
+        });
+
+        database.ref('reminder').on('value', (snapshot) => {
+            const text = snapshot.val() || "";
+            const bar = document.getElementById('reminderBar');
+            const txtEl = document.getElementById('reminderText');
+            if (text.trim() !== "") {
+                if (txtEl) txtEl.innerText = `⚠️ 긴급 공지: ${text} \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0`;
+                if (bar) bar.style.display = 'block';
+                const duration = Math.max(14, text.length * 0.45);
+                if (txtEl) txtEl.style.animationDuration = `${duration}s`;
             } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+                if (bar) bar.style.display = 'none';
+                if (txtEl) txtEl.innerText = "";
             }
+        });
+    }
+
+    function initWeather() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => { fetchWeather(position.coords.latitude, position.coords.longitude); },
+                () => { fetchWeather(37.2638, 127.0286); }
+            );
+        } else { fetchWeather(37.2638, 127.0286); }
+    }
+
+    async function fetchWeather(lat, lon) {
+        const apiKey = '5bce1dcb3eac35e493f0ed9df94b5dac';
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('날씨 수집 불가');
+            const data = await response.json();
+            const temp = Math.round(data.main.temp * 10) / 10;
+            document.getElementById('weatherTemp').innerText = `${temp}°C`;
+
+            const weatherId = data.weather[0].id;
+            let emoji = '☀️';
+            if (weatherId >= 200 && weatherId < 300) emoji = '⛈️';
+            else if (weatherId >= 300 && weatherId < 600) emoji = '🌧️';
+            else if (weatherId >= 600 && weatherId < 700) emoji = '❄️';
+            else if (weatherId >= 700 && weatherId < 800) emoji = '🌫️';
+            else if (weatherId === 800) emoji = '☀️';
+            else if (weatherId > 800) emoji = '☁️';
+
+            const description = data.weather[0].description;
+            document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" id="weatherIcon" class="emoji-font">${emoji}</span> ${description}`;
+            document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">💧</span> 습도 ${data.main.humidity}%</span> <span><span class="emoji-font">💨</span> 풍속 ${data.wind.speed}m/s</span>`;
+        } catch {
+            document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" class="emoji-font">⚠️</span> 날씨 로드 실패`;
+        }
+    }
+
+    /* ============================================================
+       순위(ranking) 로직
+       ============================================================ */
+    function switchRankingSubNav(tab) {
+        document.getElementById('nav-btn-attendance').classList.toggle('active', tab === 'attendance');
+        document.getElementById('nav-btn-lotto').classList.toggle('active', tab === 'lotto');
+
+        const attView = document.getElementById('rk-view-attendance');
+        const lottoView = document.getElementById('rk-view-lotto');
+
+        if (tab === 'attendance') {
+            lottoView.style.display = 'none';
+            attView.style.display = 'grid';
+            attView.classList.remove('animate-tab-switch'); void attView.offsetWidth; attView.classList.add('animate-tab-switch');
+        } else {
+            attView.style.display = 'none';
+            lottoView.style.display = 'grid';
+            lottoView.classList.remove('animate-tab-switch'); void lottoView.offsetWidth; lottoView.classList.add('animate-tab-switch');
+        }
+    }
+
+    function loadAttendanceData() {
+        const now = new Date();
+        const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('currentMonthTitle').innerText = `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
+
+        database.ref('attendance').once('value', (snapshot) => {
+            const allData = snapshot.val() || {};
+            let rankArray = [];
+
+            database.ref('students').once('value', (stdSnap) => {
+                const stds = stdSnap.val() || {};
+                Object.keys(allData).forEach(uid => {
+                    const monthInfo = allData[uid][yearMonth];
+                    if (monthInfo) {
+                        const count = monthInfo.count || 0;
+                        const std = stds[uid] || {};
+                        const rawName = std.name || std.studentName || std.userName;
+                        const name = rawName ? decryptAES(rawName) : "학생";
+                        const school = std.schoolName || "학교 미기재";
+                        const teacher = std.teacher ? `${std.teacher} 선생님` : "선생님 미기재";
+                        rankArray.push({ uid: uid, name: name, school: school, teacher: teacher, count: count });
+                    }
+                });
+                rankArray.sort((a, b) => b.count - a.count);
+                renderAttendanceRank(rankArray);
+                renderMyCalendar(allData[currentUserUid] ? allData[currentUserUid][yearMonth] : null, now);
+            });
+        });
+    }
+
+    function renderAttendanceRank(rankArray) {
+        const container = document.getElementById('attendanceRankList');
+        const myRankContainer = document.getElementById('myAttendanceRankCard');
+        container.innerHTML = '';
+
+        if (rankArray.length === 0) {
+            container.innerHTML = '<div class="text-center py-10 text-gray-400">이번 달 출석 기록이 없습니다.</div>';
+            return;
         }
 
-        function showToast(message) {
-            const toast = document.getElementById('toastMessage');
-            toast.innerText = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2200);
-        }
-
-        function decryptAES(cipherText) {
-            if (!cipherText) return "";
-            try {
-                const cleanCipherText = String(cipherText).trim();
-                if (!cleanCipherText.startsWith("U2FsdGVkX1")) return cleanCipherText;
-                const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_SALT);
-                return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText; 
-            } catch (e) {
-                console.error("🚨 복호화 에러:", e);
-                return String(cipherText); 
+        let myRankInfo = null;
+        let myRankIndex = -1;
+        rankArray.forEach((item, idx) => {
+            if (item.uid === currentUserUid) { myRankInfo = item; myRankIndex = idx + 1; }
+            if (idx < 10) {
+                const isMe = item.uid === currentUserUid;
+                const badgeClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+                container.innerHTML += `
+                    <div class="rank-item ${isMe ? 'my-rank' : ''}">
+                        <div class="flex items-center gap-3">
+                            <div class="rank-badge ${badgeClass}">${idx + 1}</div>
+                            <div>
+                                <div class="font-bold">${item.name} ${isMe ? '(나)' : ''}</div>
+                                <div class="text-xs text-gray-500">🏫 ${item.school} | 👨‍🏫 ${item.teacher}</div>
+                            </div>
+                        </div>
+                        <span class="font-black text-indigo-600">${item.count}일</span>
+                    </div>`;
             }
+        });
+
+        if (myRankInfo) {
+            myRankContainer.innerHTML = `
+                <div class="rank-item my-rank">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs bg-indigo-600 text-white font-bold px-2.5 py-1 rounded-md">내 순위</span>
+                        <div>
+                            <div class="font-bold">${myRankIndex}위 (${myRankInfo.name})</div>
+                            <div class="text-xs text-gray-500">🏫 ${myRankInfo.school} | 👨‍🏫 ${myRankInfo.teacher}</div>
+                        </div>
+                    </div>
+                    <span class="font-black text-indigo-600">${myRankInfo.count}일</span>
+                </div>`;
         }
+    }
 
-        function encryptAES(plainText) {
-            if (plainText === null || plainText === undefined) return "";
-            const textString = String(plainText).trim();
-            return CryptoJS.AES.encrypt(textString, SECRET_SALT).toString();
+    function renderMyCalendar(myMonthData, now) {
+        const daysContainer = document.getElementById('calendarDays');
+        daysContainer.innerHTML = '';
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const attendedDays = myMonthData && myMonthData.days ? myMonthData.days : {};
+        const attCount = Object.keys(attendedDays).length;
+
+        document.getElementById('myAttDays').innerText = `${attCount}일`;
+        const rate = Math.round((attCount / daysInMonth) * 100);
+        document.getElementById('myAttRate').innerText = `${rate}%`;
+
+        for (let i = 0; i < firstDayIndex; i++) { daysContainer.innerHTML += `<div></div>`; }
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const isAttended = !!attendedDays[dateStr];
+            daysContainer.innerHTML += `<div class="calendar-day ${isAttended ? 'attended' : ''}">${d}</div>`;
         }
+    }
 
-        const schoolInput = document.getElementById('schoolName');
-        const schoolList = document.getElementById('schoolList');
-        const schoolCodeInput = document.getElementById('schoolCode');
+    function loadLottoData() {
+        fetch("https://lotto-vzqu.onrender.com/")
+            .then(res => res.json())
+            .then(resData => {
+                if (resData && resData.status === "success" && resData.data) {
+                    renderLottoWinningBalls(resData.data.numbers, resData.data.bonusNo);
+                }
+            })
+            .catch(() => { document.getElementById('lottoWinningBox').innerHTML = `<span class="text-xs text-red-500 font-bold">당첨 번호를 불러올 수 없습니다.</span>`; });
 
-        schoolInput.addEventListener('input', function() {
+        database.ref('lotto_predictions').once('value', (snapshot) => {
+            const predictions = snapshot.val() || {};
+            renderLottoRank(predictions);
+            checkMyLottoSubmission(predictions[currentUserUid]);
+        });
+    }
+
+    function getBallColorClass(num) {
+        if (num <= 10) return 'ball-yellow';
+        if (num <= 20) return 'ball-blue';
+        if (num <= 30) return 'ball-red';
+        if (num <= 40) return 'ball-gray';
+        return 'ball-green';
+    }
+
+    function renderLottoWinningBalls(numbers, bonus) {
+        const box = document.getElementById('lottoWinningBox');
+        box.innerHTML = '';
+        numbers.forEach(n => { box.innerHTML += `<div class="lotto-ball ${getBallColorClass(n)}">${n}</div>`; });
+        box.innerHTML += `<span class="font-bold text-gray-400 mx-1.5">+</span>`;
+        box.innerHTML += `<div class="lotto-ball ${getBallColorClass(bonus)}">${bonus}</div>`;
+    }
+
+    function renderLottoRank(predictions) {
+        const container = document.getElementById('lottoRankList');
+        container.innerHTML = '';
+        let rankArray = [];
+        database.ref('students').once('value', (stdSnap) => {
+            const stds = stdSnap.val() || {};
+            Object.keys(predictions).forEach(uid => {
+                const item = predictions[uid];
+                const std = stds[uid] || {};
+                const rawName = std.name || std.studentName || std.userName;
+                const name = rawName ? decryptAES(rawName) : "학생";
+                rankArray.push({
+                    uid: uid, name: name,
+                    school: std.schoolName || "학교 미기재",
+                    teacher: std.teacher ? `${std.teacher} 선생님` : "선생님 미기재",
+                    matchedCount: item.matchedCount || 0
+                });
+            });
+            rankArray.sort((a, b) => b.matchedCount - a.matchedCount);
+
+            if (rankArray.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-400">이번 주 예측 참여자가 없습니다.</div>';
+                return;
+            }
+
+            rankArray.slice(0, 10).forEach((item, idx) => {
+                const isMe = item.uid === currentUserUid;
+                const badgeClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+                container.innerHTML += `
+                    <div class="rank-item ${isMe ? 'my-rank' : ''}">
+                        <div class="flex items-center gap-3">
+                            <div class="rank-badge ${badgeClass}">${idx + 1}</div>
+                            <div>
+                                <div class="font-bold">${item.name} ${isMe ? '(나)' : ''}</div>
+                                <div class="text-xs text-gray-500">🏫 ${item.school} | 👨‍🏫 ${item.teacher}</div>
+                            </div>
+                        </div>
+                        <span class="font-black text-indigo-600">${item.matchedCount}개 적중</span>
+                    </div>`;
+            });
+        });
+    }
+
+    function checkMyLottoSubmission(myPrediction) {
+        const statusBox = document.getElementById('myLottoStatus');
+        if (myPrediction) {
+            const balls = myPrediction.numbers.map(n => `<div class="lotto-ball ${getBallColorClass(n)}">${n}</div>`).join(' ');
+            const bonusBall = myPrediction.bonus ? `<div class="lotto-ball ${getBallColorClass(myPrediction.bonus)}">${myPrediction.bonus}</div>` : '';
+            statusBox.innerHTML = `
+                <div class="bg-indigo-50/80 p-5 rounded-2xl border border-indigo-100 text-center shadow-sm">
+                    <div class="text-sm text-indigo-600 font-extrabold mb-3">✅ 이번 주 예측 제출 완료</div>
+                    <div class="flex justify-center items-center gap-2 mt-2 flex-wrap">
+                        ${balls}
+                        ${bonusBall ? `<span class="font-bold text-gray-400 mx-1">+</span> ${bonusBall}` : ''}
+                    </div>
+                </div>`;
+        }
+    }
+
+    function generateAutoLotto() {
+        let nums = new Set();
+        while (nums.size < 7) { nums.add(Math.floor(Math.random() * 45) + 1); }
+        const arr = Array.from(nums);
+        const bonus = arr.pop();
+        const sorted = arr.sort((a,b) => a-b);
+        const inputs = document.querySelectorAll('.lotto-in');
+        inputs.forEach((input, idx) => input.value = sorted[idx]);
+        document.getElementById('lottoBonusInput').value = bonus;
+    }
+
+    function submitLottoPrediction() {
+        const inputs = document.querySelectorAll('.lotto-in');
+        const bonusInput = document.getElementById('lottoBonusInput');
+        let selected = [];
+        for (let input of inputs) {
+            const val = parseInt(input.value);
+            if (isNaN(val) || val < 1 || val > 45) { showToast("1~45 사이의 숫자를 올바르게 입력해주세요."); return; }
+            selected.push(val);
+        }
+        const bonusVal = parseInt(bonusInput.value);
+        if (isNaN(bonusVal) || bonusVal < 1 || bonusVal > 45) { showToast("보너스 번호(1~45)를 입력해주세요."); return; }
+        const totalSet = new Set([...selected, bonusVal]);
+        if (totalSet.size !== 7) { showToast("중복된 번호가 있습니다. 7개 번호를 모두 다르게 입력해주세요."); return; }
+        selected.sort((a,b) => a-b);
+
+        database.ref(`lotto_predictions/${currentUserUid}`).set({
+            studentName: currentStudentName, numbers: selected, bonus: bonusVal, matchedCount: 0,
+            submittedAt: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => { showToast("🎉 로또 예측 번호 제출 완료!"); loadLottoData(); })
+          .catch(err => showToast("제출 실패: " + err.message));
+    }
+
+    /* ============================================================
+       마이페이지(mypage) 로직
+       ============================================================ */
+    const RECAPTCHA_SITE_KEY = "6LcoRYAtAAAAAP_83dJyhmTfWrTrer3QUYf8Pof1";
+    let recaptchaWidgetId = null;
+    let recaptchaReady = false;
+    window.onloadCallback = function () { recaptchaReady = true; };
+    function ensureRecaptchaRendered() {
+        if (recaptchaReady && recaptchaWidgetId === null && document.getElementById('recaptchaWidget')) {
+            recaptchaWidgetId = grecaptcha.render('recaptchaWidget', { sitekey: RECAPTCHA_SITE_KEY });
+        }
+    }
+
+    let autoSaveTimer = null;
+    let isInitialLoad = true;
+    let originalU2mId = "";
+    let pendingU2mId = "";
+    let originalPhoneTail = "";
+    let myPageBound = false;
+
+    function togglePasswordVisibility(inputId, eyeBtn) {
+        const input = document.getElementById(inputId);
+        const icon = eyeBtn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
+        } else {
+            input.type = 'password'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
+        }
+    }
+
+    const schoolInput = document.getElementById('schoolName');
+    const schoolList = document.getElementById('schoolList');
+    const schoolCodeInput = document.getElementById('schoolCode');
+
+    if (schoolInput) {
+        schoolInput.addEventListener('input', function () {
             const query = this.value.trim();
             if (query.length < 2) {
-                schoolList.innerHTML = '';
-                schoolList.classList.add('hidden');
-                schoolCodeInput.value = '';
+                schoolList.innerHTML = ''; schoolList.classList.add('hidden'); schoolCodeInput.value = '';
                 return;
             }
-
             const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
-
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    schoolList.innerHTML = '';
-                    if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
-                        const rows = data.schoolInfo[1].row;
-                        schoolList.classList.remove('hidden');
-                        rows.forEach(item => {
-                            const li = document.createElement('li');
-                            li.className = 'autocomplete-item';
-                            li.innerHTML = `${item.SCHUL_NM} <span class="school-region">${item.ATPT_OFCDC_SC_NM}</span>`;
-                            li.addEventListener('click', () => {
-                                schoolInput.value = item.SCHUL_NM;
-                                schoolCodeInput.value = item.SD_SCHUL_CODE;
-                                schoolList.innerHTML = '';
-                                schoolList.classList.add('hidden');
-                                triggerAutoSave();
-                            });
-                            schoolList.appendChild(li);
-                        });
-                    } else {
-                        schoolList.classList.add('hidden');
-                    }
-                })
-                .catch(err => { console.error(err); });
-        });
-
-        document.addEventListener('click', function(e) {
-            if (e.target !== schoolInput && e.target !== schoolList) {
+            fetch(url).then(response => response.json()).then(data => {
                 schoolList.innerHTML = '';
-                schoolList.classList.add('hidden');
+                if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                    const rows = data.schoolInfo[1].row;
+                    schoolList.classList.remove('hidden');
+                    rows.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'autocomplete-item';
+                        li.innerHTML = `${item.SCHUL_NM} <span class="school-region">${item.ATPT_OFCDC_SC_NM}</span>`;
+                        li.addEventListener('click', () => {
+                            schoolInput.value = item.SCHUL_NM;
+                            schoolCodeInput.value = item.SD_SCHUL_CODE;
+                            schoolList.innerHTML = ''; schoolList.classList.add('hidden');
+                            triggerAutoSave();
+                        });
+                        schoolList.appendChild(li);
+                    });
+                } else { schoolList.classList.add('hidden'); }
+            }).catch(err => { console.error(err); });
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        if (schoolInput && schoolList && e.target !== schoolInput && e.target !== schoolList) {
+            schoolList.innerHTML = ''; schoolList.classList.add('hidden');
+        }
+    });
+
+    function populateMyPageForm(data) {
+        document.getElementById('studentName').value = decryptAES(data.name);
+        document.getElementById('schoolName').value = data.schoolName || '';
+        document.getElementById('schoolCode').value = data.schoolCode || '';
+
+        if (data.grade) document.getElementById('studentGrade').value = data.grade;
+        document.getElementById('studentClass').value = data.className || data.class || '';
+
+        if (data.teacher) document.getElementById('teacherName').value = data.teacher;
+
+        originalU2mId = data.u2mId || '';
+        document.getElementById('u2mId').value = originalU2mId;
+
+        originalPhoneTail = decryptAES(data.phone) || '';
+        document.getElementById('u2mPhone').value = originalPhoneTail;
+
+        const rawMathflatId = data.studentPhone ? decryptAES(data.studentPhone) : (data.mathflatId || '');
+        document.getElementById('mathflatId').value = rawMathflatId;
+        document.getElementById('mathflatPw').value = decryptAES(data.mathflatPw);
+
+        if (!myPageBound) { bindMyPageAutoSaveEvents(); myPageBound = true; }
+        setTimeout(() => { isInitialLoad = false; }, 300);
+    }
+
+    function bindMyPageAutoSaveEvents() {
+        const inputs = ['studentName', 'schoolName', 'studentGrade', 'studentClass', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw'];
+        inputs.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', triggerAutoSave);
+                element.addEventListener('change', triggerAutoSave);
+                element.addEventListener('blur', triggerAutoSave);
             }
         });
+        const u2mInput = document.getElementById('u2mId');
+        if (u2mInput) {
+            u2mInput.addEventListener('change', handleU2mIdChange);
+            u2mInput.addEventListener('blur', handleU2mIdChange);
+        }
+    }
 
-        window.onload = function() {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    database.ref(`students/${user.uid}`).once('value', (snapshot) => {
-                        const data = snapshot.val();
-                        if (data) {
-                            document.getElementById('studentName').value = decryptAES(data.name);
-                            document.getElementById('schoolName').value = data.schoolName || '';
-                            document.getElementById('schoolCode').value = data.schoolCode || '';
-                            
-                            // 💡 학년 및 반 불러오기
-                            if (data.grade) {
-                                document.getElementById('studentGrade').value = data.grade;
-                            }
-                            document.getElementById('studentClass').value = data.className || data.class || '';
+    function handleU2mIdChange() {
+        if (isInitialLoad) return;
+        const currentVal = document.getElementById('u2mId').value.trim();
+        if (currentVal !== originalU2mId && currentVal.length > 0) {
+            pendingU2mId = currentVal;
+            document.getElementById('newU2mIdText').innerText = `'${pendingU2mId}'`;
+            ensureRecaptchaRendered();
+            if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) { grecaptcha.reset(recaptchaWidgetId); }
+            openBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
+        }
+    }
 
-                            if (data.teacher) {
-                                document.getElementById('teacherName').value = data.teacher;
-                            }
-                            
-                            originalU2mId = data.u2mId || '';
-                            document.getElementById('u2mId').value = originalU2mId;
-                            
-                            originalPhoneTail = decryptAES(data.phone) || '';
-                            document.getElementById('u2mPhone').value = originalPhoneTail;
-                            
-                            const rawMathflatId = data.studentPhone ? decryptAES(data.studentPhone) : (data.mathflatId || '');
-                            document.getElementById('mathflatId').value = rawMathflatId;
-                            
-                            document.getElementById('mathflatPw').value = decryptAES(data.mathflatPw);
-                            
-                            document.getElementById('dataLoadingOverlay').style.display = 'none';
-                            
-                            bindAutoSaveEvents();
-                            setTimeout(() => {
-                                isInitialLoad = false;
-                            }, 300);
-                        } else {
-                            document.getElementById('dataLoadingOverlay').style.display = 'none';
-                            showToast("학생 데이터를 찾을 수 없습니다.");
-                            setTimeout(() => { window.location.replace('login.html'); }, 1500);
-                        }
-                    });
-                } else {
-                    window.location.replace('login.html');
-                }
+    function openBottomSheet(overlayId, sheetId) {
+        document.getElementById(overlayId).classList.add('active');
+        document.getElementById(sheetId).classList.add('active');
+    }
+    function closeBottomSheet(overlayId, sheetId) {
+        document.getElementById(overlayId).classList.remove('active');
+        document.getElementById(sheetId).classList.remove('active');
+    }
+
+    function confirmU2mIdChange() {
+        if (typeof grecaptcha === 'undefined') { showToast("reCAPTCHA 로드에 실패했습니다. 페이지를 새로고침해 주세요."); return; }
+        const response = grecaptcha.getResponse(recaptchaWidgetId);
+        if (!response || response.length === 0) { showToast("🤖 '로봇이 아닙니다' 체크박스를 먼저 진행해 주세요."); return; }
+
+        closeBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
+        const user = auth.currentUser;
+        if (!user) return;
+
+        database.ref(`students/${user.uid}`).update({ u2mId: pendingU2mId })
+            .then(() => { originalU2mId = pendingU2mId; showToast("💾 유투엠 아이디가 성공적으로 변경되었습니다."); })
+            .catch((err) => {
+                console.error(err);
+                showToast("❌ 유투엠 아이디 변경 실패");
+                document.getElementById('u2mId').value = originalU2mId;
             });
-        };
+    }
 
-        function bindAutoSaveEvents() {
-            // 💡 학년(studentGrade), 반(studentClass) 이벤트 바인딩 추가
-            const inputs = ['studentName', 'schoolName', 'studentGrade', 'studentClass', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw'];
-            inputs.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('input', triggerAutoSave);
-                    element.addEventListener('change', triggerAutoSave);
-                    element.addEventListener('blur', triggerAutoSave);
-                }
-            });
+    function cancelU2mIdChange() {
+        closeBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
+        document.getElementById('u2mId').value = originalU2mId;
+        if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) { grecaptcha.reset(recaptchaWidgetId); }
+    }
 
-            const u2mInput = document.getElementById('u2mId');
-            if (u2mInput) {
-                u2mInput.addEventListener('change', handleU2mIdChange);
-                u2mInput.addEventListener('blur', handleU2mIdChange);
-            }
-        }
+    function triggerAutoSave() {
+        if (isInitialLoad) return;
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(() => { updateStudentProfileAuto(); }, 700);
+    }
 
-        function handleU2mIdChange() {
-            if (isInitialLoad) return;
-            const currentVal = document.getElementById('u2mId').value.trim();
-            if (currentVal !== originalU2mId && currentVal.length > 0) {
-                pendingU2mId = currentVal;
-                document.getElementById('newU2mIdText').innerText = `'${pendingU2mId}'`;
-                
-                if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
-                    grecaptcha.reset(recaptchaWidgetId);
-                }
-                openBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
-            }
-        }
+    function updateStudentProfileAuto() {
+        const user = auth.currentUser;
+        if (!user) return;
 
-        function openBottomSheet(overlayId, sheetId) {
-            document.getElementById(overlayId).classList.add('active');
-            document.getElementById(sheetId).classList.add('active');
-        }
+        const studentName = document.getElementById('studentName').value.trim();
+        const schoolName = document.getElementById('schoolName').value.trim();
+        const schoolCode = document.getElementById('schoolCode').value.trim();
+        const grade = document.getElementById('studentGrade').value;
+        const studentClass = document.getElementById('studentClass').value.trim();
+        const selectedTeacher = document.getElementById('teacherName').value;
+        const phoneTail = document.getElementById('u2mPhone').value.trim();
+        const mathflatPhone = document.getElementById('mathflatId').value.trim().replace(/[^0-9]/g, '');
+        const mathflatPw = document.getElementById('mathflatPw').value.trim();
 
-        function closeBottomSheet(overlayId, sheetId) {
-            document.getElementById(overlayId).classList.remove('active');
-            document.getElementById(sheetId).classList.remove('active');
-        }
+        const isPhoneChanged = (phoneTail !== originalPhoneTail) && (/^\d{4}$/.test(phoneTail));
+        const updatedObject = {};
 
-        function confirmU2mIdChange() {
-            if (typeof grecaptcha === 'undefined') {
-                showToast("reCAPTCHA 로드에 실패했습니다. 페이지를 새로고침해 주세요.");
-                return;
-            }
+        if (studentName) updatedObject.name = encryptAES(studentName);
+        if (schoolName) updatedObject.schoolName = schoolName;
+        if (schoolCode) updatedObject.schoolCode = schoolCode;
+        if (grade) updatedObject.grade = grade;
+        if (studentClass !== undefined) { updatedObject.className = studentClass; updatedObject.class = studentClass; }
+        if (selectedTeacher) updatedObject.teacher = selectedTeacher;
+        if (phoneTail) updatedObject.phone = encryptAES(phoneTail);
+        if (mathflatPhone) { updatedObject.studentPhone = encryptAES(mathflatPhone); updatedObject.mathflatId = mathflatPhone; }
+        if (mathflatPw) updatedObject.mathflatPw = encryptAES(mathflatPw);
 
-            const response = grecaptcha.getResponse(recaptchaWidgetId);
-            if (!response || response.length === 0) {
-                showToast("🤖 '로봇이 아닙니다' 체크박스를 먼저 진행해 주세요.");
-                return;
-            }
+        if (Object.keys(updatedObject).length === 0) return;
 
-            closeBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
-            const user = auth.currentUser;
-            if (!user) return;
-
-            database.ref(`students/${user.uid}`).update({ u2mId: pendingU2mId })
+        if (isPhoneChanged) {
+            const newAuthPw = "00" + phoneTail;
+            user.updatePassword(newAuthPw)
                 .then(() => {
-                    originalU2mId = pendingU2mId;
-                    showToast("💾 유투엠 아이디가 성공적으로 변경되었습니다.");
+                    originalPhoneTail = phoneTail;
+                    localStorage.setItem('u2m_pw', newAuthPw);
+                    return database.ref(`students/${user.uid}`).update(updatedObject);
                 })
+                .then(() => { showToast("💾 부모님 전화번호 및 로그인 비밀번호가 변경되었습니다."); })
                 .catch((err) => {
-                    console.error(err);
-                    showToast("❌ 유투엠 아이디 변경 실패");
-                    document.getElementById('u2mId').value = originalU2mId;
+                    console.error("비밀번호 변경 실패:", err);
+                    if (err.code === 'auth/requires-recent-login') { showToast("⚠️ 보안을 위해 다시 로그인한 후 변경해 주세요."); }
+                    else { showToast("❌ 비밀번호 변경 실패: " + (err.message || "입력값을 확인해 주세요.")); }
+                    document.getElementById('u2mPhone').value = originalPhoneTail;
                 });
+        } else {
+            database.ref(`students/${user.uid}`).update(updatedObject)
+                .then(() => { showToast("💾 변경사항이 자동으로 저장되었습니다."); })
+                .catch((err) => { console.error("자동 저장 실패:", err); showToast("❌ 저장 실패: 네트워크 상태를 확인하세요."); });
         }
+    }
 
-        function cancelU2mIdChange() {
-            closeBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
-            document.getElementById('u2mId').value = originalU2mId;
-            if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
-                grecaptcha.reset(recaptchaWidgetId);
-            }
-        }
+    function openDeleteBottomSheet() {
+        document.getElementById('reauthId').value = originalU2mId;
+        const phoneTail = document.getElementById('u2mPhone').value.trim();
+        document.getElementById('reauthPw').value = (phoneTail && phoneTail.length === 4) ? phoneTail : '';
+        openBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet');
+    }
 
-        function triggerAutoSave() {
-            if (isInitialLoad) return;
-            clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => {
-                updateStudentProfileAuto();
-            }, 700);
-        }
+    function processReauthAndDelete() {
+        const user = auth.currentUser;
+        if (!user) { showToast("로그인 사용자 정보를 찾을 수 없습니다."); return; }
 
-        function updateStudentProfileAuto() {
-            const user = auth.currentUser;
-            if (!user) return;
+        const inputId = document.getElementById('reauthId').value.trim();
+        let inputPw = document.getElementById('reauthPw').value.trim();
 
-            const studentName = document.getElementById('studentName').value.trim();
-            const schoolName = document.getElementById('schoolName').value.trim();
-            const schoolCode = document.getElementById('schoolCode').value.trim();
-            const grade = document.getElementById('studentGrade').value;
-            const studentClass = document.getElementById('studentClass').value.trim();
-            const selectedTeacher = document.getElementById('teacherName').value;
-            const phoneTail = document.getElementById('u2mPhone').value.trim();
-            const mathflatPhone = document.getElementById('mathflatId').value.trim().replace(/[^0-9]/g, '');
-            const mathflatPw = document.getElementById('mathflatPw').value.trim();
+        if (!inputId) { showToast("유투엠 아이디를 입력해 주세요."); return; }
+        if (!inputPw) { showToast("전화번호 뒷자리 4자리를 입력해 주세요."); return; }
 
-            const isPhoneChanged = (phoneTail !== originalPhoneTail) && (/^\d{4}$/.test(phoneTail));
+        const email = inputId.includes('@') ? inputId : `${inputId}@kst.com`;
+        if (/^\d{4}$/.test(inputPw)) { inputPw = "00" + inputPw; }
 
-            const updatedObject = {};
+        const credential = firebase.auth.EmailAuthProvider.credential(email, inputPw);
+        closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet');
+        document.getElementById('loadingText').innerHTML = "본인 인증 확인 및 회원 탈퇴를<br>진행하는 중입니다...";
+        document.getElementById('dataLoadingOverlay').style.display = 'flex';
 
-            if (studentName) updatedObject.name = encryptAES(studentName);
-            if (schoolName) updatedObject.schoolName = schoolName;
-            if (schoolCode) updatedObject.schoolCode = schoolCode;
-            
-            // 💡 학년 및 반 저장 항목 추가
-            if (grade) updatedObject.grade = grade;
-            if (studentClass !== undefined) {
-                updatedObject.className = studentClass;
-                updatedObject.class = studentClass;
-            }
+        user.reauthenticateWithCredential(credential)
+            .then(() => database.ref(`students/${user.uid}`).remove())
+            .then(() => user.delete())
+            .then(() => {
+                document.getElementById('dataLoadingOverlay').style.display = 'none';
+                localStorage.clear();
+                showToast("회원 탈퇴가 안전하게 완료되었습니다.");
+                setTimeout(() => { window.location.replace('login.html'); }, 1500);
+            })
+            .catch((error) => {
+                document.getElementById('dataLoadingOverlay').style.display = 'none';
+                console.error("재인증 및 탈퇴 실패:", error);
+                const errStr = JSON.stringify(error);
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || errStr.includes('INVALID_LOGIN_CREDENTIALS')) {
+                    showToast("아이디 또는 부모님 전화번호 뒷자리 4자리가 올바르지 않습니다.");
+                } else if (error.code === 'auth/invalid-email') {
+                    showToast("올바르지 않은 아이디 형식입니다.");
+                } else {
+                    showToast("인증 실패: " + (error.message || "입력 정보를 다시 확인해 주세요."));
+                }
+                openDeleteBottomSheet();
+            });
+    }
 
-            if (selectedTeacher) updatedObject.teacher = selectedTeacher;
-            if (phoneTail) updatedObject.phone = encryptAES(phoneTail);
-            if (mathflatPhone) {
-                updatedObject.studentPhone = encryptAES(mathflatPhone);
-                updatedObject.mathflatId = mathflatPhone;
-            }
-            if (mathflatPw) updatedObject.mathflatPw = encryptAES(mathflatPw);
-
-            if (Object.keys(updatedObject).length === 0) return;
-
-            if (isPhoneChanged) {
-                const newAuthPw = "00" + phoneTail;
-                user.updatePassword(newAuthPw)
-                    .then(() => {
-                        originalPhoneTail = phoneTail;
-                        localStorage.setItem('u2m_pw', newAuthPw);
-                        return database.ref(`students/${user.uid}`).update(updatedObject);
-                    })
-                    .then(() => {
-                        showToast("💾 부모님 전화번호 및 로그인 비밀번호가 변경되었습니다.");
-                    })
-                    .catch((err) => {
-                        console.error("비밀번호 변경 실패:", err);
-                        if (err.code === 'auth/requires-recent-login') {
-                            showToast("⚠️ 보안을 위해 다시 로그인한 후 변경해 주세요.");
-                        } else {
-                            showToast("❌ 비밀번호 변경 실패: " + (err.message || "입력값을 확인해 주세요."));
-                        }
-                        document.getElementById('u2mPhone').value = originalPhoneTail;
-                    });
-            } else {
-                database.ref(`students/${user.uid}`).update(updatedObject)
-                    .then(() => {
-                        showToast("💾 변경사항이 자동으로 저장되었습니다.");
-                    })
-                    .catch((err) => {
-                        console.error("자동 저장 실패:", err);
-                        showToast("❌ 저장 실패: 네트워크 상태를 확인하세요.");
-                    });
-            }
-        }
-
-        function openDeleteBottomSheet() {
-            document.getElementById('reauthId').value = originalU2mId;
-            const phoneTail = document.getElementById('u2mPhone').value.trim();
-            document.getElementById('reauthPw').value = (phoneTail && phoneTail.length === 4) ? phoneTail : '';
-            openBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet');
-        }
-
-        function processReauthAndDelete() {
-            const user = auth.currentUser;
-            if (!user) {
-                showToast("로그인 사용자 정보를 찾을 수 없습니다.");
-                return;
-            }
-
-            const inputId = document.getElementById('reauthId').value.trim();
-            let inputPw = document.getElementById('reauthPw').value.trim();
-
-            if (!inputId) {
-                showToast("유투엠 아이디를 입력해 주세요.");
-                return;
-            }
-            if (!inputPw) {
-                showToast("전화번호 뒷자리 4자리를 입력해 주세요.");
-                return;
-            }
-
-            const email = inputId.includes('@') ? inputId : `${inputId}@kst.com`;
-
-            if (/^\d{4}$/.test(inputPw)) {
-                inputPw = "00" + inputPw;
-            }
-
-            const credential = firebase.auth.EmailAuthProvider.credential(email, inputPw);
-
-            closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet');
-            document.getElementById('loadingText').innerHTML = "본인 인증 확인 및 회원 탈퇴를<br>진행하는 중입니다...";
-            document.getElementById('dataLoadingOverlay').style.display = 'flex';
-
-            user.reauthenticateWithCredential(credential)
-                .then(() => {
-                    return database.ref(`students/${user.uid}`).remove();
-                })
-                .then(() => {
-                    return user.delete();
-                })
-                .then(() => {
-                    document.getElementById('dataLoadingOverlay').style.display = 'none';
-                    localStorage.clear();
-                    showToast("회원 탈퇴가 안전하게 완료되었습니다.");
-                    setTimeout(() => {
-                        window.location.replace('login.html');
-                    }, 1500);
-                })
-                .catch((error) => {
-                    document.getElementById('dataLoadingOverlay').style.display = 'none';
-                    console.error("재인증 및 탈퇴 실패:", error);
-                    
-                    const errStr = JSON.stringify(error);
-                    if (error.code === 'auth/wrong-password' || 
-                        error.code === 'auth/user-not-found' || 
-                        errStr.includes('INVALID_LOGIN_CREDENTIALS')) {
-                        showToast("아이디 또는 부모님 전화번호 뒷자리 4자리가 올바르지 않습니다.");
-                    } else if (error.code === 'auth/invalid-email') {
-                        showToast("올바르지 않은 아이디 형식입니다.");
-                    } else {
-                        showToast("인증 실패: " + (error.message || "입력 정보를 다시 확인해 주세요."));
-                    }
-                    openDeleteBottomSheet();
-                });
-        }
+    /* ============================================================
+       초기 구동
+       ============================================================ */
+    window.onload = function () {
+        listenToFirebase();
+        initWeather();
+        setTimeout(() => { hideLoading(); }, 3000);
+    };
     </script>
 </body>
 </html>
