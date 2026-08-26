@@ -64,6 +64,20 @@
         #view-mypage { width: 100%; max-width: 430px; margin: 0 auto; }
         #view-ranking { width: 100%; max-width: 1100px; margin: 0 auto; }
 
+        /* 큰 화면(태블릿 이상)에서는 여백만 커지지 않도록 박스/글자 크기를 함께 키움 */
+        @media (min-width: 900px) {
+            html { font-size: 16px; }
+            #view-home { max-width: 920px; }
+            #view-mypage { max-width: 520px; }
+            .bottom-nav-bar { max-width: 640px; }
+        }
+        @media (min-width: 1300px) {
+            html { font-size: 18px; }
+            #view-home { max-width: 1080px; }
+            #view-mypage { max-width: 560px; }
+            .bottom-nav-bar { max-width: 720px; }
+        }
+
         /* ============ 공통(전역) 컴포넌트 ============ */
         .toast-container {
             position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px);
