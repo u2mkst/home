@@ -46,7 +46,7 @@
             font-weight: normal; font-display: swap;
         }
 
-        html { font-size: 14px; }
+        html { font-size: 13.5px; }
         * { font-family: 'FlightSans', 'Paperlogy', 'Noto Sans KR', 'Mona12', sans-serif; }
         .emoji-font { font-family: 'Mona12', sans-serif !important; font-weight: normal !important; }
 
@@ -55,19 +55,14 @@
                         linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
             background-blend-mode: multiply; background-attachment: fixed;
             margin: 0; min-height: 100vh; color: #1d1d1f; box-sizing: border-box;
-            padding: 40px clamp(16px, 4vw, 48px) 130px clamp(16px, 4vw, 48px);
+            padding: 40px 8vw 100px 8vw;
             overflow-x: hidden;
         }
 
         /* ============ 뷰 컨테이너 (홈 / 마이페이지 / 순위) ============ */
-        #view-home { width: 100%; max-width: 880px; margin: 0 auto; }
-        #view-mypage { width: 100%; max-width: 480px; margin: 0 auto; }
+        #view-home { width: 100%; max-width: 740px; margin: 0 auto; }
+        #view-mypage { width: 100%; max-width: 430px; margin: 0 auto; }
         #view-ranking { width: 100%; max-width: 1100px; margin: 0 auto; }
-
-        @media (max-width: 420px) {
-            .clock-time { font-size: 2.6rem !important; }
-            .welcome-text { font-size: 1.3rem !important; }
-        }
 
         /* ============ 공통(전역) 컴포넌트 ============ */
         .toast-container {
