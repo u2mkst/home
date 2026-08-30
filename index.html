@@ -380,8 +380,8 @@
 
         .tablet-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: stretch; }
         @media (max-width: 820px) { .tablet-grid { grid-template-columns: 1fr; } }
-        .fixed-rank-card { height: 520px; display: flex; flex-direction: column; }
-        .rank-scroll-area { flex: 1; overflow-y: auto; padding-right: 6px; }
+        .fixed-rank-card { min-height: 340px; display: flex; flex-direction: column; }
+        .rank-scroll-area { flex: 1; overflow-y: auto; padding-right: 6px; max-height: 460px; }
         .rank-scroll-area::-webkit-scrollbar { width: 6px; }
         .rank-scroll-area::-webkit-scrollbar-thumb { background: rgba(108, 92, 231, 0.25); border-radius: 10px; }
         .rank-scroll-area::-webkit-scrollbar-thumb:hover { background: rgba(108, 92, 231, 0.5); }
@@ -673,7 +673,7 @@
                 <div>
                     <div class="mb-6">
                         <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
-                            <span class="emoji-font">🎉</span> 이번 주 당첨 번호
+                            <span class="emoji-font">🎉</span> <span id="lottoResultRoundText">지난 회차 당첨 결과</span>
                         </h2>
                         <div id="lottoWinningBox" class="min-h-[72px] flex flex-col items-center justify-center gap-2 bg-white/70 p-4 rounded-2xl border border-white shadow-sm">
                             <span class="text-sm text-gray-400">당첨 번호를 불러오는 중...</span>
@@ -683,31 +683,34 @@
                     <div class="pt-4 border-t border-gray-200/60">
                         <div class="flex justify-between items-center mb-2">
                             <h2 class="text-lg font-bold flex items-center gap-2">
-                                <span class="emoji-font">🔮</span> 이번 주 나의 예측
+                                <span class="emoji-font">🔮</span> <span id="lottoChallengeRoundText">나의 예측</span>
                             </h2>
                             <button onclick="generateAutoLotto()" class="text-xs text-indigo-600 font-bold hover:underline bg-indigo-50 px-3 py-1.5 rounded-full">
                                 🎲 번호 자동 생성
                             </button>
                         </div>
-                        <p class="text-xs text-gray-500 mb-5">* 1~45 사이의 중복 없는 7개 번호를 채워주세요.</p>
+                        <p id="lottoChallengeSubtext" class="text-xs text-gray-500 mb-5">* 회차 정보를 불러오는 중입니다...</p>
 
                         <div id="myLottoStatus">
-                            <div class="flex flex-col items-center gap-4 mb-6 bg-white/60 p-5 rounded-2xl border border-white/80">
-                                <div class="flex justify-center gap-2.5 w-full flex-wrap">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                            <div id="lottoInputForm">
+                                <div class="flex flex-col items-center gap-4 mb-6 bg-white/60 p-5 rounded-2xl border border-white/80">
+                                    <div class="flex justify-center gap-2.5 w-full flex-wrap">
+                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
+                                    </div>
+                                    <div class="flex items-center gap-3 pt-3 border-t border-dashed border-gray-300 w-full justify-center">
+                                        <span class="text-sm font-bold text-indigo-600">+ 보너스</span>
+                                        <input type="number" id="lottoBonusInput" min="1" max="45" class="lotto-ball-input bonus-style">
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-3 pt-3 border-t border-dashed border-gray-300 w-full justify-center">
-                                    <span class="text-sm font-bold text-indigo-600">+ 보너스</span>
-                                    <input type="number" id="lottoBonusInput" min="1" max="45" class="lotto-ball-input bonus-style">
-                                </div>
-                            </div>
 
-                            <button id="lottoSubmitBtn" onclick="submitLottoPrediction()" class="rank-btn-base rank-btn-primary w-full py-4 text-base">예측 번호 제출하기</button>
+                                <button id="lottoSubmitBtn" onclick="submitLottoPrediction()" class="rank-btn-base rank-btn-primary w-full py-4 text-base">예측 번호 제출하기</button>
+                            </div>
+                            <div id="lottoSubmittedView" style="display:none;"></div>
                         </div>
                     </div>
                 </div>
@@ -715,7 +718,7 @@
 
             <div class="rank-card fixed-rank-card">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <span class="emoji-font">🎯</span> 로또 적중 랭킹 Top 10
+                    <span class="emoji-font">🎯</span> <span id="lottoRankTitleText">적중 랭킹 Top 10</span>
                 </h2>
                 <div class="rank-scroll-area">
                     <div id="lottoRankList" class="space-y-2.5">
@@ -1389,6 +1392,12 @@
         m1: "중학교 1학년", m2: "중학교 2학년", m3: "중학교 3학년"
     };
 
+    // 마이페이지 "학년" 드롭다운 값(초3~중3) → 오늘의 문제 학년 코드(p3~m3) 매핑
+    const KOREAN_GRADE_TO_MATHQ_CODE = {
+        '초3': 'p3', '초4': 'p4', '초5': 'p5', '초6': 'p6',
+        '중1': 'm1', '중2': 'm2', '중3': 'm3'
+    };
+
     const mathqGenerators = {
         p3: [
             (rng) => { const a = mathqRand(rng,100,899), b = mathqRand(rng,100,899); return { title: "3자리 수의 덧셈", text: `$${a} + ${b} = ?$`, ans: a + b }; },
@@ -1449,29 +1458,21 @@
         const hashHex = CryptoJS.SHA256(`${todayKey}-${uid}-${gradeCode}`).toString();
         return parseInt(hashHex.substring(0, 8), 16);
     }
+    // 마이페이지의 "학년" 값을 최우선으로 사용해 오늘의 문제와 항상 동일한 학년을 유지합니다.
+    // 마이페이지 학년이 없거나 지원 범위 밖(초1~2, 고1~3)일 때만 오늘의 문제에서 별도로 선택했던
+    // mathGradeCode를 대체로 사용합니다.
     function getMathQuizGradeCode() {
         if (!currentStudentData) return null;
+
+        const mypageGrade = currentStudentData.grade;
+        if (mypageGrade && KOREAN_GRADE_TO_MATHQ_CODE[mypageGrade]) {
+            return KOREAN_GRADE_TO_MATHQ_CODE[mypageGrade];
+        }
+
         if (currentStudentData.mathGradeCode && MATHQ_GRADE_LABELS[currentStudentData.mathGradeCode]) {
             return currentStudentData.mathGradeCode;
         }
-        const schoolName = currentStudentData.schoolName || "";
-        let schoolType = null;
-        if (schoolName.includes('초등')) schoolType = 'p';
-        else if (schoolName.includes('중학교') || schoolName.includes('중등')) schoolType = 'm';
 
-        const rawCandidates = [
-            currentStudentData.grade, currentStudentData.studentGrade,
-            currentStudentData.gradeLevel, currentStudentData.schoolGrade, currentStudentData.grade_level
-        ];
-        let gradeNum = null;
-        for (const candidate of rawCandidates) {
-            if (candidate === undefined || candidate === null || candidate === "") continue;
-            const match = String(candidate).match(/\d+/);
-            if (match) { gradeNum = parseInt(match[0], 10); break; }
-        }
-        if (!schoolType || !gradeNum) return null;
-        if (schoolType === 'p' && gradeNum >= 3 && gradeNum <= 6) return `p${gradeNum}`;
-        if (schoolType === 'm' && gradeNum >= 1 && gradeNum <= 3) return `m${gradeNum}`;
         return null;
     }
 
@@ -2418,9 +2419,41 @@
         }
     }
 
-    /* --- 8-2. 로또 예측 랭킹 (실제 당첨결과와 비교하도록 개선) --- */
+    /* --- 8-2. 로또 예측 랭킹 ---
+       회차(round) 단위로 예측을 저장합니다.
+       - cachedDrawnRound : 마지막으로 "발표된" 회차 (당첨 번호가 존재)
+       - cachedTargetRound : 이번 주 학생들이 "도전 중"인, 아직 발표되지 않은 다음 회차
+       => 이번 주에 제출하면 다음 발표(다음 주) 때 결과가 확인되고, 발표가 나면 그 회차는
+          자동으로 "지난 회차 결과"로 넘어가며 새로운 다음 회차가 자동으로 열려
+          매주 새로 도전할 수 있습니다.
+    */
     let cachedWinningNumbers = null;
     let cachedBonusNumber = null;
+    let cachedDrawnRound = null;
+    let cachedTargetRound = null;
+
+    function updateLottoChallengeTitle() {
+        const resultTitle = document.getElementById('lottoResultRoundText');
+        const challengeTitle = document.getElementById('lottoChallengeRoundText');
+        const challengeSub = document.getElementById('lottoChallengeSubtext');
+        const rankTitle = document.getElementById('lottoRankTitleText');
+
+        if (cachedDrawnRound) {
+            if (resultTitle) resultTitle.innerText = `제 ${cachedDrawnRound}회 당첨 결과`;
+            if (rankTitle) rankTitle.innerText = `제 ${cachedDrawnRound}회 적중 랭킹 Top 10`;
+        } else {
+            if (resultTitle) resultTitle.innerText = `당첨 결과`;
+            if (rankTitle) rankTitle.innerText = `적중 랭킹 Top 10`;
+        }
+
+        if (cachedTargetRound) {
+            if (challengeTitle) challengeTitle.innerText = `제 ${cachedTargetRound}회 도전! 나의 예측`;
+            if (challengeSub) challengeSub.innerText = `* 1~45 사이의 중복 없는 6개 번호 + 보너스 번호를 채워주세요. 제출하면 다음 발표(제 ${cachedTargetRound}회)에서 결과를 확인할 수 있어요.`;
+        } else {
+            if (challengeTitle) challengeTitle.innerText = `나의 예측`;
+            if (challengeSub) challengeSub.innerText = `* 회차 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.`;
+        }
+    }
 
     function loadLottoData() {
         const box = document.getElementById('lottoWinningBox');
@@ -2430,20 +2463,41 @@
             .then(result => {
                 cachedWinningNumbers = result.numbers;
                 cachedBonusNumber = result.bonus;
-                renderLottoWinningBalls(result.numbers, result.bonus, result.round);
+                cachedDrawnRound = result.round || null;
+                cachedTargetRound = cachedDrawnRound ? cachedDrawnRound + 1 : null;
+                renderLottoWinningBalls(result.numbers, result.bonus);
             })
             .catch(() => {
                 cachedWinningNumbers = null;
                 cachedBonusNumber = null;
+                cachedDrawnRound = null;
+                cachedTargetRound = null;
                 if (box) box.innerHTML = `<span class="text-xs text-red-500 font-bold">당첨 번호를 불러올 수 없어요. 잠시 후 다시 시도해 주세요.</span>`;
             })
             .finally(() => {
-                database.ref('lotto_predictions').once('value', (snapshot) => {
-                    const predictions = snapshot.val() || {};
-                    renderLottoRank(predictions);
-                    checkMyLottoSubmission(predictions[currentUserUid]);
-                    syncMyMatchedCount(predictions[currentUserUid]);
-                });
+                updateLottoChallengeTitle();
+
+                // 지난(발표된) 회차 예측 결과 랭킹
+                if (cachedDrawnRound) {
+                    database.ref(`lotto_predictions/${cachedDrawnRound}`).once('value', (snapshot) => {
+                        const predictions = snapshot.val() || {};
+                        renderLottoRank(predictions, cachedDrawnRound);
+                        if (currentUserUid && predictions[currentUserUid]) {
+                            syncMyMatchedCount(predictions[currentUserUid], cachedDrawnRound);
+                        }
+                    });
+                } else {
+                    renderLottoRank({}, null);
+                }
+
+                // 이번 주(아직 미발표) 도전 현황 확인
+                if (cachedTargetRound && currentUserUid) {
+                    database.ref(`lotto_predictions/${cachedTargetRound}/${currentUserUid}`).once('value', (snapshot) => {
+                        checkMyLottoSubmission(snapshot.val());
+                    });
+                } else {
+                    checkMyLottoSubmission(null);
+                }
             });
     }
 
@@ -2485,13 +2539,10 @@
         return 'ball-green';
     }
 
-    function renderLottoWinningBalls(numbers, bonus, round) {
+    function renderLottoWinningBalls(numbers, bonus) {
         const box = document.getElementById('lottoWinningBox');
         if (!box) return;
         box.innerHTML = '';
-        if (round) {
-            box.innerHTML += `<div class="w-full text-center text-[11px] text-gray-400 font-bold">제 ${round}회</div>`;
-        }
         const row = document.createElement('div');
         row.className = 'flex items-center justify-center gap-2 flex-wrap';
         numbers.forEach(n => { row.innerHTML += `<div class="lotto-ball ${getBallColorClass(n)}">${n}</div>`; });
@@ -2509,15 +2560,22 @@
         return cachedBonusNumber != null && predictionBonus === cachedBonusNumber;
     }
 
-    function renderLottoRank(predictions) {
+    function renderLottoRank(predictions, round) {
         const container = document.getElementById('lottoRankList');
+        if (!container) return;
         container.innerHTML = '';
+
+        const keys = Object.keys(predictions || {});
+        if (keys.length === 0) {
+            container.innerHTML = `<div class="text-center py-10 text-gray-400">${round ? `제 ${round}회` : '이번'} 예측 결과가 아직 없습니다.</div>`;
+            return;
+        }
 
         let rankArray = [];
         database.ref('students').once('value', (stdSnap) => {
             const stds = stdSnap.val() || {};
 
-            Object.keys(predictions).forEach(uid => {
+            keys.forEach(uid => {
                 const item = predictions[uid];
                 const std = stds[uid] || {};
                 const rawName = std.name || std.studentName || std.userName;
@@ -2539,11 +2597,6 @@
                 return (b.bonusHit ? 1 : 0) - (a.bonusHit ? 1 : 0);
             });
 
-            if (rankArray.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-gray-400">이번 주 예측 참여자가 없습니다.</div>';
-                return;
-            }
-
             rankArray.slice(0, 10).forEach((item, idx) => {
                 const isMe = item.uid === currentUserUid;
                 const badgeClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
@@ -2563,36 +2616,50 @@
         });
     }
 
+    function showLottoInputForm() {
+        const inputForm = document.getElementById('lottoInputForm');
+        const submittedView = document.getElementById('lottoSubmittedView');
+        if (!inputForm || !submittedView) return;
+        inputForm.style.display = '';
+        submittedView.style.display = 'none';
+        // 새 회차 도전이므로 이전에 남아있을 수 있는 입력값을 초기화
+        document.querySelectorAll('#lottoInputForm .lotto-in').forEach(input => input.value = '');
+        const bonusInput = document.getElementById('lottoBonusInput');
+        if (bonusInput) bonusInput.value = '';
+    }
+
     function checkMyLottoSubmission(myPrediction) {
-        const statusBox = document.getElementById('myLottoStatus');
-        if (!statusBox) return;
+        const inputForm = document.getElementById('lottoInputForm');
+        const submittedView = document.getElementById('lottoSubmittedView');
+        if (!inputForm || !submittedView) return;
+
         if (myPrediction) {
             const balls = myPrediction.numbers.map(n => `<div class="lotto-ball ${getBallColorClass(n)}">${n}</div>`).join(' ');
             const bonusBall = myPrediction.bonus ? `<div class="lotto-ball ${getBallColorClass(myPrediction.bonus)}">${myPrediction.bonus}</div>` : '';
-            const matched = computeMatchedCount(myPrediction.numbers);
-            const bonusHit = isBonusMatched(myPrediction.bonus);
-            const resultLabel = matched === null
-                ? '⏳ 이번 주 추첨 결과를 기다리는 중이에요.'
-                : `🎯 현재 ${matched}개 적중${bonusHit ? ' + 보너스 번호 적중!' : ''}`;
+            const roundLabel = cachedTargetRound ? `제 ${cachedTargetRound}회` : '이번 회차';
 
-            statusBox.innerHTML = `
+            submittedView.innerHTML = `
                 <div class="bg-indigo-50/80 p-5 rounded-2xl border border-indigo-100 text-center shadow-sm">
-                    <div class="text-sm text-indigo-600 font-extrabold mb-3">✅ 이번 주 예측 제출 완료</div>
+                    <div class="text-sm text-indigo-600 font-extrabold mb-3">✅ ${roundLabel} 예측 제출 완료</div>
                     <div class="flex justify-center items-center gap-2 mt-2 flex-wrap">
                         ${balls}
                         ${bonusBall ? `<span class="font-bold text-gray-400 mx-1">+</span> ${bonusBall}` : ''}
                     </div>
-                    <div class="text-xs text-gray-500 font-bold mt-3">${resultLabel}</div>
+                    <div class="text-xs text-gray-500 font-bold mt-3">⏳ ${roundLabel} 발표를 기다리는 중이에요.</div>
                 </div>`;
+            inputForm.style.display = 'none';
+            submittedView.style.display = '';
+        } else {
+            showLottoInputForm();
         }
     }
 
-    function syncMyMatchedCount(myPrediction) {
-        if (!myPrediction || !currentUserUid) return;
+    function syncMyMatchedCount(myPrediction, round) {
+        if (!myPrediction || !currentUserUid || !round) return;
         const matched = computeMatchedCount(myPrediction.numbers);
         if (matched === null) return;
         if (myPrediction.matchedCount === matched) return;
-        database.ref(`lotto_predictions/${currentUserUid}`).update({ matchedCount: matched }).catch(() => {});
+        database.ref(`lotto_predictions/${round}/${currentUserUid}`).update({ matchedCount: matched }).catch(() => {});
     }
 
     function generateAutoLotto() {
@@ -2602,13 +2669,16 @@
         const bonus = arr.pop();
         const sorted = arr.sort((a, b) => a - b);
 
-        const inputs = document.querySelectorAll('.lotto-in');
+        const inputs = document.querySelectorAll('#lottoInputForm .lotto-in');
         inputs.forEach((input, idx) => input.value = sorted[idx]);
         document.getElementById('lottoBonusInput').value = bonus;
     }
 
     function submitLottoPrediction() {
-        const inputs = document.querySelectorAll('.lotto-in');
+        if (!cachedTargetRound) { showToast("회차 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
+        if (!currentUserUid) { showToast("로그인 정보를 확인할 수 없습니다."); return; }
+
+        const inputs = document.querySelectorAll('#lottoInputForm .lotto-in');
         const bonusInput = document.getElementById('lottoBonusInput');
 
         let selected = [];
@@ -2626,15 +2696,16 @@
 
         selected.sort((a, b) => a - b);
 
-        database.ref(`lotto_predictions/${currentUserUid}`).set({
+        const targetRound = cachedTargetRound;
+
+        database.ref(`lotto_predictions/${targetRound}/${currentUserUid}`).set({
             studentName: currentStudentName,
             numbers: selected,
             bonus: bonusVal,
-            matchedCount: computeMatchedCount(selected) || 0,
             submittedAt: firebase.database.ServerValue.TIMESTAMP
         }).then(() => {
-            showToast("🎉 로또 예측 번호 제출 완료!");
-            loadLottoData();
+            showToast(`🎉 제 ${targetRound}회 예측 번호 제출 완료!`);
+            checkMyLottoSubmission({ numbers: selected, bonus: bonusVal });
         }).catch(err => showToast("제출 실패: " + err.message));
     }
 
