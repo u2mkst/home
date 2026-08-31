@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- 🤖 Google reCAPTCHA v2 API (마이페이지 아이디 변경용) -->
-    <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
 
     <!-- MathJax 수식 렌더링 라이브러리 (오늘의 문제 바텀시트용) -->
     <script>
@@ -1990,11 +1990,27 @@
     let originalPhoneTail = "";
     let recaptchaWidgetId = null;
 
-    window.onloadCallback = function () {
-        if (document.getElementById('recaptchaWidget')) {
-            recaptchaWidgetId = grecaptcha.render('recaptchaWidget', { 'sitekey': RECAPTCHA_SITE_KEY });
+    // reCAPTCHA는 페이지 로드시 자동 콜백에 의존하지 않고,
+    // 아이디 변경 바텀시트를 열 때(실제로 필요한 시점)에 직접 렌더링합니다.
+    // api.js가 아직 로드되지 않았다면 잠시 후 다시 시도합니다.
+    function prepareRecaptchaWidget(retries = 10) {
+        if (typeof grecaptcha === 'undefined' || !grecaptcha.render) {
+            if (retries > 0) {
+                setTimeout(() => prepareRecaptchaWidget(retries - 1), 300);
+            } else {
+                showToast("🤖 보안 확인 모듈을 불러오지 못했습니다. 페이지를 새로고침해 주세요.");
+            }
+            return;
         }
-    };
+        const widgetEl = document.getElementById('recaptchaWidget');
+        if (!widgetEl) return;
+
+        if (recaptchaWidgetId === null) {
+            recaptchaWidgetId = grecaptcha.render('recaptchaWidget', { 'sitekey': RECAPTCHA_SITE_KEY });
+        } else {
+            grecaptcha.reset(recaptchaWidgetId);
+        }
+    }
 
     function togglePasswordVisibility(inputId, eyeBtn) {
         const input = document.getElementById(inputId);
@@ -2096,8 +2112,8 @@
         if (currentVal !== originalU2mId && currentVal.length > 0) {
             pendingU2mId = currentVal;
             document.getElementById('newU2mIdText').innerText = `'${pendingU2mId}'`;
-            if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) { grecaptcha.reset(recaptchaWidgetId); }
             openBottomSheet('u2mBottomSheetOverlay', 'u2mBottomSheet');
+            prepareRecaptchaWidget();
         }
     }
 
