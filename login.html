@@ -57,7 +57,9 @@
             /* 🧊 리퀴드 글래스 토큰 */
             --lg-surface: rgba(255, 255, 255, 0.45);
             --lg-surface-strong: rgba(255, 255, 255, 0.68);
+            --lg-surface-sheet: rgba(255, 255, 255, 0.92);
             --lg-border: rgba(255, 255, 255, 0.85);
+            --lg-border-sheet: rgba(255, 255, 255, 0.95);
             --lg-highlight: rgba(255, 255, 255, 0.9);
             --lg-blur: blur(26px) saturate(180%);
             --lg-shadow: 0 16px 40px rgba(15, 23, 42, 0.08), inset 0 1px 1px var(--lg-highlight);
@@ -317,12 +319,12 @@
         .captcha-overlay.active { opacity: 1; visibility: visible; }
 
         .captcha-bottom-sheet {
-            width: 100%; max-width: 440px; background: var(--lg-surface-strong);
-            backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
-            border: 1.5px solid var(--lg-border); border-bottom: none;
+            width: 100%; max-width: 440px; background: var(--lg-surface-sheet);
+            backdrop-filter: blur(32px) saturate(180%); -webkit-backdrop-filter: blur(32px) saturate(180%);
+            border: 1.5px solid var(--lg-border-sheet); border-bottom: none;
             border-top-left-radius: 34px; border-top-right-radius: 34px;
             padding: 28px 24px 36px 24px; box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.2), inset 0 1px 1px var(--lg-highlight);
-            transform: translateY(100%); transition: transform 0.55s var(--spring);
+            transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .captcha-overlay.active .captcha-bottom-sheet { transform: translateY(0); }

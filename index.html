@@ -55,6 +55,8 @@
             --lg-surface: rgba(255, 255, 255, 0.42);
             --lg-surface-strong: rgba(255, 255, 255, 0.62);
             --lg-surface-soft: rgba(255, 255, 255, 0.3);
+            --lg-surface-sheet: rgba(255, 255, 255, 0.9);
+            --lg-border-sheet: rgba(255, 255, 255, 0.95);
             --lg-border: rgba(255, 255, 255, 0.75);
             --lg-border-soft: rgba(255, 255, 255, 0.5);
             --lg-highlight: rgba(255, 255, 255, 0.85);
@@ -119,8 +121,10 @@
         }
         .modal-title { font-size: 1.15rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px; }
         .modal-content { font-size: 0.95rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px; white-space: pre-wrap; word-break: break-all; }
-        .modal-box textarea, .modal-box input[type="text"], .modal-box input[type="password"] { width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.6); border-radius: var(--radius-sm); box-sizing: border-box; margin-bottom: 12px; font-size: 0.9rem; font-family: inherit; background: rgba(255,255,255,0.55); transition: all 0.25s var(--ease-smooth); }
-        .modal-box textarea:focus, .modal-box input:focus { outline: none; border-color: #6c5ce7; background: rgba(255,255,255,0.85); box-shadow: 0 0 0 3px rgba(108,92,231,0.15); }
+        .modal-box textarea, .modal-box input[type="text"], .modal-box input[type="password"],
+        .bottom-sheet-container textarea, .bottom-sheet-container input[type="text"], .bottom-sheet-container input[type="password"] { width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.6); border-radius: var(--radius-sm); box-sizing: border-box; margin-bottom: 12px; font-size: 0.9rem; font-family: inherit; background: rgba(255,255,255,0.55); transition: all 0.25s var(--ease-smooth); }
+        .modal-box textarea:focus, .modal-box input:focus,
+        .bottom-sheet-container textarea:focus, .bottom-sheet-container input:focus { outline: none; border-color: #6c5ce7; background: rgba(255,255,255,0.85); box-shadow: 0 0 0 3px rgba(108,92,231,0.15); }
         .btn-flex-group { display: flex; gap: 8px; }
 
         .btn-base {
@@ -147,14 +151,14 @@
         }
         .bottom-sheet-overlay.active { opacity: 1; visibility: visible; }
         .bottom-sheet-container {
-            width: 100%; max-width: 520px; background: var(--lg-surface-strong);
-            backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
-            border: 1.5px solid var(--lg-border); border-bottom: none;
+            width: 100%; max-width: 520px; background: var(--lg-surface-sheet);
+            backdrop-filter: blur(32px) saturate(180%); -webkit-backdrop-filter: blur(32px) saturate(180%);
+            border: 1.5px solid var(--lg-border-sheet); border-bottom: none;
             border-top-left-radius: 34px; border-top-right-radius: 34px;
             padding: 24px 28px 36px; box-sizing: border-box;
             box-shadow: 0 -16px 44px rgba(0, 0, 0, 0.16), inset 0 1px 1px var(--lg-highlight);
             transform: translateY(100%);
-            transition: transform 0.55s var(--spring);
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .bottom-sheet-overlay.active .bottom-sheet-container { transform: translateY(0); }
         .sheet-drag-handle { width: 36px; height: 4px; background: rgba(120,120,128,0.4); border-radius: 2px; margin: 0 auto 18px; }
@@ -166,13 +170,13 @@
         /* 슬라이드형 바텀시트 (mypage 방식: 아이디 변경 / 회원 탈퇴) */
         .bottom-sheet {
             position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 430px; background: var(--lg-surface-strong);
-            backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
-            border: 1.5px solid var(--lg-border); border-bottom: none;
+            width: 100%; max-width: 430px; background: var(--lg-surface-sheet);
+            backdrop-filter: blur(32px) saturate(180%); -webkit-backdrop-filter: blur(32px) saturate(180%);
+            border: 1.5px solid var(--lg-border-sheet); border-bottom: none;
             border-top-left-radius: 34px; border-top-right-radius: 34px;
             padding: 24px; box-sizing: border-box;
             box-shadow: 0 -16px 40px rgba(0,0,0,0.16), inset 0 1px 1px var(--lg-highlight);
-            z-index: 9999; transition: bottom 0.55s var(--spring);
+            z-index: 9999; transition: bottom 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .bottom-sheet.active { bottom: 0; }
         .sheet-handle { width: 40px; height: 5px; background: rgba(120,120,128,0.4); border-radius: 10px; margin: 0 auto 16px auto; }
@@ -934,20 +938,22 @@
         </div>
     </div>
 
-    <!-- 문의/제안 모달 세트 -->
-    <div id="unifiedInquiryModal" class="modal-overlay">
-        <div class="modal-box" style="padding: 24px 20px;">
-            <div class="modal-title">📝 문의 및 제안 선택</div>
-            <div class="modal-content" style="margin-bottom: 20px;">원하시는 항목을 선택해 주세요.</div>
+    <!-- 문의/제안 바텀시트 세트 -->
+    <div id="unifiedInquiryModal" class="bottom-sheet-overlay" onclick="handleGenericSheetOverlayClick(event)">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
+            <div class="sheet-drag-handle"></div>
+            <div class="sheet-title">📝 문의 및 제안 선택</div>
+            <div class="sheet-subtitle" style="margin-bottom: 20px;">원하시는 항목을 선택해 주세요.</div>
             <button class="btn-base btn-glass" style="margin-bottom: 12px;" onclick="triggerSuggestionFromUnified()">💡 오늘의 한마디 제안하기</button>
             <button class="btn-base btn-glass" style="margin-bottom: 20px;" onclick="triggerInquiryFromUnified()">🏫 학원에 문의하기</button>
             <button class="btn-base btn-secondary" onclick="closeModal('unifiedInquiryModal')">닫기</button>
         </div>
     </div>
 
-    <div id="suggestionModal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-title">💡 오늘의 한마디 제안</div>
+    <div id="suggestionModal" class="bottom-sheet-overlay" onclick="handleGenericSheetOverlayClick(event)">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
+            <div class="sheet-drag-handle"></div>
+            <div class="sheet-title">💡 오늘의 한마디 제안</div>
             <textarea id="suggestContent" rows="3" placeholder="기억에 남는 명언이나 하고 싶은 말(내용)을 입력해 주세요."></textarea>
             <input type="text" id="suggestAuthor" placeholder="말한 사람 (닉네임)">
             <input type="text" id="suggestProfile" placeholder="그 사람 설명 (예: 3학년, 과학자, 소설가 등)">
@@ -958,9 +964,10 @@
         </div>
     </div>
 
-    <div id="academyInquiryModal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-title">🏫 학원에 문의하기</div>
+    <div id="academyInquiryModal" class="bottom-sheet-overlay" onclick="handleGenericSheetOverlayClick(event)">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
+            <div class="sheet-drag-handle"></div>
+            <div class="sheet-title">🏫 학원에 문의하기</div>
             <textarea id="inquiryContent" rows="5" placeholder="학원에 궁금한 점이나 건의사항을 자유롭게 적어주세요. 원장님께 직접 전달됩니다."></textarea>
             <div class="btn-flex-group">
                 <button class="btn-base btn-secondary" onclick="closeAcademyInquiryModal()">취소</button>
@@ -1143,8 +1150,21 @@
         if (overlay) overlay.classList.add('hidden');
     }
 
-    function showModal(id) { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }
-    function closeModal(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+    function showModal(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.classList.contains('bottom-sheet-overlay')) el.classList.add('active');
+        else el.style.display = 'flex';
+    }
+    function closeModal(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.classList.contains('bottom-sheet-overlay')) el.classList.remove('active');
+        else el.style.display = 'none';
+    }
+    function handleGenericSheetOverlayClick(event) {
+        if (event.target.classList.contains('bottom-sheet-overlay')) closeModal(event.target.id);
+    }
 
     function openBottomSheet(overlayId, sheetId) {
         document.getElementById(overlayId).classList.add('active');
