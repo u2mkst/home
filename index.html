@@ -1048,8 +1048,7 @@
     /* =====================================================================
        0. 공통 상수 / 전역 상태
     ===================================================================== */
-    const SECRET_KEY = "u2mkst!";
-    const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
+    const BACKEND_URL = "https://kst-backend.vercel.app";
     const RECAPTCHA_SITE_KEY = "6LcoRYAtAAAAAP_83dJyhmTfWrTrer3QUYf8Pof1";
 
     const firebaseConfig = {
@@ -1122,19 +1121,46 @@
         document.getElementById(sheetId).classList.remove('active');
     }
 
-    function decryptAES(cipherText) {
-        if (!cipherText) return "";
-        try {
-            const cleanCipherText = cipherText.toString().trim();
-            if (!cleanCipherText.startsWith("U2FsdGVkX1")) return cleanCipherText;
-            const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
-            return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText;
-        } catch (e) { return cipherText; }
+    async function getIdToken() {
+        return auth.currentUser ? await auth.currentUser.getIdToken() : null;
     }
-    function encryptAES(plainText) {
-        if (plainText === null || plainText === undefined) return "";
-        const textString = String(plainText).trim();
-        return CryptoJS.AES.encrypt(textString, SECRET_KEY).toString();
+
+    async function decryptAESBatch(cipherTexts) {
+        const list = cipherTexts.map(c => c || "");
+        if (list.every(c => !c)) return list.map(() => "");
+        const token = await getIdToken();
+        if (!token) return list;
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/decrypt`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ texts: list })
+            });
+            if (!res.ok) return list;
+            const { results } = await res.json();
+            return results;
+        } catch (e) { return list; }
+    }
+    async function encryptAESBatch(plainTexts) {
+        const list = plainTexts.map(t => (t === null || t === undefined) ? "" : String(t).trim());
+        const token = await getIdToken();
+        const res = await fetch(`${BACKEND_URL}/api/encrypt`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ texts: list })
+        });
+        if (!res.ok) throw new Error('암호화 서버 오류');
+        const { results } = await res.json();
+        return results;
+    }
+    async function decryptAES(cipherText) {
+        if (!cipherText) return "";
+        const [result] = await decryptAESBatch([cipherText]);
+        return result;
+    }
+    async function encryptAES(plainText) {
+        const [result] = await encryptAESBatch([plainText]);
+        return result;
     }
 
     function logoutUser() { showModal('logoutCheckModal'); }
@@ -1220,12 +1246,12 @@
                     serverTimeOffset = snapshot.val() || 0;
                 });
 
-                database.ref(`students/${user.uid}`).once('value', (snapshot) => {
+                database.ref(`students/${user.uid}`).once('value', async (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         currentStudentData = data;
                         const rawName = data.name || data.studentName || data.userName;
-                        const actualName = rawName ? decryptAES(rawName) : (user.displayName || "학생");
+                        const actualName = rawName ? await decryptAES(rawName) : (user.displayName || "학생");
                         currentStudentName = actualName;
                         document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
 
@@ -1327,7 +1353,7 @@
     }
     function closeSuggestionModal() { closeModal('suggestionModal'); }
 
-    function submitSuggestion() {
+    async function submitSuggestion() {
         const contentText = document.getElementById('suggestContent').value.trim();
         const authorText = document.getElementById('suggestAuthor').value.trim();
         const profileText = document.getElementById('suggestProfile').value.trim();
@@ -1343,22 +1369,32 @@
 
         const currentUser = auth.currentUser;
         const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
-        const realName = decryptAES(rawName);
 
-        const suggestData = {
-            studentName: realName,
-            studentUid: currentUser ? currentUser.uid : "익명",
-            schoolName: currentStudentData.schoolName || "미지정",
-            category: "오늘의 한마디 제안",
-            content: CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString(),
-            author: CryptoJS.AES.encrypt(authorText, SECRET_KEY).toString(),
-            authorProfile: CryptoJS.AES.encrypt(profileText, SECRET_KEY).toString(),
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        };
+        try {
+            const [realName, encContent, encAuthor, encProfile] = await Promise.all([
+                decryptAES(rawName),
+                encryptAES(contentText),
+                encryptAES(authorText),
+                encryptAES(profileText)
+            ]);
 
-        database.ref('suggestions').push(suggestData)
-            .then(() => { showToast("🎉 원장님께 한마디 제안이 접수되었습니다."); closeSuggestionModal(); })
-            .catch(err => showToast('전송 실패: ' + err.message));
+            const suggestData = {
+                studentName: realName,
+                studentUid: currentUser ? currentUser.uid : "익명",
+                schoolName: currentStudentData.schoolName || "미지정",
+                category: "오늘의 한마디 제안",
+                content: encContent,
+                author: encAuthor,
+                authorProfile: encProfile,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            await database.ref('suggestions').push(suggestData);
+            showToast("🎉 원장님께 한마디 제안이 접수되었습니다.");
+            closeSuggestionModal();
+        } catch (err) {
+            showToast('전송 실패: ' + err.message);
+        }
     }
 
     function openAcademyInquiryModal() {
@@ -1367,7 +1403,7 @@
     }
     function closeAcademyInquiryModal() { closeModal('academyInquiryModal'); }
 
-    function submitAcademyInquiry() {
+    async function submitAcademyInquiry() {
         const contentText = document.getElementById('inquiryContent').value.trim();
         if (!contentText) { showToast("🏫 문의사항 내용을 입력해 주세요."); return; }
         if (!currentStudentData) { showToast("⌛ 학생 정보 동기화 중입니다."); return; }
@@ -1378,56 +1414,70 @@
 
         const currentUser = auth.currentUser;
         const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
-        const realName = decryptAES(rawName);
 
-        const inquiryData = {
-            studentName: realName,
-            studentUid: currentUser ? currentUser.uid : "익명",
-            schoolName: currentStudentData.schoolName || "미지정",
-            category: "학원에 문의하기",
-            content: CryptoJS.AES.encrypt(contentText, SECRET_KEY).toString(),
-            author: "",
-            authorProfile: "",
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        };
+        try {
+            const [realName, encContent] = await Promise.all([
+                decryptAES(rawName),
+                encryptAES(contentText)
+            ]);
 
-        database.ref('suggestions').push(inquiryData)
-            .then(() => { showToast("🏫 원장님께 문의가 접수되었습니다."); closeAcademyInquiryModal(); })
-            .catch(err => showToast('전송 실패: ' + err.message));
+            const inquiryData = {
+                studentName: realName,
+                studentUid: currentUser ? currentUser.uid : "익명",
+                schoolName: currentStudentData.schoolName || "미지정",
+                category: "학원에 문의하기",
+                content: encContent,
+                author: "",
+                authorProfile: "",
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            await database.ref('suggestions').push(inquiryData);
+            showToast("🏫 원장님께 문의가 접수되었습니다.");
+            closeAcademyInquiryModal();
+        } catch (err) {
+            showToast('전송 실패: ' + err.message);
+        }
     }
 
     /* =====================================================================
        4. 유투엠 / 매쓰플랫 바로가기
     ===================================================================== */
-    function transmitBridgeCredentials() {
+    async function transmitBridgeCredentials() {
         if (!currentStudentData) return;
         try {
             const u2mId = localStorage.getItem('u2m_id') || currentStudentData.u2mId || '';
-            const u2mPw = decryptAES(currentStudentData.phone || '').trim();
-            const mathflatId = decryptAES(currentStudentData.mathflatId || currentStudentData.studentPhone || '').trim();
-            const decryptedMathflatPw = decryptAES(currentStudentData.mathflatPw || '').trim();
+            const [u2mPw, mathflatId, decryptedMathflatPw] = await decryptAESBatch([
+                currentStudentData.phone || '',
+                currentStudentData.mathflatId || currentStudentData.studentPhone || '',
+                currentStudentData.mathflatPw || ''
+            ]);
 
             if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
-                window.AndroidApp.loginToU2M(u2mId, u2mPw, decryptedMathflatPw, mathflatId);
+                window.AndroidApp.loginToU2M(u2mId, u2mPw.trim(), decryptedMathflatPw.trim(), mathflatId.trim());
             }
         } catch (err) { console.error("크레덴셜 앱 전달 오류:", err); }
     }
 
-    function goToU2MWithCredentials() {
-        transmitBridgeCredentials();
+    async function goToU2MWithCredentials() {
+        await transmitBridgeCredentials();
         showToast("🚀 유투엠 페이지로 이동합니다...");
         setTimeout(() => { window.location.href = "https://www.u2math.co.kr/Login/Index"; }, 800);
     }
 
-    function handleMathflatClick() {
+    async function handleMathflatClick() {
         if (!currentStudentData) { showToast("⌛ 학생 정보를 불러오는 중입니다..."); return; }
-        const mId = decryptAES(currentStudentData.mathflatId || currentStudentData.studentPhone || '').trim();
-        const mPw = decryptAES(currentStudentData.mathflatPw || '').trim();
+        const [rawMId, rawMPw] = await decryptAESBatch([
+            currentStudentData.mathflatId || currentStudentData.studentPhone || '',
+            currentStudentData.mathflatPw || ''
+        ]);
+        const mId = rawMId.trim();
+        const mPw = rawMPw.trim();
 
         if (!mId || !mPw) {
             openMathflatBottomSheet();
         } else {
-            transmitBridgeCredentials();
+            await transmitBridgeCredentials();
             showToast("🚀 매쓰플랫 페이지로 이동합니다...");
             setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 800);
         }
@@ -1447,7 +1497,7 @@
         if (event.target.id === 'mathflatBottomSheet') closeMathflatBottomSheet();
     }
 
-    function saveMathflatCredentials() {
+    async function saveMathflatCredentials() {
         const inputId = document.getElementById('bsMathflatId').value.trim();
         const inputPw = document.getElementById('bsMathflatPw').value.trim();
         if (!inputId || !inputPw) { showToast("아이디와 비밀번호를 모두 입력해 주세요."); return; }
@@ -1455,20 +1505,22 @@
         const currentUser = auth.currentUser;
         if (!currentUser) return;
 
-        const encId = CryptoJS.AES.encrypt(inputId, SECRET_KEY).toString();
-        const encPw = CryptoJS.AES.encrypt(inputPw, SECRET_KEY).toString();
+        try {
+            const [encId, encPw] = await encryptAESBatch([inputId, inputPw]);
 
-        database.ref(`students/${currentUser.uid}`).update({
-            mathflatId: encId, mathflatPw: encPw, studentPhone: encId
-        }).then(() => {
+            await database.ref(`students/${currentUser.uid}`).update({
+                mathflatId: encId, mathflatPw: encPw, studentPhone: encId
+            });
             currentStudentData.mathflatId = encId;
             currentStudentData.mathflatPw = encPw;
             currentStudentData.studentPhone = encId;
             closeMathflatBottomSheet();
-            transmitBridgeCredentials();
+            await transmitBridgeCredentials();
             showToast("✅ 등록 완료! 매쓰플랫으로 이동합니다...");
             setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 1000);
-        }).catch(err => { showToast("저장 실패: " + err.message); });
+        } catch (err) {
+            showToast("저장 실패: " + err.message);
+        }
     }
 
     /* =====================================================================
@@ -1732,7 +1784,7 @@
 
     function fetchExamDateFromNeis(schoolName) {
         if (!schoolName) { renderDDayBadge(null); return; }
-        const schoolInfoUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
+        const schoolInfoUrl = `${BACKEND_URL}/api/neis?endpoint=schoolInfo&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
 
         fetch(schoolInfoUrl)
             .then(res => res.json())
@@ -1744,7 +1796,7 @@
                 const currentYear = new Date().getFullYear();
                 const fromYmd = `${currentYear}0301`;
                 const toYmd = `${currentYear + 1}0228`;
-                const scheduleUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=800`;
+                const scheduleUrl = `${BACKEND_URL}/api/neis?endpoint=SchoolSchedule&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=800`;
                 return fetch(scheduleUrl);
             })
             .then(res => res ? res.json() : null)
@@ -1842,11 +1894,11 @@
             }
         });
 
-        unreadRef.limitToLast(1).on('child_added', (snapshot) => {
+        unreadRef.limitToLast(1).on('child_added', async (snapshot) => {
             if (isInitialLoad) return;
             const note = snapshot.val();
             if (note) {
-                let decryptedMsg = decryptAES(note.message);
+                let decryptedMsg = await decryptAES(note.message);
                 if (decryptedMsg.startsWith("[답장완료] ")) { decryptedMsg = decryptedMsg.replace("[답장완료] ", ""); }
                 showToast(`✉️ 선생님 쪽지: ${decryptedMsg.substring(0, 20)}...`);
                 document.getElementById('modalTitle').innerText = "✉️ 선생님의 전송 쪽지";
@@ -1865,27 +1917,25 @@
 
         const qRef = database.ref('messages').orderByChild('studentUid').equalTo(studentUid);
         historyListeners.push({ ref: qRef, type: 'value' });
-        qRef.on('value', (snapshot) => {
-            myQuestions = [];
+        qRef.on('value', async (snapshot) => {
+            const rows = [];
             if (snapshot.exists()) {
-                snapshot.forEach(child => {
-                    const val = child.val();
-                    myQuestions.push({ id: child.key, isMine: true, ...val, message: decryptAES(val.message) });
-                });
+                snapshot.forEach(child => { rows.push({ id: child.key, isMine: true, ...child.val() }); });
             }
+            const decrypted = await decryptAESBatch(rows.map(r => r.message));
+            myQuestions = rows.map((r, i) => ({ ...r, message: decrypted[i] }));
             renderCombinedChat(myQuestions, teacherNotes);
         });
 
         const nRef = database.ref(`student_messages/${studentUid}`);
         historyListeners.push({ ref: nRef, type: 'value' });
-        nRef.on('value', (snapshot) => {
-            teacherNotes = [];
+        nRef.on('value', async (snapshot) => {
+            const rows = [];
             if (snapshot.exists()) {
-                snapshot.forEach(child => {
-                    const val = child.val();
-                    teacherNotes.push({ id: child.key, isMine: false, ...val, message: decryptAES(val.message) });
-                });
+                snapshot.forEach(child => { rows.push({ id: child.key, isMine: false, ...child.val() }); });
             }
+            const decrypted = await decryptAESBatch(rows.map(r => r.message));
+            teacherNotes = rows.map((r, i) => ({ ...r, message: decrypted[i] }));
             renderCombinedChat(myQuestions, teacherNotes);
         });
     }
@@ -1953,7 +2003,7 @@
         historyListeners = [];
     }
 
-    function sendMessageToTeacher() {
+    async function sendMessageToTeacher() {
         const msgInput = document.getElementById('chat-input');
         if (!msgInput) return;
         const text = msgInput.value.trim();
@@ -1962,25 +2012,28 @@
         const currentUser = auth.currentUser;
 
         const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
-        const realName = decryptAES(rawName);
 
-        const msgData = {
-            studentName: realName,
-            u2mId: currentStudentData.u2mId || '',
-            studentUid: currentUser.uid,
-            teacher: currentStudentData.teacher,
-            message: CryptoJS.AES.encrypt(text, SECRET_KEY).toString(),
-            timestamp: firebase.database.ServerValue.TIMESTAMP,
-            read: false
-        };
+        try {
+            const [realName, encMessage] = await Promise.all([decryptAES(rawName), encryptAES(text)]);
 
-        database.ref('messages').push(msgData)
-            .then(() => {
-                msgInput.value = '';
-                showToast("💬 메시지가 성공적으로 전송되었습니다.");
-                const zoneEl = document.getElementById('messageHistoryZone');
-                if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
-            }).catch(err => showToast('전송 오류: ' + err.message));
+            const msgData = {
+                studentName: realName,
+                u2mId: currentStudentData.u2mId || '',
+                studentUid: currentUser.uid,
+                teacher: currentStudentData.teacher,
+                message: encMessage,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                read: false
+            };
+
+            await database.ref('messages').push(msgData);
+            msgInput.value = '';
+            showToast("💬 메시지가 성공적으로 전송되었습니다.");
+            const zoneEl = document.getElementById('messageHistoryZone');
+            if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
+        } catch (err) {
+            showToast('전송 오류: ' + err.message);
+        }
     }
 
     function escapeHTML(str) {
@@ -2108,12 +2161,19 @@
         }
     }
 
-    function populateMypageFromCache() {
+    async function populateMypageFromCache() {
         if (!currentStudentData) { showToast("⌛ 학생 정보 동기화 중입니다."); return; }
         mypageInitialPopulate = true;
         const d = currentStudentData;
 
-        document.getElementById('studentName').value = decryptAES(d.name);
+        const [decName, decPhone, decMathflatId, decMathflatPw] = await decryptAESBatch([
+            d.name,
+            d.phone,
+            d.studentPhone || '',
+            d.mathflatPw
+        ]);
+
+        document.getElementById('studentName').value = decName;
         document.getElementById('schoolName').value = d.schoolName || '';
         document.getElementById('schoolCode').value = d.schoolCode || '';
         document.getElementById('schoolOfficeCode').value = d.schoolOfficeCode || '';
@@ -2126,12 +2186,12 @@
         originalU2mId = d.u2mId || '';
         document.getElementById('u2mId').value = originalU2mId;
 
-        originalPhoneTail = decryptAES(d.phone) || '';
+        originalPhoneTail = decPhone || '';
         document.getElementById('u2mPhone').value = originalPhoneTail;
 
-        const rawMathflatId = d.studentPhone ? decryptAES(d.studentPhone) : (d.mathflatId || '');
+        const rawMathflatId = d.studentPhone ? decMathflatId : (d.mathflatId || '');
         document.getElementById('mathflatId').value = rawMathflatId;
-        document.getElementById('mathflatPw').value = decryptAES(d.mathflatPw);
+        document.getElementById('mathflatPw').value = decMathflatPw;
 
         if (!mypageBound) { bindAutoSaveEvents(); mypageBound = true; }
         setTimeout(() => { mypageInitialPopulate = false; }, 300);
@@ -2149,7 +2209,7 @@
             if (query.length < 2) {
                 schoolList.innerHTML = ''; schoolList.classList.add('hidden'); schoolCodeInput.value = ''; return;
             }
-            const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
+            const url = `${BACKEND_URL}/api/neis?endpoint=schoolInfo&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
             fetch(url).then(response => response.json()).then(data => {
                 schoolList.innerHTML = '';
                 if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
@@ -2237,7 +2297,7 @@
         autoSaveTimer = setTimeout(() => { updateStudentProfileAuto(); }, 700);
     }
 
-    function updateStudentProfileAuto() {
+    async function updateStudentProfileAuto() {
         const user = auth.currentUser;
         if (!user) return;
 
@@ -2255,9 +2315,13 @@
         const mathflatPw = document.getElementById('mathflatPw').value.trim();
 
         const isPhoneChanged = (phoneTail !== originalPhoneTail) && (/^\d{4}$/.test(phoneTail));
-        const updatedObject = {};
 
-        if (studentName) updatedObject.name = encryptAES(studentName);
+        const [encName, encPhone, encMathflatPhone, encMathflatPw] = await encryptAESBatch([
+            studentName || '', phoneTail || '', mathflatPhone || '', mathflatPw || ''
+        ]);
+
+        const updatedObject = {};
+        if (studentName) updatedObject.name = encName;
         if (schoolName) updatedObject.schoolName = schoolName;
         if (schoolCode) updatedObject.schoolCode = schoolCode;
         if (schoolOfficeCode) updatedObject.schoolOfficeCode = schoolOfficeCode;
@@ -2266,9 +2330,9 @@
         if (grade) updatedObject.grade = grade;
         if (studentClass !== undefined) { updatedObject.className = studentClass; updatedObject.class = studentClass; }
         if (selectedTeacher) updatedObject.teacher = selectedTeacher;
-        if (phoneTail) updatedObject.phone = encryptAES(phoneTail);
-        if (mathflatPhone) { updatedObject.studentPhone = encryptAES(mathflatPhone); updatedObject.mathflatId = mathflatPhone; }
-        if (mathflatPw) updatedObject.mathflatPw = encryptAES(mathflatPw);
+        if (phoneTail) updatedObject.phone = encPhone;
+        if (mathflatPhone) { updatedObject.studentPhone = encMathflatPhone; updatedObject.mathflatId = mathflatPhone; }
+        if (mathflatPw) updatedObject.mathflatPw = encMathflatPw;
 
         if (Object.keys(updatedObject).length === 0) return;
 
@@ -2437,10 +2501,10 @@
 
         database.ref('attendance').once('value', (snapshot) => {
             const allData = snapshot.val() || {};
-            let rankArray = [];
 
-            database.ref('students').once('value', (stdSnap) => {
+            database.ref('students').once('value', async (stdSnap) => {
                 const stds = stdSnap.val() || {};
+                const rows = [];
 
                 Object.keys(allData).forEach(uid => {
                     const monthInfo = allData[uid][yearMonth];
@@ -2448,12 +2512,17 @@
                         const count = monthInfo.count || 0;
                         const std = stds[uid] || {};
                         const rawName = std.name || std.studentName || std.userName;
-                        const name = rawName ? decryptAES(rawName) : "학생";
                         const school = std.schoolName || "학교 미기재";
                         const teacher = std.teacher ? `${std.teacher} 선생님` : "선생님 미기재";
-                        rankArray.push({ uid: uid, name: name, school: school, teacher: teacher, count: count });
+                        rows.push({ uid: uid, rawName: rawName, school: school, teacher: teacher, count: count });
                     }
                 });
+
+                const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''));
+                const rankArray = rows.map((r, i) => ({
+                    uid: r.uid, name: r.rawName ? decrypted[i] : "학생",
+                    school: r.school, teacher: r.teacher, count: r.count
+                }));
 
                 rankArray.sort((a, b) => b.count - a.count);
                 renderAttendanceRank(rankArray);
@@ -2685,24 +2754,25 @@
             return;
         }
 
-        let rankArray = [];
-        database.ref('students').once('value', (stdSnap) => {
+        database.ref('students').once('value', async (stdSnap) => {
             const stds = stdSnap.val() || {};
+            const rows = [];
 
             keys.forEach(uid => {
                 const item = predictions[uid];
                 const std = stds[uid] || {};
                 const rawName = std.name || std.studentName || std.userName;
-                const name = rawName ? decryptAES(rawName) : "학생";
-
-                rankArray.push({
-                    uid: uid, name: name,
+                rows.push({
+                    uid: uid, rawName: rawName,
                     school: std.schoolName || "학교 미기재",
                     teacher: std.teacher ? `${std.teacher} 선생님` : "선생님 미기재",
                     matched: computeMatchedCount(item.numbers),
                     bonusHit: isBonusMatched(item.bonus)
                 });
             });
+
+            const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''));
+            const rankArray = rows.map((r, i) => ({ ...r, name: r.rawName ? decrypted[i] : "학생" }));
 
             rankArray.sort((a, b) => {
                 const am = a.matched === null ? -1 : a.matched;
@@ -2875,7 +2945,7 @@
             return;
         }
         // 기존 가입자 등 메타 정보가 없는 경우, 학교명으로 1회 조회 후 Firebase에 캐싱
-        const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(currentStudentData.schoolName)}`;
+        const url = `${BACKEND_URL}/api/neis?endpoint=schoolInfo&Type=json&SCHUL_NM=${encodeURIComponent(currentStudentData.schoolName)}`;
         fetch(url).then(res => res.json()).then(data => {
             if (!data.schoolInfo) { callback(null); return; }
             const rows = data.schoolInfo[1].row;
@@ -3073,7 +3143,7 @@
             if (ttCache[cacheKey]) { renderPeriodList(ttCache[cacheKey].rows, dateObj, ttCache[cacheKey].source); return; }
 
             const endpoint = getTimetableEndpoint(meta.schoolLevel);
-            const niceUrl = `https://open.neis.go.kr/hub/${endpoint}?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${meta.officeCode}&SD_SCHUL_CODE=${currentStudentData.schoolCode}&GRADE=${gradeNum}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateStr}`;
+            const niceUrl = `${BACKEND_URL}/api/neis?endpoint=${endpoint}&Type=json&ATPT_OFCDC_SC_CODE=${meta.officeCode}&SD_SCHUL_CODE=${currentStudentData.schoolCode}&GRADE=${gradeNum}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateStr}`;
 
             // 1) NICE API 먼저 조회
             fetch(niceUrl).then(res => res.json()).then(niceData => {

@@ -487,30 +487,52 @@
 
     <!-- Firebase 및 기능 로직 (100% 동일 유지) -->
     <script>
-        const SECRET_KEY = "u2mkst!";
+        const BACKEND_URL = "https://kst-backend.vercel.app";
 
-        function encryptAES(text) {
-            if (!text) return "";
-            return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
+        async function getIdToken() {
+            return auth.currentUser ? await auth.currentUser.getIdToken() : null;
         }
 
-        function decryptAES(cipherText) {
-            if (!cipherText) return "";
+        async function encryptAESBatch(plainTexts) {
+            const list = plainTexts.map(t => (t === null || t === undefined) ? "" : String(t).trim());
+            const token = await getIdToken();
+            const res = await fetch(`${BACKEND_URL}/api/encrypt`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ texts: list })
+            });
+            if (!res.ok) throw new Error('암호화 서버 오류');
+            const { results } = await res.json();
+            return results;
+        }
+
+        async function decryptAESBatch(cipherTexts) {
+            const list = cipherTexts.map(c => c || "");
+            if (list.every(c => !c)) return list.map(() => "");
+            const token = await getIdToken();
+            if (!token) return list;
             try {
-                let cleanText = String(cipherText).trim();
-                if (cleanText.startsWith('"') && cleanText.endsWith('"')) {
-                    cleanText = cleanText.slice(1, -1);
-                } else if (cleanText.startsWith("'") && cleanText.endsWith("'")) {
-                    cleanText = cleanText.slice(1, -1);
-                }
-                cleanText = cleanText.replace(/ /g, '+');
-                const bytes = CryptoJS.AES.decrypt(cleanText, SECRET_KEY);
-                const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-                return decryptedText || cipherText;
-            } catch (e) {
-                console.error("복호화 예외 발생:", e);
-                return cipherText;
-            }
+                const res = await fetch(`${BACKEND_URL}/api/decrypt`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ texts: list })
+                });
+                if (!res.ok) return list;
+                const { results } = await res.json();
+                return results;
+            } catch (e) { return list; }
+        }
+
+        async function encryptAES(text) {
+            if (!text) return "";
+            const [result] = await encryptAESBatch([text]);
+            return result;
+        }
+
+        async function decryptAES(cipherText) {
+            if (!cipherText) return "";
+            const [result] = await decryptAESBatch([cipherText]);
+            return result;
         }
 
         function escapeHTML(str) {
@@ -582,21 +604,17 @@
         });
 
         function fetchTeacherStudents(teacherName) {
-            database.ref('students').orderByChild('teacher').equalTo(teacherName).on('value', (snapshot) => {
-                allStudents = [];
+            database.ref('students').orderByChild('teacher').equalTo(teacherName).on('value', async (snapshot) => {
                 const data = snapshot.val();
+                const rows = [];
                 if (data) {
                     for (let id in data) {
-                        const studentData = data[id];
-                        const decryptedName = decryptAES(studentData.name);
-                        allStudents.push({ 
-                            id, 
-                            ...studentData, 
-                            name: decryptedName 
-                        });
+                        rows.push({ id, ...data[id] });
                     }
                 }
-                filterStudents(); 
+                const decrypted = await decryptAESBatch(rows.map(r => r.name));
+                allStudents = rows.map((r, i) => ({ ...r, name: decrypted[i] }));
+                filterStudents();
             });
         }
 
@@ -653,16 +671,14 @@
 
             const qRef = database.ref('messages').orderByChild('studentUid').equalTo(studentUid);
             adminChatListeners.push({ ref: qRef, type: 'value' });
-            qRef.on('value', (snapshot) => {
-                studentQuestions = [];
+            qRef.on('value', async (snapshot) => {
+                const rows = [];
                 const updates = {};
-                
+
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const val = child.val();
-                        let decryptedMsg = decryptAES(val.message); 
-                        studentQuestions.push({ id: child.key, origin: 'student', ...val, message: decryptedMsg });
-                        
+                        rows.push({ id: child.key, origin: 'student', ...val });
                         if (val.read === false) {
                             updates[`/messages/${child.key}/read`] = true;
                         }
@@ -671,20 +687,22 @@
                 if (Object.keys(updates).length > 0) {
                     database.ref().update(updates);
                 }
+                const decrypted = await decryptAESBatch(rows.map(r => r.message));
+                studentQuestions = rows.map((r, i) => ({ ...r, message: decrypted[i] }));
                 renderAdminChatFeed(studentQuestions, teacherReplies);
             });
 
             const rRef = database.ref(`student_messages/${studentUid}`);
             adminChatListeners.push({ ref: rRef, type: 'value' });
-            rRef.on('value', (snapshot) => {
-                teacherReplies = [];
+            rRef.on('value', async (snapshot) => {
+                const rows = [];
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
-                        const val = child.val();
-                        let decryptedMsg = decryptAES(val.message); 
-                        teacherReplies.push({ id: child.key, origin: 'teacher', ...val, message: decryptedMsg });
+                        rows.push({ id: child.key, origin: 'teacher', ...child.val() });
                     });
                 }
+                const decrypted = await decryptAESBatch(rows.map(r => r.message));
+                teacherReplies = rows.map((r, i) => ({ ...r, message: decrypted[i] }));
                 renderAdminChatFeed(studentQuestions, teacherReplies);
             });
         }
@@ -739,7 +757,7 @@
             zoneEl.scrollTop = zoneEl.scrollHeight;
         }
 
-        function sendTeacherReply() {
+        async function sendTeacherReply() {
             const replyInput = document.getElementById('teacherReplyInput');
             const text = replyInput.value.trim();
             const teacherName = localStorage.getItem('admin_teacher') || "선생님";
@@ -750,20 +768,21 @@
             }
             if (!text) return;
 
-            const encryptedMessage = encryptAES(`[답장완료] ${text}`); 
+            try {
+                const encryptedMessage = await encryptAES(`[답장완료] ${text}`);
 
-            const replyData = {
-                teacher: teacherName,
-                message: encryptedMessage,
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-                read: false
-            };
+                const replyData = {
+                    teacher: teacherName,
+                    message: encryptedMessage,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    read: false
+                };
 
-            database.ref(`student_messages/${currentSelectedStudentUid}`).push(replyData)
-                .then(() => {
-                    replyInput.value = '';
-                })
-                .catch(err => alert("전송 실패: " + err.message));
+                await database.ref(`student_messages/${currentSelectedStudentUid}`).push(replyData);
+                replyInput.value = '';
+            } catch (err) {
+                alert("전송 실패: " + err.message);
+            }
         }
 
         function detachAdminChatListeners() {
@@ -782,7 +801,7 @@
         }
 
         function listenToIncomingMessages(teacherName) {
-            messageListener = database.ref('messages').orderByChild('teacher').equalTo(teacherName).on('value', (snapshot) => {
+            messageListener = database.ref('messages').orderByChild('teacher').equalTo(teacherName).on('value', async (snapshot) => {
                 const listEl = document.getElementById('modalMsgList');
                 if (!listEl) return;
                 listEl.innerHTML = '';
@@ -800,15 +819,17 @@
                         return tB - tA;
                     });
 
-                    msgArray.forEach(msg => {
+                    const decryptedMessages = await decryptAESBatch(msgArray.map(m => m.message));
+
+                    msgArray.forEach((msg, msgIdx) => {
                         if (!msg.read) unreadCount++;
 
                         const ts = (typeof msg.timestamp === 'number') ? msg.timestamp : Date.now();
                         const date = new Date(ts);
                         const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-                        
+
                         const msgStudentId = msg.u2mId ? msg.u2mId : '아이디 누락';
-                        let decryptedMsg = decryptAES(msg.message); 
+                        let decryptedMsg = decryptedMessages[msgIdx];
 
                         const item = document.createElement('div');
                         item.className = `msg-item ${!msg.read ? 'unread' : ''}`;
@@ -861,7 +882,7 @@
             zone.style.display = zone.style.display === 'block' ? 'none' : 'block';
         }
 
-        function sendReplyFromModal(msgId, studentUid, teacherName) {
+        async function sendReplyFromModal(msgId, studentUid, teacherName) {
             const inputEl = document.getElementById(`replyInput-${msgId}`);
             const text = inputEl.value.trim();
 
@@ -874,33 +895,31 @@
                 return;
             }
 
-            const timestamp = firebase.database.ServerValue.TIMESTAMP;
-            const encryptedMessage = encryptAES(`[답장완료] ${text}`); 
-            const encryptedHistoryMessage = encryptAES(text);
+            try {
+                const timestamp = firebase.database.ServerValue.TIMESTAMP;
+                const [encryptedMessage, encryptedHistoryMessage] = await encryptAESBatch([`[답장완료] ${text}`, text]);
 
-            database.ref(`student_messages/${studentUid}`).push({
-                teacher: teacherName,
-                message: encryptedMessage,
-                timestamp: timestamp,
-                read: false
-            })
-            .then(() => {
-                return database.ref(`messages/${msgId}/replies`).push({
+                await database.ref(`student_messages/${studentUid}`).push({
+                    teacher: teacherName,
+                    message: encryptedMessage,
+                    timestamp: timestamp,
+                    read: false
+                });
+                await database.ref(`messages/${msgId}/replies`).push({
                     teacher: teacherName,
                     message: encryptedHistoryMessage,
                     timestamp: timestamp
                 });
-            })
-            .then(() => {
                 alert("답장이 전송되었습니다.");
                 inputEl.value = '';
                 document.getElementById(`replyZone-${msgId}`).style.display = 'none';
-            })
-            .catch(err => alert("전송 실패: " + err.message));
+            } catch (err) {
+                alert("전송 실패: " + err.message);
+            }
         }
 
         function listenToExistingReplies(msgId) {
-            database.ref(`messages/${msgId}/replies`).on('value', (snapshot) => {
+            database.ref(`messages/${msgId}/replies`).on('value', async (snapshot) => {
                 const historyContainer = document.getElementById(`history-${msgId}`);
                 if (!historyContainer) return;
                 historyContainer.innerHTML = '';
@@ -911,17 +930,19 @@
                 }
 
                 historyContainer.style.display = 'block';
-                snapshot.forEach((child) => {
-                    const data = child.val();
+                const rows = [];
+                snapshot.forEach((child) => { rows.push(child.val()); });
+
+                const decryptedReplies = await decryptAESBatch(rows.map(r => r.message));
+
+                rows.forEach((data, idx) => {
                     const ts = (typeof data.timestamp === 'number') ? data.timestamp : Date.now();
                     const dateObj = new Date(ts);
                     const timeStr = `${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
-                    
-                    let decryptedReply = decryptAES(data.message); 
 
                     const itemHtml = `
                         <div class="history-item">
-                            <span class="history-teacher">└ 답장:</span> ${escapeHTML(decryptedReply)}
+                            <span class="history-teacher">└ 답장:</span> ${escapeHTML(decryptedReplies[idx])}
                             <span style="font-size:0.7rem; color:var(--text-sub);">(${timeStr})</span>
                         </div>
                     `;
@@ -1005,12 +1026,12 @@
             localStorage.removeItem('admin_password');
         }
 
-        function publishData(path, inputId) {
+        async function publishData(path, inputId) {
             let val = document.getElementById(inputId).value;
             if (path === 'notice') {
-                val = encryptAES(val); 
+                val = await encryptAES(val);
             }
-            database.ref(path).set(val);
+            await database.ref(path).set(val);
             alert("전송 완료! 태블릿에 실시간 반영되었습니다.");
         }
         
@@ -1021,8 +1042,8 @@
         }
 
         function loadCurrentStatus() {
-            database.ref('notice').once('value', s => { 
-                if(s.val()) document.getElementById('noticeInput').value = decryptAES(s.val()); 
+            database.ref('notice').once('value', async s => {
+                if(s.val()) document.getElementById('noticeInput').value = await decryptAES(s.val());
             });
             database.ref('reminder').once('value', s => { 
                 if(s.val()) document.getElementById('reminderInput').value = s.val(); 

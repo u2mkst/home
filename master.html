@@ -414,8 +414,8 @@
     </div>
 
     <script>
-        const SECRET_KEY = "u2mkst!";
-        
+        const BACKEND_URL = "https://kst-backend.vercel.app";
+
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
             authDomain: "ksthome-76889.firebaseapp.com",
@@ -433,17 +433,31 @@
 
         let targetQuoteCache = null; 
 
-        function decryptAES(cipherText) {
-            if (!cipherText) return "";
+        async function getIdToken() {
+            return auth.currentUser ? await auth.currentUser.getIdToken() : null;
+        }
+
+        async function decryptAESBatch(cipherTexts) {
+            const list = cipherTexts.map(c => c || "");
+            if (list.every(c => !c)) return list.map(() => "");
+            const token = await getIdToken();
+            if (!token) return list;
             try {
-                const cleanCipherText = cipherText.toString().trim();
-                if (!cleanCipherText.startsWith("U2FsdGVkX1")) return cleanCipherText;
-                const bytes = CryptoJS.AES.decrypt(cleanCipherText, SECRET_KEY);
-                return bytes.toString(CryptoJS.enc.Utf8) || cleanCipherText; 
-            } catch (e) {
-                console.error("복호화 실패:", e);
-                return cipherText; 
-            }
+                const res = await fetch(`${BACKEND_URL}/api/decrypt`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ texts: list })
+                });
+                if (!res.ok) return list;
+                const { results } = await res.json();
+                return results;
+            } catch (e) { return list; }
+        }
+
+        async function decryptAES(cipherText) {
+            if (!cipherText) return "";
+            const [result] = await decryptAESBatch([cipherText]);
+            return result;
         }
 
         auth.onAuthStateChanged((user) => {
@@ -534,7 +548,7 @@
                 if(snapshot.exists()) document.getElementById('input-reminder').value = snapshot.val();
             });
 
-            database.ref('suggestions').orderByChild('timestamp').on('value', (snapshot) => {
+            database.ref('suggestions').orderByChild('timestamp').on('value', async (snapshot) => {
                 const listContainer = document.getElementById('feed-container-list');
                 listContainer.innerHTML = '';
 
@@ -543,14 +557,20 @@
                     return;
                 }
 
-                let itemsHTML = [];
-                snapshot.forEach((child) => {
-                    const key = child.key;
-                    const val = child.val();
+                const rows = [];
+                snapshot.forEach((child) => { rows.push({ key: child.key, val: child.val() }); });
 
-                    const realContent = decryptAES(val.content);
-                    const realAuthor = val.author ? decryptAES(val.author) : "";
-                    const realProfile = val.authorProfile ? decryptAES(val.authorProfile) : "";
+                const [decContents, decAuthors, decProfiles] = await Promise.all([
+                    decryptAESBatch(rows.map(r => r.val.content)),
+                    decryptAESBatch(rows.map(r => r.val.author || '')),
+                    decryptAESBatch(rows.map(r => r.val.authorProfile || ''))
+                ]);
+
+                let itemsHTML = [];
+                rows.forEach(({ key, val }, idx) => {
+                    const realContent = decContents[idx];
+                    const realAuthor = val.author ? decAuthors[idx] : "";
+                    const realProfile = val.authorProfile ? decProfiles[idx] : "";
 
                     const isSuggestion = (val.category === "오늘의 한마디 제안");
                     const badgeClass = isSuggestion ? "badge-suggest" : "badge-inquiry";

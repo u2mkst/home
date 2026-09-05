@@ -647,10 +647,25 @@
         const auth = firebase.auth();
         const database = firebase.database();
 
-        const SECRET_SALT = "u2mkst!";
-        const NEIS_API_KEY = "19f78fd07bfb4243a6333e7bf4641bfc";
+        const BACKEND_URL = "https://kst-backend.vercel.app";
 
-        let loginFailCount = 0; 
+        async function getIdToken() {
+            return auth.currentUser ? await auth.currentUser.getIdToken() : null;
+        }
+
+        async function encryptAESBatch(plainTexts) {
+            const token = await getIdToken();
+            const res = await fetch(`${BACKEND_URL}/api/encrypt`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ texts: plainTexts })
+            });
+            if (!res.ok) throw new Error('암호화 서버 오류');
+            const { results } = await res.json();
+            return results;
+        }
+
+        let loginFailCount = 0;
         let toastTimeout = null;
         let isMathflatSkipped = false; 
 
@@ -850,7 +865,7 @@
                 return;
             }
 
-            const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
+            const url = `${BACKEND_URL}/api/neis?endpoint=schoolInfo&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
 
             fetch(url)
                 .then(response => response.json())
@@ -932,32 +947,34 @@
             const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
             const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
 
-            const studentEmail = u2mId + "@kst.com"; 
-            const studentPassword = "00" + phoneTail; 
-
-            const encryptedName = CryptoJS.AES.encrypt(studentName, SECRET_SALT).toString();
-            const encryptedPhoneTail = CryptoJS.AES.encrypt(phoneTail, SECRET_SALT).toString();
-            const encryptedMfPhone = mathflatPhone ? CryptoJS.AES.encrypt(mathflatPhone, SECRET_SALT).toString() : "";
-            const encryptedMfPw = mathflatPw ? CryptoJS.AES.encrypt(mathflatPw, SECRET_SALT).toString() : "";
+            const studentEmail = u2mId + "@kst.com";
+            const studentPassword = "00" + phoneTail;
 
             auth.createUserWithEmailAndPassword(studentEmail, studentPassword)
-                .then((userCredential) => {
+                .then(async (userCredential) => {
                     const user = userCredential.user;
-                    return user.updateProfile({ displayName: studentName }).then(() => {
-                        return database.ref('students/' + user.uid).set({
-                            name: encryptedName,                  
-                            u2mId: u2mId,                         
-                            schoolName: schoolName,               
-                            schoolCode: schoolCode,               
-                            mathGradeCode: studentGrade,          
-                            class: studentClass,                  
-                            teacher: selectedTeacher,             
-                            phone: encryptedPhoneTail,            
-                            studentPhone: encryptedMfPhone,       
-                            mathflatPw: encryptedMfPw,           
-                            mathflatId: mathflatPhone,            
-                            joinedAt: firebase.database.ServerValue.TIMESTAMP
-                        });
+
+                    const [encryptedName, encryptedPhoneTail, encryptedMfPhone, encryptedMfPw] = await encryptAESBatch([
+                        studentName,
+                        phoneTail,
+                        mathflatPhone || "",
+                        mathflatPw || ""
+                    ]);
+
+                    await user.updateProfile({ displayName: studentName });
+                    return database.ref('students/' + user.uid).set({
+                        name: encryptedName,
+                        u2mId: u2mId,
+                        schoolName: schoolName,
+                        schoolCode: schoolCode,
+                        mathGradeCode: studentGrade,
+                        class: studentClass,
+                        teacher: selectedTeacher,
+                        phone: encryptedPhoneTail,
+                        studentPhone: mathflatPhone ? encryptedMfPhone : "",
+                        mathflatPw: mathflatPw ? encryptedMfPw : "",
+                        mathflatId: mathflatPhone,
+                        joinedAt: firebase.database.ServerValue.TIMESTAMP
                     });
                 })
                 .then(() => {

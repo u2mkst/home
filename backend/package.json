@@ -1,0 +1,10 @@
+{
+  "name": "kst-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Serverless backend for K&P KST: hides the AES key and NEIS API key that used to live in the static frontend.",
+  "dependencies": {
+    "crypto-js": "^4.1.1",
+    "firebase-admin": "^12.1.0"
+  }
+}
