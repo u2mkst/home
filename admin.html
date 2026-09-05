@@ -26,18 +26,22 @@
             /* Liquid Glass Theme Colors */
             --glass-bg: rgba(255, 255, 255, 0.45);
             --glass-card: rgba(255, 255, 255, 0.55);
-            --glass-border: rgba(255, 255, 255, 0.7);
-            --glass-shine: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 100%);
-            
+            --glass-border: rgba(255, 255, 255, 0.75);
+            --glass-shine: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.1) 100%);
+            --glass-blur: blur(26px) saturate(180%);
+
             --primary: #4f46e5;
             --primary-light: rgba(79, 70, 229, 0.1);
             --text-main: #0f172a;
             --text-sub: #475569;
             --danger: #ef4444;
             --success: #10b981;
-            
-            --shadow-glass: 0 16px 32px 0 rgba(31, 38, 135, 0.07);
+
+            --shadow-glass: 0 16px 36px 0 rgba(31, 38, 135, 0.09), inset 0 1px 1px rgba(255,255,255,0.7);
+            --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
         }
+        @keyframes lgPopIn { 0% { opacity: 0; transform: scale(0.85) translateY(14px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 
         * { box-sizing: border-box; }
 
@@ -98,16 +102,17 @@
         }
 
         /* 애플 리퀴드 글래스 카스트 효과 */
-        .card { 
+        .card {
             position: relative;
-            background: var(--glass-card); 
-            padding: 24px; 
-            border-radius: 24px; 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: var(--glass-card);
+            padding: 24px;
+            border-radius: 28px;
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
             box-shadow: var(--shadow-glass);
             overflow: hidden;
+            transition: transform 0.4s var(--ease-smooth), box-shadow 0.4s var(--ease-smooth);
         }
 
         .card::before {
@@ -153,30 +158,30 @@
             box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
         }
 
-        button { 
+        button {
             font-family: var(--font-title);
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            background: var(--primary); 
+            background: linear-gradient(135deg, #6259ef 0%, var(--primary) 100%);
             color: #ffffff;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 12px 18px; 
-            border-radius: 14px; 
-            cursor: pointer; 
-            font-weight: 700; 
+            padding: 12px 18px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-weight: 700;
             font-size: 0.95rem;
-            width: 100%; 
-            margin-bottom: 8px; 
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+            margin-bottom: 8px;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3), inset 0 1px 1px rgba(255,255,255,0.3);
+            transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth);
         }
 
-        button:hover { 
+        button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+            box-shadow: 0 12px 26px rgba(79, 70, 229, 0.4), inset 0 1px 1px rgba(255,255,255,0.3);
         }
-        button:active { transform: translateY(0); }
+        button:active { transform: scale(0.96); }
 
         .btn-delete { 
             background: rgba(239, 68, 68, 0.15);
@@ -250,12 +255,13 @@
         .msg-fab {
             position: fixed; bottom: 30px; right: 30px;
             width: 60px; height: 60px; border-radius: 50%;
-            background: var(--primary); color: white; border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+            background: linear-gradient(135deg, #6259ef, var(--primary)); color: white; border: 1px solid rgba(255, 255, 255, 0.45);
+            box-shadow: 0 14px 30px rgba(79, 70, 229, 0.45), inset 0 1px 1px rgba(255,255,255,0.35);
             cursor: pointer; display: none; justify-content: center; align-items: center;
-            font-size: 1.5rem; z-index: 999; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 1.5rem; z-index: 999; transition: transform 0.4s var(--spring), box-shadow 0.3s var(--ease-smooth);
         }
-        .msg-fab:hover { transform: scale(1.1); }
+        .msg-fab:hover { transform: scale(1.1) translateY(-2px); }
+        .msg-fab:active { transform: scale(0.92); }
         .msg-badge {
             position: absolute; top: -2px; right: -2px;
             background: var(--danger); color: white;
@@ -267,13 +273,14 @@
         /* 🗂️ 메시지 모달창 */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(8px); z-index: 1000;
+            background: rgba(15, 23, 42, 0.32); backdrop-filter: blur(10px) saturate(140%); z-index: 1000;
             justify-content: center; align-items: center;
         }
         .modal-box {
-            background: rgba(255, 255, 255, 0.85); width: 90%; max-width: 450px; padding: 24px;
-            border-radius: 28px; backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.72); width: 90%; max-width: 450px; padding: 24px;
+            border-radius: 30px; backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1.5px solid var(--glass-border);
+            box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.28), inset 0 1px 1px rgba(255,255,255,0.7); box-sizing: border-box;
+            animation: lgPopIn 0.45s var(--spring);
         }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .modal-title { font-family: var(--font-title); font-size: 1.15rem; font-weight: 700; color: var(--text-main); }
