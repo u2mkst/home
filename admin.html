@@ -513,6 +513,12 @@
             }
         }
 
+        function escapeHTML(str) {
+            return String(str ?? "").replace(/[&<>'"]/g,
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
             authDomain: "ksthome-76889.firebaseapp.com",
@@ -623,11 +629,14 @@
                 item.className = 'student-item';
                 item.innerHTML = `
                     <div class="student-info">
-                        <span class="student-name">👤 ${student.name}</span>
-                        <span class="student-id">ID: ${studentIdStr}</span>
+                        <span class="student-name">👤 ${escapeHTML(student.name)}</span>
+                        <span class="student-id">ID: ${escapeHTML(studentIdStr)}</span>
                     </div>
-                    <button class="btn-note" onclick="loadStudentChatRoom('${student.id}', '${student.name}')">대화방</button>
+                    <button class="btn-note" data-student-id="${escapeHTML(student.id)}" data-student-name="${escapeHTML(student.name)}">대화방</button>
                 `;
+                item.querySelector('.btn-note').addEventListener('click', function() {
+                    loadStudentChatRoom(this.dataset.studentId, this.dataset.studentName);
+                });
                 listZone.appendChild(item);
             });
         }
@@ -715,13 +724,13 @@
 
                 if (chat.origin === 'student') {
                     wrapper.innerHTML = `
-                        <span class="admin-chat-meta"><span class="chat-sender-name">👤 ${currentSelectedStudentName}</span> (${timeStr})</span>
-                        <div class="admin-bubble student">${rawMessage}</div>
+                        <span class="admin-chat-meta"><span class="chat-sender-name">👤 ${escapeHTML(currentSelectedStudentName)}</span> (${timeStr})</span>
+                        <div class="admin-bubble student">${escapeHTML(rawMessage)}</div>
                     `;
                 } else {
                     wrapper.innerHTML = `
-                        <span class="admin-chat-meta teacher"><span class="chat-sender-name me">나 (${chat.teacher || '선생님'})</span> (${timeStr})</span>
-                        <div class="admin-bubble teacher">${rawMessage}</div>
+                        <span class="admin-chat-meta teacher"><span class="chat-sender-name me">나 (${escapeHTML(chat.teacher || '선생님')})</span> (${timeStr})</span>
+                        <div class="admin-bubble teacher">${escapeHTML(rawMessage)}</div>
                     `;
                 }
                 zoneEl.appendChild(wrapper);
@@ -805,24 +814,30 @@
                         item.className = `msg-item ${!msg.read ? 'unread' : ''}`;
                         item.innerHTML = `
                             <div class="msg-meta">
-                                <span class="msg-sender">👤 ${msg.studentName || '알수없음'} (${msgStudentId})</span>
+                                <span class="msg-sender">👤 ${escapeHTML(msg.studentName || '알수없음')} (${escapeHTML(msgStudentId)})</span>
                                 <span>${timeStr}</span>
                             </div>
-                            <div class="msg-body">${decryptedMsg || ''}</div>
-                            
+                            <div class="msg-body">${escapeHTML(decryptedMsg || '')}</div>
+
                             <div class="reply-box">
-                                <button class="reply-toggle-btn" onclick="toggleReplyZone('${msg.id}')">답장하기</button>
-                                
+                                <button class="reply-toggle-btn" data-msg-id="${escapeHTML(msg.id)}">답장하기</button>
+
                                 <div class="reply-input-zone" id="replyZone-${msg.id}">
                                     <textarea class="reply-mini-textarea" id="replyInput-${msg.id}" rows="2" placeholder="답장 내용을 입력하세요."></textarea>
-                                    <button class="reply-send-btn" onclick="sendReplyFromModal('${msg.id}', '${msg.studentUid}', '${msg.teacher}')">전송 및 저장</button>
+                                    <button class="reply-send-btn" data-msg-id="${escapeHTML(msg.id)}" data-student-uid="${escapeHTML(msg.studentUid)}" data-teacher="${escapeHTML(msg.teacher)}">전송 및 저장</button>
                                 </div>
-                                
+
                                 <div class="history-list" id="history-${msg.id}" style="display:none;"></div>
                             </div>
                         `;
+                        item.querySelector('.reply-toggle-btn').addEventListener('click', function() {
+                            toggleReplyZone(this.dataset.msgId);
+                        });
+                        item.querySelector('.reply-send-btn').addEventListener('click', function() {
+                            sendReplyFromModal(this.dataset.msgId, this.dataset.studentUid, this.dataset.teacher);
+                        });
                         listEl.appendChild(item);
-                        
+
                         listenToExistingReplies(msg.id);
                     });
                 } else {
@@ -906,7 +921,7 @@
 
                     const itemHtml = `
                         <div class="history-item">
-                            <span class="history-teacher">└ 답장:</span> ${decryptedReply} 
+                            <span class="history-teacher">└ 답장:</span> ${escapeHTML(decryptedReply)}
                             <span style="font-size:0.7rem; color:var(--text-sub);">(${timeStr})</span>
                         </div>
                     `;
