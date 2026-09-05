@@ -863,31 +863,13 @@
             </div>
 
             <div id="ttMainContent" style="display:none;">
-                <div class="tt-tab-switch">
-                    <button id="ttTabMonth" class="tt-tab-btn active" onclick="switchTimetableView('month')">월간</button>
-                    <button id="ttTabWeek" class="tt-tab-btn" onclick="switchTimetableView('week')">주간</button>
-                </div>
-
                 <div class="tt-nav-row">
                     <button class="tt-nav-btn" onclick="navigateTimetable(-1)">◀</button>
                     <span class="tt-nav-label" id="ttNavLabel">-</span>
                     <button class="tt-nav-btn" onclick="navigateTimetable(1)">▶</button>
                 </div>
 
-                <div id="ttMonthView">
-                    <div class="calendar-grid">
-                        <div class="calendar-day-head text-red-500">일</div>
-                        <div class="calendar-day-head">월</div>
-                        <div class="calendar-day-head">화</div>
-                        <div class="calendar-day-head">수</div>
-                        <div class="calendar-day-head">목</div>
-                        <div class="calendar-day-head">금</div>
-                        <div class="calendar-day-head text-blue-500">토</div>
-                    </div>
-                    <div id="ttMonthGrid" class="calendar-grid" style="margin-top:8px;"></div>
-                </div>
-
-                <div id="ttWeekView" style="display:none;">
+                <div id="ttWeekView">
                     <div class="tt-week-row" id="ttWeekGrid"></div>
                 </div>
 
@@ -2901,7 +2883,6 @@
        - 4) 컴시간 실패/데이터 없음 → NICE 결과 그대로 사용
        - 선생님 이름이 정확히 2글자면 마지막 글자를 *로 마스킹 (예: 홍길 → 홍길*)
     ===================================================================== */
-    let ttViewMode = 'month';
     let ttCurrentDate = new Date();
     let ttSelectedDateStr = null;
     const ttCache = {};
@@ -2967,13 +2948,8 @@
         if (!currentStudentData) { showToast("⌛ 학생 정보 동기화 중입니다."); return; }
 
         document.getElementById('ttSchoolLabel').innerText = `${currentStudentData.schoolName || ''} · ${currentStudentData.grade || ''}`;
-        ttViewMode = 'month';
         ttCurrentDate = new Date();
         ttSelectedDateStr = null;
-        document.getElementById('ttTabMonth').classList.add('active');
-        document.getElementById('ttTabWeek').classList.remove('active');
-        document.getElementById('ttMonthView').style.display = '';
-        document.getElementById('ttWeekView').style.display = 'none';
         document.getElementById('ttPeriodList').innerHTML = '<div class="no-data">날짜를 선택하면 시간표가 표시됩니다.</div>';
 
         if (!currentStudentData.schoolClassNum) {
@@ -3010,17 +2986,8 @@
         }).catch(err => showToast("저장 실패: " + err.message));
     }
 
-    function switchTimetableView(mode) {
-        ttViewMode = mode;
-        document.getElementById('ttTabMonth').classList.toggle('active', mode === 'month');
-        document.getElementById('ttTabWeek').classList.toggle('active', mode === 'week');
-        document.getElementById('ttMonthView').style.display = mode === 'month' ? '' : 'none';
-        document.getElementById('ttWeekView').style.display = mode === 'week' ? '' : 'none';
-        renderTimetableNav();
-    }
     function navigateTimetable(direction) {
-        if (ttViewMode === 'month') { ttCurrentDate.setMonth(ttCurrentDate.getMonth() + direction); }
-        else { ttCurrentDate.setDate(ttCurrentDate.getDate() + direction * 7); }
+        ttCurrentDate.setDate(ttCurrentDate.getDate() + direction * 7);
         renderTimetableNav();
     }
 
@@ -3029,44 +2996,12 @@
 
     function renderTimetableNav() {
         const label = document.getElementById('ttNavLabel');
-        if (ttViewMode === 'month') {
-            label.innerText = `${ttCurrentDate.getFullYear()}년 ${ttCurrentDate.getMonth() + 1}월`;
-            renderTimetableMonthGrid();
-        } else {
-            const startOfWeek = new Date(ttCurrentDate);
-            startOfWeek.setDate(ttCurrentDate.getDate() - ttCurrentDate.getDay());
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
-            label.innerText = `${startOfWeek.getMonth()+1}.${startOfWeek.getDate()} ~ ${endOfWeek.getMonth()+1}.${endOfWeek.getDate()}`;
-            renderTimetableWeekGrid(startOfWeek);
-        }
-    }
-
-    function renderTimetableMonthGrid() {
-        const grid = document.getElementById('ttMonthGrid');
-        grid.innerHTML = '';
-        const year = ttCurrentDate.getFullYear();
-        const month = ttCurrentDate.getMonth();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const firstDayIndex = new Date(year, month, 1).getDay();
-        const today = new Date();
-
-        for (let i = 0; i < firstDayIndex; i++) {
-            const empty = document.createElement('div');
-            empty.className = 'ttcal-day empty';
-            grid.appendChild(empty);
-        }
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateObj = new Date(year, month, d);
-            const dateStr = toDateStr(dateObj);
-            const cell = document.createElement('div');
-            cell.className = 'ttcal-day';
-            if (isSameDate(dateObj, today)) cell.classList.add('today');
-            if (dateStr === ttSelectedDateStr) cell.classList.add('selected');
-            cell.innerText = d;
-            cell.onclick = () => selectTimetableDate(dateObj);
-            grid.appendChild(cell);
-        }
+        const startOfWeek = new Date(ttCurrentDate);
+        startOfWeek.setDate(ttCurrentDate.getDate() - ttCurrentDate.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        label.innerText = `${startOfWeek.getMonth()+1}.${startOfWeek.getDate()} ~ ${endOfWeek.getMonth()+1}.${endOfWeek.getDate()}`;
+        renderTimetableWeekGrid(startOfWeek);
     }
 
     function renderTimetableWeekGrid(startOfWeek) {
@@ -3090,7 +3025,7 @@
 
     function selectTimetableDate(dateObj) {
         ttSelectedDateStr = toDateStr(dateObj);
-        if (ttViewMode === 'month') renderTimetableMonthGrid(); else renderTimetableNav();
+        renderTimetableNav();
         fetchTimetableForDate(dateObj);
     }
 
