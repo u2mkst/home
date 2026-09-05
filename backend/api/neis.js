@@ -21,6 +21,10 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: "Unknown or missing `endpoint`" });
     }
 
+    if (!process.env.NEIS_API_KEY) {
+        return res.status(500).json({ error: "NEIS_API_KEY is not configured on the server" });
+    }
+
     const search = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
         if (value === undefined) continue;
@@ -30,11 +34,23 @@ module.exports = async (req, res) => {
 
     const url = `https://open.neis.go.kr/hub/${endpoint}?${search.toString()}`;
 
+    let neisRes;
     try {
-        const neisRes = await fetch(url);
-        const data = await neisRes.json();
-        return res.status(neisRes.status).json(data);
+        neisRes = await fetch(url, {
+            headers: { "User-Agent": "Mozilla/5.0 (KST backend proxy)" },
+        });
     } catch (err) {
-        return res.status(502).json({ error: "Failed to reach NEIS API" });
+        return res.status(502).json({ error: "Failed to reach NEIS API", detail: err.message });
+    }
+
+    const rawBody = await neisRes.text();
+    try {
+        return res.status(neisRes.status).json(JSON.parse(rawBody));
+    } catch (err) {
+        return res.status(502).json({
+            error: "NEIS API returned a non-JSON response",
+            neisStatus: neisRes.status,
+            bodyPreview: rawBody.slice(0, 300),
+        });
     }
 };
