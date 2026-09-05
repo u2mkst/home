@@ -102,7 +102,7 @@
         .btn-secondary { background-color: #e2e8f0; color: #4a5568; }
         .btn-secondary:hover { background-color: #cbd5e1; }
 
-        /* 슬라이드형 바텀시트 (index 방식: 오늘의 문제 / 매쓰플랫) */
+        /* 슬라이드형 바텀시트 (index 방식: 오늘의 문제 / 매쓰플랫 / 시간표) */
         .bottom-sheet-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
@@ -301,6 +301,30 @@
         }
         .mathq-more-link:hover { background: rgba(108, 92, 231, 0.12); transform: translateX(2px); }
 
+        /* 🗓️ 학교 시간표 바텀시트 전용 디자인 */
+        .tt-tab-switch { display:flex; gap:8px; background:#f1f5f9; border-radius:16px; padding:5px; margin-bottom:16px; }
+        .tt-tab-btn { flex:1; padding:10px; border:none; background:transparent; border-radius:12px; font-family:'Paperlogy',sans-serif; font-weight:700; font-size:0.85rem; color:#86868b; cursor:pointer; transition:all .2s ease; }
+        .tt-tab-btn.active { background:#6c5ce7; color:#fff; box-shadow:0 4px 12px rgba(108,92,231,0.3); }
+        .tt-nav-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+        .tt-nav-btn { width:34px; height:34px; border-radius:10px; border:1px solid #e2e8f0; background:#f8fafc; color:#6c5ce7; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; }
+        .tt-nav-btn:hover { background:#6c5ce7; color:#fff; }
+        .tt-nav-label { font-family:'Paperlogy',sans-serif; font-weight:700; font-size:0.95rem; color:#1d1d1f; }
+        .ttcal-day { padding:10px 0; font-size:0.9rem; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; cursor:pointer; transition:all .15s ease; text-align:center; }
+        .ttcal-day:hover { background:#eef2ff; }
+        .ttcal-day.today { border-color:#6c5ce7; font-weight:800; color:#6c5ce7; }
+        .ttcal-day.selected { background:#6c5ce7; color:#fff; border-color:#6c5ce7; }
+        .ttcal-day.empty { background:transparent; border:none; cursor:default; }
+        .tt-week-row { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:6px; }
+        .tt-period-list { margin-top:16px; display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; }
+        .tt-period-item { display:flex; align-items:center; gap:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:12px 14px; }
+        .tt-period-num { width:32px; height:32px; border-radius:50%; background:#6c5ce7; color:#fff; font-weight:800; font-size:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .tt-period-subject { font-weight:700; color:#1d1d1f; font-size:0.92rem; }
+        .tt-period-teacher { font-size: 0.76rem; color: #86868b; font-weight: 600; margin-top: 2px; }
+        .tt-source-badge { display:inline-block; font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:6px; vertical-align:middle; }
+        .tt-source-badge.nice { background:rgba(108,92,231,0.1); color:#6c5ce7; }
+        .tt-source-badge.comcigan { background:rgba(16,185,129,0.12); color:#10b981; }
+        .tt-classnum-form { display:flex; gap:8px; margin-top:10px; }
+
         /* ============ 마이페이지(MYPAGE) 뷰 ============ */
         .mypage-header-zone { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; width: 100%; }
         .page-title { font-size: 1.4rem; font-weight: bold; color: #2c3e50; font-family: 'Paperlogy', sans-serif; }
@@ -450,7 +474,7 @@
     <div id="view-home">
         <div class="header-zone" onclick="showView('home')" title="홈">
             <h1 class="welcome-text" id="welcome-message">학생 정보를 불러오는 중...</h1>
-            <div class="dday-badge" id="ddayText">확인 중...</div>
+            <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="눌러서 학교 시간표 보기">확인 중...</div>
         </div>
 
         <div class="main-grid">
@@ -520,6 +544,13 @@
                 <input type="text" id="schoolName" placeholder="예: 무원중" autocomplete="off">
                 <div id="schoolList" class="autocomplete-list hidden"></div>
                 <input type="hidden" id="schoolCode">
+                <input type="hidden" id="schoolOfficeCode">
+                <input type="hidden" id="schoolLevelHidden">
+            </div>
+
+            <div class="input-wrapper">
+                <label for="schoolClassNum">학교 학급 번호 (시간표 조회용)</label>
+                <input type="text" id="schoolClassNum" placeholder="예: 3 (숫자만 입력)" inputmode="numeric" maxlength="2">
             </div>
 
             <div class="input-row">
@@ -811,6 +842,61 @@
                 <a href="#" id="mathqMoreLink" class="mathq-more-link" onclick="return false;">더 많은 문제 연습하기 →</a>
                 <button type="button" class="btn-base btn-secondary" style="margin-top: 12px;" onclick="closeMathQuizBottomSheet()">닫기</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 🗓️ 학교 시간표 바텀 시트 -->
+    <div id="timetableBottomSheet" class="bottom-sheet-overlay" onclick="handleTimetableOverlayClick(event)">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()" style="max-height: 86vh; overflow-y: auto;">
+            <div class="sheet-drag-handle"></div>
+            <div class="sheet-title">🗓️ 학교 시간표</div>
+            <div class="sheet-subtitle" id="ttSchoolLabel">학교 정보를 확인하는 중...</div>
+
+            <div id="ttClassNumMissing" style="display:none;">
+                <div style="text-align:center; padding: 10px 0 6px; font-size:0.88rem; color:#4a5568;">
+                    시간표 조회를 위해 학교 학급 번호가 필요해요.
+                </div>
+                <div class="tt-classnum-form">
+                    <input type="text" id="ttClassNumInput" class="sheet-input" placeholder="예: 3 (숫자만)" inputmode="numeric" maxlength="2" style="margin-bottom:0;">
+                    <button type="button" class="btn-base btn-primary" style="width:auto; padding:12px 18px;" onclick="saveSchoolClassNumFromSheet()">저장</button>
+                </div>
+            </div>
+
+            <div id="ttMainContent" style="display:none;">
+                <div class="tt-tab-switch">
+                    <button id="ttTabMonth" class="tt-tab-btn active" onclick="switchTimetableView('month')">월간</button>
+                    <button id="ttTabWeek" class="tt-tab-btn" onclick="switchTimetableView('week')">주간</button>
+                </div>
+
+                <div class="tt-nav-row">
+                    <button class="tt-nav-btn" onclick="navigateTimetable(-1)">◀</button>
+                    <span class="tt-nav-label" id="ttNavLabel">-</span>
+                    <button class="tt-nav-btn" onclick="navigateTimetable(1)">▶</button>
+                </div>
+
+                <div id="ttMonthView">
+                    <div class="calendar-grid">
+                        <div class="calendar-day-head text-red-500">일</div>
+                        <div class="calendar-day-head">월</div>
+                        <div class="calendar-day-head">화</div>
+                        <div class="calendar-day-head">수</div>
+                        <div class="calendar-day-head">목</div>
+                        <div class="calendar-day-head">금</div>
+                        <div class="calendar-day-head text-blue-500">토</div>
+                    </div>
+                    <div id="ttMonthGrid" class="calendar-grid" style="margin-top:8px;"></div>
+                </div>
+
+                <div id="ttWeekView" style="display:none;">
+                    <div class="tt-week-row" id="ttWeekGrid"></div>
+                </div>
+
+                <div id="ttPeriodList" class="tt-period-list">
+                    <div class="no-data">날짜를 선택하면 시간표가 표시됩니다.</div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-base btn-secondary" style="margin-top: 16px;" onclick="closeTimetableBottomSheet()">닫기</button>
         </div>
     </div>
 
@@ -2030,6 +2116,9 @@
         document.getElementById('studentName').value = decryptAES(d.name);
         document.getElementById('schoolName').value = d.schoolName || '';
         document.getElementById('schoolCode').value = d.schoolCode || '';
+        document.getElementById('schoolOfficeCode').value = d.schoolOfficeCode || '';
+        document.getElementById('schoolLevelHidden').value = d.schoolLevel || '';
+        document.getElementById('schoolClassNum').value = d.schoolClassNum || '';
         if (d.grade) document.getElementById('studentGrade').value = d.grade;
         document.getElementById('studentClass').value = d.className || d.class || '';
         if (d.teacher) document.getElementById('teacherName').value = d.teacher;
@@ -2073,6 +2162,8 @@
                         li.addEventListener('click', () => {
                             schoolInput.value = item.SCHUL_NM;
                             schoolCodeInput.value = item.SD_SCHUL_CODE;
+                            document.getElementById('schoolOfficeCode').value = item.ATPT_OFCDC_SC_CODE;
+                            document.getElementById('schoolLevelHidden').value = item.SCHUL_KND_SC_NM || '';
                             schoolList.innerHTML = ''; schoolList.classList.add('hidden');
                             triggerAutoSave();
                         });
@@ -2090,7 +2181,7 @@
     });
 
     function bindAutoSaveEvents() {
-        const inputs = ['studentName', 'schoolName', 'studentGrade', 'studentClass', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw'];
+        const inputs = ['studentName', 'schoolName', 'studentGrade', 'studentClass', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw', 'schoolClassNum'];
         inputs.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
@@ -2153,6 +2244,9 @@
         const studentName = document.getElementById('studentName').value.trim();
         const schoolName = document.getElementById('schoolName').value.trim();
         const schoolCode = document.getElementById('schoolCode').value.trim();
+        const schoolOfficeCode = document.getElementById('schoolOfficeCode').value.trim();
+        const schoolLevel = document.getElementById('schoolLevelHidden').value.trim();
+        const schoolClassNum = document.getElementById('schoolClassNum').value.trim().replace(/[^0-9]/g, '');
         const grade = document.getElementById('studentGrade').value;
         const studentClass = document.getElementById('studentClass').value.trim();
         const selectedTeacher = document.getElementById('teacherName').value;
@@ -2166,6 +2260,9 @@
         if (studentName) updatedObject.name = encryptAES(studentName);
         if (schoolName) updatedObject.schoolName = schoolName;
         if (schoolCode) updatedObject.schoolCode = schoolCode;
+        if (schoolOfficeCode) updatedObject.schoolOfficeCode = schoolOfficeCode;
+        if (schoolLevel) updatedObject.schoolLevel = schoolLevel;
+        if (schoolClassNum) updatedObject.schoolClassNum = schoolClassNum;
         if (grade) updatedObject.grade = grade;
         if (studentClass !== undefined) { updatedObject.className = studentClass; updatedObject.class = studentClass; }
         if (selectedTeacher) updatedObject.teacher = selectedTeacher;
@@ -2727,7 +2824,325 @@
     }
 
     /* =====================================================================
-       9. 채팅 FAB / 초기 부팅
+       9. 🗓️ 학교 시간표 (바텀시트) — NICE API + 컴시간 API 보강
+       - 1) NICE API로 우선 조회
+       - 2) 컴시간(comcigan) API로 동일 날짜 조회 시도
+       - 3) 컴시간 조회 성공 & 데이터 있음 → 컴시간 데이터로 덮어씀 (선생님 이름 포함)
+       - 4) 컴시간 실패/데이터 없음 → NICE 결과 그대로 사용
+       - 선생님 이름이 정확히 2글자면 마지막 글자를 *로 마스킹 (예: 홍길 → 홍길*)
+    ===================================================================== */
+    let ttViewMode = 'month';
+    let ttCurrentDate = new Date();
+    let ttSelectedDateStr = null;
+    const ttCache = {};
+
+    const NEIS_OFFICE_TO_REGION = {
+        "B10": "서울", "C10": "부산", "D10": "대구", "E10": "인천", "F10": "광주",
+        "G10": "대전", "H10": "울산", "I10": "세종", "J10": "경기", "K10": "강원",
+        "M10": "충북", "N10": "충남", "P10": "전북", "Q10": "전남",
+        "R10": "경북", "S10": "경남", "T10": "제주"
+    };
+
+    function getTimetableEndpoint(schoolLevel) {
+        if (!schoolLevel) return 'hisTimetable';
+        if (schoolLevel.includes('초등')) return 'elsTimetable';
+        if (schoolLevel.includes('중')) return 'misTimetable';
+        return 'hisTimetable';
+    }
+    function parseGradeNumber(gradeStr) {
+        if (!gradeStr) return null;
+        const match = String(gradeStr).match(/\d+/);
+        return match ? parseInt(match[0], 10) : null;
+    }
+    function maskTeacherName(name) {
+        if (!name) return '';
+        const trimmed = String(name).trim();
+        if (trimmed.length === 2) return trimmed + '*';
+        return trimmed;
+    }
+    // JS getDay(): 0=일,1=월,2=화,3=수,4=목,5=금,6=토 → 컴시간 weekday 인덱스(0=월~4=금)로 변환
+    function jsDayToComciganIndex(jsDay) {
+        if (jsDay >= 1 && jsDay <= 5) return jsDay - 1;
+        return null; // 주말은 컴시간 데이터 없음
+    }
+
+    function ensureSchoolMeta(callback) {
+        if (!currentStudentData || !currentStudentData.schoolName || !currentStudentData.schoolCode) {
+            callback(null); return;
+        }
+        if (currentStudentData.schoolOfficeCode && currentStudentData.schoolLevel) {
+            callback({ officeCode: currentStudentData.schoolOfficeCode, schoolLevel: currentStudentData.schoolLevel });
+            return;
+        }
+        // 기존 가입자 등 메타 정보가 없는 경우, 학교명으로 1회 조회 후 Firebase에 캐싱
+        const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(currentStudentData.schoolName)}`;
+        fetch(url).then(res => res.json()).then(data => {
+            if (!data.schoolInfo) { callback(null); return; }
+            const rows = data.schoolInfo[1].row;
+            const row = rows.find(r => r.SD_SCHUL_CODE === currentStudentData.schoolCode) || rows[0];
+            const meta = { officeCode: row.ATPT_OFCDC_SC_CODE, schoolLevel: row.SCHUL_KND_SC_NM || '' };
+            const user = auth.currentUser;
+            if (user) {
+                database.ref(`students/${user.uid}`).update({ schoolOfficeCode: meta.officeCode, schoolLevel: meta.schoolLevel }).catch(() => {});
+                currentStudentData.schoolOfficeCode = meta.officeCode;
+                currentStudentData.schoolLevel = meta.schoolLevel;
+            }
+            callback(meta);
+        }).catch(() => callback(null));
+    }
+
+    function openTimetableBottomSheet() {
+        const sheet = document.getElementById('timetableBottomSheet');
+        if (!sheet) return;
+        if (!currentStudentData) { showToast("⌛ 학생 정보 동기화 중입니다."); return; }
+
+        document.getElementById('ttSchoolLabel').innerText = `${currentStudentData.schoolName || ''} · ${currentStudentData.grade || ''}`;
+        ttViewMode = 'month';
+        ttCurrentDate = new Date();
+        ttSelectedDateStr = null;
+        document.getElementById('ttTabMonth').classList.add('active');
+        document.getElementById('ttTabWeek').classList.remove('active');
+        document.getElementById('ttMonthView').style.display = '';
+        document.getElementById('ttWeekView').style.display = 'none';
+        document.getElementById('ttPeriodList').innerHTML = '<div class="no-data">날짜를 선택하면 시간표가 표시됩니다.</div>';
+
+        if (!currentStudentData.schoolClassNum) {
+            document.getElementById('ttClassNumMissing').style.display = 'block';
+            document.getElementById('ttMainContent').style.display = 'none';
+        } else {
+            document.getElementById('ttClassNumMissing').style.display = 'none';
+            document.getElementById('ttMainContent').style.display = 'block';
+            renderTimetableNav();
+        }
+        sheet.classList.add('active');
+    }
+    function closeTimetableBottomSheet() {
+        const sheet = document.getElementById('timetableBottomSheet');
+        if (sheet) sheet.classList.remove('active');
+    }
+    function handleTimetableOverlayClick(event) {
+        if (event.target.id === 'timetableBottomSheet') closeTimetableBottomSheet();
+    }
+
+    function saveSchoolClassNumFromSheet() {
+        const val = document.getElementById('ttClassNumInput').value.trim().replace(/[^0-9]/g, '');
+        if (!val) { showToast("학급 번호를 숫자로 입력해 주세요."); return; }
+        const user = auth.currentUser;
+        if (!user) return;
+        database.ref(`students/${user.uid}`).update({ schoolClassNum: val }).then(() => {
+            currentStudentData.schoolClassNum = val;
+            const mypageInput = document.getElementById('schoolClassNum');
+            if (mypageInput) mypageInput.value = val;
+            document.getElementById('ttClassNumMissing').style.display = 'none';
+            document.getElementById('ttMainContent').style.display = 'block';
+            renderTimetableNav();
+            showToast("💾 학급 번호가 저장되었습니다.");
+        }).catch(err => showToast("저장 실패: " + err.message));
+    }
+
+    function switchTimetableView(mode) {
+        ttViewMode = mode;
+        document.getElementById('ttTabMonth').classList.toggle('active', mode === 'month');
+        document.getElementById('ttTabWeek').classList.toggle('active', mode === 'week');
+        document.getElementById('ttMonthView').style.display = mode === 'month' ? '' : 'none';
+        document.getElementById('ttWeekView').style.display = mode === 'week' ? '' : 'none';
+        renderTimetableNav();
+    }
+    function navigateTimetable(direction) {
+        if (ttViewMode === 'month') { ttCurrentDate.setMonth(ttCurrentDate.getMonth() + direction); }
+        else { ttCurrentDate.setDate(ttCurrentDate.getDate() + direction * 7); }
+        renderTimetableNav();
+    }
+
+    function toDateStr(d) { return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; }
+    function isSameDate(d1, d2) { return d1.getFullYear()===d2.getFullYear() && d1.getMonth()===d2.getMonth() && d1.getDate()===d2.getDate(); }
+
+    function renderTimetableNav() {
+        const label = document.getElementById('ttNavLabel');
+        if (ttViewMode === 'month') {
+            label.innerText = `${ttCurrentDate.getFullYear()}년 ${ttCurrentDate.getMonth() + 1}월`;
+            renderTimetableMonthGrid();
+        } else {
+            const startOfWeek = new Date(ttCurrentDate);
+            startOfWeek.setDate(ttCurrentDate.getDate() - ttCurrentDate.getDay());
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            label.innerText = `${startOfWeek.getMonth()+1}.${startOfWeek.getDate()} ~ ${endOfWeek.getMonth()+1}.${endOfWeek.getDate()}`;
+            renderTimetableWeekGrid(startOfWeek);
+        }
+    }
+
+    function renderTimetableMonthGrid() {
+        const grid = document.getElementById('ttMonthGrid');
+        grid.innerHTML = '';
+        const year = ttCurrentDate.getFullYear();
+        const month = ttCurrentDate.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const today = new Date();
+
+        for (let i = 0; i < firstDayIndex; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'ttcal-day empty';
+            grid.appendChild(empty);
+        }
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateObj = new Date(year, month, d);
+            const dateStr = toDateStr(dateObj);
+            const cell = document.createElement('div');
+            cell.className = 'ttcal-day';
+            if (isSameDate(dateObj, today)) cell.classList.add('today');
+            if (dateStr === ttSelectedDateStr) cell.classList.add('selected');
+            cell.innerText = d;
+            cell.onclick = () => selectTimetableDate(dateObj);
+            grid.appendChild(cell);
+        }
+    }
+
+    function renderTimetableWeekGrid(startOfWeek) {
+        const grid = document.getElementById('ttWeekGrid');
+        grid.innerHTML = '';
+        const today = new Date();
+        const labels = ['일','월','화','수','목','금','토'];
+        for (let i = 0; i < 7; i++) {
+            const dateObj = new Date(startOfWeek);
+            dateObj.setDate(startOfWeek.getDate() + i);
+            const dateStr = toDateStr(dateObj);
+            const cell = document.createElement('div');
+            cell.className = 'ttcal-day';
+            if (isSameDate(dateObj, today)) cell.classList.add('today');
+            if (dateStr === ttSelectedDateStr) cell.classList.add('selected');
+            cell.innerHTML = `<div style="font-size:0.7rem; opacity:0.7;">${labels[i]}</div>${dateObj.getDate()}`;
+            cell.onclick = () => selectTimetableDate(dateObj);
+            grid.appendChild(cell);
+        }
+    }
+
+    function selectTimetableDate(dateObj) {
+        ttSelectedDateStr = toDateStr(dateObj);
+        if (ttViewMode === 'month') renderTimetableMonthGrid(); else renderTimetableNav();
+        fetchTimetableForDate(dateObj);
+    }
+
+    function fetchComciganTimetable(schoolName, gradeNum, classNum, region) {
+        let url = `https://sch-5bnq.onrender.com/timetable/${encodeURIComponent(schoolName)}?grade=${gradeNum}&class_num=${classNum}`;
+        if (region) url += `&region=${encodeURIComponent(region)}`;
+
+        return fetch(url).then(res => res.json()).then(data => {
+            if (data && data.detail) throw new Error(data.detail);
+            if (!data || !data.timetable) throw new Error("컴시간 응답 형식 오류");
+            return data;
+        });
+    }
+
+    function extractComciganPeriods(comciganData, jsDay) {
+        const idx = jsDayToComciganIndex(jsDay);
+        if (idx === null) return null;
+        const dayArr = comciganData.timetable[idx];
+        if (!dayArr || dayArr.length === 0) return null;
+
+        const rows = dayArr
+            .filter(c => c.subject && c.subject.trim() !== '')
+            .map(c => ({
+                period: c.classTime,
+                subject: c.subject,
+                teacher: maskTeacherName(c.teacher)
+            }));
+
+        return rows.length > 0 ? rows : null;
+    }
+
+    function fetchTimetableForDate(dateObj) {
+        const listEl = document.getElementById('ttPeriodList');
+        listEl.innerHTML = '<div class="no-data">시간표를 불러오는 중...</div>';
+
+        ensureSchoolMeta((meta) => {
+            if (!meta || !meta.officeCode) {
+                listEl.innerHTML = '<div class="no-data">학교 정보를 확인할 수 없어요. 마이페이지에서 학교를 다시 선택해 주세요.</div>';
+                return;
+            }
+            const gradeNum = parseGradeNumber(currentStudentData.grade);
+            const classNum = currentStudentData.schoolClassNum;
+            if (!gradeNum || !classNum) {
+                listEl.innerHTML = '<div class="no-data">학년/학급 정보가 부족해요. 마이페이지에서 확인해 주세요.</div>';
+                return;
+            }
+
+            const dateStr = toDateStr(dateObj);
+            const cacheKey = `${meta.officeCode}_${currentStudentData.schoolCode}_${gradeNum}_${classNum}_${dateStr}`;
+            if (ttCache[cacheKey]) { renderPeriodList(ttCache[cacheKey].rows, dateObj, ttCache[cacheKey].source); return; }
+
+            const endpoint = getTimetableEndpoint(meta.schoolLevel);
+            const niceUrl = `https://open.neis.go.kr/hub/${endpoint}?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${meta.officeCode}&SD_SCHUL_CODE=${currentStudentData.schoolCode}&GRADE=${gradeNum}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateStr}`;
+
+            // 1) NICE API 먼저 조회
+            fetch(niceUrl).then(res => res.json()).then(niceData => {
+                let niceRows = [];
+                if (niceData[endpoint] && niceData[endpoint][1] && niceData[endpoint][1].row) {
+                    niceRows = niceData[endpoint][1].row
+                        .map(r => ({ period: parseInt(r.PERIO, 10), subject: r.ITRT_CNTNT, teacher: '' }))
+                        .sort((a, b) => a.period - b.period);
+                }
+                return niceRows;
+            }).catch(() => []) // NICE 실패해도 계속 진행 (컴시간으로 보강 시도)
+            .then((niceRows) => {
+                const region = NEIS_OFFICE_TO_REGION[meta.officeCode] || null;
+
+                // 2) 컴시간 API로 보강 시도
+                fetchComciganTimetable(currentStudentData.schoolName, gradeNum, classNum, region)
+                    .then(comciganData => {
+                        const comciganRows = extractComciganPeriods(comciganData, dateObj.getDay());
+                        if (comciganRows && comciganRows.length > 0) {
+                            // 컴시간 데이터로 덮어쓰기
+                            ttCache[cacheKey] = { rows: comciganRows, source: 'comcigan' };
+                            renderPeriodList(comciganRows, dateObj, 'comcigan');
+                        } else if (niceRows.length > 0) {
+                            ttCache[cacheKey] = { rows: niceRows, source: 'nice' };
+                            renderPeriodList(niceRows, dateObj, 'nice');
+                        } else {
+                            ttCache[cacheKey] = { rows: [], source: 'nice' };
+                            renderPeriodList([], dateObj, 'nice');
+                        }
+                    })
+                    .catch(() => {
+                        // 컴시간 실패 → NICE 결과만 사용
+                        if (niceRows.length > 0) {
+                            ttCache[cacheKey] = { rows: niceRows, source: 'nice' };
+                            renderPeriodList(niceRows, dateObj, 'nice');
+                        } else {
+                            listEl.innerHTML = '<div class="no-data">시간표를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
+                        }
+                    });
+            });
+        });
+    }
+
+    function renderPeriodList(rows, dateObj, source) {
+        const listEl = document.getElementById('ttPeriodList');
+        const dateLabel = `${dateObj.getMonth()+1}월 ${dateObj.getDate()}일`;
+        const sourceLabel = source === 'comcigan'
+            ? '<span class="tt-source-badge comcigan">컴시간</span>'
+            : '<span class="tt-source-badge nice">NICE</span>';
+
+        if (!rows || rows.length === 0) {
+            listEl.innerHTML = `<div class="no-data">${dateLabel}에는 등록된 시간표가 없어요.<br>(주말 또는 방학일 수 있어요)</div>`;
+            return;
+        }
+
+        listEl.innerHTML = `<div style="font-size:0.8rem; color:#86868b; font-weight:700; margin-bottom:4px;">${dateLabel} 시간표 ${sourceLabel}</div>`;
+        rows.forEach(r => {
+            const item = document.createElement('div');
+            item.className = 'tt-period-item';
+            const teacherHtml = r.teacher
+                ? `<div><div class="tt-period-subject">${escapeHTML(r.subject || '-')}</div><div class="tt-period-teacher">${escapeHTML(r.teacher)} 선생님</div></div>`
+                : `<div class="tt-period-subject">${escapeHTML(r.subject || '-')}</div>`;
+            item.innerHTML = `<div class="tt-period-num">${r.period}</div>${teacherHtml}`;
+            listEl.appendChild(item);
+        });
+    }
+
+    /* =====================================================================
+       10. 채팅 FAB / 초기 부팅
     ===================================================================== */
     document.addEventListener('DOMContentLoaded', () => {
         const openBtn = document.getElementById('open-chat-btn');
