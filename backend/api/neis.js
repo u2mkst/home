@@ -31,6 +31,7 @@ module.exports = async (req, res) => {
         search.set(key, Array.isArray(value) ? value[0] : value);
     }
     search.set("KEY", process.env.NEIS_API_KEY);
+    search.set("Type", "json");
 
     const url = `https://open.neis.go.kr/hub/${endpoint}?${search.toString()}`;
 
