@@ -189,32 +189,36 @@
 
         /* 📱 하단 고정 네비게이션 바 (전체 공통) */
         .bottom-nav-bar {
-            position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
             width: calc(100% - 32px); max-width: 720px;
             background: #ffffff;
-            border: 1px solid rgba(0, 0, 0, 0.06); border-radius: var(--radius-xl);
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
-            padding: 10px 6px; display: flex; justify-content: space-around; align-items: stretch;
-            z-index: 1000; box-sizing: border-box; gap: 2px;
+            border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 24px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04), 0 16px 32px rgba(17, 17, 26, 0.12);
+            padding: 8px; display: flex; justify-content: space-around; align-items: stretch;
+            z-index: 1000; box-sizing: border-box; gap: 4px;
         }
         .tab-item {
             position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
             gap: 3px; background: none; border: none; cursor: pointer; flex: 1; min-width: 0;
-            padding: 7px 2px; border-radius: 16px; transition: all 0.35s var(--spring);
-            color: #86868b; font-family: 'Paperlogy', sans-serif;
+            padding: 9px 2px; border-radius: 16px; transition: all 0.35s var(--spring);
+            color: #a8a8ad; font-family: 'Paperlogy', sans-serif;
         }
         .tab-item .tab-icon { font-size: 1.25rem; line-height: 1; transition: transform 0.3s var(--spring); }
         .tab-item .tab-label { font-family: 'Paperlogy', sans-serif; font-size: 0.64rem; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; }
-        .tab-item:hover, .tab-item:active { color: #6c5ce7; background: rgba(108, 92, 231, 0.12); }
+        .tab-item:hover, .tab-item:active { color: #6c5ce7; background: rgba(108, 92, 231, 0.1); }
         .tab-item:active { transform: scale(0.92); }
         .tab-item:hover .tab-icon { transform: translateY(-2px); }
         .tab-item.danger:hover { color: #ff453a; background: rgba(255, 69, 58, 0.1); }
-        .tab-item.active { color: #6c5ce7; background: rgba(108, 92, 231, 0.14); box-shadow: inset 0 1px 1px rgba(255,255,255,0.6); }
-        .tab-item.active .tab-icon { transform: scale(1.1); }
+        .tab-item.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #7c6cf0 0%, #6c5ce7 100%);
+            box-shadow: 0 6px 16px rgba(108, 92, 231, 0.4), inset 0 1px 1px rgba(255,255,255,0.25);
+        }
+        .tab-item.active .tab-icon { transform: scale(1.08); }
         @media (max-width: 400px) {
             .tab-item .tab-label { font-size: 0.58rem; }
             .tab-item .tab-icon { font-size: 1.15rem; }
-            .bottom-nav-bar { padding: 8px 3px; }
+            .bottom-nav-bar { padding: 7px 5px; }
         }
 
         /* ℹ️ 탭하면 뜨는 인포 툴팁 (터치 환경에서는 title/:hover가 안 뜨므로 별도 구현) */
@@ -590,17 +594,11 @@
 
             <div class="glass-card menu-card">
                 <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
-                    <span style="display:flex; align-items:center; gap:10px;">
-                        <span class="emoji-font" style="font-size:1.15rem;">📘</span>
-                        <span class="menu-item-text">유투엠 바로가기</span>
-                    </span>
+                    <span class="menu-item-text">유투엠 바로가기</span>
                     <span class="arrow-icon">➔</span>
                 </a>
                 <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
-                    <span style="display:flex; align-items:center; gap:10px;">
-                        <span class="emoji-font" style="font-size:1.15rem;">🧮</span>
-                        <span class="menu-item-text">매쓰플랫 바로가기</span>
-                    </span>
+                    <span class="menu-item-text">매쓰플랫 바로가기</span>
                     <span class="arrow-icon">➔</span>
                 </a>
             </div>
