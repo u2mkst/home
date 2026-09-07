@@ -279,32 +279,53 @@
         .switch-link:hover { text-decoration: underline; }
 
         .lite-mode-card {
-            margin-top: 20px; padding: 12px 14px;
-            background: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(79, 70, 229, 0.15); border-radius: var(--radius-md);
+            margin-top: 20px; padding: 16px 18px;
+            background: linear-gradient(135deg, rgba(99, 89, 255, 0.12) 0%, rgba(139, 92, 246, 0.09) 100%);
+            border: 1.5px solid rgba(99, 89, 255, 0.3); border-radius: var(--radius-md);
             display: flex; align-items: center; justify-content: space-between;
-            text-decoration: none; transition: all 0.2s ease;
+            text-decoration: none;
+            backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.1), inset 0 1px 0 rgba(255,255,255,0.55);
+            transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), border-color 0.2s ease;
+            position: relative; overflow: hidden;
+        }
+
+        .lite-mode-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
         }
 
         .lite-mode-card:hover {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
-            transform: translateY(-1px);
+            border-color: rgba(99, 89, 255, 0.55);
+            box-shadow: 0 10px 28px rgba(79, 70, 229, 0.2), inset 0 1px 0 rgba(255,255,255,0.6);
+            transform: translateY(-2px);
         }
 
-        .lite-info { display: flex; align-items: center; gap: 10px; }
+        .lite-info { display: flex; align-items: center; gap: 12px; }
 
         .lite-icon {
-            width: 32px; height: 32px;
-            background: rgba(79, 70, 229, 0.1); color: var(--primary);
-            border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+            width: 40px; height: 40px; flex-shrink: 0;
+            background: linear-gradient(135deg, rgba(99,89,255,0.18), rgba(139,92,246,0.14));
+            border: 1px solid rgba(99,89,255,0.25);
+            color: var(--primary); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
         }
 
-        .lite-text-group { display: flex; flex-direction: column; text-align: left; }
-        .lite-title { font-size: 0.83rem; font-weight: 700; color: var(--text-main); }
-        .lite-desc { font-size: 0.72rem; color: var(--text-muted); }
-        .lite-arrow { font-size: 0.85rem; color: var(--primary); font-weight: bold; }
+        .lite-text-group { display: flex; flex-direction: column; gap: 2px; text-align: left; }
+
+        .lite-title-row { display: flex; align-items: center; gap: 6px; }
+        .lite-title { font-size: 0.87rem; font-weight: 800; color: var(--text-main); font-family: var(--font-title); }
+        .lite-badge {
+            font-size: 0.64rem; font-weight: 700; padding: 2px 7px; border-radius: 99px;
+            background: linear-gradient(135deg, #6259ef, #8b5cf6);
+            color: #fff; letter-spacing: 0.02em; line-height: 1.5;
+        }
+        .lite-desc { font-size: 0.74rem; color: var(--text-muted); font-weight: 500; }
+        .lite-arrow {
+            font-size: 1rem; color: var(--primary); font-weight: bold; flex-shrink: 0;
+            background: rgba(79,70,229,0.1); width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
 
         /* reCAPTCHA 바텀시트 모달 스타일 */
         .captcha-overlay {
@@ -408,11 +429,14 @@
                 <div class="lite-info">
                     <div class="lite-icon"><i class="emoji-icon mona12">⚡</i></div>
                     <div class="lite-text-group">
-                        <span class="lite-title">Lite 모드 이용하기</span>
-                        <span class="lite-desc">로그인 없이 빠르게 바로 사용</span>
+                        <div class="lite-title-row">
+                            <span class="lite-title">Lite 모드 이용하기</span>
+                            <span class="lite-badge">로그인 없이</span>
+                        </div>
+                        <span class="lite-desc">계정 없이도 시간표·공지 바로 확인</span>
                     </div>
                 </div>
-                <span class="lite-arrow">➔</span>
+                <div class="lite-arrow">→</div>
             </a>
         </div>
 

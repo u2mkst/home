@@ -159,6 +159,8 @@
             box-shadow: 0 -16px 44px rgba(0, 0, 0, 0.16), inset 0 1px 1px var(--lg-highlight);
             transform: translateY(100%);
             transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            max-height: 86vh; overflow-y: auto;
+            overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch;
         }
         .bottom-sheet-overlay.active .bottom-sheet-container { transform: translateY(0); }
         .sheet-drag-handle { width: 36px; height: 4px; background: rgba(120,120,128,0.4); border-radius: 2px; margin: 0 auto 18px; }
@@ -189,10 +191,9 @@
         .bottom-nav-bar {
             position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
             width: calc(100% - 32px); max-width: 720px;
-            background: var(--lg-surface-strong);
-            backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
-            border: 1px solid var(--lg-border); border-radius: var(--radius-xl);
-            box-shadow: var(--lg-shadow);
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.06); border-radius: var(--radius-xl);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
             padding: 10px 6px; display: flex; justify-content: space-around; align-items: stretch;
             z-index: 1000; box-sizing: border-box; gap: 2px;
         }
@@ -215,6 +216,34 @@
             .tab-item .tab-icon { font-size: 1.15rem; }
             .bottom-nav-bar { padding: 8px 3px; }
         }
+
+        /* ℹ️ 탭하면 뜨는 인포 툴팁 (터치 환경에서는 title/:hover가 안 뜨므로 별도 구현) */
+        .info-tip {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(108, 92, 231, 0.12); color: #6c5ce7;
+            border: none; cursor: pointer; font-size: 0.68rem; font-weight: 800;
+            font-family: 'Paperlogy', sans-serif; line-height: 1; padding: 0;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .info-tip:hover, .info-tip:active { background: rgba(108, 92, 231, 0.22); transform: scale(1.08); }
+        .info-tip-bubble {
+            position: fixed; max-width: 240px; background: rgba(29, 29, 31, 0.94);
+            color: #ffffff; font-family: 'Paperlogy', sans-serif; font-size: 0.76rem; font-weight: 600;
+            line-height: 1.45; padding: 10px 14px; border-radius: 14px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+            z-index: 100001; opacity: 0; visibility: hidden; pointer-events: none;
+            transform: translateY(6px) scale(0.92); transform-origin: top left;
+            transition: opacity 0.22s var(--spring), transform 0.22s var(--spring), visibility 0.22s;
+        }
+        .info-tip-bubble.show { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        .info-tip-bubble::before {
+            content: ''; position: absolute; top: -5px; left: 14px; width: 10px; height: 10px;
+            background: rgba(29, 29, 31, 0.94); transform: rotate(45deg); border-radius: 2px;
+        }
+
+        /* 🖼️ 빈 상태(empty state) SVG 일러스트 */
+        .no-data-illustration { width: 52px; height: 52px; margin: 0 auto 10px; color: #c7c9d9; display: block; }
 
         .fab-chat-btn {
             position: fixed; bottom: 92px; right: 20px; width: 56px; height: 56px;
@@ -368,7 +397,7 @@
         .ttcal-day.selected { background:#6c5ce7; color:#fff; border-color:#6c5ce7; box-shadow: 0 6px 16px rgba(108,92,231,0.35); }
         .ttcal-day.empty { background:transparent; border:none; cursor:default; }
         .tt-week-row { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:6px; }
-        .tt-period-list { margin-top:16px; display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; }
+        .tt-period-list { margin-top:16px; display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
         .tt-period-item { display:flex; align-items:center; gap:12px; background: var(--lg-surface); backdrop-filter: var(--lg-blur-sm); border: 1px solid var(--lg-border-soft); border-radius: var(--radius-md); padding:12px 14px; animation: lgPopIn 0.35s var(--spring); }
         .tt-period-num { width:32px; height:32px; border-radius:50%; background: linear-gradient(135deg, #7c6cf0, #6c5ce7); color:#fff; font-weight:800; font-size:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow: 0 4px 10px rgba(108,92,231,0.35); }
         .tt-period-subject { font-weight:700; color:#1d1d1f; font-size:0.92rem; }
@@ -461,7 +490,7 @@
         .tablet-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: stretch; }
         @media (max-width: 820px) { .tablet-grid { grid-template-columns: 1fr; } }
         .fixed-rank-card { min-height: 340px; display: flex; flex-direction: column; }
-        .rank-scroll-area { flex: 1; overflow-y: auto; padding-right: 6px; max-height: 460px; }
+        .rank-scroll-area { flex: 1; overflow-y: auto; padding-right: 6px; max-height: 460px; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
         .rank-scroll-area::-webkit-scrollbar { width: 6px; }
         .rank-scroll-area::-webkit-scrollbar-thumb { background: rgba(108, 92, 231, 0.25); border-radius: 10px; }
         .rank-scroll-area::-webkit-scrollbar-thumb:hover { background: rgba(108, 92, 231, 0.5); }
@@ -530,7 +559,10 @@
     <div id="view-home">
         <div class="header-zone" onclick="showView('home')" title="홈">
             <h1 class="welcome-text" id="welcome-message">학생 정보를 불러오는 중...</h1>
-            <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="눌러서 학교 시간표 보기">확인 중...</div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="눌러서 학교 시간표 보기">확인 중...</div>
+                <button type="button" class="info-tip" onclick="event.stopPropagation()" data-tip="D-Day는 다가오는 시험까지 남은 날짜예요. 이 배지를 누르면 학교 시간표를 바로 볼 수 있어요.">ⓘ</button>
+            </div>
         </div>
 
         <div class="main-grid">
@@ -558,11 +590,17 @@
 
             <div class="glass-card menu-card">
                 <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
-                    <span class="menu-item-text">유투엠 바로가기</span>
+                    <span style="display:flex; align-items:center; gap:10px;">
+                        <span class="emoji-font" style="font-size:1.15rem;">📘</span>
+                        <span class="menu-item-text">유투엠 바로가기</span>
+                    </span>
                     <span class="arrow-icon">➔</span>
                 </a>
                 <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
-                    <span class="menu-item-text">매쓰플랫 바로가기</span>
+                    <span style="display:flex; align-items:center; gap:10px;">
+                        <span class="emoji-font" style="font-size:1.15rem;">🧮</span>
+                        <span class="menu-item-text">매쓰플랫 바로가기</span>
+                    </span>
                     <span class="arrow-icon">➔</span>
                 </a>
             </div>
@@ -591,12 +629,12 @@
 
         <div class="form-container">
             <div class="input-wrapper">
-                <label for="studentName">학생 이름</label>
+                <label for="studentName"><span class="emoji-font">🙋</span> 학생 이름</label>
                 <input type="text" id="studentName" placeholder="이름을 입력해 주세요.">
             </div>
 
             <div class="input-wrapper">
-                <label for="schoolName">소속 학교</label>
+                <label for="schoolName"><span class="emoji-font">🏫</span> 소속 학교</label>
                 <input type="text" id="schoolName" placeholder="예: 무원중" autocomplete="off">
                 <div id="schoolList" class="autocomplete-list hidden"></div>
                 <input type="hidden" id="schoolCode">
@@ -605,13 +643,13 @@
             </div>
 
             <div class="input-wrapper">
-                <label for="schoolClassNum">학교 학급 번호 (시간표 조회용)</label>
+                <label for="schoolClassNum"><span class="emoji-font">🏷️</span> 학교 학급 번호 (시간표 조회용)</label>
                 <input type="text" id="schoolClassNum" placeholder="예: 3 (숫자만 입력)" inputmode="numeric" maxlength="2">
             </div>
 
             <div class="input-row">
                 <div class="input-wrapper">
-                    <label for="studentGrade">학년</label>
+                    <label for="studentGrade"><span class="emoji-font">🎓</span> 학년</label>
                     <select id="studentGrade">
                         <option value="" disabled selected>학년 선택</option>
                         <option value="초1">초1</option>
@@ -629,13 +667,13 @@
                     </select>
                 </div>
                 <div class="input-wrapper">
-                    <label for="studentClass">반</label>
+                    <label for="studentClass"><span class="emoji-font">🔤</span> 반</label>
                     <input type="text" id="studentClass" placeholder="예: A반, S반">
                 </div>
             </div>
 
             <div class="input-wrapper">
-                <label for="teacherName">담당 선생님 선택</label>
+                <label for="teacherName"><span class="emoji-font">👨‍🏫</span> 담당 선생님 선택</label>
                 <select id="teacherName">
                     <option value="" disabled selected>담당 선생님을 선택해 주세요</option>
                     <option value="김동진">김동진 선생님</option>
@@ -651,11 +689,11 @@
 
         <div class="form-container">
             <div class="input-wrapper">
-                <label for="u2mId">유투엠 아이디</label>
+                <label for="u2mId"><span class="emoji-font">🔑</span> 유투엠 아이디</label>
                 <input type="text" id="u2mId" placeholder="유투엠 아이디 입력">
             </div>
             <div class="input-wrapper">
-                <label for="u2mPhone">부모님 전화번호 뒷자리 (4자리)</label>
+                <label for="u2mPhone"><span class="emoji-font">🔒</span> 부모님 전화번호 뒷자리 (4자리)</label>
                 <div class="input-pw">
                     <input type="password" id="u2mPhone" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric">
                     <div class="eyes" onclick="togglePasswordVisibility('u2mPhone', this)">
@@ -667,14 +705,14 @@
 
         <div class="form-container">
             <div class="section-divider">
-                <span class="section-title">매쓰플랫 연동 정보</span>
+                <span class="section-title" style="display:inline-flex; align-items:center; gap:5px;">매쓰플랫 연동 정보 <button type="button" class="info-tip" data-tip="매쓰플랫 계정을 연동하면 학습 진도와 문제 풀이 현황을 학원에서 함께 확인할 수 있어요.">ⓘ</button></span>
             </div>
             <div class="input-wrapper">
-                <label for="mathflatId">매쓰플랫 아이디 (학생 전화번호)</label>
+                <label for="mathflatId"><span class="emoji-font">📱</span> 매쓰플랫 아이디 (학생 전화번호)</label>
                 <input type="text" id="mathflatId" placeholder="하이픈(-) 없이 숫자만 입력" inputmode="numeric">
             </div>
             <div class="input-wrapper">
-                <label for="mathflatPw">매쓰플랫 비밀번호</label>
+                <label for="mathflatPw"><span class="emoji-font">🔒</span> 매쓰플랫 비밀번호</label>
                 <div class="input-pw">
                     <input type="password" id="mathflatPw" placeholder="매쓰플랫 학생용 비밀번호">
                     <div class="eyes" onclick="togglePasswordVisibility('mathflatPw', this)">
@@ -714,6 +752,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-lg font-bold flex items-center gap-2">
                             <span class="emoji-font">📊</span> 나의 이번 달 출석현황
+                            <button type="button" class="info-tip" data-tip="학원에 출석 체크가 될 때마다 이번 달 출석일과 달성률이 자동으로 올라가요.">ⓘ</button>
                         </h2>
                         <span id="currentMonthTitle" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">2026년 8월</span>
                     </div>
@@ -748,7 +787,7 @@
                 </h2>
                 <div class="rank-scroll-area">
                     <div id="attendanceRankList" class="space-y-2.5">
-                        <div class="text-center py-10 text-gray-400">랭킹 불러오는 중...</div>
+                        <div class="text-center py-10 text-gray-400"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5a2 2 0 0 0 0 4h1M16 5h3a2 2 0 0 1 0 4h-1"/><path d="M12 13v3M9 20h6M10 17h4v3h-4z"/></svg>랭킹 불러오는 중...</div>
                     </div>
                 </div>
                 <div id="myAttendanceRankCard" class="mt-3 pt-3 border-t border-gray-200/60"></div>
@@ -772,6 +811,7 @@
                         <div class="flex justify-between items-center mb-2">
                             <h2 class="text-lg font-bold flex items-center gap-2">
                                 <span class="emoji-font">🔮</span> <span id="lottoChallengeRoundText">나의 예측</span>
+                                <button type="button" class="info-tip" data-tip="번호 6개와 보너스 번호 1개를 예측해서 제출하면, 실제 추첨 결과와 비교해 적중 개수로 랭킹이 매겨져요.">ⓘ</button>
                             </h2>
                             <button onclick="generateAutoLotto()" class="text-xs text-indigo-600 font-bold hover:underline bg-indigo-50 px-3 py-1.5 rounded-full">
                                 🎲 번호 자동 생성
@@ -810,7 +850,7 @@
                 </h2>
                 <div class="rank-scroll-area">
                     <div id="lottoRankList" class="space-y-2.5">
-                        <div class="text-center py-10 text-gray-400">랭킹 불러오는 중...</div>
+                        <div class="text-center py-10 text-gray-400"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5a2 2 0 0 0 0 4h1M16 5h3a2 2 0 0 1 0 4h-1"/><path d="M12 13v3M9 20h6M10 17h4v3h-4z"/></svg>랭킹 불러오는 중...</div>
                     </div>
                 </div>
             </div>
@@ -905,7 +945,7 @@
     <div id="timetableBottomSheet" class="bottom-sheet-overlay" onclick="handleTimetableOverlayClick(event)">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()" style="max-height: 86vh; overflow-y: auto;">
             <div class="sheet-drag-handle"></div>
-            <div class="sheet-title">🗓️ 학교 시간표</div>
+            <div class="sheet-title">🗓️ 학교 시간표 <button type="button" class="info-tip" data-tip="나이스(NICE)·컴시간 학교 공식 API를 기반으로 표시돼요. 학교 사정에 따라 실제 수업과 다를 수 있어요.">ⓘ</button></div>
             <div class="sheet-subtitle" id="ttSchoolLabel">학교 정보를 확인하는 중...</div>
 
             <div id="ttClassNumMissing" style="display:none;">
@@ -930,7 +970,7 @@
                 </div>
 
                 <div id="ttPeriodList" class="tt-period-list">
-                    <div class="no-data">날짜를 선택하면 시간표가 표시됩니다.</div>
+                    <div class="no-data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h2M8 17h5"/></svg>날짜를 선택하면 시간표가 표시됩니다.</div>
                 </div>
             </div>
 
@@ -986,7 +1026,7 @@
             </div>
 
             <div id="messageHistoryZone" class="history-zone flex-1 overflow-y-auto p-4 bg-slate-50" style="max-height: none; margin-bottom: 0; border: none; border-radius: 0;">
-                <div class="no-data">메시지 내역을 불러오는 중입니다...</div>
+                <div class="no-data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg>메시지 내역을 불러오는 중입니다...</div>
             </div>
 
             <div class="bg-white p-3 border-t border-gray-100 flex gap-2 z-10">
@@ -1041,7 +1081,7 @@
     <div id="u2mBottomSheetOverlay" class="bottom-sheet-overlay" style="z-index: 9998;" onclick="cancelU2mIdChange()"></div>
     <div id="u2mBottomSheet" class="bottom-sheet">
         <div class="sheet-handle"></div>
-        <div class="sheet-title">아이디 변경 보안 확인</div>
+        <div class="sheet-title">아이디 변경 보안 확인 <button type="button" class="info-tip" data-tip="보안을 위해 로봇이 아님을 인증한 뒤 아이디가 변경돼요. 변경 후에는 새 아이디로 다시 로그인해야 해요.">ⓘ</button></div>
         <div class="sheet-desc">
             유투엠 아이디를 <span id="newU2mIdText"></span>(으)로 변경하시겠습니까?
         </div>
@@ -1060,17 +1100,17 @@
     <div id="reauthBottomSheetOverlay" class="bottom-sheet-overlay" style="z-index: 9998;" onclick="closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet')"></div>
     <div id="reauthBottomSheet" class="bottom-sheet">
         <div class="sheet-handle"></div>
-        <div class="sheet-title" style="color: #e53e3e;">⚠️ 학원 앱 회원 탈퇴</div>
+        <div class="sheet-title" style="color: #e53e3e;">⚠️ 학원 앱 회원 탈퇴 <button type="button" class="info-tip" data-tip="탈퇴하면 출석·성적·랭킹 등 저장된 모든 정보가 삭제되며 복구할 수 없어요.">ⓘ</button></div>
         <div class="sheet-desc">
             본인 확인을 위해 <span>유투엠 아이디</span>와 <span>전화번호 뒷자리 4자리</span>를 입력해 주세요.
         </div>
 
         <div class="input-wrapper">
-            <label for="reauthId">유투엠 아이디</label>
+            <label for="reauthId"><span class="emoji-font">🔑</span> 유투엠 아이디</label>
             <input type="text" id="reauthId" placeholder="아이디 입력">
         </div>
         <div class="input-wrapper">
-            <label for="reauthPw">부모님 전화번호 뒷자리 4자리</label>
+            <label for="reauthPw"><span class="emoji-font">🔒</span> 부모님 전화번호 뒷자리 4자리</label>
             <div class="input-pw">
                 <input type="password" id="reauthPw" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric">
                 <div class="eyes" onclick="togglePasswordVisibility('reauthPw', this)">
@@ -1120,6 +1160,13 @@
     let remainingSeconds = 60;
     const THIRTY_MINUTES = 30 * 60 * 1000;
 
+    /* 🖼️ 빈 상태(empty state) 공용 SVG 일러스트 */
+    const EMPTY_ICONS = {
+        calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h2M8 17h5"/></svg>',
+        trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5a2 2 0 0 0 0 4h1M16 5h3a2 2 0 0 1 0 4h-1"/><path d="M12 13v3M9 20h6M10 17h4v3h-4z"/></svg>',
+        chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg>'
+    };
+
     const BANNED_KEYWORDS = [
         "시발", "씨발", "개새끼", "새끼", "존나", "좆", "지랄", "병신", "개세끼", "썅", "미친놈", "미친년",
         "새키", "뒤져", "닥쳐", "쓰벌", "씨벌", "엠창", "凸", "fuck", "shibal", "ssibal", "bbyungshin"
@@ -1149,6 +1196,34 @@
         const overlay = document.getElementById('loadingOverlay');
         if (overlay) overlay.classList.add('hidden');
     }
+
+    /* ℹ️ 탭하면 뜨는 인포 툴팁(info-tip) — 터치 환경에서는 title/:hover 툴팁이 안 뜨므로 직접 구현 */
+    (function initInfoTips() {
+        const bubble = document.createElement('div');
+        bubble.className = 'info-tip-bubble';
+        document.body.appendChild(bubble);
+
+        function hideBubble() { bubble.classList.remove('show'); }
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.info-tip');
+            if (btn) {
+                e.stopPropagation();
+                bubble.textContent = btn.getAttribute('data-tip') || '';
+                bubble.classList.add('show');
+
+                const rect = btn.getBoundingClientRect();
+                const bubbleWidth = 240;
+                let left = Math.min(Math.max(rect.left, 12), window.innerWidth - bubbleWidth - 12);
+                bubble.style.left = left + 'px';
+                bubble.style.top = (rect.bottom + 10) + 'px';
+                return;
+            }
+            if (!e.target.closest('.info-tip-bubble')) hideBubble();
+        });
+
+        window.addEventListener('scroll', hideBubble, true);
+    })();
 
     function showModal(id) {
         const el = document.getElementById(id);
@@ -3022,7 +3097,7 @@
         document.getElementById('ttSchoolLabel').innerText = `${currentStudentData.schoolName || ''} · ${currentStudentData.grade || ''}`;
         ttCurrentDate = new Date();
         ttSelectedDateStr = null;
-        document.getElementById('ttPeriodList').innerHTML = '<div class="no-data">날짜를 선택하면 시간표가 표시됩니다.</div>';
+        document.getElementById('ttPeriodList').innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}날짜를 선택하면 시간표가 표시됩니다.</div>`;
 
         if (!currentStudentData.schoolClassNum) {
             document.getElementById('ttClassNumMissing').style.display = 'block';
@@ -3131,17 +3206,17 @@
 
     function fetchTimetableForDate(dateObj) {
         const listEl = document.getElementById('ttPeriodList');
-        listEl.innerHTML = '<div class="no-data">시간표를 불러오는 중...</div>';
+        listEl.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}시간표를 불러오는 중...</div>`;
 
         ensureSchoolMeta((meta) => {
             if (!meta || !meta.officeCode) {
-                listEl.innerHTML = '<div class="no-data">학교 정보를 확인할 수 없어요. 마이페이지에서 학교를 다시 선택해 주세요.</div>';
+                listEl.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}학교 정보를 확인할 수 없어요. 마이페이지에서 학교를 다시 선택해 주세요.</div>`;
                 return;
             }
             const gradeNum = parseGradeNumber(currentStudentData.grade);
             const classNum = currentStudentData.schoolClassNum;
             if (!gradeNum || !classNum) {
-                listEl.innerHTML = '<div class="no-data">학년/학급 정보가 부족해요. 마이페이지에서 확인해 주세요.</div>';
+                listEl.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}학년/학급 정보가 부족해요. 마이페이지에서 확인해 주세요.</div>`;
                 return;
             }
 
@@ -3187,7 +3262,7 @@
                             ttCache[cacheKey] = { rows: niceRows, source: 'nice' };
                             renderPeriodList(niceRows, dateObj, 'nice');
                         } else {
-                            listEl.innerHTML = '<div class="no-data">시간표를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
+                            listEl.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}시간표를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>`;
                         }
                     });
             });
@@ -3202,7 +3277,7 @@
             : '<span class="tt-source-badge nice">NICE</span>';
 
         if (!rows || rows.length === 0) {
-            listEl.innerHTML = `<div class="no-data">${dateLabel}에는 등록된 시간표가 없어요.<br>(주말 또는 방학일 수 있어요)</div>`;
+            listEl.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}${dateLabel}에는 등록된 시간표가 없어요.<br>(주말 또는 방학일 수 있어요)</div>`;
             return;
         }
 
