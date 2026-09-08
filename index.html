@@ -404,8 +404,9 @@
         .tt-period-list { margin-top:16px; display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
         .tt-period-item { display:flex; align-items:center; gap:12px; background: var(--lg-surface); backdrop-filter: var(--lg-blur-sm); border: 1px solid var(--lg-border-soft); border-radius: var(--radius-md); padding:12px 14px; animation: lgPopIn 0.35s var(--spring); }
         .tt-period-num { width:32px; height:32px; border-radius:50%; background: linear-gradient(135deg, #7c6cf0, #6c5ce7); color:#fff; font-weight:800; font-size:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow: 0 4px 10px rgba(108,92,231,0.35); }
-        .tt-period-subject { font-weight:700; color:#1d1d1f; font-size:0.92rem; }
-        .tt-period-teacher { font-size: 0.76rem; color: #86868b; font-weight: 600; margin-top: 2px; }
+        .tt-period-content { flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+        .tt-period-subject { font-weight:700; color:#1d1d1f; font-size:0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tt-period-teacher { font-size: 0.76rem; color: #86868b; font-weight: 600; flex-shrink: 0; white-space: nowrap; }
         .tt-source-badge { display:inline-block; font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:6px; vertical-align:middle; }
         .tt-source-badge.nice { background:rgba(108,92,231,0.1); color:#6c5ce7; }
         .tt-source-badge.comcigan { background:rgba(16,185,129,0.12); color:#10b981; }
@@ -3243,7 +3244,11 @@
             const endpoint = getTimetableEndpoint(meta.schoolLevel);
             const niceUrl = `${BACKEND_URL}/api/neis?endpoint=${endpoint}&Type=json&ATPT_OFCDC_SC_CODE=${meta.officeCode}&SD_SCHUL_CODE=${currentStudentData.schoolCode}&GRADE=${gradeNum}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateStr}`;
 
-            // 1) NICE API 먼저 조회
+            // 날짜를 옮긴 뒤 늦게 도착한 컴시간 응답이 엉뚱한 날짜를 덮어쓰지 않도록 확인
+            const isStillSelected = () => ttSelectedDateStr === dateStr;
+            let niceFailed = false;
+
+            // 1) NICE API 먼저 조회 — 도착하는 대로 바로 렌더링(빠르게 뭔가는 보이도록)
             fetch(niceUrl).then(res => res.json()).then(niceData => {
                 let niceRows = [];
                 if (niceData[endpoint] && niceData[endpoint][1] && niceData[endpoint][1].row) {
@@ -3252,32 +3257,30 @@
                         .sort((a, b) => a.period - b.period);
                 }
                 return niceRows;
-            }).catch(() => []) // NICE 실패해도 계속 진행 (컴시간으로 보강 시도)
+            }).catch(() => { niceFailed = true; return []; }) // NICE 실패해도 계속 진행 (컴시간으로 보강 시도)
             .then((niceRows) => {
+                // NICE가 응답은 했지만(진짜로 그 날 수업이 없는 경우 포함) 렌더링 — 실패했을 땐 컴시간 결과를 기다림
+                if (!niceFailed && isStillSelected()) {
+                    ttCache[cacheKey] = { rows: niceRows, source: 'nice' };
+                    renderPeriodList(niceRows, dateObj, 'nice');
+                }
+
                 const region = NEIS_OFFICE_TO_REGION[meta.officeCode] || null;
 
-                // 2) 컴시간 API로 보강 시도
+                // 2) 컴시간 API로 보강 시도 — 성공하면 방금 그린 NICE 결과를 덮어쓴다.
                 fetchComciganTimetable(currentStudentData.schoolName, gradeNum, classNum, region)
                     .then(comciganData => {
                         const comciganRows = extractComciganPeriods(comciganData, dateObj.getDay());
                         if (comciganRows && comciganRows.length > 0) {
-                            // 컴시간 데이터로 덮어쓰기
                             ttCache[cacheKey] = { rows: comciganRows, source: 'comcigan' };
-                            renderPeriodList(comciganRows, dateObj, 'comcigan');
-                        } else if (niceRows.length > 0) {
-                            ttCache[cacheKey] = { rows: niceRows, source: 'nice' };
-                            renderPeriodList(niceRows, dateObj, 'nice');
-                        } else {
-                            ttCache[cacheKey] = { rows: [], source: 'nice' };
-                            renderPeriodList([], dateObj, 'nice');
+                            if (isStillSelected()) renderPeriodList(comciganRows, dateObj, 'comcigan');
+                        } else if (niceFailed && isStillSelected()) {
+                            // NICE도 실패, 컴시간도 데이터 없음 → 진짜 실패 안내
+                            listEl.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}시간표를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>`;
                         }
                     })
                     .catch(() => {
-                        // 컴시간 실패 → NICE 결과만 사용
-                        if (niceRows.length > 0) {
-                            ttCache[cacheKey] = { rows: niceRows, source: 'nice' };
-                            renderPeriodList(niceRows, dateObj, 'nice');
-                        } else {
+                        if (niceFailed && isStillSelected()) {
                             listEl.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}시간표를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>`;
                         }
                     });
@@ -3301,10 +3304,10 @@
         rows.forEach(r => {
             const item = document.createElement('div');
             item.className = 'tt-period-item';
-            const teacherHtml = r.teacher
-                ? `<div><div class="tt-period-subject">${escapeHTML(r.subject || '-')}</div><div class="tt-period-teacher">${escapeHTML(r.teacher)} 선생님</div></div>`
-                : `<div class="tt-period-subject">${escapeHTML(r.subject || '-')}</div>`;
-            item.innerHTML = `<div class="tt-period-num">${r.period}</div>${teacherHtml}`;
+            const contentHtml = r.teacher
+                ? `<div class="tt-period-content"><span class="tt-period-subject">${escapeHTML(r.subject || '-')}</span><span class="tt-period-teacher">${escapeHTML(r.teacher)} 선생님</span></div>`
+                : `<div class="tt-period-content"><span class="tt-period-subject">${escapeHTML(r.subject || '-')}</span></div>`;
+            item.innerHTML = `<div class="tt-period-num">${r.period}</div>${contentHtml}`;
             listEl.appendChild(item);
         });
     }
