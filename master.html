@@ -469,6 +469,9 @@
     <script>
         const BACKEND_URL = "https://kst-backend-yhwings21-4601s-projects.vercel.app";
 
+        // 이 화면은 로그인 여부가 아니라 아래 허용 목록에 있는 계정인지로 접근을 제어한다.
+        const MASTER_ALLOWED_EMAILS = ["admin@kst.com", "ufes0603@kst.com"];
+
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
             authDomain: "ksthome-76889.firebaseapp.com",
@@ -514,18 +517,22 @@
         }
 
         auth.onAuthStateChanged((user) => {
-            if (user) {
+            const isAllowed = user && MASTER_ALLOWED_EMAILS.includes((user.email || '').toLowerCase());
+
+            if (isAllowed) {
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('admin-view').style.display = 'block';
                 document.getElementById('welcome-bar').innerText = `${user.email} 연결됨`;
-                
+
                 const todayStr = new Date().toISOString().substring(0, 10);
                 document.getElementById('quote-date').value = todayStr;
                 fetchReservedQuote(todayStr);
-                
+
                 initAdminDataFeed();
                 initComciganOverridePanel();
             } else {
+                // 로그인은 되어 있지만(예: 학생 계정) 허용 목록에 없는 경우에도 관리자 화면 대신 로그인 화면을 보여준다.
+                // 여기서 signOut()을 호출하면 다른 탭(index.html 등)의 학생 세션까지 끊기므로 호출하지 않는다.
                 document.getElementById('login-view').style.display = 'block';
                 document.getElementById('admin-view').style.display = 'none';
             }

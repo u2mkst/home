@@ -593,7 +593,7 @@
                 </div>
             </div>
 
-            <div class="glass-card menu-card">
+            <div class="glass-card menu-card" id="shortcutMenuCard">
                 <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
                     <span class="menu-item-text">유투엠 바로가기</span>
                     <span class="arrow-icon">➔</span>
@@ -1131,6 +1131,21 @@
     const BACKEND_URL = "https://kst-backend-yhwings21-4601s-projects.vercel.app";
     const RECAPTCHA_SITE_KEY = "6LcoRYAtAAAAAP_83dJyhmTfWrTrer3QUYf8Pof1";
 
+    // 이 계정으로 로그인하면 유투엠/매쓰플랫 바로가기 대신 마스터 관리자 페이지 링크를 보여준다.
+    const MASTER_U2M_ID = "ufes0603";
+
+    function applyMasterShortcut(u2mId) {
+        if ((u2mId || '').toLowerCase() !== MASTER_U2M_ID) return;
+        const menuCard = document.getElementById('shortcutMenuCard');
+        if (!menuCard) return;
+        menuCard.innerHTML = `
+            <a href="./master.html" class="menu-item">
+                <span class="menu-item-text">🛠️ 마스터 관리자 페이지</span>
+                <span class="arrow-icon">➔</span>
+            </a>
+        `;
+    }
+
     const firebaseConfig = {
         apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
         authDomain: "ksthome-76889.firebaseapp.com",
@@ -1378,6 +1393,7 @@
                     const data = snapshot.val();
                     if (data) {
                         currentStudentData = data;
+                        applyMasterShortcut(data.u2mId);
 
                         if (data.schoolName && !data.schoolName.includes('초등')) {
                             fetchExamDateFromNeis(data.schoolName);
