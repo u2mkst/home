@@ -163,6 +163,24 @@
         }
         textarea.form-control { resize: none; }
 
+        .hidden { display: none !important; }
+
+        /* 학교 검색 자동완성 */
+        .autocomplete-list {
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+            background: var(--glass-card); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border); border-radius: 14px; box-shadow: var(--shadow-glass);
+            max-height: 220px; overflow-y: auto; list-style: none; margin: 0; padding: 6px; text-align: left;
+        }
+        .autocomplete-item { padding: 10px 12px; border-radius: 10px; font-size: 0.9rem; color: var(--text-main); cursor: pointer; }
+        .autocomplete-item:hover { background: rgba(79, 70, 229, 0.1); }
+        .autocomplete-item .school-region { font-size: 0.76rem; color: var(--text-sub); margin-left: 6px; }
+        .selected-school-badge {
+            display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600;
+            color: var(--primary); background: var(--primary-light); padding: 6px 12px; border-radius: 999px;
+            margin: -6px 0 14px 0;
+        }
+
         /* 대형 달력 스타일 */
         .calendar-input {
             font-family: var(--font-title);
@@ -393,6 +411,32 @@
             </div>
 
             <div class="panel-card">
+                <h3>🗓️ 컴시간 학교명 등록</h3>
+                <p style="font-size:0.82rem; color: var(--text-sub); margin: -6px 0 14px 0; line-height:1.4;">
+                    컴시간(comcigan)에 등록된 학교명이 NEIS 정식 명칭과 다른 경우, 학교를 검색해 컴시간 검색용 이름을 등록해두면 학생 시간표에 자동 반영됩니다.
+                </p>
+
+                <div class="form-group" style="position: relative;">
+                    <label for="comcigan-school-search">학교 검색 (NEIS)</label>
+                    <input type="text" id="comcigan-school-search" class="form-control" placeholder="예: 광교호수중학교" autocomplete="off">
+                    <ul id="comcigan-school-list" class="autocomplete-list hidden"></ul>
+                </div>
+                <input type="hidden" id="comcigan-school-code">
+                <div id="comcigan-selected-school" class="selected-school-badge hidden"></div>
+
+                <div class="form-group">
+                    <label for="comcigan-override-name">컴시간에 등록된 학교명</label>
+                    <input type="text" id="comcigan-override-name" class="form-control" placeholder="예: 호수중">
+                </div>
+                <button class="btn-block btn-purple" onclick="saveComciganOverride()">등록/수정 저장</button>
+
+                <div style="height: 16px;"></div>
+                <div id="comcigan-override-list" class="feed-container">
+                    <div class="no-data">등록된 매핑이 없습니다.</div>
+                </div>
+            </div>
+
+            <div class="panel-card">
                 <h3>📬 실시간 알림 수신함</h3>
                 <div id="feed-container-list" class="feed-container">
                     <div class="no-data">수신 대기 중인 문의 사항이 없습니다.</div>
@@ -480,6 +524,7 @@
                 fetchReservedQuote(todayStr);
                 
                 initAdminDataFeed();
+                initComciganOverridePanel();
             } else {
                 document.getElementById('login-view').style.display = 'block';
                 document.getElementById('admin-view').style.display = 'none';
@@ -614,6 +659,118 @@
                 });
                 listContainer.innerHTML = itemsHTML.join('');
             });
+        }
+
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>'"]/g,
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        let comciganPanelBound = false;
+        function initComciganOverridePanel() {
+            renderComciganOverrideList();
+            if (comciganPanelBound) return;
+            comciganPanelBound = true;
+
+            const searchInput = document.getElementById('comcigan-school-search');
+            const searchList = document.getElementById('comcigan-school-list');
+            const codeInput = document.getElementById('comcigan-school-code');
+            const selectedBadge = document.getElementById('comcigan-selected-school');
+
+            searchInput.addEventListener('input', function () {
+                const query = this.value.trim();
+                codeInput.value = '';
+                selectedBadge.classList.add('hidden');
+                if (query.length < 2) {
+                    searchList.innerHTML = ''; searchList.classList.add('hidden');
+                    return;
+                }
+                const url = `${BACKEND_URL}/api/neis?endpoint=schoolInfo&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
+                fetch(url).then(res => res.json()).then(data => {
+                    searchList.innerHTML = '';
+                    if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                        const rows = data.schoolInfo[1].row;
+                        searchList.classList.remove('hidden');
+                        rows.forEach(item => {
+                            const li = document.createElement('li');
+                            li.className = 'autocomplete-item';
+                            li.innerHTML = `${escapeHTML(item.SCHUL_NM)} <span class="school-region">${escapeHTML(item.ATPT_OFCDC_SC_NM)}</span>`;
+                            li.addEventListener('click', () => {
+                                searchInput.value = item.SCHUL_NM;
+                                codeInput.value = item.SD_SCHUL_CODE;
+                                selectedBadge.textContent = `✅ 선택됨: ${item.SCHUL_NM} (${item.SD_SCHUL_CODE})`;
+                                selectedBadge.classList.remove('hidden');
+                                searchList.innerHTML = ''; searchList.classList.add('hidden');
+                            });
+                            searchList.appendChild(li);
+                        });
+                    } else {
+                        searchList.classList.add('hidden');
+                    }
+                }).catch(err => console.error(err));
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target !== searchInput && e.target !== searchList) {
+                    searchList.innerHTML = ''; searchList.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderComciganOverrideList() {
+            database.ref('comciganOverrides').on('value', (snapshot) => {
+                const listContainer = document.getElementById('comcigan-override-list');
+                if (!snapshot.exists()) {
+                    listContainer.innerHTML = '<div class="no-data">등록된 매핑이 없습니다.</div>';
+                    return;
+                }
+                database.ref('comciganOverrideMeta').once('value', (metaSnap) => {
+                    const meta = metaSnap.val() || {};
+                    let itemsHTML = [];
+                    snapshot.forEach((child) => {
+                        const schoolCode = child.key;
+                        const overrideName = child.val();
+                        const schoolName = (meta[schoolCode] && meta[schoolCode].schoolName) || schoolCode;
+                        itemsHTML.push(`
+                            <div class="feed-item">
+                                <div class="feed-meta"><b>${escapeHTML(schoolName)}</b> (${escapeHTML(schoolCode)})</div>
+                                <div style="font-size:0.9rem; color:var(--text-main); margin-bottom:8px;">컴시간 등록명: <b>${escapeHTML(overrideName)}</b></div>
+                                <button class="btn-block btn-red" style="padding:6px; font-size:0.78rem; border-radius:10px;" onclick="deleteComciganOverride('${schoolCode}')">삭제</button>
+                            </div>
+                        `);
+                    });
+                    listContainer.innerHTML = itemsHTML.join('');
+                });
+            });
+        }
+
+        function saveComciganOverride() {
+            const schoolCode = document.getElementById('comcigan-school-code').value.trim();
+            const schoolName = document.getElementById('comcigan-school-search').value.trim();
+            const overrideName = document.getElementById('comcigan-override-name').value.trim();
+
+            if (!schoolCode) { alert("먼저 검색 결과에서 학교를 선택해 주세요."); return; }
+            if (!overrideName) { alert("컴시간에 등록된 학교명을 입력해 주세요."); return; }
+
+            Promise.all([
+                database.ref(`comciganOverrides/${schoolCode}`).set(overrideName),
+                database.ref(`comciganOverrideMeta/${schoolCode}`).set({ schoolName })
+            ]).then(() => {
+                alert("컴시간 학교명이 등록되었습니다.");
+                document.getElementById('comcigan-school-search').value = '';
+                document.getElementById('comcigan-school-code').value = '';
+                document.getElementById('comcigan-override-name').value = '';
+                document.getElementById('comcigan-selected-school').classList.add('hidden');
+            }).catch(err => alert("저장 실패: " + err.message));
+        }
+
+        function deleteComciganOverride(schoolCode) {
+            if (!confirm("이 학교의 컴시간 등록명을 삭제할까요?")) return;
+            Promise.all([
+                database.ref(`comciganOverrides/${schoolCode}`).remove(),
+                database.ref(`comciganOverrideMeta/${schoolCode}`).remove()
+            ]).then(() => alert("삭제되었습니다.")).catch(err => alert("삭제 실패: " + err.message));
         }
 
         function saveManualQuoteData() {

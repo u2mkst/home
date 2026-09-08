@@ -3050,6 +3050,21 @@
     let ttCurrentDate = new Date();
     let ttSelectedDateStr = null;
     const ttCache = {};
+    const comciganOverrideCache = {};
+
+    // 관리자가 학교별로 등록해둔 컴시간 검색용 학교명이 있으면 그걸 쓰고, 없으면 NEIS 정식 학교명을 그대로 쓴다.
+    function getComciganSchoolName(schoolCode, fallbackName) {
+        if (Object.prototype.hasOwnProperty.call(comciganOverrideCache, schoolCode)) {
+            return Promise.resolve(comciganOverrideCache[schoolCode] || fallbackName);
+        }
+        return database.ref(`comciganOverrides/${schoolCode}`).once('value')
+            .then(snapshot => {
+                const override = snapshot.val();
+                comciganOverrideCache[schoolCode] = override || null;
+                return override || fallbackName;
+            })
+            .catch(() => fallbackName);
+    }
 
     const NEIS_OFFICE_TO_REGION = {
         "B10": "서울", "C10": "부산", "D10": "대구", "E10": "인천", "F10": "광주",
@@ -3267,8 +3282,10 @@
 
                 const region = NEIS_OFFICE_TO_REGION[meta.officeCode] || null;
 
-                // 2) 컴시간 API로 보강 시도 — 성공하면 방금 그린 NICE 결과를 덮어쓴다.
-                fetchComciganTimetable(currentStudentData.schoolName, gradeNum, classNum, region)
+                // 2) 컴시간 API로 보강 시도 — 관리자가 등록해둔 학교명이 있으면 그걸 우선 사용.
+                // 성공하면 방금 그린 NICE 결과를 덮어쓴다.
+                getComciganSchoolName(currentStudentData.schoolCode, currentStudentData.schoolName)
+                .then(comciganSchoolName => fetchComciganTimetable(comciganSchoolName, gradeNum, classNum, region))
                     .then(comciganData => {
                         const comciganRows = extractComciganPeriods(comciganData, dateObj.getDay());
                         if (comciganRows && comciganRows.length > 0) {
