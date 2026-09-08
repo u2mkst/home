@@ -1373,14 +1373,10 @@
                     serverTimeOffset = snapshot.val() || 0;
                 });
 
-                database.ref(`students/${user.uid}`).once('value', async (snapshot) => {
+                database.ref(`students/${user.uid}`).once('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         currentStudentData = data;
-                        const rawName = data.name || data.studentName || data.userName;
-                        const actualName = rawName ? await decryptAES(rawName) : (user.displayName || "학생");
-                        currentStudentName = actualName;
-                        document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
 
                         if (data.schoolName && !data.schoolName.includes('초등')) {
                             fetchExamDateFromNeis(data.schoolName);
@@ -1392,6 +1388,13 @@
                         listenToRemoteCommands(user.uid);
 
                         hideLoading();
+
+                        const rawName = data.name || data.studentName || data.userName;
+                        (rawName ? decryptAES(rawName) : Promise.resolve(user.displayName || "학생"))
+                            .then(actualName => {
+                                currentStudentName = actualName;
+                                document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
+                            });
                     } else {
                         cleanStudentSystemSession();
                         hideLoading();
@@ -1911,44 +1914,59 @@
 
     function fetchExamDateFromNeis(schoolName) {
         if (!schoolName) { renderDDayBadge(null); return; }
-        const schoolInfoUrl = `${BACKEND_URL}/api/neis?endpoint=schoolInfo&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
 
+        function applySchedule(data) {
+            if (!data || !data.SchoolSchedule) { renderDDayBadge(null); return; }
+            const rows = data.SchoolSchedule[1].row;
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+            let upcomingExamDates = [];
+            rows.forEach(item => {
+                const eventName = item.EVENT_NM || "";
+                const eventDate = item.AA_YMD;
+                if (eventDate >= todayStr) {
+                    if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") ||
+                        eventName.includes("지필") || eventName.includes("시험") || eventName.includes("정규")) {
+                        upcomingExamDates.push({ date: eventDate, name: eventName });
+                    }
+                }
+            });
+            if (upcomingExamDates.length > 0) {
+                upcomingExamDates.sort((a, b) => a.date.localeCompare(b.date));
+                const closest = upcomingExamDates[0];
+                const finalDateForm = `${closest.date.substring(0,4)}-${closest.date.substring(4,6)}-${closest.date.substring(6,8)}`;
+                renderDDayBadge(finalDateForm, closest.name);
+            } else { renderDDayBadge(null); }
+        }
+
+        function fetchSchedule(officeCode, schoolCode) {
+            const currentYear = new Date().getFullYear();
+            const fromYmd = `${currentYear}0301`;
+            const toYmd = `${currentYear + 1}0228`;
+            const scheduleUrl = `${BACKEND_URL}/api/neis?endpoint=SchoolSchedule&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=800`;
+            fetch(scheduleUrl).then(res => res.json()).then(applySchedule).catch(() => renderDDayBadge(null));
+        }
+
+        // schoolCode가 있으면 ensureSchoolMeta의 캐시(schoolOfficeCode)를 재사용해 schoolInfo 재조회를 건너뛴다.
+        // schoolCode 자체가 없는 계정만 학교명으로 처음부터 조회하는 기존 방식으로 폴백.
+        if (currentStudentData && currentStudentData.schoolCode) {
+            ensureSchoolMeta((meta) => {
+                if (meta && meta.officeCode) {
+                    fetchSchedule(meta.officeCode, currentStudentData.schoolCode);
+                } else {
+                    renderDDayBadge(null);
+                }
+            });
+            return;
+        }
+
+        const schoolInfoUrl = `${BACKEND_URL}/api/neis?endpoint=schoolInfo&Type=json&SCHUL_NM=${encodeURIComponent(schoolName)}`;
         fetch(schoolInfoUrl)
             .then(res => res.json())
             .then(data => {
                 if (!data.schoolInfo) { renderDDayBadge(null); return; }
                 const row = data.schoolInfo[1].row[0];
-                const officeCode = row.ATPT_OFCDC_SC_CODE;
-                const schoolCode = row.SD_SCHUL_CODE;
-                const currentYear = new Date().getFullYear();
-                const fromYmd = `${currentYear}0301`;
-                const toYmd = `${currentYear + 1}0228`;
-                const scheduleUrl = `${BACKEND_URL}/api/neis?endpoint=SchoolSchedule&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=800`;
-                return fetch(scheduleUrl);
-            })
-            .then(res => res ? res.json() : null)
-            .then(data => {
-                if (!data || !data.SchoolSchedule) { renderDDayBadge(null); return; }
-                const rows = data.SchoolSchedule[1].row;
-                const now = new Date();
-                const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-                let upcomingExamDates = [];
-                rows.forEach(item => {
-                    const eventName = item.EVENT_NM || "";
-                    const eventDate = item.AA_YMD;
-                    if (eventDate >= todayStr) {
-                        if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") ||
-                            eventName.includes("지필") || eventName.includes("시험") || eventName.includes("정규")) {
-                            upcomingExamDates.push({ date: eventDate, name: eventName });
-                        }
-                    }
-                });
-                if (upcomingExamDates.length > 0) {
-                    upcomingExamDates.sort((a, b) => a.date.localeCompare(b.date));
-                    const closest = upcomingExamDates[0];
-                    const finalDateForm = `${closest.date.substring(0,4)}-${closest.date.substring(4,6)}-${closest.date.substring(6,8)}`;
-                    renderDDayBadge(finalDateForm, closest.name);
-                } else { renderDDayBadge(null); }
+                fetchSchedule(row.ATPT_OFCDC_SC_CODE, row.SD_SCHUL_CODE);
             }).catch(() => renderDDayBadge(null));
     }
 
