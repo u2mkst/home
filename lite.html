@@ -29,23 +29,27 @@
             font-display: swap;
         }
         
+        :root {
+            --primary: #3182F6;
+            --border-soft: #E5E8EB;
+            --surface-soft: #F7F8FA;
+        }
+
         html { font-size: 13.5px; }
 
         * { font-family: 'FlightSans', 'Paperlogy', 'Noto Sans KR', 'Mona12', sans-serif; }
-        
+
         .emoji-font {
             font-family: 'Mona12', sans-serif !important;
             font-weight: normal !important;
         }
-        
+
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%), 
-                        linear-gradient(25deg, #ecd5e3 0%, #cee5f2 60%, #e2daf0 100%);
-            background-blend-mode: multiply; 
-            margin: 0; 
+            background: #F2F4F6;
+            margin: 0;
             display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; color: #1d1d1f;
-            box-sizing: border-box; 
+            min-height: 100vh; color: #191F28;
+            box-sizing: border-box;
             padding: 40px 8vw;
             overflow-x: hidden;
         }
@@ -62,13 +66,12 @@
         .main-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
         @media (min-width: 768px) { .main-grid { grid-template-columns: 1fr 1fr; align-items: stretch; } }
 
-        /* Glassmorphism 카드 */
+        /* 플랫 카드 */
         .glass-card {
-            background: rgba(255, 255, 255, 0.38); 
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.45); 
+            background: #FFFFFF;
+            border: 1px solid var(--border-soft);
             border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
             box-sizing: border-box; display: flex; flex-direction: column;
         }
         
@@ -80,7 +83,7 @@
             font-family: 'FlightSans', 'Paperlogy', sans-serif;
             font-size: 0.9rem;
             font-weight: 700;
-            color: #ff453a;
+            color: #F04452;
             letter-spacing: -0.3px;
         }
 
@@ -93,9 +96,9 @@
             transition: all 0.25s ease;
         }
         .wide-ad-card:hover {
-            background: rgba(255, 255, 255, 0.55);
+            background: rgba(49, 130, 246, 0.04);
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
         }
         .wide-ad-title { font-family: 'Paperlogy', sans-serif; font-size: 1.05rem; font-weight: 700; color: #1d1d1f; margin: 0; }
         .wide-ad-desc { font-size: 0.85rem; color: #6e6e73; margin: 2px 0 0 0; }
@@ -120,10 +123,10 @@
             transition: all 0.25s ease; cursor: pointer;
         }
         .menu-item:not(:last-child) { border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
-        .menu-item:hover { background: rgba(255, 255, 255, 0.35); padding-left: 36px; }
+        .menu-item:hover { background: rgba(49, 130, 246, 0.05); padding-left: 36px; }
         .menu-item-text { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.3px; }
         .arrow-icon { font-family: 'FlightSans', sans-serif; font-size: 0.9rem; color: #86868b; transition: transform 0.2s ease, color 0.2s ease; }
-        .menu-item:hover .arrow-icon { transform: translateX(4px); color: #0071e3; }
+        .menu-item:hover .arrow-icon { transform: translateX(4px); color: var(--primary); }
 
         .footer { margin-top: 40px; text-align: center; }
         .footer-brand { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.3px; margin-bottom: 6px; }
