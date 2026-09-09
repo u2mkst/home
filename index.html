@@ -1763,15 +1763,9 @@
         return !!(entry && entry.correctIndexes && Object.keys(entry.correctIndexes).length > 0);
     }
 
-    function computeMathqStreak(history) {
-        let streak = 0;
-        const d = new Date();
-        if (!mathqHasAnyCorrect(history[toDateStr(d)])) d.setDate(d.getDate() - 1);
-        while (mathqHasAnyCorrect(history[toDateStr(d)])) {
-            streak++;
-            d.setDate(d.getDate() - 1);
-        }
-        return streak;
+    // 매일 등원하는 학원이 아니라서 "연속 출석/연속 도전" 개념 대신 누적 참여일수로 센다.
+    function computeMathqTotalDays(history) {
+        return Object.keys(history).filter(k => mathqHasAnyCorrect(history[k])).length;
     }
 
     // 하단 탭에 "오늘 아직 안 풀었어요" 알림 점을 표시할지 결정
@@ -1930,9 +1924,9 @@
             const todayEntry = history[todayKey];
             mathqCorrectToday = (todayEntry && todayEntry.correctIndexes) ? { ...todayEntry.correctIndexes } : {};
 
-            const streak = computeMathqStreak(history);
-            const streakText = streak > 0 ? ` · 🔥 ${streak}일 연속 도전 중!` : '';
-            subtitle.textContent = `${MATHQ_GRADE_LABELS[gradeCode] || ''} · ${dateLabel} 오늘의 문제${streakText}`;
+            const totalDays = computeMathqTotalDays(history);
+            const totalText = totalDays > 0 ? ` · ✨ 누적 참여 ${totalDays}일째` : '';
+            subtitle.textContent = `${MATHQ_GRADE_LABELS[gradeCode] || ''} · ${dateLabel} 오늘의 문제${totalText}`;
 
             container.innerHTML = '';
             questions.forEach((q, index) => {
@@ -2551,37 +2545,51 @@
        🏅 업적 배지 도감 (마이페이지)
     ===================================================================== */
     const ACHIEVEMENTS = [
-        { id: 'att_1',   icon: '🥉', name: '첫 출석',    desc: '누적 출석 1일',        category: 'attendance', threshold: 1 },
-        { id: 'att_30',  icon: '🥈', name: '개근왕',      desc: '누적 출석 30일',       category: 'attendance', threshold: 30 },
-        { id: 'att_100', icon: '🥇', name: '찐근성왕',    desc: '누적 출석 100일',      category: 'attendance', threshold: 100 },
-        { id: 'quiz_3',  icon: '🔥', name: '도전 시작',   desc: '오늘의 문제 3일 연속',  category: 'quizStreak', threshold: 3 },
-        { id: 'quiz_7',  icon: '🔥', name: '불타는 열정', desc: '오늘의 문제 7일 연속',  category: 'quizStreak', threshold: 7 },
-        { id: 'quiz_30', icon: '🔥', name: '문제 마스터', desc: '오늘의 문제 30일 연속', category: 'quizStreak', threshold: 30 },
-        { id: 'lotto_3', icon: '🎯', name: '예측왕',      desc: '로또 3개 이상 적중',    category: 'lottoMatch', threshold: 3 },
-        { id: 'lotto_5', icon: '🎰', name: '적중 고수',   desc: '로또 5개 이상 적중',    category: 'lottoMatch', threshold: 5 },
+        { id: 'att_1',   icon: '🥉', name: '첫 출석',      desc: '누적 출석 1일',       category: 'attendance', threshold: 1 },
+        { id: 'att_30',  icon: '🥈', name: '개근왕',        desc: '누적 출석 30일',      category: 'attendance', threshold: 30 },
+        { id: 'att_100', icon: '🥇', name: '찐근성왕',      desc: '누적 출석 100일',     category: 'attendance', threshold: 100 },
+        { id: 'quiz_3',  icon: '🔥', name: '도전 시작',    desc: '오늘의 문제 누적 3일',  category: 'quizDays', threshold: 3 },
+        { id: 'quiz_7',  icon: '🔥', name: '꾸준한 도전자', desc: '오늘의 문제 누적 7일',  category: 'quizDays', threshold: 7 },
+        { id: 'quiz_30', icon: '🔥', name: '문제 마스터',   desc: '오늘의 문제 누적 30일', category: 'quizDays', threshold: 30 },
+        { id: 'lotto_3', icon: '🎯', name: '예측왕',       desc: '로또 3개 이상 적중',   category: 'lottoMatch', threshold: 3 },
+        { id: 'lotto_5', icon: '🎰', name: '적중 고수',    desc: '로또 5개 이상 적중',   category: 'lottoMatch', threshold: 5 },
     ];
 
+    // 조건을 한 번 채운 배지는 studentAchievements/{uid}에 영구 기록해, 이후 상황이 바뀌어도
+    // (예: 로또 새 회차가 시작돼 matchedCount가 0으로 리셋) 계속 달성 상태로 유지한다.
     async function computeAchievementProgress(uid) {
-        const [attSnap, quizSnap, lottoSnap] = await Promise.all([
+        const [attSnap, quizSnap, lottoSnap, unlockedSnap] = await Promise.all([
             database.ref(`attendance/${uid}`).once('value'),
             database.ref(`mathQuizProgress/${uid}`).once('value'),
-            cachedTargetRound ? database.ref(`lotto_predictions/${cachedTargetRound}/${uid}`).once('value') : Promise.resolve(null)
+            cachedTargetRound ? database.ref(`lotto_predictions/${cachedTargetRound}/${uid}`).once('value') : Promise.resolve(null),
+            database.ref(`studentAchievements/${uid}`).once('value')
         ]);
 
-        const attendance = Object.values(attSnap.val() || {}).reduce((sum, m) => sum + (m.count || 0), 0);
-        const quizStreak = computeMathqStreak(quizSnap.val() || {});
-        const lottoMatch = (lottoSnap && lottoSnap.val() && lottoSnap.val().matchedCount) || 0;
+        const liveProgress = {
+            attendance: Object.values(attSnap.val() || {}).reduce((sum, m) => sum + (m.count || 0), 0),
+            quizDays: computeMathqTotalDays(quizSnap.val() || {}),
+            lottoMatch: (lottoSnap && lottoSnap.val() && lottoSnap.val().matchedCount) || 0
+        };
+        const unlockedRecord = unlockedSnap.val() || {};
 
-        return { attendance, quizStreak, lottoMatch };
+        const newlyUnlocked = {};
+        ACHIEVEMENTS.forEach(a => {
+            if (!unlockedRecord[a.id] && liveProgress[a.category] >= a.threshold) newlyUnlocked[a.id] = true;
+        });
+        if (Object.keys(newlyUnlocked).length > 0) {
+            database.ref(`studentAchievements/${uid}`).update(newlyUnlocked).catch(err => console.error("업적 저장 실패:", err));
+        }
+
+        return { ...unlockedRecord, ...newlyUnlocked };
     }
 
     function renderAchievementBadges() {
         const grid = document.getElementById('achievementBadgeGrid');
         if (!grid || !auth.currentUser) return;
 
-        computeAchievementProgress(auth.currentUser.uid).then(progress => {
+        computeAchievementProgress(auth.currentUser.uid).then(unlockedRecord => {
             grid.innerHTML = ACHIEVEMENTS.map(a => {
-                const unlocked = (progress[a.category] || 0) >= a.threshold;
+                const unlocked = !!unlockedRecord[a.id];
                 return `
                     <div class="badge-tile ${unlocked ? 'unlocked' : 'locked'}">
                         <div class="badge-tile-icon">${unlocked ? a.icon : '🔒'}</div>
