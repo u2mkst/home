@@ -743,7 +743,7 @@
                             <div class="feed-item">
                                 <div class="feed-meta"><b>${escapeHTML(schoolName)}</b> (${escapeHTML(schoolCode)})</div>
                                 <div style="font-size:0.9rem; color:var(--text-main); margin-bottom:8px;">컴시간 등록명: <b>${escapeHTML(overrideName)}</b></div>
-                                <button class="btn-block btn-red" style="padding:6px; font-size:0.78rem; border-radius:10px;" onclick="deleteComciganOverride('${schoolCode}')">삭제</button>
+                                <button class="btn-block btn-red" style="padding:6px; font-size:0.78rem; border-radius:10px;" onclick="deleteComciganOverride('${escapeHTML(schoolCode)}')">삭제</button>
                             </div>
                         `);
                     });
