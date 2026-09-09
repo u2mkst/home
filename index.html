@@ -205,7 +205,12 @@
             padding: 9px 2px; border-radius: 16px; transition: all 0.35s var(--spring);
             color: #a8a8ad; font-family: 'Paperlogy', sans-serif;
         }
-        .tab-item .tab-icon { font-size: 1.25rem; line-height: 1; transition: transform 0.3s var(--spring); }
+        .tab-item .tab-icon { font-size: 1.25rem; line-height: 1; transition: transform 0.3s var(--spring); position: relative; }
+        .tab-item .tab-dot {
+            position: absolute; top: -2px; right: -4px; width: 9px; height: 9px;
+            background: #ff453a; border-radius: 50%; border: 2px solid #ffffff; display: none;
+        }
+        .tab-item .tab-dot.show { display: block; }
         .tab-item .tab-label { font-family: 'Paperlogy', sans-serif; font-size: 0.64rem; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; }
         .tab-item:hover, .tab-item:active { color: #6c5ce7; background: rgba(108, 92, 231, 0.1); }
         .tab-item:active { transform: scale(0.92); }
@@ -383,14 +388,6 @@
         }
         .mathq-feedback.correct { display: flex; background: rgba(16,185,129,0.14); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); }
         .mathq-feedback.incorrect { display: flex; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); }
-        .mathq-more-link {
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            margin-top: 14px; padding: 12px; color: #6c5ce7; font-weight: 700; font-size: 0.9rem;
-            text-decoration: none; background: rgba(108, 92, 231, 0.08); border-radius: var(--radius-md);
-            transition: all 0.3s var(--ease-smooth);
-        }
-        .mathq-more-link:hover { background: rgba(108, 92, 231, 0.15); transform: translateX(3px); }
-
         /* 🗓️ 학교 시간표 바텀시트 전용 디자인 */
         .tt-nav-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
         .tt-nav-btn { width:34px; height:34px; border-radius: var(--radius-sm); border:1px solid var(--lg-border-soft); background: rgba(255,255,255,0.5); backdrop-filter: var(--lg-blur-sm); color:#6c5ce7; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition: all 0.3s var(--spring); }
@@ -875,7 +872,7 @@
             <span class="tab-label">문의</span>
         </button>
         <button onclick="openMathQuizBottomSheet()" class="tab-item">
-            <span class="tab-icon emoji-font">🧮</span>
+            <span class="tab-icon emoji-font">🧮<span class="tab-dot" id="mathQuizTabDot"></span></span>
             <span class="tab-label">오늘의 문제</span>
         </button>
         <button data-view="mypage" onclick="showView('mypage')" class="tab-item">
@@ -936,7 +933,6 @@
                 <div class="sheet-title">🧮 오늘의 문제</div>
                 <div class="sheet-subtitle" id="mathqQuizSubtitle"></div>
                 <div id="mathqQuizContainer"></div>
-                <a href="#" id="mathqMoreLink" class="mathq-more-link" onclick="return false;">더 많은 문제 연습하기 →</a>
                 <button type="button" class="btn-base btn-secondary" style="margin-top: 12px;" onclick="closeMathQuizBottomSheet()">닫기</button>
             </div>
         </div>
@@ -1417,6 +1413,7 @@
                         startLiveChatHistory(user.uid);
                         startDeviceStatusReporting(user.uid);
                         listenToRemoteCommands(user.uid);
+                        updateMathQuizTabDot();
 
                         hideLoading();
 
@@ -1699,6 +1696,33 @@
         m1: "중학교 1학년", m2: "중학교 2학년", m3: "중학교 3학년"
     };
 
+    // 오늘 이 세션에서 맞춘 문제 인덱스(바텀시트를 열 때 Firebase에서 다시 채워짐)
+    let mathqCorrectToday = {};
+
+    function mathqHasAnyCorrect(entry) {
+        return !!(entry && entry.correctIndexes && Object.keys(entry.correctIndexes).length > 0);
+    }
+
+    function computeMathqStreak(history) {
+        let streak = 0;
+        const d = new Date();
+        if (!mathqHasAnyCorrect(history[toDateStr(d)])) d.setDate(d.getDate() - 1);
+        while (mathqHasAnyCorrect(history[toDateStr(d)])) {
+            streak++;
+            d.setDate(d.getDate() - 1);
+        }
+        return streak;
+    }
+
+    // 하단 탭에 "오늘 아직 안 풀었어요" 알림 점을 표시할지 결정
+    function updateMathQuizTabDot() {
+        const dot = document.getElementById('mathQuizTabDot');
+        if (!dot || !auth.currentUser) return;
+        database.ref(`mathQuizProgress/${auth.currentUser.uid}/${toDateStr(new Date())}`).once('value', (snapshot) => {
+            dot.classList.toggle('show', !mathqHasAnyCorrect(snapshot.val()));
+        });
+    }
+
     // 마이페이지 "학년" 드롭다운 값(초3~중3) → 오늘의 문제 학년 코드(p3~m3) 매핑
     const KOREAN_GRADE_TO_MATHQ_CODE = {
         '초3': 'p3', '초4': 'p4', '초5': 'p5', '초6': 'p6',
@@ -1827,38 +1851,50 @@
     function renderTodayMathQuiz(gradeCode) {
         const container = document.getElementById('mathqQuizContainer');
         const subtitle = document.getElementById('mathqQuizSubtitle');
-        const moreLink = document.getElementById('mathqMoreLink');
-        if (!container) return;
+        if (!container || !auth.currentUser) return;
 
         const now = new Date();
         const dateLabel = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
-        subtitle.textContent = `${MATHQ_GRADE_LABELS[gradeCode] || ''} · ${dateLabel} 오늘의 문제`;
-        if (moreLink) moreLink.href = `math.html?grade=${gradeCode}`;
+        const todayKey = toDateStr(now);
+        const uid = auth.currentUser.uid;
 
         const seed = mathqTodaySeed(gradeCode);
         const rng = mulberry32(seed);
         const generators = mathqGenerators[gradeCode] || [];
+        const questions = generators.map(gen => gen(rng));
 
-        container.innerHTML = '';
-        generators.forEach((gen, index) => {
-            const q = gen(rng);
-            const card = document.createElement('div');
-            card.className = 'mathq-card';
-            card.innerHTML = `
-                <div class="mathq-card-title">유형 ${index + 1}. ${q.title}</div>
-                <div class="mathq-card-text">${q.text}</div>
-                <div class="mathq-input-group">
-                    <input type="number" id="mathq-ans-${index}" placeholder="정답 입력" onkeydown="if(event.key==='Enter') checkMathQuizAnswer(${index}, ${q.ans})">
-                    <button onclick="checkMathQuizAnswer(${index}, ${q.ans})">확인</button>
-                </div>
-                <div class="mathq-feedback" id="mathq-feedback-${index}"></div>
-            `;
-            container.appendChild(card);
+        database.ref(`mathQuizProgress/${uid}`).once('value', (snapshot) => {
+            const history = snapshot.val() || {};
+            const todayEntry = history[todayKey];
+            mathqCorrectToday = (todayEntry && todayEntry.correctIndexes) ? { ...todayEntry.correctIndexes } : {};
+
+            const streak = computeMathqStreak(history);
+            const streakText = streak > 0 ? ` · 🔥 ${streak}일 연속 도전 중!` : '';
+            subtitle.textContent = `${MATHQ_GRADE_LABELS[gradeCode] || ''} · ${dateLabel} 오늘의 문제${streakText}`;
+
+            container.innerHTML = '';
+            questions.forEach((q, index) => {
+                const alreadyCorrect = !!mathqCorrectToday[index];
+                const card = document.createElement('div');
+                card.className = 'mathq-card';
+                card.innerHTML = `
+                    <div class="mathq-card-title">유형 ${index + 1}. ${q.title}</div>
+                    <div class="mathq-card-text">${q.text}</div>
+                    <div class="mathq-input-group">
+                        <input type="number" id="mathq-ans-${index}" placeholder="정답 입력" ${alreadyCorrect ? `value="${q.ans}" disabled` : ''} onkeydown="if(event.key==='Enter') checkMathQuizAnswer(${index}, ${q.ans})">
+                        <button ${alreadyCorrect ? 'disabled' : ''} onclick="checkMathQuizAnswer(${index}, ${q.ans})">확인</button>
+                    </div>
+                    <div class="mathq-feedback ${alreadyCorrect ? 'correct' : ''}" id="mathq-feedback-${index}">${alreadyCorrect ? '<span>✅</span> 오늘 이미 맞춘 문제예요.' : ''}</div>
+                `;
+                container.appendChild(card);
+            });
+
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([container]);
+            }
+
+            updateMathQuizTabDot();
         });
-
-        if (window.MathJax && window.MathJax.typesetPromise) {
-            window.MathJax.typesetPromise([container]);
-        }
     }
 
     function checkMathQuizAnswer(index, correctAns) {
@@ -1875,10 +1911,26 @@
         if (Math.abs(userAns - correctAns) < 0.01) {
             feedbackEl.innerHTML = `<span>🎉</span> 정답입니다! 아주 잘했어요.`;
             feedbackEl.className = "mathq-feedback correct";
+            inputEl.disabled = true;
+            saveMathQuizProgress(index);
         } else {
             feedbackEl.innerHTML = `<span>❌</span> 틀렸습니다. (정답: ${correctAns})`;
             feedbackEl.className = "mathq-feedback incorrect";
         }
+    }
+
+    function saveMathQuizProgress(index) {
+        if (mathqCorrectToday[index] || !auth.currentUser) return;
+        mathqCorrectToday[index] = true;
+
+        const uid = auth.currentUser.uid;
+        const todayKey = toDateStr(new Date());
+        database.ref(`mathQuizProgress/${uid}/${todayKey}`).update({
+            [`correctIndexes/${index}`]: true,
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
+        }).catch(err => console.error("오늘의 문제 진행 저장 실패:", err));
+
+        updateMathQuizTabDot();
     }
 
     /* =====================================================================
