@@ -6,7 +6,9 @@
     <title>K&P 수학입시학원</title>
 
     <!-- 에셋 및 라이브러리 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
+    <!-- Mona12는 이모지 아이콘 전용 폰트라 렌더링을 막지 않도록 비동기로 로드 -->
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css"></noscript>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -1296,6 +1298,18 @@
         const { results } = await res.json();
         return results;
     }
+    // 학생 본인 이름 캐시 — 암호문이 그대로면 복호화 API를 다시 부르지 않고 즉시 표시.
+    // 이름이 바뀌면 암호문 자체가 달라지므로 별도 만료 처리 없이 자동으로 무효화된다.
+    function getCachedName(uid, cipher) {
+        try {
+            const cached = JSON.parse(localStorage.getItem(`kst_name_${uid}`) || 'null');
+            return (cached && cached.cipher === cipher) ? cached.plain : null;
+        } catch { return null; }
+    }
+    function setCachedName(uid, cipher, plain) {
+        try { localStorage.setItem(`kst_name_${uid}`, JSON.stringify({ cipher, plain })); } catch {}
+    }
+
     async function decryptAES(cipherText) {
         if (!cipherText) return "";
         const [result] = await decryptAESBatch([cipherText]);
@@ -1407,11 +1421,18 @@
                         hideLoading();
 
                         const rawName = data.name || data.studentName || data.userName;
-                        (rawName ? decryptAES(rawName) : Promise.resolve(user.displayName || "학생"))
-                            .then(actualName => {
-                                currentStudentName = actualName;
-                                document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
-                            });
+                        const cachedName = rawName ? getCachedName(user.uid, rawName) : null;
+                        if (cachedName) {
+                            currentStudentName = cachedName;
+                            document.getElementById('welcome-message').innerText = `안녕하세요, ${cachedName}님`;
+                        } else {
+                            (rawName ? decryptAES(rawName) : Promise.resolve(user.displayName || "학생"))
+                                .then(actualName => {
+                                    currentStudentName = actualName;
+                                    document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
+                                    if (rawName) setCachedName(user.uid, rawName, actualName);
+                                });
+                        }
                     } else {
                         cleanStudentSystemSession();
                         hideLoading();
@@ -2244,39 +2265,55 @@
         });
     }
 
-    function initWeather() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => { fetchWeather(position.coords.latitude, position.coords.longitude); },
-                () => { fetchWeather(37.2638, 127.0286); }
-            );
-        } else { fetchWeather(37.2638, 127.0286); }
+    const WEATHER_CACHE_KEY = 'kst_weather_cache';
+
+    function renderWeatherData(data) {
+        const temp = Math.round(data.main.temp * 10) / 10;
+        document.getElementById('weatherTemp').innerText = `${temp}°C`;
+
+        const weatherId = data.weather[0].id;
+        let emoji = '☀️';
+        if (weatherId >= 200 && weatherId < 300) emoji = '⛈️';
+        else if (weatherId >= 300 && weatherId < 600) emoji = '🌧️';
+        else if (weatherId >= 600 && weatherId < 700) emoji = '❄️';
+        else if (weatherId >= 700 && weatherId < 800) emoji = '🌫️';
+        else if (weatherId === 800) emoji = '☀️';
+        else if (weatherId > 800) emoji = '☁️';
+
+        const description = data.weather[0].description;
+        document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" id="weatherIcon" class="emoji-font">${emoji}</span> ${description}`;
+        document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">💧</span> 습도 ${data.main.humidity}%</span> <span><span class="emoji-font">💨</span> 풍속 ${data.wind.speed}m/s</span>`;
     }
 
-    async function fetchWeather(lat, lon) {
+    function initWeather() {
+        let hasCache = false;
+        try {
+            const cached = JSON.parse(localStorage.getItem(WEATHER_CACHE_KEY) || 'null');
+            if (cached && cached.payload) { renderWeatherData(cached.payload); hasCache = true; }
+        } catch {}
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => { fetchWeather(position.coords.latitude, position.coords.longitude, hasCache); },
+                () => { fetchWeather(37.2638, 127.0286, hasCache); }
+            );
+        } else { fetchWeather(37.2638, 127.0286, hasCache); }
+    }
+
+    async function fetchWeather(lat, lon, hasCache) {
         const apiKey = '5bce1dcb3eac35e493f0ed9df94b5dac';
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`;
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error('날씨 수집 불가');
             const data = await response.json();
-            const temp = Math.round(data.main.temp * 10) / 10;
-            document.getElementById('weatherTemp').innerText = `${temp}°C`;
-
-            const weatherId = data.weather[0].id;
-            let emoji = '☀️';
-            if (weatherId >= 200 && weatherId < 300) emoji = '⛈️';
-            else if (weatherId >= 300 && weatherId < 600) emoji = '🌧️';
-            else if (weatherId >= 600 && weatherId < 700) emoji = '❄️';
-            else if (weatherId >= 700 && weatherId < 800) emoji = '🌫️';
-            else if (weatherId === 800) emoji = '☀️';
-            else if (weatherId > 800) emoji = '☁️';
-
-            const description = data.weather[0].description;
-            document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" id="weatherIcon" class="emoji-font">${emoji}</span> ${description}`;
-            document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">💧</span> 습도 ${data.main.humidity}%</span> <span><span class="emoji-font">💨</span> 풍속 ${data.wind.speed}m/s</span>`;
+            renderWeatherData(data);
+            try { localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ lat, lon, payload: data, timestamp: Date.now() })); } catch {}
         } catch {
-            document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" class="emoji-font">⚠️</span> 날씨 로드 실패`;
+            // 새로 불러오기 실패해도 이미 캐시로 그려둔 화면이 있으면 실패 문구로 덮어쓰지 않는다.
+            if (!hasCache) {
+                document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" class="emoji-font">⚠️</span> 날씨 로드 실패`;
+            }
         }
     }
 
@@ -2661,35 +2698,35 @@
         const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         document.getElementById('currentMonthTitle').innerText = `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
 
-        database.ref('attendance').once('value', (snapshot) => {
+        Promise.all([
+            database.ref('attendance').once('value'),
+            database.ref('students').once('value')
+        ]).then(async ([snapshot, stdSnap]) => {
             const allData = snapshot.val() || {};
+            const stds = stdSnap.val() || {};
+            const rows = [];
 
-            database.ref('students').once('value', async (stdSnap) => {
-                const stds = stdSnap.val() || {};
-                const rows = [];
-
-                Object.keys(allData).forEach(uid => {
-                    const monthInfo = allData[uid][yearMonth];
-                    if (monthInfo) {
-                        const count = monthInfo.count || 0;
-                        const std = stds[uid] || {};
-                        const rawName = std.name || std.studentName || std.userName;
-                        const school = std.schoolName || "학교 미기재";
-                        const teacher = std.teacher ? `${std.teacher} 선생님` : "선생님 미기재";
-                        rows.push({ uid: uid, rawName: rawName, school: school, teacher: teacher, count: count });
-                    }
-                });
-
-                const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''));
-                const rankArray = rows.map((r, i) => ({
-                    uid: r.uid, name: r.rawName ? decrypted[i] : "학생",
-                    school: r.school, teacher: r.teacher, count: r.count
-                }));
-
-                rankArray.sort((a, b) => b.count - a.count);
-                renderAttendanceRank(rankArray);
-                renderMyCalendar(allData[currentUserUid] ? allData[currentUserUid][yearMonth] : null, now);
+            Object.keys(allData).forEach(uid => {
+                const monthInfo = allData[uid][yearMonth];
+                if (monthInfo) {
+                    const count = monthInfo.count || 0;
+                    const std = stds[uid] || {};
+                    const rawName = std.name || std.studentName || std.userName;
+                    const school = std.schoolName || "학교 미기재";
+                    const teacher = std.teacher ? `${std.teacher} 선생님` : "선생님 미기재";
+                    rows.push({ uid: uid, rawName: rawName, school: school, teacher: teacher, count: count });
+                }
             });
+
+            const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''));
+            const rankArray = rows.map((r, i) => ({
+                uid: r.uid, name: r.rawName ? decrypted[i] : "학생",
+                school: r.school, teacher: r.teacher, count: r.count
+            }));
+
+            rankArray.sort((a, b) => b.count - a.count);
+            renderAttendanceRank(rankArray);
+            renderMyCalendar(allData[currentUserUid] ? allData[currentUserUid][yearMonth] : null, now);
         });
     }
 
