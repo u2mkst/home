@@ -388,6 +388,26 @@
         }
         .mathq-feedback.correct { display: flex; background: rgba(16,185,129,0.14); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); }
         .mathq-feedback.incorrect { display: flex; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); }
+        .mathq-scratchpad { margin-top: 4px; margin-bottom: 16px; }
+        .mathq-scratchpad-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .mathq-scratchpad-title { font-size: 0.85rem; font-weight: 700; color: #1d1d1f; }
+        .mathq-scratchpad-tools { display: flex; align-items: center; gap: 6px; }
+        .mathq-pen-swatch {
+            width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; padding: 0;
+            cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .mathq-pen-swatch.active { border-color: #6c5ce7; transform: scale(1.15); }
+        .mathq-tool-btn {
+            padding: 6px 10px; font-size: 0.76rem; font-weight: 700; border-radius: 10px;
+            border: 1px solid var(--lg-border-soft); background: rgba(255,255,255,0.6); color: #475569; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .mathq-tool-btn.active { background: #6c5ce7; color: #ffffff; border-color: #6c5ce7; }
+        .mathq-scratch-canvas {
+            width: 100%; height: 220px; display: block; background: #ffffff;
+            border-radius: var(--radius-md); border: 1px solid var(--lg-border-soft); box-shadow: var(--lg-shadow-sm);
+            touch-action: none; cursor: crosshair;
+        }
         /* 🗓️ 학교 시간표 바텀시트 전용 디자인 */
         .tt-nav-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
         .tt-nav-btn { width:34px; height:34px; border-radius: var(--radius-sm); border:1px solid var(--lg-border-soft); background: rgba(255,255,255,0.5); backdrop-filter: var(--lg-blur-sm); color:#6c5ce7; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition: all 0.3s var(--spring); }
@@ -933,6 +953,21 @@
                 <div class="sheet-title">🧮 오늘의 문제</div>
                 <div class="sheet-subtitle" id="mathqQuizSubtitle"></div>
                 <div id="mathqQuizContainer"></div>
+
+                <div class="mathq-scratchpad">
+                    <div class="mathq-scratchpad-header">
+                        <span class="mathq-scratchpad-title">✏️ 풀이 공간</span>
+                        <div class="mathq-scratchpad-tools">
+                            <button type="button" class="mathq-pen-swatch active" data-color="#1d1d1f" style="background:#1d1d1f;" onclick="setMathqTool('#1d1d1f', this)" aria-label="검정 펜"></button>
+                            <button type="button" class="mathq-pen-swatch" data-color="#ef4444" style="background:#ef4444;" onclick="setMathqTool('#ef4444', this)" aria-label="빨강 펜"></button>
+                            <button type="button" class="mathq-pen-swatch" data-color="#4f46e5" style="background:#4f46e5;" onclick="setMathqTool('#4f46e5', this)" aria-label="파랑 펜"></button>
+                            <button type="button" class="mathq-tool-btn" id="mathqEraserBtn" onclick="setMathqTool('eraser', this)">🧽 지우개</button>
+                            <button type="button" class="mathq-tool-btn" onclick="clearMathqScratchpad()">전체 지우기</button>
+                        </div>
+                    </div>
+                    <canvas id="mathqScratchCanvas" class="mathq-scratch-canvas"></canvas>
+                </div>
+
                 <button type="button" class="btn-base btn-secondary" style="margin-top: 12px;" onclick="closeMathQuizBottomSheet()">닫기</button>
             </div>
         </div>
@@ -1861,7 +1896,9 @@
         const seed = mathqTodaySeed(gradeCode);
         const rng = mulberry32(seed);
         const generators = mathqGenerators[gradeCode] || [];
-        const questions = generators.map(gen => gen(rng));
+        // 하루에 문제 1개만 — 어떤 유형이 나올지도 같은 시드로 결정해 하루 동안은 항상 같은 문제가 나온다.
+        const genIndex = generators.length ? Math.floor(rng() * generators.length) : 0;
+        const questions = generators.length ? [generators[genIndex](rng)] : [];
 
         database.ref(`mathQuizProgress/${uid}`).once('value', (snapshot) => {
             const history = snapshot.val() || {};
@@ -1878,7 +1915,7 @@
                 const card = document.createElement('div');
                 card.className = 'mathq-card';
                 card.innerHTML = `
-                    <div class="mathq-card-title">유형 ${index + 1}. ${q.title}</div>
+                    <div class="mathq-card-title">${q.title}</div>
                     <div class="mathq-card-text">${q.text}</div>
                     <div class="mathq-input-group">
                         <input type="number" id="mathq-ans-${index}" placeholder="정답 입력" ${alreadyCorrect ? `value="${q.ans}" disabled` : ''} onkeydown="if(event.key==='Enter') checkMathQuizAnswer(${index}, ${q.ans})">
@@ -1893,6 +1930,7 @@
                 window.MathJax.typesetPromise([container]);
             }
 
+            initMathqScratchpad();
             updateMathQuizTabDot();
         });
     }
@@ -1931,6 +1969,78 @@
         }).catch(err => console.error("오늘의 문제 진행 저장 실패:", err));
 
         updateMathQuizTabDot();
+    }
+
+    /* ✏️ 오늘의 문제 풀이 공간(스크래치패드) — Pointer Events로 마우스/터치/펜 입력을 함께 처리 */
+    let mathqPenColor = '#1d1d1f';
+    let mathqIsEraser = false;
+    let mathqDrawing = false;
+    let mathqLastPoint = null;
+
+    function initMathqScratchpad() {
+        const canvas = document.getElementById('mathqScratchCanvas');
+        if (!canvas) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        mathqIsEraser = false;
+        mathqPenColor = '#1d1d1f';
+        document.querySelectorAll('.mathq-pen-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === mathqPenColor));
+        const eraserBtn = document.getElementById('mathqEraserBtn');
+        if (eraserBtn) eraserBtn.classList.remove('active');
+
+        canvas.onpointerdown = (e) => {
+            mathqDrawing = true;
+            mathqLastPoint = { x: e.offsetX, y: e.offsetY };
+            canvas.setPointerCapture(e.pointerId);
+        };
+        canvas.onpointermove = (e) => {
+            if (!mathqDrawing || !mathqLastPoint) return;
+            ctx.strokeStyle = mathqIsEraser ? '#ffffff' : mathqPenColor;
+            ctx.lineWidth = mathqIsEraser ? 20 : 3;
+            ctx.beginPath();
+            ctx.moveTo(mathqLastPoint.x, mathqLastPoint.y);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            mathqLastPoint = { x: e.offsetX, y: e.offsetY };
+        };
+        const stopDrawing = () => { mathqDrawing = false; mathqLastPoint = null; };
+        canvas.onpointerup = stopDrawing;
+        canvas.onpointerleave = stopDrawing;
+        canvas.onpointercancel = stopDrawing;
+    }
+
+    function setMathqTool(value, btnEl) {
+        const swatches = document.querySelectorAll('.mathq-pen-swatch');
+        const eraserBtn = document.getElementById('mathqEraserBtn');
+        swatches.forEach(s => s.classList.remove('active'));
+        if (eraserBtn) eraserBtn.classList.remove('active');
+
+        if (value === 'eraser') {
+            mathqIsEraser = true;
+            if (eraserBtn) eraserBtn.classList.add('active');
+        } else {
+            mathqIsEraser = false;
+            mathqPenColor = value;
+            if (btnEl) btnEl.classList.add('active');
+        }
+    }
+
+    function clearMathqScratchpad() {
+        const canvas = document.getElementById('mathqScratchCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // devicePixelRatio 스케일과 무관하게 캔버스 전체를 확실히 지운다
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
     }
 
     /* =====================================================================
