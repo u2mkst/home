@@ -237,11 +237,12 @@
         .bottom-nav-bar {
             position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
             width: calc(100% - 32px); max-width: 720px;
-            background: #ffffff;
-            border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 24px;
+            background: var(--lg-surface);
+            border: 1px solid var(--lg-border-soft); border-radius: 24px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04), 0 16px 32px rgba(17, 17, 26, 0.12);
             padding: 8px; display: flex; justify-content: space-around; align-items: stretch;
             z-index: 1000; box-sizing: border-box; gap: 4px;
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
         .tab-item {
             position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
