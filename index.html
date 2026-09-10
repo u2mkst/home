@@ -98,7 +98,33 @@
             --accent-light: #1E3A5F;
             --bg-page: #15171C;
             --text-main: #F2F4F6;
-            --text-muted: #9AA5B1;
+            --text-muted: #B0BAC5;
+        }
+
+        :root[data-theme="dark"] .bottom-sheet-container textarea,
+        :root[data-theme="dark"] .bottom-sheet-container input[type="text"],
+        :root[data-theme="dark"] .bottom-sheet-container input[type="password"],
+        :root[data-theme="dark"] .mathq-input-group input,
+        :root[data-theme="dark"] .input-wrapper input,
+        :root[data-theme="dark"] .input-wrapper select,
+        :root[data-theme="dark"] .lotto-ball-input,
+        :root[data-theme="dark"] .mathq-tool-btn {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        :root[data-theme="dark"] .bottom-sheet-container textarea:focus,
+        :root[data-theme="dark"] .bottom-sheet-container input:focus,
+        :root[data-theme="dark"] .mathq-input-group input:focus,
+        :root[data-theme="dark"] .input-wrapper input:focus,
+        :root[data-theme="dark"] .input-wrapper select:focus {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        :root[data-theme="dark"] .btn-secondary:hover,
+        :root[data-theme="dark"] .rank-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        :root[data-theme="dark"] .ttcal-day,
+        :root[data-theme="dark"] .calendar-day {
+            background: rgba(255, 255, 255, 0.05);
         }
 
         body {
@@ -517,7 +543,7 @@
             backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
             animation: lgPopIn 0.3s var(--spring);
         }
-        .autocomplete-item { padding: 12px 16px; cursor: pointer; font-size: 0.9rem; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
+        .autocomplete-item { padding: 12px 16px; cursor: pointer; font-size: 0.9rem; color: var(--text-main); border-bottom: 1px solid rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
         .autocomplete-item:last-child { border-bottom: none; }
         .autocomplete-item:hover { background: rgba(0, 75, 191, 0.08); color: var(--accent); font-weight: 600; }
         .autocomplete-item .school-region { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; }
