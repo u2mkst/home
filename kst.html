@@ -339,7 +339,9 @@
 
         /* APK 다운로드 함수 */
         function downloadApk() {
-            const apkUrl = "https://u2mkst.github.io/home/kst.apk";
+            // 캐시된 예전 apk가 내려가는 걸 막기 위해 매번 다른 쿼리스트링을 붙여
+            // 브라우저/CDN 캐시를 무시하고 항상 최신 파일을 새로 받아오게 한다.
+            const apkUrl = "https://u2mkst.github.io/home/kst.apk?t=" + Date.now();
             window.location.href = apkUrl;
         }
     </script>
