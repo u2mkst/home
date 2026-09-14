@@ -199,6 +199,8 @@
     </div>
 
     <script>
+    const BACKEND_URL = "https://kst-backend-yhwings21-4601s-projects.vercel.app";
+
     // Firebase 환경 설정
     const firebaseConfig = {
       apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
@@ -313,8 +315,7 @@
     }
 
     async function fetchWeather(lat, lon) {
-        const apiKey = '5bce1dcb3eac35e493f0ed9df94b5dac';
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`;
+        const url = `${BACKEND_URL}/api/weather?lat=${lat}&lon=${lon}`;
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error();

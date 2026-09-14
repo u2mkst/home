@@ -569,19 +569,18 @@
         let currentSelectedStudentName = "";
         let adminChatListeners = [];
 
+        // 🔒 비밀번호 원문을 localStorage에 저장하지 않는다 — Firebase Auth는 기본적으로
+        // 세션을 로컬에 안전하게(IndexedDB, 재발급 토큰) 유지하므로, 새로고침 시
+        // onAuthStateChanged가 알아서 로그인 상태를 복원해준다. 여기서는 편의를 위해
+        // 마지막으로 선택한 선생님 이름만 복원한다.
         window.addEventListener('DOMContentLoaded', () => {
             const savedTeacher = localStorage.getItem('admin_teacher');
-            const savedEmail = localStorage.getItem('admin_email');
-            const savedPassword = localStorage.getItem('admin_password');
-
             if (savedTeacher) {
                 document.getElementById('adminTeacher').value = savedTeacher;
             }
-            if (savedTeacher && savedEmail && savedPassword) {
-                auth.signInWithEmailAndPassword(savedEmail, savedPassword).catch((err) => {
-                    clearLocalStorageAuth();
-                });
-            }
+            // 이전 버전에서 저장해둔 평문 비밀번호/이메일이 남아있다면 즉시 제거한다.
+            localStorage.removeItem('admin_email');
+            localStorage.removeItem('admin_password');
         });
 
         auth.onAuthStateChanged((user) => {
@@ -999,8 +998,6 @@
             auth.signInWithEmailAndPassword(email, password)
                 .then(() => {
                     localStorage.setItem('admin_teacher', teacher);
-                    localStorage.setItem('admin_email', email);
-                    localStorage.setItem('admin_password', password);
                 })
                 .catch((error) => {
                     alert("❌ 인증 실패: " + error.message);
