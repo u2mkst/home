@@ -6,8 +6,8 @@ const { decryptOne, assertValidBatch } = require("../lib/aes");
 // 실제로 그 학생의 "이름"과 일치하는 값일 때만 복호화를 허용한다(랭킹 화면에서
 // 다른 학생 이름은 봐야 하지만, 그 학생의 연락처/매쓰플랫 비밀번호까지 보여줄 필요는 없음).
 const ADMIN_UIDS = new Set([
-    "53GNQdLdQ0aH2QzOzjdb0WQIwJH3",
-    "9temrm7WfSXRKo5v5jJiz65t8yF2",
+    "9temrm7WfSXRKo5v5jJiz65t8yF2", // admin@kst.com
+    "Rkd6EHSpWibkSbQuQN9spYZ9p1i1", // ufes0603@kst.com (마스터)
 ]);
 
 // ownerUid가 호출자 본인이 아닐 때, 그 값이 정말 "이름" 필드인지 실제 DB를 조회해
