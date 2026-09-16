@@ -59,7 +59,11 @@ async function fetchVilageFcst(base_date, base_time) {
     }
     const header = json && json.response && json.response.header;
     if (!header || header.resultCode !== "00") {
-        return { ok: false, error: (header && header.resultMsg) || "KMA API 오류" };
+        return {
+            ok: false,
+            error: (header && header.resultMsg) || "KMA API 오류",
+            bodyPreview: rawBody.slice(0, 500),
+        };
     }
     const items = (json.response.body && json.response.body.items && json.response.body.items.item) || [];
     return { ok: true, items };
