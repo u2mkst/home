@@ -688,6 +688,7 @@
 
         async function encryptAESBatch(plainTexts) {
             const token = await getIdToken();
+            if (!token) throw new Error('로그인 상태를 확인할 수 없습니다.');
             const res = await fetch(`${BACKEND_URL}/api/encrypt`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

@@ -493,16 +493,18 @@
             return auth.currentUser ? await auth.currentUser.getIdToken() : null;
         }
 
+        // 관리자 계정으로 호출하므로 ownerUid를 몰라도 서버가 무조건 복호화해준다.
         async function decryptAESBatch(cipherTexts) {
             const list = cipherTexts.map(c => c || "");
             if (list.every(c => !c)) return list.map(() => "");
             const token = await getIdToken();
             if (!token) return list;
+            const items = list.map(text => ({ text, ownerUid: null }));
             try {
                 const res = await fetch(`${BACKEND_URL}/api/decrypt`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ texts: list })
+                    body: JSON.stringify({ items })
                 });
                 if (!res.ok) return list;
                 const { results } = await res.json();
