@@ -35,7 +35,15 @@ module.exports = async (req, res) => {
         const decoded = await requireAuth(req);
         const isAdmin = ADMIN_UIDS.has(decoded.uid);
 
-        const { items } = req.body || {};
+        const body = req.body || {};
+        // 이전 버전 프론트엔드(캐시된 페이지 등)가 아직 {texts:[...]} 형식으로 보낼 수
+        // 있으니 하위 호환 처리 — ownerUid 정보가 없으니 전부 "본인 데이터"로만 간주한다
+        // (남의 이름을 보여주는 랭킹 기능은 새 프론트엔드로 갱신돼야 정상 동작).
+        const items = Array.isArray(body.items)
+            ? body.items
+            : Array.isArray(body.texts)
+                ? body.texts.map((text) => ({ text, ownerUid: decoded.uid }))
+                : null;
         if (!Array.isArray(items) || items.length === 0) {
             const err = new Error("`items` must be a non-empty array");
             err.statusCode = 400;
