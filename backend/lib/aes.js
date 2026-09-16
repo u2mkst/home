@@ -2,9 +2,18 @@ const CryptoJS = require("crypto-js");
 
 const MAX_BATCH = 200;
 
+const CIPHER_PREFIX = "U2FsdGVkX1";
+
+// 클라이언트 쪽 버그(복호화 실패 값을 화면에 남긴 채 재저장 등)로 인해 이미
+// 암호문 형태인 문자열이 "평문"으로 암호화 요청에 들어올 수 있다. 그걸 그대로
+// 다시 암호화하면 이중 암호화 사고가 재발하므로, 이미 우리 형식의 암호문처럼
+// 보이는 입력은 한 번 더 감싸지 않고 그대로 통과시킨다(멱등). 정상적인 평문이
+// 우연히 이 접두사로 시작할 확률은 사실상 0이다.
 function encryptOne(key, plainText) {
     if (plainText === null || plainText === undefined) return "";
-    return CryptoJS.AES.encrypt(String(plainText).trim(), key).toString();
+    const str = String(plainText).trim();
+    if (str.startsWith(CIPHER_PREFIX)) return str;
+    return CryptoJS.AES.encrypt(str, key).toString();
 }
 
 const MAX_DECRYPT_LAYERS = 5;
@@ -22,7 +31,7 @@ function decryptOne(key, cipherText) {
         else if (clean.startsWith("'") && clean.endsWith("'")) clean = clean.slice(1, -1);
         clean = clean.replace(/ /g, "+");
 
-        if (!clean.startsWith("U2FsdGVkX1")) return clean; // already plaintext, matches old client fallback
+        if (!clean.startsWith(CIPHER_PREFIX)) return clean; // already plaintext, matches old client fallback
 
         try {
             const bytes = CryptoJS.AES.decrypt(clean, key);

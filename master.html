@@ -527,6 +527,12 @@
             return result;
         }
 
+        // 복호화 서버 장애 등으로 실패하면 암호문을 그대로 돌려주는데, 그 값을
+        // 학생에게 그대로 게시(명언 등)해버리는 사고를 막기 위한 판별 함수.
+        function looksLikeCipherText(value) {
+            return typeof value === 'string' && value.startsWith('U2FsdGVkX1');
+        }
+
         auth.onAuthStateChanged((user) => {
             const isAllowed = user && MASTER_ALLOWED_EMAILS.includes((user.email || '').toLowerCase());
 
@@ -679,7 +685,9 @@
                     let commandButtons = `<button class="btn-block btn-red" onclick="deleteFeedItem('${key}')">기록 삭제</button>`;
                     if (isSuggestion) {
                         commandButtons = `
-                            <button class="btn-block btn-green" onclick="openPublishBridgeModal('${key}', '${realContent.replace(/'/g, "\\'")}', '${realAuthor.replace(/'/g, "\\'")}', '${realProfile.replace(/'/g, "\\'")}')">명언 게시</button>
+                            ${looksLikeCipherText(realContent)
+                                ? '<button class="btn-block btn-secondary" disabled title="복호화 실패 - 새로고침 후 다시 시도해 주세요">명언 게시 (복호화 실패)</button>'
+                                : `<button class="btn-block btn-green" onclick="openPublishBridgeModal('${key}', '${realContent.replace(/'/g, "\\'")}', '${realAuthor.replace(/'/g, "\\'")}', '${realProfile.replace(/'/g, "\\'")}')">명언 게시</button>`}
                             ${commandButtons}
                         `;
                     }
@@ -866,6 +874,10 @@
             const selectedDate = document.getElementById('modal-target-date').value;
             if(!selectedDate) { alert("날짜를 선택해 주세요."); return; }
             if(!targetQuoteCache) return;
+            if (looksLikeCipherText(targetQuoteCache.content) || looksLikeCipherText(targetQuoteCache.author)) {
+                alert("복호화가 제대로 되지 않은 내용입니다. 새로고침 후 다시 시도해 주세요.");
+                return;
+            }
 
             database.ref(`dailyQuotes/${selectedDate}`).set({
                 message: targetQuoteCache.content,

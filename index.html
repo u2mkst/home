@@ -1846,6 +1846,12 @@
                 currentStudentData.mathflatPw || ''
             ]);
 
+            // 복호화 실패로 암호문이 그대로 온 값을 로그인 자격증명으로 앱에 넘기지 않는다.
+            if ([u2mPw, mathflatId, decryptedMathflatPw].some(looksLikeCipherText)) {
+                console.error("크레덴셜 복호화 실패 - 자동로그인 값 전달을 건너뜁니다.");
+                return;
+            }
+
             if (window.AndroidApp && typeof window.AndroidApp.loginToU2M === 'function') {
                 window.AndroidApp.loginToU2M(u2mId, u2mPw.trim(), decryptedMathflatPw.trim(), mathflatId.trim());
             }
@@ -1867,7 +1873,10 @@
         const mId = rawMId.trim();
         const mPw = rawMPw.trim();
 
-        if (!mId || !mPw) {
+        if (!mId || !mPw || looksLikeCipherText(mId) || looksLikeCipherText(mPw)) {
+            if (looksLikeCipherText(mId) || looksLikeCipherText(mPw)) {
+                showToast("⚠️ 저장된 정보를 불러오지 못했어요. 잠시 후 다시 시도하거나 다시 등록해 주세요.");
+            }
             openMathflatBottomSheet();
         } else {
             await transmitBridgeCredentials();
@@ -2951,7 +2960,8 @@
         const grade = document.getElementById('studentGrade').value;
         const studentClass = document.getElementById('studentClass').value.trim();
         const selectedTeacher = document.getElementById('teacherName').value;
-        const phoneTail = document.getElementById('u2mPhone').value.trim();
+        let phoneTail = document.getElementById('u2mPhone').value.trim();
+        if (looksLikeCipherText(phoneTail) || !/^\d{0,4}$/.test(phoneTail)) phoneTail = '';
         const mathflatIdRaw = document.getElementById('mathflatId').value.trim();
         // 화면에 암호문/깨진 값이 남아있는 상태에서 저장되면 그 문자열에서 숫자만
         // 뽑아 "그럴듯한 가짜 아이디"로 저장해버리는 사고가 실제로 발생한 적 있다.
