@@ -648,7 +648,7 @@
             <div style="font-size:48px; margin-bottom:16px;">🔧</div>
             <div style="font-size:20px; font-weight:700; margin-bottom:8px;">잠시 점검 중입니다</div>
             <div style="font-size:14px; color:#8B95A1; margin-bottom:20px;">오늘 밤 10시 이후 다시 이용해주세요.</div>
-            <button id="kstMaintenanceLightModeBtn" style="background:#004BBF; color:#fff; border:none; border-radius:10px; padding:12px 20px; font-size:14px; font-weight:700; cursor:pointer;">라이트모드로 바로 이용하기</button>
+            <button id="kstMaintenanceLightModeBtn" style="background:#004BBF; color:#fff; border:none; border-radius:10px; padding:12px 20px; font-size:14px; font-weight:700; cursor:pointer;">라이트 버전으로 바로가기</button>
         </div>
     </div>
     <script>
@@ -665,12 +665,7 @@
         var btn = document.getElementById('kstMaintenanceLightModeBtn');
         if (btn) {
             btn.addEventListener('click', function () {
-                // 다크모드를 강제로 끄고(로컬 저장값 제거 + 속성 제거) 점검 화면을 닫는다.
-                document.documentElement.removeAttribute('data-theme');
-                try { localStorage.removeItem('kst_dark_mode'); } catch (e) {}
-                var gateEl = document.getElementById('kstMaintenanceGate');
-                if (gateEl) gateEl.style.display = 'none';
-                document.documentElement.style.overflow = '';
+                window.location.href = 'lite.html';
             });
         }
     })();
