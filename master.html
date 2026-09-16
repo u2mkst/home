@@ -393,6 +393,15 @@
             </div>
 
             <div class="panel-card">
+                <h3>🚧 사이트 점검 모드</h3>
+                <p style="font-size:0.82rem; color: var(--text-sub); margin: -6px 0 14px 0; line-height:1.4;">
+                    켜면 학생용 로그인/메인 화면 전체가 점검 안내로 가려집니다 (라이트 버전 바로가기 버튼은 계속 노출). 관리자 페이지는 영향받지 않습니다.
+                </p>
+                <div id="maintenanceStatusText" style="font-weight:700; margin-bottom:10px;">현재 상태 확인 중...</div>
+                <button id="maintenanceToggleBtn" class="btn-block btn-red" onclick="toggleMaintenanceMode()">점검 모드 켜기</button>
+            </div>
+
+            <div class="panel-card">
                 <h3>📢 메인 공지 및 전광판</h3>
                 
                 <div class="form-group">
@@ -603,7 +612,29 @@
             }
         }
 
+        let currentMaintenanceState = false;
+
+        function toggleMaintenanceMode() {
+            const next = !currentMaintenanceState;
+            database.ref('siteMaintenance').set(next)
+                .catch(err => alert(err.message));
+        }
+
         function initAdminDataFeed() {
+            database.ref('siteMaintenance').on('value', (snapshot) => {
+                currentMaintenanceState = snapshot.val() === true;
+                const statusEl = document.getElementById('maintenanceStatusText');
+                const btnEl = document.getElementById('maintenanceToggleBtn');
+                if (statusEl) {
+                    statusEl.textContent = currentMaintenanceState ? '🔴 현재 점검 모드 ON (학생 접속 차단 중)' : '🟢 현재 정상 운영 중';
+                }
+                if (btnEl) {
+                    btnEl.textContent = currentMaintenanceState ? '점검 모드 끄기' : '점검 모드 켜기';
+                    btnEl.classList.toggle('btn-red', !currentMaintenanceState);
+                    btnEl.classList.toggle('btn-green', currentMaintenanceState);
+                }
+            });
+
             database.ref('notice').once('value', (snapshot) => {
                 if(snapshot.exists()) document.getElementById('input-notice').value = snapshot.val();
             });

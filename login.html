@@ -380,34 +380,16 @@
 </head>
 <body>
 
-    <!-- 🔧 임시 점검 안내 (오늘 밤 10시까지) — 항상 라이트모드로 고정 표시 -->
+    <!-- 🔧 점검 안내 오버레이 — Firebase의 siteMaintenance 값으로 마스터 페이지에서 켜고 끔.
+         항상 라이트모드로 고정 표시 (다크모드 CSS 변수 영향 안 받음). -->
     <div id="kstMaintenanceGate" style="display:none; position:fixed; inset:0; z-index:2147483647; background:#F2F4F6; color:#191F28; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; align-items:center; justify-content:center; text-align:center; padding:24px; box-sizing:border-box;">
         <div>
             <div style="font-size:48px; margin-bottom:16px;">🔧</div>
             <div style="font-size:20px; font-weight:700; margin-bottom:8px;">잠시 점검 중입니다</div>
-            <div style="font-size:14px; color:#8B95A1; margin-bottom:20px;">오늘 밤 10시 이후 다시 이용해주세요.</div>
+            <div style="font-size:14px; color:#8B95A1; margin-bottom:20px;">잠시 후 다시 이용해주세요.</div>
             <button id="kstMaintenanceLightModeBtn" style="background:#004BBF; color:#fff; border:none; border-radius:10px; padding:12px 20px; font-size:14px; font-weight:700; cursor:pointer;">라이트 버전으로 바로가기</button>
         </div>
     </div>
-    <script>
-    (function () {
-        var nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
-        var hour = nowKst.getUTCHours();
-        if (hour < 22) {
-            var gate = document.getElementById('kstMaintenanceGate');
-            if (gate) {
-                gate.style.display = 'flex';
-                document.documentElement.style.overflow = 'hidden';
-            }
-        }
-        var btn = document.getElementById('kstMaintenanceLightModeBtn');
-        if (btn) {
-            btn.addEventListener('click', function () {
-                window.location.href = 'lite.html';
-            });
-        }
-    })();
-    </script>
 
     <div class="container">
         <!-- 로고 상단 헤더 존 -->
@@ -708,6 +690,23 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
+
+        // 🔧 점검 모드 — 마스터 페이지에서 siteMaintenance 값을 켜고 끄면 실시간 반영된다.
+        database.ref('siteMaintenance').on('value', (snapshot) => {
+            const gate = document.getElementById('kstMaintenanceGate');
+            if (!gate) return;
+            if (snapshot.val() === true) {
+                gate.style.display = 'flex';
+                document.documentElement.style.overflow = 'hidden';
+            } else {
+                gate.style.display = 'none';
+                document.documentElement.style.overflow = '';
+            }
+        });
+        const kstMaintenanceLightModeBtn = document.getElementById('kstMaintenanceLightModeBtn');
+        if (kstMaintenanceLightModeBtn) {
+            kstMaintenanceLightModeBtn.addEventListener('click', () => { window.location.href = 'lite.html'; });
+        }
 
         const BACKEND_URL = "https://kst-backend-yhwings21-4601s-projects.vercel.app";
 
