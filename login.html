@@ -380,6 +380,28 @@
 </head>
 <body>
 
+    <!-- 🔧 임시 점검 안내 (오늘 밤 10시까지) — 항상 라이트모드로 고정 표시 -->
+    <div id="kstMaintenanceGate" style="display:none; position:fixed; inset:0; z-index:2147483647; background:#F2F4F6; color:#191F28; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; align-items:center; justify-content:center; text-align:center; padding:24px; box-sizing:border-box;">
+        <div>
+            <div style="font-size:48px; margin-bottom:16px;">🔧</div>
+            <div style="font-size:20px; font-weight:700; margin-bottom:8px;">잠시 점검 중입니다</div>
+            <div style="font-size:14px; color:#8B95A1;">오늘 밤 10시 이후 다시 이용해주세요.</div>
+        </div>
+    </div>
+    <script>
+    (function () {
+        var nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+        var hour = nowKst.getUTCHours();
+        if (hour < 22) {
+            var gate = document.getElementById('kstMaintenanceGate');
+            if (gate) {
+                gate.style.display = 'flex';
+                document.documentElement.style.overflow = 'hidden';
+            }
+        }
+    })();
+    </script>
+
     <div class="container">
         <!-- 로고 상단 헤더 존 -->
         <div class="header-zone" id="logoZone">
