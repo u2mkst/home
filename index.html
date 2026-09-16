@@ -1548,6 +1548,12 @@
         auth.signOut().then(() => {
             localStorage.removeItem('u2m_id');
             localStorage.removeItem('u2m_pw');
+            // ⚠️ 이 호출이 빠지면 안드로이드 앱의 쿠키/웹스토리지 및 유투엠·매쓰플랫 자동로그인용
+            // 캐시 자격증명이 그대로 남아, 같은 기기를 이어서 쓰는 다음 학생에게
+            // 이전 학생의 세션(자동로그인)이 넘어가는 사고로 이어진다.
+            if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
+                window.AndroidApp.logoutAll();
+            }
             window.location.href = 'login.html';
         }).catch(() => { showToast("로그아웃 오류가 발생했습니다."); });
     }
@@ -1680,6 +1686,11 @@
         auth.signOut().then(() => {
             localStorage.removeItem('u2m_id');
             localStorage.removeItem('u2m_pw');
+            // 안드로이드 앱의 쿠키/웹스토리지/유투엠·매쓰플랫 자동로그인용 캐시 자격증명까지
+            // 지워야 같은 기기의 다음 학생에게 이전 학생 세션이 넘어가지 않는다.
+            if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
+                window.AndroidApp.logoutAll();
+            }
             if (window.location.pathname.indexOf('login.html') === -1) {
                 window.location.replace('login.html');
             }
