@@ -2743,7 +2743,7 @@
             d.mathflatPw
         ]);
 
-        document.getElementById('studentName').value = decName;
+        document.getElementById('studentName').value = looksLikeCipherText(decName) ? '' : decName;
         document.getElementById('schoolName').value = d.schoolName || '';
         document.getElementById('schoolCode').value = d.schoolCode || '';
         document.getElementById('schoolOfficeCode').value = d.schoolOfficeCode || '';
@@ -2756,12 +2756,12 @@
         originalU2mId = d.u2mId || '';
         document.getElementById('u2mId').value = originalU2mId;
 
-        originalPhoneTail = decPhone || '';
+        originalPhoneTail = looksLikeCipherText(decPhone) ? '' : (decPhone || '');
         document.getElementById('u2mPhone').value = originalPhoneTail;
 
-        const rawMathflatId = d.studentPhone ? decMathflatId : (d.mathflatId || '');
+        const rawMathflatId = d.studentPhone ? (looksLikeCipherText(decMathflatId) ? '' : decMathflatId) : (d.mathflatId || '');
         document.getElementById('mathflatId').value = rawMathflatId;
-        document.getElementById('mathflatPw').value = decMathflatPw;
+        document.getElementById('mathflatPw').value = looksLikeCipherText(decMathflatPw) ? '' : decMathflatPw;
 
         if (!mypageBound) { bindAutoSaveEvents(); mypageBound = true; }
         setTimeout(() => { mypageInitialPopulate = false; }, 300);
@@ -2871,7 +2871,8 @@
         const user = auth.currentUser;
         if (!user) return;
 
-        const studentName = document.getElementById('studentName').value.trim();
+        let studentName = document.getElementById('studentName').value.trim();
+        if (looksLikeCipherText(studentName)) studentName = '';
         const schoolName = document.getElementById('schoolName').value.trim();
         const schoolCode = document.getElementById('schoolCode').value.trim();
         const schoolOfficeCode = document.getElementById('schoolOfficeCode').value.trim();
@@ -2882,7 +2883,10 @@
         const selectedTeacher = document.getElementById('teacherName').value;
         const phoneTail = document.getElementById('u2mPhone').value.trim();
         const mathflatPhone = document.getElementById('mathflatId').value.trim().replace(/[^0-9]/g, '');
-        const mathflatPw = document.getElementById('mathflatPw').value.trim();
+        let mathflatPw = document.getElementById('mathflatPw').value.trim();
+        // 복호화 실패(패스스루) 값이 화면에 남아있는 상태로 다른 필드를 수정해 자동저장이
+        // 발동하면, 그 암호문을 다시 암호화해서 DB에 이중 암호화로 박아버리는 사고를 막는다.
+        if (looksLikeCipherText(mathflatPw)) mathflatPw = '';
 
         const isPhoneChanged = (phoneTail !== originalPhoneTail) && (/^\d{4}$/.test(phoneTail));
 
