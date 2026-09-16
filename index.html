@@ -1496,13 +1496,23 @@
     }
     // 학생 본인 이름 캐시 — 암호문이 그대로면 복호화 API를 다시 부르지 않고 즉시 표시.
     // 이름이 바뀌면 암호문 자체가 달라지므로 별도 만료 처리 없이 자동으로 무효화된다.
+    // ⚠️ 복호화 서버 장애 중에는 decryptAES가 실패 시 암호문을 그대로 돌려주는데,
+    // 그 값을 "복호화 성공"으로 착각해 캐시해버리면 서버가 복구된 뒤에도 계속 암호문이
+    // 캐시에서 재생된다 — 그래서 캐시값이 암호문 형태(CryptoJS 접두사)나 원문과 동일하면
+    // 무효한 캐시로 보고 버린다.
+    function looksLikeCipherText(value) {
+        return typeof value === 'string' && value.startsWith('U2FsdGVkX1');
+    }
     function getCachedName(uid, cipher) {
         try {
             const cached = JSON.parse(localStorage.getItem(`kst_name_${uid}`) || 'null');
-            return (cached && cached.cipher === cipher) ? cached.plain : null;
+            if (!cached || cached.cipher !== cipher) return null;
+            if (!cached.plain || cached.plain === cipher || looksLikeCipherText(cached.plain)) return null;
+            return cached.plain;
         } catch { return null; }
     }
     function setCachedName(uid, cipher, plain) {
+        if (!plain || plain === cipher || looksLikeCipherText(plain)) return; // 복호화 실패(패스스루) 결과는 캐시하지 않는다.
         try { localStorage.setItem(`kst_name_${uid}`, JSON.stringify({ cipher, plain })); } catch {}
     }
 
