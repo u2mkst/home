@@ -503,6 +503,7 @@
         async function encryptAESBatch(plainTexts) {
             const list = plainTexts.map(t => (t === null || t === undefined) ? "" : String(t).trim());
             const token = await getIdToken();
+            if (!token) throw new Error('로그인 상태를 확인할 수 없습니다.');
             const res = await fetch(`${BACKEND_URL}/api/encrypt`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -513,16 +514,18 @@
             return results;
         }
 
+        // 관리자 계정으로 호출하므로 ownerUid를 몰라도 서버가 무조건 복호화해준다.
         async function decryptAESBatch(cipherTexts) {
             const list = cipherTexts.map(c => c || "");
             if (list.every(c => !c)) return list.map(() => "");
             const token = await getIdToken();
             if (!token) return list;
+            const items = list.map(text => ({ text, ownerUid: null }));
             try {
                 const res = await fetch(`${BACKEND_URL}/api/decrypt`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ texts: list })
+                    body: JSON.stringify({ items })
                 });
                 if (!res.ok) return list;
                 const { results } = await res.json();

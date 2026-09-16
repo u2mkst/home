@@ -1308,7 +1308,6 @@
 
     let noteListener = null;
     let historyListeners = [];
-    let rebootListener = null;
     let serverTimeOffset = 0;
 
     let idleTimer;
@@ -1430,16 +1429,24 @@
         return auth.currentUser ? await auth.currentUser.getIdToken() : null;
     }
 
-    async function decryptAESBatch(cipherTexts) {
+    // ownerUids: 생략하면 전부 "내 데이터"로 취급(가장 흔한 경우). 학생 랭킹처럼
+    // 남의 데이터(이름만)를 복호화해야 할 때는 각 항목의 실제 소유자 uid 배열을 넘긴다.
+    // 서버가 관리자/본인 여부 + (남의 경우) 실제 이름 필드 일치 여부를 다시 검증한다.
+    async function decryptAESBatch(cipherTexts, ownerUids) {
         const list = cipherTexts.map(c => c || "");
         if (list.every(c => !c)) return list.map(() => "");
         const token = await getIdToken();
         if (!token) return list;
+        const myUid = auth.currentUser ? auth.currentUser.uid : null;
+        const items = list.map((text, i) => ({
+            text,
+            ownerUid: Array.isArray(ownerUids) ? (ownerUids[i] || myUid) : myUid
+        }));
         try {
             const res = await fetch(`${BACKEND_URL}/api/decrypt`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ texts: list })
+                body: JSON.stringify({ items })
             });
             if (!res.ok) return list;
             const { results } = await res.json();
@@ -1449,6 +1456,7 @@
     async function encryptAESBatch(plainTexts) {
         const list = plainTexts.map(t => (t === null || t === undefined) ? "" : String(t).trim());
         const token = await getIdToken();
+        if (!token) throw new Error('로그인 상태를 확인할 수 없습니다.');
         const res = await fetch(`${BACKEND_URL}/api/encrypt`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -1577,7 +1585,6 @@
                         listenToTeacherNotes(user.uid);
                         startLiveChatHistory(user.uid);
                         startDeviceStatusReporting(user.uid);
-                        listenToRemoteCommands(user.uid);
                         updateMathQuizTabDot();
 
                         hideLoading();
@@ -1613,7 +1620,6 @@
     function cleanStudentSystemSession() {
         detachAllHistoryListeners();
         if (noteListener) noteListener.off();
-        if (rebootListener) rebootListener.off();
         applyDarkModePreference(false);
         localStorage.removeItem('kst_dark_mode');
         auth.signOut().then(() => {
@@ -2195,25 +2201,6 @@
         }, 60000);
     }
 
-    function listenToRemoteCommands(studentUid) {
-        if (rebootListener) rebootListener.off();
-        rebootListener = database.ref(`commands/${studentUid}`);
-        rebootListener.on('value', (snapshot) => {
-            if (snapshot.exists()) {
-                const cmd = snapshot.val();
-                if (cmd && cmd.reboot === true) {
-                    database.ref(`commands/${studentUid}`).remove();
-                    if (window.AndroidApp && typeof window.AndroidApp.rebootDevice === 'function') {
-                        window.AndroidApp.rebootDevice();
-                    } else {
-                        showToast("🔄 원격 시스템 강제 재부팅 신호가 수신되었습니다.");
-                        setTimeout(() => { window.location.reload(); }, 1500);
-                    }
-                }
-            }
-        });
-    }
-
     function updateClock() {
         const serverTimeMillis = Date.now() + serverTimeOffset;
         const now = new Date(serverTimeMillis);
@@ -2573,6 +2560,7 @@
         document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">💧</span> 습도 ${data.main.humidity}%</span> <span><span class="emoji-font">💨</span> 풍속 ${data.wind.speed}m/s</span>`;
     }
 
+    // 학원 고정 위치 기준 예보라 기기 GPS가 필요 없다 (백엔드가 위치를 고정해서 조회함).
     function initWeather() {
         let hasCache = false;
         try {
@@ -2580,22 +2568,17 @@
             if (cached && cached.payload) { renderWeatherData(cached.payload); hasCache = true; }
         } catch {}
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => { fetchWeather(position.coords.latitude, position.coords.longitude, hasCache); },
-                () => { fetchWeather(37.2638, 127.0286, hasCache); }
-            );
-        } else { fetchWeather(37.2638, 127.0286, hasCache); }
+        fetchWeather(hasCache);
     }
 
-    async function fetchWeather(lat, lon, hasCache) {
-        const url = `${BACKEND_URL}/api/weather?lat=${lat}&lon=${lon}`;
+    async function fetchWeather(hasCache) {
+        const url = `${BACKEND_URL}/api/weather`;
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error('날씨 수집 불가');
             const data = await response.json();
             renderWeatherData(data);
-            try { localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ lat, lon, payload: data, timestamp: Date.now() })); } catch {}
+            try { localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ payload: data, timestamp: Date.now() })); } catch {}
         } catch {
             // 새로 불러오기 실패해도 이미 캐시로 그려둔 화면이 있으면 실패 문구로 덮어쓰지 않는다.
             if (!hasCache) {
@@ -3068,7 +3051,7 @@
                 }
             });
 
-            const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''));
+            const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''), rows.map(r => r.uid));
             const rankArray = rows.map((r, i) => ({
                 uid: r.uid, name: r.rawName ? decrypted[i] : "학생",
                 school: r.school, teacher: r.teacher, count: r.count
@@ -3320,7 +3303,7 @@
                 });
             });
 
-            const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''));
+            const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''), rows.map(r => r.uid));
             const rankArray = rows.map((r, i) => ({ ...r, name: r.rawName ? decrypted[i] : "학생" }));
 
             rankArray.sort((a, b) => {

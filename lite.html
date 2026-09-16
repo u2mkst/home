@@ -305,17 +305,13 @@
         document.getElementById('dateText').innerText = `${parseInt(month)}월 ${parseInt(day)}일 ${weekday}`;
     }
 
+    // 학원 고정 위치 기준 예보라 기기 GPS가 필요 없다 (백엔드가 위치를 고정해서 조회함).
     function initWeather() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-                () => fetchWeather(37.2638, 127.0286)
-            );
-        } else { fetchWeather(37.2638, 127.0286); }
+        fetchWeather();
     }
 
-    async function fetchWeather(lat, lon) {
-        const url = `${BACKEND_URL}/api/weather?lat=${lat}&lon=${lon}`;
+    async function fetchWeather() {
+        const url = `${BACKEND_URL}/api/weather`;
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error();
