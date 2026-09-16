@@ -87,9 +87,9 @@ function pickNearestSlot(items) {
     return chosenKey ? grouped[chosenKey] : null;
 }
 
-// 프론트엔드(index.html/lite.html)가 이미 OpenWeatherMap 응답 구조를 그대로
-// 쓰고 있어서, 기상청 코드를 그 구조에 맞게 변환해준다 — 화면 렌더링 코드는
-// 하나도 안 건드리고 API 공급자만 바꿀 수 있게.
+// 프론트엔드(index.html/lite.html)의 화면 렌더링 코드가 기대하는
+// { main: {temp, humidity}, weather: [{id, description}], wind: {speed} }
+// 형태로 기상청 코드를 변환해준다.
 function toWeatherShape(slot) {
     const temp = parseFloat(slot.TMP);
     const humidity = parseInt(slot.REH, 10);
