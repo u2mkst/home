@@ -1046,6 +1046,22 @@
         </div>
     </div>
 
+    <!-- 📲 매쓰플랫 아이디 확인 바텀 시트 (시스템 점검 중 저장된 값이 잘못됐을 수 있어 재확인) -->
+    <div id="mathflatIdCheckBottomSheet" class="bottom-sheet-overlay" onclick="if(event.target.id==='mathflatIdCheckBottomSheet') closeMathflatIdCheckBottomSheet()">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
+            <div class="sheet-drag-handle"></div>
+            <div class="sheet-title">📲 매쓰플랫 아이디 확인</div>
+            <div class="sheet-subtitle">최근 점검 중 아이디가 잘못 저장됐을 수 있어요. 아래 아이디가 맞는지 확인해 주세요.</div>
+
+            <input type="text" id="mathflatIdCheckInput" class="sheet-input" placeholder="매쓰플랫 아이디 (또는 학생 휴대폰 번호)">
+
+            <div class="btn-flex-group" style="margin-top: 10px;">
+                <button type="button" class="btn-base btn-secondary" onclick="closeMathflatIdCheckBottomSheet()">나중에</button>
+                <button type="button" class="btn-base btn-primary" onclick="confirmMathflatIdCheck()">맞아요 / 수정 후 저장</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🧮 오늘의 문제 바텀 시트 -->
     <div id="mathQuizBottomSheet" class="bottom-sheet-overlay" onclick="handleMathQuizOverlayClick(event)">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()" style="max-height: 82vh; overflow-y: auto;">
@@ -1624,6 +1640,7 @@
                         startLiveChatHistory(user.uid);
                         startDeviceStatusReporting(user.uid);
                         updateMathQuizTabDot();
+                        checkMathflatIdConfirmation(user.uid, data);
 
                         hideLoading();
 
@@ -1894,6 +1911,59 @@
             await transmitBridgeCredentials();
             showToast("✅ 등록 완료! 매쓰플랫으로 이동합니다...");
             setTimeout(() => { window.location.href = "https://student.mathflat.com/"; }, 1000);
+        } catch (err) {
+            showToast("저장 실패: " + err.message);
+        }
+    }
+
+    // 최근 점검 중 일부 계정의 매쓰플랫 아이디가 암호문에서 숫자만 잘못 뽑혀
+    // 저장된 사고가 있었다. 저장된 원문(rawId)이 바뀌기 전까지는 계정당 한 번만
+    // 재확인 창을 띄우고, 사용자가 확인/저장하면 그 값을 "확인됨"으로 기록해 둔다.
+    let mathflatIdCheckRawId = null;
+    async function checkMathflatIdConfirmation(uid, data) {
+        const rawId = data.studentPhone || data.mathflatId || '';
+        if (!rawId) return;
+        const confirmedKey = `kst_mathflatid_confirmed_${uid}`;
+        if (localStorage.getItem(confirmedKey) === rawId) return;
+        const snoozedKey = `kst_mathflatid_snoozed_${uid}`;
+        if (localStorage.getItem(snoozedKey) === rawId) return;
+
+        const decrypted = await decryptAES(rawId);
+        if (!decrypted || looksLikeCipherText(decrypted)) return; // 아직 복호화가 안 되면 다음 기회에 다시 확인
+
+        mathflatIdCheckRawId = rawId;
+        document.getElementById('mathflatIdCheckInput').value = decrypted;
+        const sheet = document.getElementById('mathflatIdCheckBottomSheet');
+        if (sheet) sheet.classList.add('active');
+    }
+    function closeMathflatIdCheckBottomSheet() {
+        if (mathflatIdCheckRawId && currentUserUid) {
+            localStorage.setItem(`kst_mathflatid_snoozed_${currentUserUid}`, mathflatIdCheckRawId);
+        }
+        const sheet = document.getElementById('mathflatIdCheckBottomSheet');
+        if (sheet) sheet.classList.remove('active');
+    }
+    async function confirmMathflatIdCheck() {
+        const inputVal = document.getElementById('mathflatIdCheckInput').value.trim();
+        const user = auth.currentUser;
+        if (!inputVal || !user) { showToast("아이디를 입력해 주세요."); return; }
+        const digitsOnly = inputVal.replace(/[^0-9]/g, '');
+        if (!/^\d{4,11}$/.test(digitsOnly)) {
+            showToast("휴대폰 번호 형태의 아이디만 저장할 수 있어요. 다시 확인해 주세요.");
+            return;
+        }
+        try {
+            const [encId] = await encryptAESBatch([digitsOnly]);
+            await database.ref(`students/${user.uid}`).update({
+                studentPhone: encId, mathflatId: digitsOnly
+            });
+            currentStudentData.studentPhone = encId;
+            currentStudentData.mathflatId = digitsOnly;
+            localStorage.setItem(`kst_mathflatid_confirmed_${user.uid}`, encId);
+            localStorage.removeItem(`kst_mathflatid_snoozed_${user.uid}`);
+            const sheet = document.getElementById('mathflatIdCheckBottomSheet');
+            if (sheet) sheet.classList.remove('active');
+            showToast("✅ 매쓰플랫 아이디가 저장되었습니다.");
         } catch (err) {
             showToast("저장 실패: " + err.message);
         }
@@ -2882,7 +2952,13 @@
         const studentClass = document.getElementById('studentClass').value.trim();
         const selectedTeacher = document.getElementById('teacherName').value;
         const phoneTail = document.getElementById('u2mPhone').value.trim();
-        const mathflatPhone = document.getElementById('mathflatId').value.trim().replace(/[^0-9]/g, '');
+        const mathflatIdRaw = document.getElementById('mathflatId').value.trim();
+        // 화면에 암호문/깨진 값이 남아있는 상태에서 저장되면 그 문자열에서 숫자만
+        // 뽑아 "그럴듯한 가짜 아이디"로 저장해버리는 사고가 실제로 발생한 적 있다.
+        // 암호문 형태거나, 뽑아낸 숫자가 전화번호로 보기 힘든 길이면 저장하지 않는다.
+        const mathflatPhoneCandidate = mathflatIdRaw.replace(/[^0-9]/g, '');
+        const mathflatPhone = (!looksLikeCipherText(mathflatIdRaw) && /^\d{4,11}$/.test(mathflatPhoneCandidate))
+            ? mathflatPhoneCandidate : '';
         let mathflatPw = document.getElementById('mathflatPw').value.trim();
         // 복호화 실패(패스스루) 값이 화면에 남아있는 상태로 다른 필드를 수정해 자동저장이
         // 발동하면, 그 암호문을 다시 암호화해서 DB에 이중 암호화로 박아버리는 사고를 막는다.
