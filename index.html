@@ -2714,7 +2714,7 @@
 
         const description = data.weather[0].description;
         document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" id="weatherIcon" class="emoji-font">${emoji}</span> ${description}`;
-        document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">💧</span> 습도 ${data.main.humidity}%</span> <span><span class="emoji-font">💨</span> 풍속 ${data.wind.speed}m/s</span>`;
+        document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">☔</span> 강수확률 ${data.main.precipProb}%</span> <span><span class="emoji-font">💨</span> 풍향 ${escapeHTML(data.wind.dir)}</span>`;
     }
 
     // 학원 고정 위치 기준 예보라 기기 GPS가 필요 없다 (백엔드가 위치를 고정해서 조회함).
