@@ -2646,7 +2646,8 @@
                 const quoteData = snapshot.val();
                 document.getElementById('quote-header').innerText = "오늘의 명언:";
                 document.getElementById('quoteText').innerText = `"${quoteData.message}"`;
-                document.getElementById('quoteAuthor').innerText = quoteData.author ? `- ${quoteData.author}` : "";
+                const profileStr = quoteData.authorProfile && quoteData.authorProfile !== "-" ? ` (${quoteData.authorProfile})` : "";
+                document.getElementById('quoteAuthor').innerText = quoteData.author ? `- ${quoteData.author}${profileStr}` : "";
             } else {
                 displayDefaultAdvice();
             }

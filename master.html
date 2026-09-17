@@ -22,8 +22,8 @@
             --font-title: 'Plus Jakarta Sans', -apple-system, sans-serif;
             --font-body: 'Pretendard', -apple-system, sans-serif;
 
-            --sidebar-bg: #14152b;
-            --sidebar-bg-2: #1c1e3a;
+            --sidebar-bg: #0b1830;
+            --sidebar-bg-2: #12294a;
             --sidebar-text: rgba(255,255,255,0.65);
             --sidebar-text-active: #ffffff;
 
@@ -32,9 +32,9 @@
             --glass-shine: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.15) 100%);
             --glass-blur: blur(26px) saturate(180%);
 
-            --primary: #4f46e5;
-            --primary-2: #7c3aed;
-            --primary-light: rgba(79, 70, 229, 0.1);
+            --primary: #004bbf;
+            --primary-2: #003a94;
+            --primary-light: rgba(0, 75, 191, 0.1);
             --text-main: #0f172a;
             --text-sub: #64748b;
             --danger: #ef4444;
@@ -53,7 +53,7 @@
         html, body { height: 100%; }
         body {
             font-family: var(--font-body);
-            background: radial-gradient(1200px 800px at 100% 0%, #ede9fe 0%, transparent 55%),
+            background: radial-gradient(1200px 800px at 100% 0%, #dbeafe 0%, transparent 55%),
                         radial-gradient(1000px 700px at 0% 100%, #e0f2fe 0%, transparent 55%),
                         #eef1f8;
             margin: 0;
@@ -88,7 +88,7 @@
             width: 56px; height: 56px; border-radius: 18px; margin: 0 auto 16px;
             background: linear-gradient(135deg, var(--primary), var(--primary-2));
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.6rem; box-shadow: 0 10px 24px rgba(79,70,229,0.35);
+            font-size: 1.6rem; box-shadow: 0 10px 24px rgba(0,75,191,0.35);
         }
         .admin-title {
             font-family: var(--font-title);
@@ -120,7 +120,7 @@
         }
         .form-control:focus {
             outline: none; border-color: var(--primary); background: #fff;
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+            box-shadow: 0 0 0 4px rgba(0, 75, 191, 0.12);
         }
         textarea.form-control { resize: none; }
 
@@ -136,7 +136,7 @@
         .btn-block:hover { transform: translateY(-2px); filter: brightness(1.03); }
         .btn-block:active { transform: scale(0.97); }
 
-        .btn-purple { background: linear-gradient(135deg, #6259ef, var(--primary)); color: white; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3); }
+        .btn-purple { background: linear-gradient(135deg, #1f6fe0, var(--primary)); color: white; box-shadow: 0 8px 20px rgba(0, 75, 191, 0.3); }
         .btn-green { background: linear-gradient(135deg, #34d399, var(--success)); color: white; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); }
         .btn-orange { background: linear-gradient(135deg, #fbbf24, var(--warning)); color: white; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3); }
         .btn-red { background: rgba(239, 68, 68, 0.12); color: var(--danger); box-shadow: none; }
@@ -257,7 +257,7 @@
             max-height: 220px; overflow-y: auto; list-style: none; margin: 0; padding: 6px; text-align: left;
         }
         .autocomplete-item { padding: 10px 12px; border-radius: 10px; font-size: 0.9rem; color: var(--text-main); cursor: pointer; }
-        .autocomplete-item:hover { background: rgba(79, 70, 229, 0.1); }
+        .autocomplete-item:hover { background: rgba(0, 75, 191, 0.1); }
         .autocomplete-item .school-region { font-size: 0.76rem; color: var(--text-sub); margin-left: 6px; }
         .selected-school-badge {
             display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600;
@@ -267,7 +267,7 @@
 
         .calendar-input {
             font-family: var(--font-title); font-size: 1.05rem; font-weight: 700; color: var(--primary);
-            text-align: center; border: 1px solid rgba(79, 70, 229, 0.25); background: #fff; cursor: pointer;
+            text-align: center; border: 1px solid rgba(0, 75, 191, 0.25); background: #fff; cursor: pointer;
         }
 
         .quote-status-box {
@@ -283,6 +283,19 @@
 
         /* 피드 리스트 */
         .feed-container { display: flex; flex-direction: column; gap: 12px; }
+        .feed-bulkbar {
+            display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .feed-select-all {
+            display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-sub); cursor: pointer; user-select: none;
+        }
+        .feed-select-all input { width: 16px; height: 16px; cursor: pointer; }
+        .feed-selected-count { font-size: 0.8rem; font-weight: 700; color: var(--primary); }
+        .feed-bulk-delete-btn { width: auto; margin: 0; padding: 8px 16px; font-size: 0.82rem; }
+        .feed-item-header { display: flex; align-items: flex-start; gap: 10px; }
+        .feed-item-cb { width: 16px; height: 16px; margin-top: 3px; cursor: pointer; flex-shrink: 0; }
+        .feed-item-body { flex: 1; min-width: 0; }
         .feed-item {
             background: rgba(255,255,255,0.65); border: 1px solid rgba(15,23,42,0.05);
             border-radius: 18px; padding: 16px; text-align: left; transition: transform 0.3s var(--spring);
@@ -330,6 +343,7 @@
         .db-count { font-size: 0.72rem; color: var(--text-sub); font-weight: 600; }
         .db-leaf { padding: 4px 8px; word-break: break-all; }
         .db-val { color: var(--text-main); font-family: 'SFMono-Regular', Consolas, monospace; }
+        .db-dec-badge { font-size: 0.68rem; font-weight: 700; color: var(--success); background: rgba(16,185,129,0.12); padding: 1px 6px; border-radius: 999px; cursor: help; }
 
         /* 모달 레이아웃 */
         .modal-overlay {
@@ -557,6 +571,13 @@
                     <section id="section-inbox" class="content-section">
                         <div class="panel-card">
                             <h3>📬 실시간 알림 수신함</h3>
+                            <div class="feed-bulkbar">
+                                <label class="feed-select-all">
+                                    <input type="checkbox" id="feedSelectAllCb" onchange="toggleSelectAllFeed(this.checked)"> 전체 선택
+                                </label>
+                                <span id="feedSelectedCount" class="feed-selected-count hidden">0개 선택됨</span>
+                                <button id="feedBulkDeleteBtn" class="btn-block btn-red feed-bulk-delete-btn hidden" onclick="deleteSelectedFeedItems()">선택 항목 일괄 삭제</button>
+                            </div>
                             <div id="feed-container-list" class="feed-container">
                                 <div class="no-data">수신 대기 중인 문의 사항이 없습니다.</div>
                             </div>
@@ -814,6 +835,7 @@
                 if (!snapshot.exists()) {
                     listContainer.innerHTML = '<div class="no-data">수신된 알림 내역이 비어 있습니다.</div>';
                     updateInboxBadge(0);
+                    resetFeedSelection();
                     return;
                 }
 
@@ -861,18 +883,24 @@
 
                     const template = `
                         <div class="feed-item">
-                            <div class="feed-badge ${badgeClass}">${badgeText}</div>
-                            <div class="feed-meta">학생: <b>${escapeHTML(val.studentName)}</b> (${escapeHTML(val.schoolName || '미지정')})</div>
-                            <div class="feed-body">${escapeHTML(realContent)}</div>
-                            ${subInfoRow}
-                            <div class="btn-group-flex">
-                                ${commandButtons}
+                            <div class="feed-item-header">
+                                <input type="checkbox" class="feed-item-cb" data-key="${escapeHTML(key)}" onchange="onFeedItemCbChange()">
+                                <div class="feed-item-body">
+                                    <div class="feed-badge ${badgeClass}">${badgeText}</div>
+                                    <div class="feed-meta">학생: <b>${escapeHTML(val.studentName)}</b> (${escapeHTML(val.schoolName || '미지정')})</div>
+                                    <div class="feed-body">${escapeHTML(realContent)}</div>
+                                    ${subInfoRow}
+                                    <div class="btn-group-flex">
+                                        ${commandButtons}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;
                     itemsHTML.unshift(template);
                 });
                 listContainer.innerHTML = itemsHTML.join('');
+                resetFeedSelection();
             });
         }
 
@@ -1030,6 +1058,41 @@
             }
         }
 
+        function resetFeedSelection() {
+            const selectAllCb = document.getElementById('feedSelectAllCb');
+            if (selectAllCb) selectAllCb.checked = false;
+            updateFeedBulkbar();
+        }
+
+        function toggleSelectAllFeed(checked) {
+            document.querySelectorAll('.feed-item-cb').forEach(cb => { cb.checked = checked; });
+            updateFeedBulkbar();
+        }
+
+        function onFeedItemCbChange() {
+            const boxes = document.querySelectorAll('.feed-item-cb');
+            const selectAllCb = document.getElementById('feedSelectAllCb');
+            if (selectAllCb) selectAllCb.checked = boxes.length > 0 && Array.from(boxes).every(cb => cb.checked);
+            updateFeedBulkbar();
+        }
+
+        function updateFeedBulkbar() {
+            const count = document.querySelectorAll('.feed-item-cb:checked').length;
+            const countEl = document.getElementById('feedSelectedCount');
+            const btnEl = document.getElementById('feedBulkDeleteBtn');
+            if (countEl) { countEl.textContent = `${count}개 선택됨`; countEl.classList.toggle('hidden', count === 0); }
+            if (btnEl) btnEl.classList.toggle('hidden', count === 0);
+        }
+
+        function deleteSelectedFeedItems() {
+            const keys = Array.from(document.querySelectorAll('.feed-item-cb:checked')).map(cb => cb.dataset.key);
+            if (keys.length === 0) return;
+            if (!confirm(`선택한 ${keys.length}건을 수신함에서 일괄 삭제할까요?`)) return;
+            Promise.all(keys.map(k => database.ref(`suggestions/${k}`).remove()))
+                .then(() => alert(`${keys.length}건 삭제 완료`))
+                .catch(err => alert("일괄 삭제 실패: " + err.message));
+        }
+
         function openPublishBridgeModal(id) {
             const raw = feedRawDataByKey[id];
             if (!raw) { alert("원문을 찾을 수 없습니다. 새로고침 후 다시 시도해 주세요."); return; }
@@ -1056,10 +1119,14 @@
                 return;
             }
 
+            const publishedId = targetQuoteCache.id;
             database.ref(`dailyQuotes/${selectedDate}`).set({
                 message: targetQuoteCache.content,
                 author: targetQuoteCache.author,
                 authorProfile: targetQuoteCache.profile || "-"
+            }).then(() => {
+                // 게시 승낙된 제안은 수신함에 그대로 남겨둘 이유가 없으니 자동으로 삭제한다.
+                return database.ref(`suggestions/${publishedId}`).remove();
             }).then(() => {
                 alert(`${selectedDate} 일자에 명언이 성공적으로 게시 예약되었습니다.`);
                 closePublishModal();
@@ -1073,12 +1140,15 @@
            동작한다(경로별 규칙만으로는 루트 한 번에 전체를 읽을 수 없음).
         ===================================================================== */
         let fullDbCache = null;
+        let dbDecryptedMap = {};
 
         function loadFullDatabase() {
             const container = document.getElementById('db-tree-container');
             container.innerHTML = '<div class="no-data">불러오는 중...</div>';
-            database.ref('/').once('value', (snapshot) => {
+            database.ref('/').once('value', async (snapshot) => {
                 fullDbCache = snapshot.val() || {};
+                container.innerHTML = '<div class="no-data">암호화된 값 복호화 중...</div>';
+                await decryptFullDbCache();
                 renderDbTree();
             }, (err) => {
                 container.innerHTML = `<div class="no-data" style="color:var(--danger);">
@@ -1088,6 +1158,29 @@
                     <code style="font-size:0.75rem;">".read": "auth != null &amp;&amp; auth.uid === '${escapeHTML(MASTER_ALLOWED_UID)}'"</code>
                 </div>`;
             });
+        }
+
+        function collectCipherStrings(value, acc) {
+            if (value !== null && typeof value === 'object') {
+                Object.values(value).forEach(v => collectCipherStrings(v, acc));
+            } else if (looksLikeCipherText(value)) {
+                acc.add(value);
+            }
+        }
+
+        // DB 탐색기에 뜨는 암호문들을 한꺼번에 모아 배치로 복호화해둔다(같은 암호문은
+        // 한 번만 요청하도록 중복 제거). 백엔드 배치 한도(200개)를 넘을 수 있으니 나눠 보낸다.
+        async function decryptFullDbCache() {
+            const cipherSet = new Set();
+            collectCipherStrings(fullDbCache, cipherSet);
+            const cipherList = Array.from(cipherSet);
+            dbDecryptedMap = {};
+            const CHUNK = 150;
+            for (let i = 0; i < cipherList.length; i += CHUNK) {
+                const chunk = cipherList.slice(i, i + CHUNK);
+                const results = await decryptAESBatch(chunk);
+                chunk.forEach((c, idx) => { dbDecryptedMap[c] = results[idx]; });
+            }
         }
 
         function buildDbNode(value, keyLabel, query) {
@@ -1114,10 +1207,16 @@
                 return details;
             } else {
                 const valStr = String(value);
-                if (query && !keyMatches && !valStr.toLowerCase().includes(query)) return null;
+                let displayVal = valStr;
+                let decBadge = '';
+                if (looksLikeCipherText(valStr) && dbDecryptedMap[valStr] && !looksLikeCipherText(dbDecryptedMap[valStr])) {
+                    displayVal = dbDecryptedMap[valStr];
+                    decBadge = ' <span class="db-dec-badge" title="원문(암호문): ' + escapeHTML(valStr) + '">🔓 복호화됨</span>';
+                }
+                if (query && !keyMatches && !valStr.toLowerCase().includes(query) && !displayVal.toLowerCase().includes(query)) return null;
                 const leaf = document.createElement('div');
                 leaf.className = 'db-leaf';
-                leaf.innerHTML = `<span class="db-key">${escapeHTML(keyLabel)}</span>: <span class="db-val">${escapeHTML(valStr)}</span>`;
+                leaf.innerHTML = `<span class="db-key">${escapeHTML(keyLabel)}</span>: <span class="db-val">${escapeHTML(displayVal)}</span>${decBadge}`;
                 return leaf;
             }
         }
