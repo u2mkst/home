@@ -329,7 +329,7 @@
             else if (weatherId > 800) emoji = '☁️';
 
             document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" id="weatherIcon" class="emoji-font">${emoji}</span> ${data.weather[0].description}`;
-            document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">💧</span> 습도 ${data.main.humidity}%</span> <span><span class="emoji-font">💨</span> 풍속 ${data.wind.speed}m/s</span>`;
+            document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">☔</span> 강수확률 ${data.main.precipProb}%</span> <span><span class="emoji-font">💨</span> 풍향 ${data.wind.dir}</span>`;
         } catch {
             document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" class="emoji-font">⚠️</span> 날씨 로드 실패`;
         }
