@@ -77,7 +77,7 @@
         }
         
         .info-card { justify-content: space-between; height: 100%; min-height: 250px; padding: 24px; }
-        .menu-card { justify-content: center; height: 100%; min-height: 250px; padding: 12px 0; }
+        .menu-card { justify-content: center; height: 100%; min-height: 250px; padding: 16px; gap: 10px; }
         
         /* 수능 D-Day 배지 스타일 */
         .suneung-badge {
@@ -120,11 +120,11 @@
 
         .menu-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 24px 32px; text-decoration: none; color: #1d1d1f; flex: 1;
+            padding: 20px 24px; text-decoration: none; color: #1d1d1f; flex: 1;
             transition: all 0.25s ease; cursor: pointer;
+            border-radius: 18px; background: var(--surface-soft);
         }
-        .menu-item:not(:last-child) { border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
-        .menu-item:hover { background: rgba(0, 75, 191, 0.05); padding-left: 36px; }
+        .menu-item:hover { background: rgba(0, 75, 191, 0.08); padding-left: 28px; }
         .menu-item-text { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.3px; }
         .arrow-icon { font-family: 'FlightSans', sans-serif; font-size: 0.9rem; color: #86868b; transition: transform 0.2s ease, color 0.2s ease; }
         .menu-item:hover .arrow-icon { transform: translateX(4px); color: var(--primary); }
