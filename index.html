@@ -147,6 +147,13 @@
         .bg-indigo-600 { background-color: var(--accent) !important; }
         .bg-indigo-50, .bg-indigo-100 { background-color: var(--accent-light) !important; }
         .text-blue-500 { color: var(--accent) !important; }
+        /* Tailwind의 "bg-white/80" 같은 투명도 변형은 별도 클래스(bg-white\/80)로
+           생성되어 위 .bg-white 규칙과 매칭되지 않는다 — 슬래시를 이스케이프해 따로 잡는다. */
+        .bg-white\/80, .bg-white\/70, .bg-white\/60 { background-color: var(--lg-surface) !important; }
+        .border-white, .border-white\/80 { border-color: var(--lg-border) !important; }
+        .border-gray-200\/60 { border-color: var(--lg-border) !important; }
+        .bg-indigo-50\/80 { background-color: var(--accent-light) !important; }
+        .hover\:text-gray-600:hover { color: var(--text-main) !important; }
 
         body {
             background: var(--bg-page);
