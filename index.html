@@ -358,14 +358,13 @@
         /* ============ 홈(HOME) 뷰 ============ */
         .header-zone { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; padding: 0 8px; cursor: default; }
         .welcome-text { font-family: 'Paperlogy', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: -0.8px; }
+        /* 박스/배경 없이 lite.html의 수능 D-Day 표시(.suneung-badge)와 동일하게
+           빨간 텍스트만 사용한다. */
         .dday-badge {
-            font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.82rem; font-weight: 700; color: #ffffff; letter-spacing: -0.2px;
-            background: rgba(28, 28, 30, 0.82); padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.18);
-            transition: transform 0.35s var(--spring), box-shadow 0.35s var(--ease-smooth);
+            font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 700; color: #F04452; letter-spacing: -0.3px;
+            transition: opacity 0.2s ease;
         }
-        .dday-badge:hover { transform: scale(1.05); box-shadow: 0 12px 26px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.2); }
-        .dday-badge:active { transform: scale(0.94); }
+        .dday-badge:active { opacity: 0.6; }
 
         .main-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
         @media (min-width: 768px) { .main-grid { grid-template-columns: 1fr 1fr; align-items: stretch; } }
