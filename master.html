@@ -88,8 +88,9 @@
             width: 56px; height: 56px; border-radius: 18px; margin: 0 auto 16px;
             background: linear-gradient(135deg, var(--primary), var(--primary-2));
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.6rem; box-shadow: 0 10px 24px rgba(0,75,191,0.35);
+            box-shadow: 0 10px 24px rgba(0,75,191,0.35);
         }
+        .login-emblem img { width: 30px; height: auto; filter: brightness(0) invert(1); }
         .admin-title {
             font-family: var(--font-title);
             font-size: 1.5rem;
@@ -381,7 +382,7 @@
     <!-- 로그인 뷰 -->
     <div id="login-view">
         <div class="login-card">
-            <div class="login-emblem">🔐</div>
+            <div class="login-emblem"><img src="assets/logo-icon.png" alt="KST"></div>
             <div class="admin-title">K&P 마스터</div>
             <div class="admin-subtitle">총관리자 인증이 필요합니다</div>
 

@@ -345,8 +345,8 @@
         /* 로딩 오버레이 (최초 진입시) */
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(245, 247, 250, 0.82); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.5s var(--ease-smooth), visibility 0.5s var(--ease-smooth); }
         .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .brand-logo { font-family: 'FlightSans', sans-serif; font-size: 2.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 24px; letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 6px; }
-        .brand-logo .sub-kst { font-family: 'Paperlogy', sans-serif; font-size: 0.95rem; font-weight: 600; color: var(--accent); letter-spacing: -0.3px; }
+        .brand-logo { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+        .brand-logo img { height: 100px; width: auto; }
         .progress-bar { width: 180px; height: 4px; background: rgba(0, 75, 191, 0.15); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
         .progress-fill { width: 100%; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light)); animation: progress 1.4s infinite ease-in-out; transform-origin: left; }
         @keyframes progress { 0% { transform: scaleX(0); } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); opacity: 0; } }
@@ -406,8 +406,11 @@
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
         .footer { margin-top: 40px; text-align: center; }
-        .footer-brand { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.3px; margin-bottom: 6px; }
+        .footer-brand { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.3px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .footer-brand span { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-weight: 700; }
+        .footer-brand img { height: 16px; width: auto; vertical-align: middle; }
+        /* 로고가 검정 단색 이미지라 다크모드 배경(어두운 --bg-page)에서는 그대로면 안 보인다 */
+        :root[data-theme="dark"] .footer-brand img { filter: invert(1); }
         .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.5px; }
 
         /* 🧮 오늘의 문제 바텀시트 전용 디자인 */
@@ -691,7 +694,7 @@
     <!-- 최초 로딩 화면 오버레이 -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="brand-logo">
-            K&P <span class="sub-kst">with KST</span>
+            <img src="assets/logo-stacked.png" alt="KST - Kind Strong Teacher">
         </div>
         <div class="progress-bar"><div class="progress-fill"></div></div>
         <div class="loading-subtext">학생 정보를 불러오는 중...</div>
@@ -750,7 +753,7 @@
         </div>
 
         <div class="footer">
-            <div class="footer-brand">K&P 수학입시학원 <span>with KST</span></div>
+            <div class="footer-brand">K&P 수학입시학원 <span>with</span> <img src="assets/logo-icon.png" alt="KST"></div>
             <div class="footer-copyright">© 2026 KST</div>
         </div>
     </div>
