@@ -19,7 +19,10 @@ async function fetchLandForecast() {
     });
     const url = `https://apihub.kma.go.kr/api/typ01/url/fct_afs_dl.php?${params.toString()}`;
     const kmaRes = await fetch(url);
-    const rawBody = await kmaRes.text();
+    // 이 구버전 typ01 API는 UTF-8이 아니라 EUC-KR로 응답한다. res.text()로 그대로
+    // 읽으면 한글이 깨져서(????? 등) 나오므로, 바이트 그대로 받아 EUC-KR로 디코딩한다.
+    const buffer = Buffer.from(await kmaRes.arrayBuffer());
+    const rawBody = new TextDecoder("euc-kr").decode(buffer);
 
     const lines = rawBody.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#"));
     if (lines.length === 0) {
