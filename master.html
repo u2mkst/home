@@ -666,11 +666,17 @@
                     decryptAESBatch(rows.map(r => r.val.authorProfile || ''))
                 ]);
 
+                // 학생이 자유 입력하는 제안/문의 내용은 신뢰할 수 없는 값이라, HTML로
+                // 직접 꽂으면 저장형 XSS로 이어진다(마스터 계정 권한으로 실행됨). 화면
+                // 표시는 전부 escapeHTML을 거치고, "명언 게시" 버튼에 넘길 원문은 HTML
+                // attribute/onclick 문자열에 절대 끼워넣지 않고 key로 조회하는 맵에만 둔다.
+                feedRawDataByKey = {};
                 let itemsHTML = [];
                 rows.forEach(({ key, val }, idx) => {
                     const realContent = decContents[idx];
                     const realAuthor = val.author ? decAuthors[idx] : "";
                     const realProfile = val.authorProfile ? decProfiles[idx] : "";
+                    feedRawDataByKey[key] = { content: realContent, author: realAuthor, profile: realProfile };
 
                     const isSuggestion = (val.category === "오늘의 한마디 제안");
                     const badgeClass = isSuggestion ? "badge-suggest" : "badge-inquiry";
@@ -678,16 +684,16 @@
 
                     let subInfoRow = '';
                     if (isSuggestion) {
-                        const profileString = realProfile ? ` (${realProfile})` : "";
-                        subInfoRow = `<div class="feed-sub">말한 사람: <b>${realAuthor}</b>${profileString}</div>`;
+                        const profileString = realProfile ? ` (${escapeHTML(realProfile)})` : "";
+                        subInfoRow = `<div class="feed-sub">말한 사람: <b>${escapeHTML(realAuthor)}</b>${profileString}</div>`;
                     }
 
-                    let commandButtons = `<button class="btn-block btn-red" onclick="deleteFeedItem('${key}')">기록 삭제</button>`;
+                    let commandButtons = `<button class="btn-block btn-red" onclick="deleteFeedItem('${escapeHTML(key)}')">기록 삭제</button>`;
                     if (isSuggestion) {
                         commandButtons = `
                             ${looksLikeCipherText(realContent)
                                 ? '<button class="btn-block btn-secondary" disabled title="복호화 실패 - 새로고침 후 다시 시도해 주세요">명언 게시 (복호화 실패)</button>'
-                                : `<button class="btn-block btn-green" onclick="openPublishBridgeModal('${key}', '${realContent.replace(/'/g, "\\'")}', '${realAuthor.replace(/'/g, "\\'")}', '${realProfile.replace(/'/g, "\\'")}')">명언 게시</button>`}
+                                : `<button class="btn-block btn-green" onclick="openPublishBridgeModal('${escapeHTML(key)}')">명언 게시</button>`}
                             ${commandButtons}
                         `;
                     }
@@ -695,8 +701,8 @@
                     const template = `
                         <div class="feed-item">
                             <div class="feed-badge ${badgeClass}">${badgeText}</div>
-                            <div class="feed-meta">학생: <b>${val.studentName}</b> (${val.schoolName || '미지정'})</div>
-                            <div class="feed-body">${realContent}</div>
+                            <div class="feed-meta">학생: <b>${escapeHTML(val.studentName)}</b> (${escapeHTML(val.schoolName || '미지정')})</div>
+                            <div class="feed-body">${escapeHTML(realContent)}</div>
                             ${subInfoRow}
                             <div class="btn-group-flex">
                                 ${commandButtons}
@@ -714,6 +720,9 @@
                 tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
             );
         }
+        // 명언 게시 모달에 넘길 학생 제안 원문(복호화된 실제 텍스트) 보관용.
+        // HTML/onclick 문자열에 직접 끼워넣지 않고 key로만 조회해 XSS를 피한다.
+        let feedRawDataByKey = {};
 
         let comciganPanelBound = false;
         function initComciganOverridePanel() {
@@ -855,8 +864,10 @@
             }
         }
 
-        function openPublishBridgeModal(id, content, author, profile) {
-            targetQuoteCache = { id, content, author, profile };
+        function openPublishBridgeModal(id) {
+            const raw = feedRawDataByKey[id];
+            if (!raw) { alert("원문을 찾을 수 없습니다. 새로고침 후 다시 시도해 주세요."); return; }
+            targetQuoteCache = { id, content: raw.content, author: raw.author, profile: raw.profile };
             document.getElementById('modal-target-date').value = new Date().toISOString().substring(0, 10);
             document.getElementById('publishDateModal').style.display = 'flex';
         }
