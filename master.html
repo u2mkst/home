@@ -4,34 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>K&P 수학입시학원 마스터</title>
-    
+
     <!-- Firebase & CryptoJS -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    
+
     <!-- 폰트 2종 적용: Plus Jakarta Sans (헤더/강조용), Pretendard (본문/입력용) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-    
+
     <style>
         :root {
             --font-title: 'Plus Jakarta Sans', -apple-system, sans-serif;
             --font-body: 'Pretendard', -apple-system, sans-serif;
 
-            /* Apple Liquid Glass Theme System */
-            --glass-card: rgba(255, 255, 255, 0.55);
-            --glass-border: rgba(255, 255, 255, 0.75);
+            --sidebar-bg: #14152b;
+            --sidebar-bg-2: #1c1e3a;
+            --sidebar-text: rgba(255,255,255,0.65);
+            --sidebar-text-active: #ffffff;
+
+            --glass-card: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.9);
             --glass-shine: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.15) 100%);
             --glass-blur: blur(26px) saturate(180%);
 
             --primary: #4f46e5;
+            --primary-2: #7c3aed;
             --primary-light: rgba(79, 70, 229, 0.1);
             --text-main: #0f172a;
-            --text-sub: #475569;
+            --text-sub: #64748b;
             --danger: #ef4444;
             --success: #10b981;
             --warning: #f59e0b;
@@ -41,135 +46,214 @@
             --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
         }
         @keyframes lgPopIn { 0% { opacity: 0; transform: scale(0.85) translateY(14px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes fadeSlideIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
 
         * { box-sizing: border-box; }
 
+        html, body { height: 100%; }
         body {
             font-family: var(--font-body);
-            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 50%, #e2e8f0 100%);
-            margin: 0; 
-            padding: 32px 16px 40px;
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start;
-            min-height: 100vh; 
-            color: var(--text-main); 
+            background: radial-gradient(1200px 800px at 100% 0%, #ede9fe 0%, transparent 55%),
+                        radial-gradient(1000px 700px at 0% 100%, #e0f2fe 0%, transparent 55%),
+                        #eef1f8;
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text-main);
         }
-        
-        .container { 
-            width: 100%; 
-            max-width: 460px; 
+
+        .hidden { display: none !important; }
+
+        /* ===================== 로그인 화면 ===================== */
+        #login-view {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
         }
-        
-        /* 헤더 스타일 */
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--glass-card);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-glass);
+            border-radius: 28px;
+            padding: 36px 28px;
+            text-align: center;
+            animation: lgPopIn 0.5s var(--spring);
+        }
+        .login-emblem {
+            width: 56px; height: 56px; border-radius: 18px; margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; box-shadow: 0 10px 24px rgba(79,70,229,0.35);
+        }
         .admin-title {
             font-family: var(--font-title);
-            font-size: 1.8rem; 
-            font-weight: 800; 
+            font-size: 1.5rem;
+            font-weight: 800;
             color: var(--text-main);
-            margin-bottom: 6px;
-            text-align: center;
+            margin-bottom: 4px;
             letter-spacing: -0.5px;
         }
         .admin-subtitle {
             font-family: var(--font-title);
-            font-size: 0.88rem;
-            color: var(--primary);
-            text-align: center;
-            font-weight: 700;
-            margin-bottom: 24px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(8px);
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 30px;
-            border: 1px solid var(--glass-border);
-        }
-        .header-wrapper {
-            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            font-weight: 600;
+            margin-bottom: 26px;
         }
 
-        /* 리퀴드 글래스 카드 커스텀 */
+        /* 폼 제어 */
+        .form-group { margin-bottom: 14px; text-align: left; }
+        .form-group label {
+            display: block; font-size: 0.83rem; font-weight: 600;
+            color: var(--text-sub); margin-bottom: 6px;
+        }
+        .form-control {
+            width: 100%; padding: 12px 16px; border: 1px solid rgba(15,23,42,0.1);
+            border-radius: 14px; background: rgba(255,255,255,0.8);
+            font-family: var(--font-body); font-size: 0.95rem; color: var(--text-main);
+            transition: all 0.25s ease;
+        }
+        .form-control:focus {
+            outline: none; border-color: var(--primary); background: #fff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+        }
+        textarea.form-control { resize: none; }
+
+        /* ===================== 버튼 시스템 ===================== */
+        .btn-block {
+            font-family: var(--font-title);
+            display: inline-flex; justify-content: center; align-items: center;
+            width: 100%; padding: 12px 18px; border-radius: 14px;
+            font-size: 0.92rem; font-weight: 700; border: none; cursor: pointer;
+            margin-bottom: 10px; text-align: center;
+            transition: transform 0.3s var(--spring), box-shadow 0.3s var(--ease-smooth), filter 0.2s ease;
+        }
+        .btn-block:hover { transform: translateY(-2px); filter: brightness(1.03); }
+        .btn-block:active { transform: scale(0.97); }
+
+        .btn-purple { background: linear-gradient(135deg, #6259ef, var(--primary)); color: white; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3); }
+        .btn-green { background: linear-gradient(135deg, #34d399, var(--success)); color: white; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); }
+        .btn-orange { background: linear-gradient(135deg, #fbbf24, var(--warning)); color: white; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3); }
+        .btn-red { background: rgba(239, 68, 68, 0.12); color: var(--danger); box-shadow: none; }
+        .btn-red:hover { background: var(--danger); color: white; }
+        .btn-gray { background-color: rgba(15,23,42,0.06); color: var(--text-sub); box-shadow: none; }
+        .btn-secondary { background-color: rgba(15,23,42,0.06); color: var(--text-sub); box-shadow: none; cursor: not-allowed; }
+
+        .btn-group-flex { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-group-flex .btn-block { margin-bottom: 0; padding: 10px; font-size: 0.85rem; }
+
+        /* ===================== 앱 셸 (사이드바 레이아웃) ===================== */
+        #admin-view { display: none; min-height: 100vh; }
+        .app-shell { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: 248px; flex-shrink: 0;
+            background: linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-2));
+            color: var(--sidebar-text);
+            display: flex; flex-direction: column;
+            padding: 22px 14px;
+            position: sticky; top: 0; height: 100vh; overflow-y: auto;
+        }
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 10px 22px;
+            font-family: var(--font-title); font-weight: 800; color: #fff; font-size: 1.05rem;
+        }
+        .sidebar-brand .emblem {
+            width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+        }
+        .nav-group-label {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+            color: rgba(255,255,255,0.35); padding: 14px 12px 6px;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 12px; border-radius: 12px; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; color: var(--sidebar-text);
+            transition: background 0.2s ease, color 0.2s ease;
+            margin-bottom: 2px;
+        }
+        .nav-item .nav-icon { font-size: 1.05rem; width: 22px; text-align: center; }
+        .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .nav-item.active { background: rgba(255,255,255,0.12); color: var(--sidebar-text-active); }
+        .nav-item .nav-badge {
+            margin-left: auto; background: var(--danger); color: #fff; font-size: 0.68rem;
+            font-weight: 800; padding: 1px 7px; border-radius: 999px; min-width: 18px; text-align: center;
+        }
+        .sidebar-footer { margin-top: auto; padding-top: 14px; }
+        .sidebar-logout {
+            width: 100%; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px;
+            font-family: var(--font-body); font-size: 0.85rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .sidebar-logout:hover { background: rgba(239,68,68,0.25); color: #fff; }
+
+        .main-area { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 30px; gap: 16px; flex-wrap: wrap;
+        }
+        .topbar-title { font-family: var(--font-title); font-size: 1.3rem; font-weight: 800; }
+        .topbar-sub { font-size: 0.82rem; color: var(--text-sub); font-weight: 600; margin-top: 2px; }
+        .conn-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(16,185,129,0.12); color: var(--success);
+            font-size: 0.78rem; font-weight: 700; padding: 6px 12px; border-radius: 999px;
+        }
+        .conn-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+
+        .content-scroll { padding: 0 30px 40px; flex: 1; }
+        .content-section { display: none; animation: fadeSlideIn 0.35s var(--ease-smooth); }
+        .content-section.active { display: block; }
+
+        /* 개요 통계 카드 */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px; }
+        .stat-card {
+            background: var(--glass-card); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px 20px; box-shadow: var(--shadow-glass);
+        }
+        .stat-card .stat-label { font-size: 0.78rem; color: var(--text-sub); font-weight: 700; margin-bottom: 8px; }
+        .stat-card .stat-value { font-family: var(--font-title); font-size: 1.5rem; font-weight: 800; }
+        .stat-card.ok .stat-value { color: var(--success); }
+        .stat-card.warn .stat-value { color: var(--danger); }
+
+        /* 패널 카드 */
         .panel-card {
             position: relative;
             background: var(--glass-card);
-            padding: 22px 20px;
-            border-radius: 28px;
+            padding: 24px 22px;
+            border-radius: 24px;
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
             box-shadow: var(--shadow-glass);
             margin-bottom: 20px;
             overflow: hidden;
-            transition: transform 0.4s var(--ease-smooth), box-shadow 0.4s var(--ease-smooth);
         }
-
         .panel-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 1px;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
             background: var(--glass-shine);
         }
-
         .panel-card h3 {
-            font-family: var(--font-title);
-            margin-top: 0;
-            margin-bottom: 16px;
-            font-size: 1.1rem;
-            color: var(--text-main);
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            padding-bottom: 10px;
+            font-family: var(--font-title); margin-top: 0; margin-bottom: 6px;
+            font-size: 1.05rem; color: var(--text-main); font-weight: 800;
+            display: flex; align-items: center; gap: 8px;
         }
-
-        /* 1순위 강조 카드 */
-        .priority-card {
-            border: 1.5px solid rgba(79, 70, 229, 0.4);
-            background: rgba(255, 255, 255, 0.65);
-        }
-
-        /* 폼 제어 */
-        .form-group {
-            margin-bottom: 14px;
-            text-align: left;
-        }
-        .form-group label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-sub);
-            margin-bottom: 6px;
-        }
-        .form-control {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(5px);
-            font-family: var(--font-body);
-            font-size: 0.95rem;
-            color: var(--text-main);
-            transition: all 0.25s ease;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.85);
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
-        }
-        textarea.form-control { resize: none; }
-
-        .hidden { display: none !important; }
+        .panel-desc { font-size: 0.82rem; color: var(--text-sub); margin: 0 0 16px; line-height: 1.5; }
+        .panel-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 
         /* 학교 검색 자동완성 */
         .autocomplete-list {
             position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
-            background: var(--glass-card); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border); border-radius: 14px; box-shadow: var(--shadow-glass);
+            background: #fff; border: 1px solid rgba(15,23,42,0.08); border-radius: 14px; box-shadow: var(--shadow-glass);
             max-height: 220px; overflow-y: auto; list-style: none; margin: 0; padding: 6px; text-align: left;
         }
         .autocomplete-item { padding: 10px 12px; border-radius: 10px; font-size: 0.9rem; color: var(--text-main); cursor: pointer; }
@@ -181,282 +265,324 @@
             margin: -6px 0 14px 0;
         }
 
-        /* 대형 달력 스타일 */
         .calendar-input {
-            font-family: var(--font-title);
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-align: center;
-            border: 1px solid rgba(79, 70, 229, 0.3);
-            background: rgba(255, 255, 255, 0.85);
-            cursor: pointer;
+            font-family: var(--font-title); font-size: 1.05rem; font-weight: 700; color: var(--primary);
+            text-align: center; border: 1px solid rgba(79, 70, 229, 0.25); background: #fff; cursor: pointer;
         }
 
-        /* 예약 상태 확인 창 */
         .quote-status-box {
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 16px;
-            padding: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            margin-top: 12px;
-            min-height: 80px;
+            background: rgba(255,255,255,0.75); border-radius: 16px; padding: 16px;
+            border: 1px solid rgba(15,23,42,0.06); margin-top: 12px; min-height: 80px;
         }
-        .status-empty {
-            color: var(--text-sub);
-            text-align: center;
-            font-size: 0.88rem;
-            padding: 16px 0;
-            line-height: 1.5;
-        }
-        .status-exist {
-            text-align: left;
-        }
+        .status-empty { color: var(--text-sub); text-align: center; font-size: 0.88rem; padding: 16px 0; line-height: 1.5; }
+        .status-exist { text-align: left; }
         .status-date-badge {
-            display: inline-block;
-            background: var(--primary);
-            color: #ffffff;
-            font-size: 0.75rem;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-family: var(--font-title);
-            margin-bottom: 8px;
+            display: inline-block; background: var(--primary); color: #fff; font-size: 0.75rem;
+            padding: 4px 10px; border-radius: 8px; font-weight: 700; font-family: var(--font-title); margin-bottom: 8px;
         }
 
-        /* 버튼 시스템 */
-        .btn-block {
-            font-family: var(--font-title);
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            padding: 12px 18px;
-            border-radius: 16px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            margin-bottom: 10px;
-            text-align: center;
-            transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-        .btn-block:hover { transform: translateY(-2px); }
-        .btn-block:active { transform: scale(0.96); }
-
-        .btn-purple { background: linear-gradient(135deg, #6259ef, var(--primary)); color: white; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3), inset 0 1px 1px rgba(255,255,255,0.3); }
-        .btn-green { background: linear-gradient(135deg, #34d399, var(--success)); color: white; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3), inset 0 1px 1px rgba(255,255,255,0.3); }
-        .btn-orange { background: linear-gradient(135deg, #fbbf24, var(--warning)); color: white; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3), inset 0 1px 1px rgba(255,255,255,0.3); }
-        .btn-red { 
-            background: rgba(239, 68, 68, 0.15); 
-            color: var(--danger); 
-            border: 1px solid rgba(239, 68, 68, 0.2); 
-            box-shadow: none; 
-        }
-        .btn-red:hover { background: var(--danger); color: white; }
-        .btn-gray { background-color: rgba(255, 255, 255, 0.6); color: var(--text-sub); border: 1px solid var(--glass-border); box-shadow: none; }
-
-        .btn-group-flex { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-group-flex .btn-block { margin-bottom: 0; padding: 10px; font-size: 0.85rem; }
-
-        /* 피드 리스트 카테고리 */
+        /* 피드 리스트 */
         .feed-container { display: flex; flex-direction: column; gap: 12px; }
         .feed-item {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(14px) saturate(160%);
-            border: 1px solid rgba(255, 255, 255, 0.75);
-            border-radius: 18px;
-            padding: 16px;
-            text-align: left;
-            transition: transform 0.35s var(--spring);
+            background: rgba(255,255,255,0.65); border: 1px solid rgba(15,23,42,0.05);
+            border-radius: 18px; padding: 16px; text-align: left; transition: transform 0.3s var(--spring);
         }
         .feed-item:hover { transform: translateY(-2px); }
         .feed-badge {
-            display: inline-block;
-            font-family: var(--font-title);
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 8px;
-            margin-bottom: 8px;
+            display: inline-block; font-family: var(--font-title); font-size: 0.75rem; font-weight: 700;
+            padding: 3px 9px; border-radius: 8px; margin-bottom: 8px;
         }
         .badge-inquiry { background-color: var(--primary-light); color: var(--primary); }
         .badge-suggest { background-color: rgba(16, 185, 129, 0.12); color: var(--success); }
-
         .feed-meta { font-size: 0.82rem; color: var(--text-sub); margin-bottom: 6px; }
         .feed-meta b { color: var(--text-main); }
-        .feed-body { 
-            font-size: 0.9rem; 
-            color: var(--text-main); 
-            line-height: 1.45; 
-            white-space: pre-wrap; 
-            background: rgba(255, 255, 255, 0.85); 
-            padding: 12px; 
-            border-radius: 12px; 
-            border: 1px solid rgba(255, 255, 255, 0.9); 
-            margin-bottom: 8px; 
+        .feed-body {
+            font-size: 0.9rem; color: var(--text-main); line-height: 1.45; white-space: pre-wrap;
+            background: rgba(255,255,255,0.9); padding: 12px; border-radius: 12px;
+            border: 1px solid rgba(15,23,42,0.05); margin-bottom: 8px;
         }
         .feed-sub { font-size: 0.8rem; color: var(--text-sub); font-style: italic; margin-bottom: 10px; }
-
         .no-data { text-align: center; color: var(--text-sub); padding: 30px 0; font-size: 0.88rem; }
-        
-        .bottom-logout-btn {
-            font-family: var(--font-title);
-            background: rgba(255, 255, 255, 0.4); 
-            color: var(--text-sub); 
-            border: 1px solid var(--glass-border); 
-            border-radius: 12px;
-            padding: 10px 20px;
-            font-size: 0.85rem; 
-            font-weight: 700;
-            cursor: pointer; 
-            margin-top: 10px;
-            transition: all 0.2s ease;
-        }
-        .bottom-logout-btn:hover { background: rgba(255, 255, 255, 0.7); color: var(--text-main); }
 
-        #login-view { display: block; }
-        #admin-view { display: none; }
+        /* DB 탐색기 */
+        .db-warning {
+            background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #92400e;
+            border-radius: 14px; padding: 12px 16px; font-size: 0.82rem; line-height: 1.5; margin-bottom: 16px;
+        }
+        .db-toolbar { display: flex; gap: 10px; margin-bottom: 16px; }
+        .db-toolbar .form-control { margin: 0; }
+        .db-toolbar button.btn-block { width: auto; white-space: nowrap; margin: 0; padding: 12px 18px; }
+        .db-tree-container {
+            background: rgba(15,23,42,0.03); border: 1px solid rgba(15,23,42,0.06); border-radius: 16px;
+            padding: 14px 16px; max-height: 60vh; overflow: auto; font-size: 0.85rem;
+        }
+        .db-node { margin-bottom: 2px; }
+        .db-node summary {
+            cursor: pointer; padding: 6px 8px; border-radius: 8px; list-style: none;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .db-node summary::-webkit-details-marker { display: none; }
+        .db-node summary:hover { background: rgba(79,70,229,0.08); }
+        .db-node summary::before { content: '▶'; font-size: 0.65rem; color: var(--text-sub); transition: transform 0.2s ease; }
+        .db-node[open] > summary::before { transform: rotate(90deg); }
+        .db-children { margin-left: 18px; padding-left: 10px; border-left: 1px dashed rgba(15,23,42,0.12); }
+        .db-key { font-weight: 700; color: var(--primary); font-family: 'SFMono-Regular', Consolas, monospace; }
+        .db-count { font-size: 0.72rem; color: var(--text-sub); font-weight: 600; }
+        .db-leaf { padding: 4px 8px; word-break: break-all; }
+        .db-val { color: var(--text-main); font-family: 'SFMono-Regular', Consolas, monospace; }
 
         /* 모달 레이아웃 */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.32); backdrop-filter: blur(10px) saturate(140%); z-index: 1000;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(10px) saturate(140%); z-index: 1000;
             justify-content: center; align-items: center;
         }
         .modal-box {
-            background: rgba(255, 255, 255, 0.72); width: 90%; max-width: 380px; padding: 24px;
-            border-radius: 30px; backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1.5px solid var(--glass-border);
-            box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.28), inset 0 1px 1px rgba(255,255,255,0.7); box-sizing: border-box;
-            animation: lgPopIn 0.45s var(--spring);
+            background: rgba(255,255,255,0.9); width: 90%; max-width: 380px; padding: 24px;
+            border-radius: 28px; border: 1px solid var(--glass-border);
+            box-shadow: 0 28px 56px -12px rgba(0,0,0,0.3); box-sizing: border-box;
+            animation: lgPopIn 0.4s var(--spring);
+        }
+
+        /* 반응형: 좁은 화면에서는 사이드바를 상단 가로 탭으로 */
+        @media (max-width: 860px) {
+            .app-shell { flex-direction: column; }
+            .sidebar {
+                width: 100%; height: auto; position: sticky; top: 0; z-index: 40;
+                flex-direction: row; align-items: center; overflow-x: auto; overflow-y: hidden;
+                padding: 10px 12px; gap: 4px;
+            }
+            .sidebar-brand { padding: 0 10px 0 0; }
+            .nav-group-label { display: none; }
+            .nav-item { flex-shrink: 0; margin-bottom: 0; }
+            .sidebar-footer { margin-top: 0; margin-left: 4px; }
+            .content-scroll { padding: 0 16px 30px; }
+            .topbar { padding: 16px; }
+            .panel-grid-2 { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        
-        <!-- 로그인 뷰 -->
-        <div id="login-view" class="panel-card" style="margin-top: 30px; text-align: center;">
+    <!-- 로그인 뷰 -->
+    <div id="login-view">
+        <div class="login-card">
+            <div class="login-emblem">🔐</div>
             <div class="admin-title">K&P 마스터</div>
-            <div class="admin-subtitle" style="margin-bottom: 20px;">총관리자 인증</div>
-            
+            <div class="admin-subtitle">총관리자 인증이 필요합니다</div>
+
             <div class="form-group">
                 <label for="admin-email">관리자 이메일</label>
-                <input type="email" id="admin-email" class="form-control" placeholder="example@email.com">
+                <input type="email" id="admin-email" class="form-control" placeholder="example@email.com" autocomplete="username">
             </div>
             <div class="form-group" style="margin-bottom: 24px;">
                 <label for="admin-password">비밀번호</label>
-                <input type="password" id="admin-password" class="form-control" placeholder="••••••••" onkeyup="if(window.event.keyCode==13){handleAdminLogin()}">
+                <input type="password" id="admin-password" class="form-control" placeholder="••••••••" autocomplete="current-password" onkeyup="if(window.event.keyCode==13){handleAdminLogin()}">
             </div>
-            
+
             <button class="btn-block btn-purple" onclick="handleAdminLogin()">원장님 로그인</button>
         </div>
+    </div>
 
-        <!-- 메인 관리자 뷰 -->
-        <div id="admin-view">
-            <div class="header-wrapper">
-                <div class="admin-title">총 관리센터</div>
-                <div id="welcome-bar" class="admin-subtitle">원격 제어 연결됨</div>
-            </div>
+    <!-- 메인 관리자 뷰 -->
+    <div id="admin-view">
+        <div class="app-shell">
+            <aside class="sidebar">
+                <div class="sidebar-brand"><span class="emblem">🛠️</span> K&P 총관리센터</div>
 
-            <div class="panel-card priority-card">
-                <h3>📅 [1순위] 예약 명언 달력 조회</h3>
-                
-                <div class="form-group">
-                    <label style="color: var(--primary); font-weight: 700;">조회 및 예약할 날짜 선택</label>
-                    <input type="date" id="quote-date" class="form-control calendar-input" onchange="fetchReservedQuote(this.value)">
+                <div class="nav-group-label">현황</div>
+                <div class="nav-item active" data-section="section-overview" onclick="switchSection('section-overview')">
+                    <span class="nav-icon">🏠</span> 개요
                 </div>
 
-                <div id="quote-status-area" class="quote-status-box">
-                    <div class="status-empty">위 달력에서 조회할 날짜를 클릭해 주세요.</div>
+                <div class="nav-group-label">운영</div>
+                <div class="nav-item" data-section="section-quotes" onclick="switchSection('section-quotes')">
+                    <span class="nav-icon">💡</span> 명언 관리
                 </div>
-            </div>
+                <div class="nav-item" data-section="section-maintenance" onclick="switchSection('section-maintenance')">
+                    <span class="nav-icon">🚧</span> 점검 모드
+                </div>
+                <div class="nav-item" data-section="section-notice" onclick="switchSection('section-notice')">
+                    <span class="nav-icon">📢</span> 공지 &amp; 전광판
+                </div>
+                <div class="nav-item" data-section="section-comcigan" onclick="switchSection('section-comcigan')">
+                    <span class="nav-icon">🗓️</span> 컴시간 등록
+                </div>
+                <div class="nav-item" data-section="section-inbox" onclick="switchSection('section-inbox')">
+                    <span class="nav-icon">📬</span> 알림 수신함
+                    <span id="inboxNavBadge" class="nav-badge hidden">0</span>
+                </div>
 
-            <div class="panel-card">
-                <h3>💡 명언 예약 및 수정</h3>
-                <div class="form-group">
-                    <label for="quote-message">명언 문구</label>
-                    <textarea id="quote-message" class="form-control" rows="2" placeholder="선택한 날짜에 노출될 문구를 입력하세요."></textarea>
+                <div class="nav-group-label">시스템</div>
+                <div class="nav-item" data-section="section-dbexplorer" onclick="switchSection('section-dbexplorer')">
+                    <span class="nav-icon">🗄️</span> DB 탐색기
                 </div>
-                <div class="form-group">
-                    <label for="quote-author">발언자 (이름)</label>
-                    <input type="text" id="quote-author" class="form-control" placeholder="예: 아인슈타인, 원장님">
-                </div>
-                <div class="form-group" style="margin-bottom: 18px;">
-                    <label for="quote-profile">발언자 설명 (선택)</label>
-                    <input type="text" id="quote-profile" class="form-control" placeholder="예: 물리학자, 졸업생">
-                </div>
-                
-                <button class="btn-block btn-green" onclick="saveManualQuoteData()">선택 날짜 명언으로 확정 등록</button>
-            </div>
 
-            <div class="panel-card">
-                <h3>🚧 사이트 점검 모드</h3>
-                <p style="font-size:0.82rem; color: var(--text-sub); margin: -6px 0 14px 0; line-height:1.4;">
-                    켜면 학생용 로그인/메인 화면 전체가 점검 안내로 가려집니다 (라이트 버전 바로가기 버튼은 계속 노출). 관리자 페이지는 영향받지 않습니다.
-                </p>
-                <div id="maintenanceStatusText" style="font-weight:700; margin-bottom:10px;">현재 상태 확인 중...</div>
-                <button id="maintenanceToggleBtn" class="btn-block btn-red" onclick="toggleMaintenanceMode()">점검 모드 켜기</button>
-            </div>
-
-            <div class="panel-card">
-                <h3>📢 메인 공지 및 전광판</h3>
-                
-                <div class="form-group">
-                    <label for="input-notice">학생 메인 공지사항 (비우면 팝업 숨김)</label>
-                    <textarea id="input-notice" class="form-control" rows="3" placeholder="휴강 정보 및 주요 일정을 입력하세요."></textarea>
+                <div class="sidebar-footer">
+                    <button class="sidebar-logout" onclick="handleAdminLogout()">🚪 관리자 로그아웃</button>
                 </div>
-                <button class="btn-block btn-purple" onclick="saveNoticeData()">공지사항 즉시 배포</button>
-                
-                <div style="height: 10px;"></div>
-                
-                <div class="form-group">
-                    <label for="input-reminder">하단 흐르는 긴급 전광판 문구 (비우면 숨김)</label>
-                    <input type="text" id="input-reminder" class="form-control" placeholder="텍스트가 좌측으로 자막 방송됩니다.">
+            </aside>
+
+            <div class="main-area">
+                <div class="topbar">
+                    <div>
+                        <div class="topbar-title">총 관리센터</div>
+                        <div class="topbar-sub">K&amp;P 수학입시학원 원격 운영 콘솔</div>
+                    </div>
+                    <div id="welcome-bar" class="conn-pill"><span class="dot"></span> 연결 확인 중...</div>
                 </div>
-                <button class="btn-block btn-orange" onclick="saveReminderData()">전광판 배너 적용</button>
-            </div>
 
-            <div class="panel-card">
-                <h3>🗓️ 컴시간 학교명 등록</h3>
-                <p style="font-size:0.82rem; color: var(--text-sub); margin: -6px 0 14px 0; line-height:1.4;">
-                    컴시간(comcigan)에 등록된 학교명이 NEIS 정식 명칭과 다른 경우, 학교를 검색해 컴시간 검색용 이름을 등록해두면 학생 시간표에 자동 반영됩니다.
-                </p>
+                <div class="content-scroll">
 
-                <div class="form-group" style="position: relative;">
-                    <label for="comcigan-school-search">학교 검색 (NEIS)</label>
-                    <input type="text" id="comcigan-school-search" class="form-control" placeholder="예: 광교호수중학교" autocomplete="off">
-                    <ul id="comcigan-school-list" class="autocomplete-list hidden"></ul>
+                    <!-- 개요 -->
+                    <section id="section-overview" class="content-section active">
+                        <div class="stat-grid">
+                            <div class="stat-card" id="overviewMaintenanceCard">
+                                <div class="stat-label">🚧 사이트 점검 모드</div>
+                                <div class="stat-value" id="overviewMaintenanceValue">확인 중...</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">📬 미확인 알림</div>
+                                <div class="stat-value" id="overviewInboxValue">0건</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">🗓️ 컴시간 등록 학교</div>
+                                <div class="stat-value" id="overviewComciganValue">0개</div>
+                            </div>
+                        </div>
+                        <div class="panel-card">
+                            <h3>👋 오신 것을 환영합니다</h3>
+                            <p class="panel-desc" style="margin-bottom:0;">
+                                왼쪽 메뉴에서 원하는 기능으로 이동하세요. 명언 예약, 사이트 점검 모드, 공지/전광판, 컴시간 학교명 등록, 학생 문의 수신함, 그리고 Firebase 데이터베이스 전체 탐색기를 이 화면 하나에서 관리할 수 있습니다.
+                            </p>
+                        </div>
+                    </section>
+
+                    <!-- 명언 관리 -->
+                    <section id="section-quotes" class="content-section">
+                        <div class="panel-grid-2">
+                            <div class="panel-card">
+                                <h3>📅 예약 명언 달력 조회</h3>
+                                <p class="panel-desc">날짜를 선택하면 해당 일자에 예약된 명언을 확인하거나 새로 등록할 수 있습니다.</p>
+                                <div class="form-group">
+                                    <label style="color: var(--primary); font-weight: 700;">조회 및 예약할 날짜 선택</label>
+                                    <input type="date" id="quote-date" class="form-control calendar-input" onchange="fetchReservedQuote(this.value)">
+                                </div>
+                                <div id="quote-status-area" class="quote-status-box">
+                                    <div class="status-empty">위 달력에서 조회할 날짜를 클릭해 주세요.</div>
+                                </div>
+                            </div>
+
+                            <div class="panel-card">
+                                <h3>✏️ 명언 예약 및 수정</h3>
+                                <div class="form-group">
+                                    <label for="quote-message">명언 문구</label>
+                                    <textarea id="quote-message" class="form-control" rows="2" placeholder="선택한 날짜에 노출될 문구를 입력하세요."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="quote-author">발언자 (이름)</label>
+                                    <input type="text" id="quote-author" class="form-control" placeholder="예: 아인슈타인, 원장님">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 18px;">
+                                    <label for="quote-profile">발언자 설명 (선택)</label>
+                                    <input type="text" id="quote-profile" class="form-control" placeholder="예: 물리학자, 졸업생">
+                                </div>
+                                <button class="btn-block btn-green" onclick="saveManualQuoteData()">선택 날짜 명언으로 확정 등록</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 점검 모드 -->
+                    <section id="section-maintenance" class="content-section">
+                        <div class="panel-card">
+                            <h3>🚧 사이트 점검 모드</h3>
+                            <p class="panel-desc">
+                                켜면 학생용 로그인/메인 화면 전체가 점검 안내로 가려집니다 (라이트 버전 바로가기 버튼은 계속 노출). 관리자 페이지는 영향받지 않습니다.
+                            </p>
+                            <div id="maintenanceStatusText" style="font-weight:700; margin-bottom:14px;">현재 상태 확인 중...</div>
+                            <button id="maintenanceToggleBtn" class="btn-block btn-red" onclick="toggleMaintenanceMode()">점검 모드 켜기</button>
+                        </div>
+                    </section>
+
+                    <!-- 공지 & 전광판 -->
+                    <section id="section-notice" class="content-section">
+                        <div class="panel-card">
+                            <h3>📢 메인 공지 및 전광판</h3>
+                            <div class="form-group">
+                                <label for="input-notice">학생 메인 공지사항 (비우면 팝업 숨김)</label>
+                                <textarea id="input-notice" class="form-control" rows="3" placeholder="휴강 정보 및 주요 일정을 입력하세요."></textarea>
+                            </div>
+                            <button class="btn-block btn-purple" onclick="saveNoticeData()">공지사항 즉시 배포</button>
+
+                            <div style="height: 10px;"></div>
+
+                            <div class="form-group">
+                                <label for="input-reminder">하단 흐르는 긴급 전광판 문구 (비우면 숨김)</label>
+                                <input type="text" id="input-reminder" class="form-control" placeholder="텍스트가 좌측으로 자막 방송됩니다.">
+                            </div>
+                            <button class="btn-block btn-orange" onclick="saveReminderData()">전광판 배너 적용</button>
+                        </div>
+                    </section>
+
+                    <!-- 컴시간 등록 -->
+                    <section id="section-comcigan" class="content-section">
+                        <div class="panel-card">
+                            <h3>🗓️ 컴시간 학교명 등록</h3>
+                            <p class="panel-desc">
+                                컴시간(comcigan)에 등록된 학교명이 NEIS 정식 명칭과 다른 경우, 학교를 검색해 컴시간 검색용 이름을 등록해두면 학생 시간표에 자동 반영됩니다.
+                            </p>
+
+                            <div class="form-group" style="position: relative;">
+                                <label for="comcigan-school-search">학교 검색 (NEIS)</label>
+                                <input type="text" id="comcigan-school-search" class="form-control" placeholder="예: 광교호수중학교" autocomplete="off">
+                                <ul id="comcigan-school-list" class="autocomplete-list hidden"></ul>
+                            </div>
+                            <input type="hidden" id="comcigan-school-code">
+                            <div id="comcigan-selected-school" class="selected-school-badge hidden"></div>
+
+                            <div class="form-group">
+                                <label for="comcigan-override-name">컴시간에 등록된 학교명</label>
+                                <input type="text" id="comcigan-override-name" class="form-control" placeholder="예: 호수중">
+                            </div>
+                            <button class="btn-block btn-purple" onclick="saveComciganOverride()">등록/수정 저장</button>
+
+                            <div style="height: 16px;"></div>
+                            <div id="comcigan-override-list" class="feed-container">
+                                <div class="no-data">등록된 매핑이 없습니다.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 알림 수신함 -->
+                    <section id="section-inbox" class="content-section">
+                        <div class="panel-card">
+                            <h3>📬 실시간 알림 수신함</h3>
+                            <div id="feed-container-list" class="feed-container">
+                                <div class="no-data">수신 대기 중인 문의 사항이 없습니다.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- DB 탐색기 -->
+                    <section id="section-dbexplorer" class="content-section">
+                        <div class="panel-card">
+                            <h3>🗄️ 전체 데이터베이스 탐색기</h3>
+                            <div class="db-warning">
+                                ⚠️ Firebase 실시간 데이터베이스에 저장된 <b>모든</b> 데이터를 그대로 보여줍니다(암호화된 값은 암호문 형태 그대로 표시됩니다). 화면을 다른 사람에게 공유하거나 캡처해서 유출하지 않도록 주의하세요.
+                            </div>
+                            <div class="db-toolbar">
+                                <input type="text" id="db-search" class="form-control" placeholder="키 또는 값으로 검색..." oninput="renderDbTree()">
+                                <button class="btn-block btn-purple" onclick="loadFullDatabase()">🔄 전체 불러오기</button>
+                            </div>
+                            <div id="db-tree-container" class="db-tree-container">
+                                <div class="no-data">"전체 불러오기" 버튼을 눌러 데이터베이스 전체 내용을 불러오세요.</div>
+                            </div>
+                        </div>
+                    </section>
+
                 </div>
-                <input type="hidden" id="comcigan-school-code">
-                <div id="comcigan-selected-school" class="selected-school-badge hidden"></div>
-
-                <div class="form-group">
-                    <label for="comcigan-override-name">컴시간에 등록된 학교명</label>
-                    <input type="text" id="comcigan-override-name" class="form-control" placeholder="예: 호수중">
-                </div>
-                <button class="btn-block btn-purple" onclick="saveComciganOverride()">등록/수정 저장</button>
-
-                <div style="height: 16px;"></div>
-                <div id="comcigan-override-list" class="feed-container">
-                    <div class="no-data">등록된 매핑이 없습니다.</div>
-                </div>
-            </div>
-
-            <div class="panel-card">
-                <h3>📬 실시간 알림 수신함</h3>
-                <div id="feed-container-list" class="feed-container">
-                    <div class="no-data">수신 대기 중인 문의 사항이 없습니다.</div>
-                </div>
-            </div>
-
-            <div style="text-align: center;">
-                <button class="bottom-logout-btn" onclick="handleAdminLogout()">관리자 로그아웃</button>
             </div>
         </div>
-
     </div>
 
     <!-- 명언 게시 모달 -->
@@ -478,8 +604,12 @@
     <script>
         const BACKEND_URL = "https://kst-backend-yhwings21-4601s-projects.vercel.app";
 
-        // 이 화면은 로그인 여부가 아니라 아래 허용 목록에 있는 계정인지로 접근을 제어한다.
-        const MASTER_ALLOWED_EMAILS = ["ufes0603@kst.com"];
+        // 🔒 이 화면은 로그인 여부가 아니라 UID가 마스터 계정과 일치하는지로 접근을 제어한다.
+        // 예전에는 이메일 문자열을 여기 그대로 적어뒀는데, 그러면 로그인 전에도 누구나
+        // 페이지 소스만 보고 마스터 계정의 실제 이메일 주소를 알아낼 수 있었다(피싱/무차별
+        // 대입 공격의 표적이 되기 쉬움). UID는 이메일과 달리 그 자체로는 계정을 특정할 수
+        // 없는 무작위 문자열이라 노출되어도 정보 가치가 없다.
+        const MASTER_ALLOWED_UID = "Rkd6EHSpWibkSbQuQN9spYZ9p1i1";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
@@ -491,12 +621,22 @@
             appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
             measurementId: "G-72TJ0364MJ"
         };
-        
+
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const auth = firebase.auth();
 
-        let targetQuoteCache = null; 
+        let targetQuoteCache = null;
+
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>'"]/g,
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // 명언 게시 모달에 넘길 학생 제안 원문(복호화된 실제 텍스트) 보관용.
+        // HTML/onclick 문자열에 직접 끼워넣지 않고 key로만 조회해 XSS를 피한다.
+        let feedRawDataByKey = {};
 
         async function getIdToken() {
             return auth.currentUser ? await auth.currentUser.getIdToken() : null;
@@ -533,13 +673,25 @@
             return typeof value === 'string' && value.startsWith('U2FsdGVkX1');
         }
 
+        /* =====================================================================
+           사이드바 섹션 전환
+        ===================================================================== */
+        function switchSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(sectionId);
+            if (target) target.classList.add('active');
+            const navEl = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
+            if (navEl) navEl.classList.add('active');
+        }
+
         auth.onAuthStateChanged((user) => {
-            const isAllowed = user && MASTER_ALLOWED_EMAILS.includes((user.email || '').toLowerCase());
+            const isAllowed = user && user.uid === MASTER_ALLOWED_UID;
 
             if (isAllowed) {
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('admin-view').style.display = 'block';
-                document.getElementById('welcome-bar').innerText = `${user.email} 연결됨`;
+                document.getElementById('welcome-bar').innerHTML = '<span class="dot"></span> 총관리자 연결됨';
 
                 const todayStr = new Date().toISOString().substring(0, 10);
                 document.getElementById('quote-date').value = todayStr;
@@ -550,7 +702,7 @@
             } else {
                 // 로그인은 되어 있지만(예: 학생 계정) 허용 목록에 없는 경우에도 관리자 화면 대신 로그인 화면을 보여준다.
                 // 여기서 signOut()을 호출하면 다른 탭(index.html 등)의 학생 세션까지 끊기므로 호출하지 않는다.
-                document.getElementById('login-view').style.display = 'block';
+                document.getElementById('login-view').style.display = 'flex';
                 document.getElementById('admin-view').style.display = 'none';
             }
         });
@@ -569,10 +721,10 @@
                     const data = snapshot.val();
                     statusBox.innerHTML = `
                         <div class="status-exist">
-                            <span class="status-date-badge">📋 ${selectedDate} 예약 완료</span>
-                            <div style="font-size:0.95rem; font-weight:bold; color:var(--text-main); margin: 6px 0;">"${data.message}"</div>
-                            <div style="font-size:0.8rem; color:var(--text-sub);">👤 인물: ${data.author} (${data.authorProfile || '-'})</div>
-                            <button class="btn-block btn-red" style="padding:6px; margin-top:10px; font-size:0.78rem; border-radius:10px;" onclick="deleteReservedQuote('${selectedDate}')">예약 취소</button>
+                            <span class="status-date-badge">📋 ${escapeHTML(selectedDate)} 예약 완료</span>
+                            <div style="font-size:0.95rem; font-weight:bold; color:var(--text-main); margin: 6px 0;">"${escapeHTML(data.message)}"</div>
+                            <div style="font-size:0.8rem; color:var(--text-sub);">👤 인물: ${escapeHTML(data.author)} (${escapeHTML(data.authorProfile || '-')})</div>
+                            <button class="btn-block btn-red" style="padding:6px; margin-top:10px; font-size:0.78rem; border-radius:10px;" onclick="deleteReservedQuote('${escapeHTML(selectedDate)}')">예약 취소</button>
                         </div>
                     `;
                     document.getElementById('quote-message').value = data.message;
@@ -581,7 +733,7 @@
                 } else {
                     statusBox.innerHTML = `
                         <div class="status-empty" style="color:var(--warning);">
-                            📅 ${selectedDate}에는 예약된 명언이 없습니다.<br>
+                            📅 ${escapeHTML(selectedDate)}에는 예약된 명언이 없습니다.<br>
                             <span style="font-size:0.78rem; color:var(--text-sub);">아래 폼에서 새로 예약을 등록해 보세요.</span>
                         </div>
                     `;
@@ -639,6 +791,13 @@
                     btnEl.classList.toggle('btn-red', !currentMaintenanceState);
                     btnEl.classList.toggle('btn-green', currentMaintenanceState);
                 }
+                const overviewEl = document.getElementById('overviewMaintenanceValue');
+                const overviewCard = document.getElementById('overviewMaintenanceCard');
+                if (overviewEl) overviewEl.textContent = currentMaintenanceState ? 'ON (차단 중)' : 'OFF (정상)';
+                if (overviewCard) {
+                    overviewCard.classList.toggle('warn', currentMaintenanceState);
+                    overviewCard.classList.toggle('ok', !currentMaintenanceState);
+                }
             });
 
             database.ref('notice').once('value', (snapshot) => {
@@ -654,11 +813,13 @@
 
                 if (!snapshot.exists()) {
                     listContainer.innerHTML = '<div class="no-data">수신된 알림 내역이 비어 있습니다.</div>';
+                    updateInboxBadge(0);
                     return;
                 }
 
                 const rows = [];
                 snapshot.forEach((child) => { rows.push({ key: child.key, val: child.val() }); });
+                updateInboxBadge(rows.length);
 
                 const [decContents, decAuthors, decProfiles] = await Promise.all([
                     decryptAESBatch(rows.map(r => r.val.content)),
@@ -715,14 +876,15 @@
             });
         }
 
-        function escapeHTML(str) {
-            return String(str).replace(/[&<>'"]/g,
-                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-            );
+        function updateInboxBadge(count) {
+            const badge = document.getElementById('inboxNavBadge');
+            if (badge) {
+                badge.textContent = String(count);
+                badge.classList.toggle('hidden', count === 0);
+            }
+            const overviewEl = document.getElementById('overviewInboxValue');
+            if (overviewEl) overviewEl.textContent = `${count}건`;
         }
-        // 명언 게시 모달에 넘길 학생 제안 원문(복호화된 실제 텍스트) 보관용.
-        // HTML/onclick 문자열에 직접 끼워넣지 않고 key로만 조회해 XSS를 피한다.
-        let feedRawDataByKey = {};
 
         let comciganPanelBound = false;
         function initComciganOverridePanel() {
@@ -780,8 +942,12 @@
                 const listContainer = document.getElementById('comcigan-override-list');
                 if (!snapshot.exists()) {
                     listContainer.innerHTML = '<div class="no-data">등록된 매핑이 없습니다.</div>';
+                    const overviewEl = document.getElementById('overviewComciganValue');
+                    if (overviewEl) overviewEl.textContent = '0개';
                     return;
                 }
+                const overviewEl = document.getElementById('overviewComciganValue');
+                if (overviewEl) overviewEl.textContent = `${snapshot.numChildren()}개`;
                 database.ref('comciganOverrideMeta').once('value', (metaSnap) => {
                     const meta = metaSnap.val() || {};
                     let itemsHTML = [];
@@ -899,6 +1065,75 @@
                 closePublishModal();
                 fetchReservedQuote(selectedDate);
             }).catch(err => alert("게시 에러: " + err.message));
+        }
+
+        /* =====================================================================
+           🗄️ 전체 데이터베이스 탐색기
+           마스터 UID에 한해 Firebase 규칙 루트에 .read 권한이 부여되어 있어야
+           동작한다(경로별 규칙만으로는 루트 한 번에 전체를 읽을 수 없음).
+        ===================================================================== */
+        let fullDbCache = null;
+
+        function loadFullDatabase() {
+            const container = document.getElementById('db-tree-container');
+            container.innerHTML = '<div class="no-data">불러오는 중...</div>';
+            database.ref('/').once('value', (snapshot) => {
+                fullDbCache = snapshot.val() || {};
+                renderDbTree();
+            }, (err) => {
+                container.innerHTML = `<div class="no-data" style="color:var(--danger);">
+                    불러오기 실패: ${escapeHTML(err.message)}<br>
+                    마스터 계정에 데이터베이스 루트 전체 읽기 권한이 없을 수 있습니다.<br>
+                    Firebase 콘솔 규칙의 최상위(rules 바로 아래)에 다음 한 줄이 있는지 확인해 주세요:<br>
+                    <code style="font-size:0.75rem;">".read": "auth != null &amp;&amp; auth.uid === '${escapeHTML(MASTER_ALLOWED_UID)}'"</code>
+                </div>`;
+            });
+        }
+
+        function buildDbNode(value, keyLabel, query) {
+            const keyMatches = !query || keyLabel.toLowerCase().includes(query);
+            if (value !== null && typeof value === 'object') {
+                const childKeys = Object.keys(value);
+                const childNodes = [];
+                childKeys.forEach(k => {
+                    const node = buildDbNode(value[k], k, query);
+                    if (node) childNodes.push(node);
+                });
+                if (query && !keyMatches && childNodes.length === 0) return null;
+
+                const details = document.createElement('details');
+                details.className = 'db-node';
+                details.open = !!query;
+                const summary = document.createElement('summary');
+                summary.innerHTML = `<span class="db-key">${escapeHTML(keyLabel || '(root)')}</span> <span class="db-count">${childKeys.length}개 항목</span>`;
+                details.appendChild(summary);
+                const childWrap = document.createElement('div');
+                childWrap.className = 'db-children';
+                childNodes.forEach(n => childWrap.appendChild(n));
+                details.appendChild(childWrap);
+                return details;
+            } else {
+                const valStr = String(value);
+                if (query && !keyMatches && !valStr.toLowerCase().includes(query)) return null;
+                const leaf = document.createElement('div');
+                leaf.className = 'db-leaf';
+                leaf.innerHTML = `<span class="db-key">${escapeHTML(keyLabel)}</span>: <span class="db-val">${escapeHTML(valStr)}</span>`;
+                return leaf;
+            }
+        }
+
+        function renderDbTree() {
+            const container = document.getElementById('db-tree-container');
+            if (!fullDbCache) return;
+            const query = (document.getElementById('db-search').value || '').trim().toLowerCase();
+            const root = buildDbNode(fullDbCache, '', query);
+            container.innerHTML = '';
+            if (!root) {
+                container.innerHTML = '<div class="no-data">검색 결과가 없습니다.</div>';
+                return;
+            }
+            const childWrap = root.querySelector('.db-children');
+            Array.from(childWrap ? childWrap.children : []).forEach(child => container.appendChild(child));
         }
     </script>
 </body>
