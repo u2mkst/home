@@ -376,9 +376,29 @@
         .toast-text { font-size: 0.88rem; font-weight: 600; white-space: pre-line; text-align: left; line-height: 1.4; }
 
         .hidden { display: none !important; }
+
+        /* 로딩 오버레이 (모든 페이지 공통 디자인) */
+        .kst-loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(245, 247, 250, 0.96); z-index: 999999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 1; transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .kst-loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .kst-loading-overlay img { height: 110px; width: auto; margin-bottom: 24px; }
+        .kst-loading-bar { width: 180px; height: 4px; background: rgba(0, 75, 191, 0.15); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+        .kst-loading-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #004bbf, #8FB8FA); animation: kstLoadingProgress 1.4s infinite ease-in-out; transform-origin: left; }
+        @keyframes kstLoadingProgress { 0% { transform: scaleX(0); } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); opacity: 0; } }
+        .kst-loading-subtext { font-family: 'Paperlogy', -apple-system, sans-serif; font-size: 0.85rem; color: #86868b; font-weight: 600; }
     </style>
 </head>
 <body>
+
+    <div id="kstLoadingOverlay" class="kst-loading-overlay">
+        <img src="assets/logo-stacked.png" alt="KST - Kind Strong Teacher">
+        <div class="kst-loading-bar"><div class="kst-loading-fill"></div></div>
+        <div class="kst-loading-subtext">로그인 화면을 불러오는 중...</div>
+    </div>
 
     <!-- 🔧 점검 안내 오버레이 — Firebase의 siteMaintenance 값으로 마스터 페이지에서 켜고 끔.
          항상 라이트모드로 고정 표시 (다크모드 CSS 변수 영향 안 받음). -->
@@ -838,13 +858,20 @@
             }
         }
 
+        function hideKstLoading() {
+            const overlay = document.getElementById('kstLoadingOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             const loginIdInput = document.getElementById('loginId');
             if(loginIdInput) {
                 loginIdInput.focus();
                 loginIdInput.setSelectionRange(loginIdInput.value.length, loginIdInput.value.length);
             }
+            hideKstLoading();
         });
+        setTimeout(hideKstLoading, 2500); // 안전장치: 위 이벤트가 못 뜨는 경우에도 결국 사라지게
 
         function updateStepView(targetStep) {
             document.getElementById('step1').classList.add('hidden');
