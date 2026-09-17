@@ -69,10 +69,11 @@
         /* 플랫 카드 */
         .glass-card {
             background: #FFFFFF;
-            border: 1px solid var(--border-soft);
-            border-radius: 20px;
+            border: 1px solid #EEF1F4;
+            border-radius: 30px;
             box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
             box-sizing: border-box; display: flex; flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
         }
         
         .info-card { justify-content: space-between; height: 100%; min-height: 250px; padding: 24px; }
