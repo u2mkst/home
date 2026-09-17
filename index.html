@@ -108,16 +108,22 @@
         :root[data-theme="dark"] .input-wrapper input,
         :root[data-theme="dark"] .input-wrapper select,
         :root[data-theme="dark"] .lotto-ball-input,
-        :root[data-theme="dark"] .mathq-tool-btn {
+        :root[data-theme="dark"] .mathq-tool-btn,
+        :root[data-theme="dark"] .sheet-input,
+        :root[data-theme="dark"] .mathq-select {
             background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
         }
         :root[data-theme="dark"] .bottom-sheet-container textarea:focus,
         :root[data-theme="dark"] .bottom-sheet-container input:focus,
         :root[data-theme="dark"] .mathq-input-group input:focus,
         :root[data-theme="dark"] .input-wrapper input:focus,
-        :root[data-theme="dark"] .input-wrapper select:focus {
+        :root[data-theme="dark"] .input-wrapper select:focus,
+        :root[data-theme="dark"] .sheet-input:focus,
+        :root[data-theme="dark"] .mathq-select:focus {
             background: rgba(255, 255, 255, 0.1);
         }
+        :root[data-theme="dark"] .sheet-input::placeholder { color: var(--text-muted); }
         :root[data-theme="dark"] .btn-secondary:hover,
         :root[data-theme="dark"] .rank-item:hover {
             background: rgba(255, 255, 255, 0.08);
@@ -126,6 +132,21 @@
         :root[data-theme="dark"] .calendar-day {
             background: rgba(255, 255, 255, 0.05);
         }
+
+        /* ============ Tailwind 유틸리티 클래스 매핑 (순위/채팅/로또 등 일부 화면이
+           커스텀 CSS 변수 대신 Tailwind CDN 클래스를 그대로 써서, 다크모드에서
+           검정/짙은 회색 글씨가 그대로 남아 안 보이던 문제 + 예전 보라색(indigo)이
+           남아있던 문제를 한 번에 해결한다. Tailwind 클래스보다 확실히 이기도록
+           !important를 쓴다. ============ */
+        .text-gray-400, .text-gray-500, .text-gray-600 { color: var(--text-muted) !important; }
+        .text-gray-800 { color: var(--text-main) !important; }
+        .bg-white { background-color: var(--lg-surface) !important; }
+        .bg-gray-50, .bg-gray-100, .bg-gray-200, .bg-slate-50 { background-color: var(--lg-surface-soft) !important; }
+        .border-gray-100, .border-gray-200, .border-gray-300 { border-color: var(--lg-border) !important; }
+        .text-indigo-600, .border-indigo-100 { color: var(--accent) !important; }
+        .bg-indigo-600 { background-color: var(--accent) !important; }
+        .bg-indigo-50, .bg-indigo-100 { background-color: var(--accent-light) !important; }
+        .text-blue-500 { color: var(--accent) !important; }
 
         body {
             background: var(--bg-page);
@@ -213,7 +234,7 @@
         .sheet-drag-handle { width: 36px; height: 4px; background: rgba(120,120,128,0.4); border-radius: 2px; margin: 0 auto 18px; }
         .sheet-title { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; text-align: center; }
         .sheet-subtitle { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; text-align: center; }
-        .sheet-input { width: 100%; padding: 14px 16px; border: 1px solid var(--lg-border-soft); border-radius: var(--radius-md); font-size: 0.95rem; font-family: inherit; background: #F7F8FA; margin-bottom: 10px; box-sizing: border-box; transition: all 0.25s var(--ease-smooth); }
+        .sheet-input { width: 100%; padding: 14px 16px; border: 1px solid var(--lg-border-soft); border-radius: var(--radius-md); font-size: 0.95rem; font-family: inherit; background: var(--lg-surface-soft); margin-bottom: 10px; box-sizing: border-box; transition: all 0.25s var(--ease-smooth); }
         .sheet-input:focus { outline: none; border-color: var(--accent); background: #FFFFFF; box-shadow: 0 0 0 3px rgba(0,75,191,0.15); }
 
         /* 슬라이드형 바텀시트 (mypage 방식: 아이디 변경 / 회원 탈퇴) */
@@ -327,7 +348,7 @@
         @keyframes progress { 0% { transform: scaleX(0); } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); opacity: 0; } }
         .loading-subtext { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
 
-        .history-zone { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px; margin-bottom: 20px; background: #F7F8FA; border-radius: var(--radius-md); border: 1px solid var(--lg-border-soft); box-sizing: border-box; text-align: left; }
+        .history-zone { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px; margin-bottom: 20px; background: var(--lg-surface-soft); border-radius: var(--radius-md); border: 1px solid var(--lg-border-soft); box-sizing: border-box; text-align: left; }
         .no-data { text-align: center; color: var(--text-muted); padding: 40px 0; font-size: 0.85rem; width: 100%; }
 
         /* ============ 홈(HOME) 뷰 ============ */
@@ -377,7 +398,7 @@
         .arrow-icon { font-family: 'FlightSans', sans-serif; font-size: 0.9rem; color: var(--text-muted); transition: transform 0.2s ease, color 0.2s ease; }
         .menu-item:hover .arrow-icon { transform: translateX(4px); color: var(--accent); }
 
-        .marquee-container { margin-top: 20px; background: #FFFFFF; border: 1px solid var(--lg-border-soft); border-radius: 50px; padding: 8px 24px; overflow: hidden; display: none; }
+        .marquee-container { margin-top: 20px; background: var(--lg-surface); border: 1px solid var(--lg-border-soft); border-radius: 50px; padding: 8px 24px; overflow: hidden; display: none; }
         .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
@@ -389,7 +410,7 @@
         /* 🧮 오늘의 문제 바텀시트 전용 디자인 */
         .mathq-select {
             width: 100%; padding: 14px 16px; border: 1px solid var(--lg-border-soft); border-radius: var(--radius-md);
-            font-size: 0.95rem; font-family: inherit; background: #F7F8FA; margin-bottom: 16px;
+            font-size: 0.95rem; font-family: inherit; background: var(--lg-surface-soft); margin-bottom: 16px;
             box-sizing: border-box; cursor: pointer; transition: all 0.25s var(--ease-smooth);
         }
         .mathq-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 75, 191, 0.15); background: #FFFFFF; }
@@ -407,13 +428,13 @@
         }
         .mathq-card-text {
             font-size: 1.15rem; color: var(--text-main); margin-bottom: 16px; font-weight: 700; line-height: 1.6;
-            padding: 10px 14px; background: #F7F8FA; border-radius: var(--radius-sm);
+            padding: 10px 14px; background: var(--lg-surface-soft); border-radius: var(--radius-sm);
             border: 1px dashed rgba(0, 75, 191, 0.25);
         }
         .mathq-input-group { display: flex; gap: 10px; }
         .mathq-input-group input {
             flex: 1; padding: 12px 14px; font-size: 0.95rem; border: 1px solid var(--lg-border-soft);
-            border-radius: var(--radius-sm); box-sizing: border-box; min-width: 0; background: #F7F8FA;
+            border-radius: var(--radius-sm); box-sizing: border-box; min-width: 0; background: var(--lg-surface-soft);
             transition: all 0.25s var(--ease-smooth);
         }
         .mathq-input-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 75, 191, 0.15); background: rgba(255,255,255,0.85); }
@@ -521,15 +542,15 @@
         }
         .input-wrapper input:focus, .input-wrapper select:focus { outline: none; border-color: var(--accent); background: rgba(255,255,255,0.85); box-shadow: 0 4px 12px rgba(0, 75, 191, 0.15); }
         .section-divider { border-top: 1px dashed rgba(0, 75, 191, 0.3); margin: 24px 0 20px 0; position: relative; }
-        .section-title { font-size: 0.8rem; color: var(--accent); font-weight: bold; background: #EFF6FF; padding: 4px 10px; border-radius: 20px; position: absolute; top: -12px; left: 10px; }
+        .section-title { font-size: 0.8rem; color: var(--accent); font-weight: bold; background: rgba(0, 75, 191, 0.1); padding: 4px 10px; border-radius: 20px; position: absolute; top: -12px; left: 10px; }
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .badge-tile {
             display: flex; flex-direction: column; align-items: center; text-align: center;
-            padding: 14px 6px; border-radius: var(--radius-md); background: #F7F8FA;
+            padding: 14px 6px; border-radius: var(--radius-md); background: var(--lg-surface-soft);
             border: 1px solid var(--lg-border-soft); transition: transform 0.3s var(--spring);
         }
         .badge-tile.unlocked {
-            background: #EFF6FF;
+            background: rgba(0, 75, 191, 0.1);
             border-color: rgba(0,75,191,0.35); box-shadow: 0 4px 12px rgba(0,75,191,0.12);
         }
         .badge-tile.unlocked:hover { transform: translateY(-3px); }
@@ -597,12 +618,12 @@
         .rank-scroll-area::-webkit-scrollbar-thumb { background: rgba(0, 75, 191, 0.25); border-radius: 10px; }
         .rank-scroll-area::-webkit-scrollbar-thumb:hover { background: rgba(0, 75, 191, 0.5); }
         .rank-scroll-area::-webkit-scrollbar-track { background: transparent; }
-        .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: #FFFFFF; border-radius: var(--radius-lg); font-size: 1rem; border: 1px solid var(--lg-border-soft); transition: transform 0.35s var(--spring), background 0.3s ease; }
-        .rank-item:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.75); }
+        .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--lg-surface); border-radius: var(--radius-lg); font-size: 1rem; border: 1px solid var(--lg-border-soft); transition: transform 0.35s var(--spring), background 0.3s ease; }
+        .rank-item:hover { transform: translateY(-3px); background: var(--lg-surface-strong); }
         .rank-item.my-rank { background: rgba(0, 75, 191, 0.14); border: 2px solid var(--accent); font-weight: 700; }
         .rank-badge { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 800; color: #fff; background: #a1a1a6; flex-shrink: 0; }
-        .rank-1 { background: #ffd700; color: var(--text-main); box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4); }
-        .rank-2 { background: #c0c0c0; color: var(--text-main); }
+        .rank-1 { background: #ffd700; color: #3d2e00; box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4); }
+        .rank-2 { background: #c0c0c0; color: #2b2b2b; }
         .rank-3 { background: #cd7f32; color: #fff; }
 
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
@@ -611,7 +632,7 @@
         .calendar-day.attended { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; font-weight: 800; box-shadow: 0 8px 18px rgba(0, 75, 191, 0.4); border-color: var(--accent); }
 
         .lotto-ball { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 0.95rem; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.08); flex-shrink: 0; }
-        .ball-yellow { background: #fbc531; color: var(--text-main); }
+        .ball-yellow { background: #fbc531; color: #3d2e00; }
         .ball-blue { background: #00a8ff; }
         .ball-red { background: #e84118; }
         .ball-gray { background: #718093; }
