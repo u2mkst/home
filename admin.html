@@ -380,9 +380,29 @@
 
         #loginCard { max-width: 400px; margin: 40px auto 0; }
         #controlPanel { display: none; }
+
+        /* 로딩 오버레이 (모든 페이지 공통 디자인) */
+        .kst-loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(245, 247, 250, 0.96); z-index: 999999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 1; transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .kst-loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .kst-loading-overlay img { height: 110px; width: auto; margin-bottom: 24px; }
+        .kst-loading-bar { width: 180px; height: 4px; background: rgba(0, 75, 191, 0.15); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+        .kst-loading-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #004bbf, #8FB8FA); animation: kstLoadingProgress 1.4s infinite ease-in-out; transform-origin: left; }
+        @keyframes kstLoadingProgress { 0% { transform: scaleX(0); } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); opacity: 0; } }
+        .kst-loading-subtext { font-family: 'Paperlogy', -apple-system, sans-serif; font-size: 0.85rem; color: #86868b; font-weight: 600; }
     </style>
 </head>
 <body>
+
+    <div id="kstLoadingOverlay" class="kst-loading-overlay">
+        <img src="assets/logo-stacked.png" alt="KST - Kind Strong Teacher">
+        <div class="kst-loading-bar"><div class="kst-loading-fill"></div></div>
+        <div class="kst-loading-subtext">관리자 페이지를 불러오는 중...</div>
+    </div>
 
     <div class="container">
         <div class="header-zone">
@@ -612,7 +632,14 @@
                 detachAdminChatListeners();
                 resetChatRoomUI();
             }
+            hideKstLoading();
         });
+
+        function hideKstLoading() {
+            const overlay = document.getElementById('kstLoadingOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+        setTimeout(hideKstLoading, 2500); // 안전장치
 
         function fetchTeacherStudents(teacherName) {
             database.ref('students').orderByChild('teacher').equalTo(teacherName).on('value', async (snapshot) => {
