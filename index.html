@@ -1964,6 +1964,10 @@
     // ⚠️ AES는 매번 임의의 salt를 써서 같은 값도 암호화할 때마다 암호문이 달라지므로,
     // "확인됨" 여부는 암호문이 아니라 복호화한 실제 숫자로 비교해야 한다 — 암호문으로
     // 비교하면 다른 필드 수정으로 재암호화될 때마다 같은 값인데도 창이 다시 떴다.
+    // ⚠️ 이 플래그는 localStorage가 아니라 Firebase(students/{uid})에 저장한다 —
+    // 안드로이드 앱은 화면 꺼짐/로그아웃/콜드 스타트마다 localStorage를 통째로 지우기
+    // 때문에(다음 학생에게 이전 학생 캐시가 넘어가지 않도록 하는 보안 기능), 로컬에만
+    // 저장하면 앱을 재시작할 때마다 이 확인 창이 계속 다시 떴다.
     let mathflatIdCheckDigits = null;
     async function checkMathflatIdConfirmation(uid, data) {
         const rawId = data.studentPhone || data.mathflatId || '';
@@ -1973,10 +1977,8 @@
         if (!decrypted || looksLikeCipherText(decrypted)) return; // 아직 복호화가 안 되면 다음 기회에 다시 확인
         const digitsOnly = decrypted.replace(/[^0-9]/g, '');
 
-        const confirmedKey = `kst_mathflatid_confirmed_${uid}`;
-        if (localStorage.getItem(confirmedKey) === digitsOnly) return;
-        const snoozedKey = `kst_mathflatid_snoozed_${uid}`;
-        if (localStorage.getItem(snoozedKey) === digitsOnly) return;
+        if (data.mathflatIdConfirmed === digitsOnly) return;
+        if (data.mathflatIdSnoozed === digitsOnly) return;
 
         mathflatIdCheckDigits = digitsOnly;
         document.getElementById('mathflatIdCheckInput').value = decrypted;
@@ -1985,7 +1987,8 @@
     }
     function closeMathflatIdCheckBottomSheet() {
         if (mathflatIdCheckDigits && currentUserUid) {
-            localStorage.setItem(`kst_mathflatid_snoozed_${currentUserUid}`, mathflatIdCheckDigits);
+            database.ref(`students/${currentUserUid}/mathflatIdSnoozed`).set(mathflatIdCheckDigits).catch(() => {});
+            if (currentStudentData) currentStudentData.mathflatIdSnoozed = mathflatIdCheckDigits;
         }
         const sheet = document.getElementById('mathflatIdCheckBottomSheet');
         if (sheet) sheet.classList.remove('active');
@@ -2002,12 +2005,13 @@
         try {
             const [encId] = await encryptAESBatch([digitsOnly]);
             await database.ref(`students/${user.uid}`).update({
-                studentPhone: encId, mathflatId: digitsOnly
+                studentPhone: encId, mathflatId: digitsOnly,
+                mathflatIdConfirmed: digitsOnly, mathflatIdSnoozed: null
             });
             currentStudentData.studentPhone = encId;
             currentStudentData.mathflatId = digitsOnly;
-            localStorage.setItem(`kst_mathflatid_confirmed_${user.uid}`, digitsOnly);
-            localStorage.removeItem(`kst_mathflatid_snoozed_${user.uid}`);
+            currentStudentData.mathflatIdConfirmed = digitsOnly;
+            currentStudentData.mathflatIdSnoozed = null;
             const sheet = document.getElementById('mathflatIdCheckBottomSheet');
             if (sheet) sheet.classList.remove('active');
             showToast("✅ 매쓰플랫 아이디가 저장되었습니다.");
