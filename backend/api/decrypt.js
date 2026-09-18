@@ -24,6 +24,36 @@ async function isVerifiedOtherStudentName(ownerUid, cipherText) {
     }
 }
 
+// 🔒 [보안 취약점 수정] ownerUid가 호출자 본인이라고 주장하는 것만으로는 부족하다 —
+// Firebase Realtime Database의 `students` 컬렉션은 랭킹 기능 때문에 로그인한 모든
+// 학생이 다른 학생의 phone/mathflatPw 등 암호문까지 통째로 읽을 수 있다(클라이언트
+// SDK로 직접 조회 가능, 이 서버를 거치지 않음). 따라서 공격자가 다른 학생의 phone
+// 암호문을 그대로 가져와 `{text: 그 암호문, ownerUid: 자기 자신의 uid}`로 이 API를
+// 호출하면, 예전 코드는 "ownerUid === decoded.uid"만 보고 그대로 복호화해줬다 —
+// phone은 로그인 비밀번호("00"+뒷자리4자리)의 원본이라 실질적으로 계정 탈취로
+// 이어질 수 있는 심각한 문제였다. 이제 "본인 것"이라는 주장도 실제 그 학생 레코드에
+// 저장된 값과 일치하는지 서버가 대조해서 검증한다.
+// cache는 매 요청(invocation)마다 새로 만들어 넘긴다 — 서버리스 함수가 인스턴스를
+// 재사용(warm start)해도 요청 간에 캐시가 새거나 무한히 쌓이지 않도록.
+function makeOwnFieldChecker() {
+    const cache = new Map();
+    return async function isOwnStudentField(uid, cipherText) {
+        if (!uid || !cipherText) return false;
+        try {
+            let dataPromise = cache.get(uid);
+            if (!dataPromise) {
+                dataPromise = admin.database().ref(`students/${uid}`).get().then((snap) => snap.val());
+                cache.set(uid, dataPromise);
+            }
+            const data = await dataPromise;
+            if (!data || typeof data !== "object") return false;
+            return Object.values(data).some((v) => v === cipherText);
+        } catch (e) {
+            return false;
+        }
+    };
+}
+
 module.exports = async (req, res) => {
     if (applyCors(req, res)) return;
 
@@ -34,6 +64,7 @@ module.exports = async (req, res) => {
     try {
         const decoded = await requireAuth(req);
         const isAdmin = ADMIN_UIDS.has(decoded.uid);
+        const isOwnStudentField = makeOwnFieldChecker();
 
         const body = req.body || {};
         // 이전 버전 프론트엔드(캐시된 페이지 등)가 아직 {texts:[...]} 형식으로 보낼 수
@@ -59,7 +90,7 @@ module.exports = async (req, res) => {
 
                 const allowed =
                     isAdmin ||
-                    ownerUid === decoded.uid ||
+                    (ownerUid === decoded.uid && (await isOwnStudentField(decoded.uid, text))) ||
                     (await isVerifiedOtherStudentName(ownerUid, text));
 
                 if (!allowed) return "";
