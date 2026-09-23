@@ -95,162 +95,36 @@
             max-width: 420px;
         }
 
-        /* 좁은 화면(휴대폰)에서는 지금까지처럼 카드 하나만 가운데 뜬다. */
+        /* 화면 크기와 상관없이 깔끔하게 카드 하나만 가운데 뜬다. */
         .tablet-shell {
             width: 100%;
             display: flex;
             justify-content: center;
         }
 
-        .showcase-panel { display: none; }
-
         @media (min-width: 700px) {
             .container { max-width: 460px; }
-            .auth-shell { padding: 28px 40px 40px; }
+            .auth-shell { padding: 40px 44px 48px; }
             .header-zone .logo-wrapper { max-width: 210px; height: 42px; }
             h2 { font-size: 1.6rem; margin-bottom: 28px; }
-            input, select, button { font-size: 1rem; padding: 15px 18px; }
+            input, select, button { font-size: 1rem; padding: 16px 18px; }
         }
 
-        /* 🖼️ 태블릿 이상 넓은 화면 — littly 로그인 화면처럼 좌측에 앱 화면 쇼케이스,
-           우측에 로그인 폼을 배치하는 풀블리드 2단 레이아웃으로 전환한다. */
-        @media (min-width: 900px) {
-            body {
-                padding: 32px;
-                align-items: center;
-                background: #E7EAEE;
-            }
-
-            /* 🔲 포스터 박스와 로그인 폼 박스를 각각 독립된 라운딩 카드로
-               분리하고, 그 사이는 간격으로만 구분한다. */
-            .tablet-shell {
-                min-height: calc(100vh - 64px);
-                align-items: stretch;
-                max-width: 1440px;
-                margin: 0 auto;
-                gap: 24px;
-            }
-
-            .showcase-panel {
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex: 1 1 0;
-                background: #EEF1F5;
-                padding: 0;
-                overflow: hidden;
-                border-radius: 40px;
-                box-shadow: 0 30px 70px rgba(15, 23, 42, 0.16);
-            }
-
-            /* 🌊 계속 천천히 움직이는 배경 블롭 — 패널이 정적으로 안 느껴지게 */
-            .showcase-panel::before,
-            .showcase-panel::after {
-                content: '';
-                position: absolute;
-                border-radius: 50%;
-                filter: blur(70px);
-                z-index: 0;
-                animation: blobDrift 16s ease-in-out infinite alternate;
-                pointer-events: none;
-            }
-            .showcase-panel::before {
-                width: 340px; height: 340px;
-                background: rgba(0, 75, 191, 0.22);
-                top: -100px; left: -80px;
-            }
-            .showcase-panel::after {
-                width: 280px; height: 280px;
-                background: rgba(124, 58, 237, 0.16);
-                bottom: -80px; right: -60px;
-                animation-delay: -8s;
-            }
-            @keyframes blobDrift {
-                0% { transform: translate(0, 0) scale(1); }
-                100% { transform: translate(46px, 34px) scale(1.18); }
-            }
-
-            .showcase-grid {
-                position: relative;
-                z-index: 1;
-                width: 100%;
-                height: 100%;
-            }
-
-            /* 🖼️ 패널을 완전히 꽉 채워서 포스터 배경색과 패널 배경색이 만나는
-               경계선(프레임처럼 보이던 부분)이 아예 없게 만든다. */
-            .poster-card {
-                position: absolute;
-                inset: 0;
-            }
-
-            .poster-slide {
-                position: absolute;
-                inset: 0;
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                opacity: 0;
-                animation: posterFade 16s infinite;
-            }
-            .poster-slide:nth-child(1) { animation-delay: 0s; }
-            .poster-slide:nth-child(2) { animation-delay: 4s; }
-            .poster-slide:nth-child(3) { animation-delay: 8s; }
-            .poster-slide:nth-child(4) { animation-delay: 12s; }
-
-            @keyframes posterFade {
-                0% { opacity: 0; }
-                5% { opacity: 1; }
-                20% { opacity: 1; }
-                25% { opacity: 0; }
-                100% { opacity: 0; }
-            }
-
-            @media (prefers-reduced-motion: reduce) {
-                .showcase-panel::before, .showcase-panel::after {
-                    animation: none;
-                }
-                .poster-slide { animation: none; opacity: 0; }
-                .poster-slide:first-child { opacity: 1; }
-            }
-
-            .container {
-                flex: 1 1 0;
-                max-width: none;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 56px;
-                background: #FFFFFF;
-                border-radius: 40px;
-                box-shadow: 0 30px 70px rgba(15, 23, 42, 0.16);
-            }
-
-            .auth-shell {
-                width: 100%;
-                max-width: 400px;
-                background: transparent;
-                border: none;
-                box-shadow: none;
-                padding: 0;
-            }
-        }
-
-        /* 🔗 리틀리처럼 로그인 폼이 박스에 갇혀 있지 않고 배경 위에 바로 놓인
-           개방형 레이아웃 — 카드 배경/테두리/그림자를 없애고 여백으로만 구획한다. */
+        /* 🔗 로고 + 로그인/회원가입 폼을 하나의 깔끔한 카드로 합친다. */
         .auth-shell {
-            background: transparent;
-            padding: 36px 6px 44px;
-            border-radius: 0;
-            border: none;
-            box-shadow: none;
+            background: var(--lg-surface-strong);
+            padding: 32px 28px 36px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--lg-border);
+            box-shadow: var(--lg-shadow);
             animation: cardFadeIn 0.5s var(--spring);
         }
 
         .header-zone {
             text-align: center;
-            margin-bottom: 28px;
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--lg-border);
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; user-select: none;
             transition: opacity 0.2s ease;
@@ -547,21 +421,6 @@
     </div>
 
     <div class="tablet-shell">
-    <!-- 🖼️ 넓은 화면(태블릿 이상)에서만 보이는 좌측 쇼케이스 — 앱 화면들을 카드 형태로
-         모아서 littly류 로그인 화면처럼 왼쪽에 배치. 좁은 화면에서는 CSS로 숨김. -->
-    <div class="showcase-panel">
-        <div class="showcase-grid">
-            <!-- 🖼️ 직접 만든 포스터 4장이 자동으로 크로스페이드되며 순환 — 그리드 맨 위에
-                 크게 배치해서 눈에 잘 띄게 한다. -->
-            <div class="poster-card">
-                <img class="poster-slide" src="assets/posters/poster1.png" alt="매일 만나는 작은 성장">
-                <img class="poster-slide" src="assets/posters/poster2.png" alt="매일 조금씩 확실하게">
-                <img class="poster-slide" src="assets/posters/poster3.png" alt="오늘도 한 걸음 더, 꾸준함이 만드는 변화">
-                <img class="poster-slide" src="assets/posters/poster4.png" alt="매일 쌓이는 나의 기록">
-            </div>
-        </div>
-    </div>
-
     <div class="container">
         <!-- 로고와 로그인/회원가입 폼을 하나의 카드로 합친다 -->
         <div class="auth-shell">
