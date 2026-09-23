@@ -121,16 +121,14 @@
                 background: #E7EAEE;
             }
 
-            /* 🔲 리틀리처럼 페이지 배경과 대비되는 큰 라운딩 박스 하나로 전체를
-               감싼다 — 내부는 그대로 2단 분할, 바깥 모서리만 크게 둥글게. */
+            /* 🔲 포스터 박스와 로그인 폼 박스를 각각 독립된 라운딩 카드로
+               분리하고, 그 사이는 간격으로만 구분한다. */
             .tablet-shell {
                 min-height: calc(100vh - 64px);
                 align-items: stretch;
                 max-width: 1440px;
                 margin: 0 auto;
-                border-radius: 40px;
-                overflow: hidden;
-                box-shadow: 0 30px 70px rgba(15, 23, 42, 0.16);
+                gap: 24px;
             }
 
             .showcase-panel {
@@ -142,6 +140,8 @@
                 background: #EEF1F5;
                 padding: 0;
                 overflow: hidden;
+                border-radius: 40px;
+                box-shadow: 0 30px 70px rgba(15, 23, 42, 0.16);
             }
 
             /* 🌊 계속 천천히 움직이는 배경 블롭 — 패널이 정적으로 안 느껴지게 */
@@ -222,6 +222,9 @@
                 align-items: center;
                 justify-content: center;
                 padding: 56px;
+                background: #FFFFFF;
+                border-radius: 40px;
+                box-shadow: 0 30px 70px rgba(15, 23, 42, 0.16);
             }
 
             .auth-shell {
