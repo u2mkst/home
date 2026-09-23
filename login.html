@@ -79,7 +79,7 @@
 
         body {
             font-family: var(--font-body);
-            background: var(--bg-gradient);
+            background: #FFFFFF;
             margin: 0; padding: 24px 16px; color: var(--text-main);
             min-height: 100vh;
             display: flex; justify-content: center; align-items: center;
@@ -110,13 +110,14 @@
             input, select, button { font-size: 1rem; padding: 16px 18px; }
         }
 
-        /* 🔗 로고 + 로그인/회원가입 폼을 하나의 깔끔한 카드로 합친다. */
+        /* 🔗 네이버 로그인 카드처럼 배경은 페이지와 같은 흰색, 테두리 하나로만
+           경계를 표시하고 그림자는 거의 없앤다. */
         .auth-shell {
-            background: var(--lg-surface-strong);
-            padding: 32px 28px 36px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--lg-border);
-            box-shadow: var(--lg-shadow);
+            background: #FFFFFF;
+            padding: 40px 32px 36px;
+            border-radius: 24px;
+            border: 1.5px solid var(--lg-border);
+            box-shadow: none;
             animation: cardFadeIn 0.5s var(--spring);
         }
 
@@ -207,17 +208,18 @@
             background: rgba(0, 75, 191, 0.2); transform: none; box-shadow: none;
         }
 
+        /* 🟢 네이버 로그인 인풋처럼 박스 없이 밑줄만 있는 스타일 */
         input, select {
-            width: 100%; padding: 16px 18px;
-            border: 1px solid var(--lg-border); border-radius: var(--radius-md);
+            width: 100%; padding: 14px 2px;
+            border: none; border-bottom: 1.5px solid var(--lg-border); border-radius: 0;
             font-size: 0.95rem; font-family: var(--font-body);
-            background-color: var(--input-bg); color: var(--text-main);
+            background-color: transparent; color: var(--text-main);
             transition: all 0.3s var(--ease-smooth);
         }
         input::placeholder { color: #94a3b8; }
         input:focus, select:focus {
-            outline: none; border-color: var(--primary);
-            background-color: rgba(255,255,255,0.9); box-shadow: 0 0 0 4px var(--primary-glow);
+            outline: none; border-bottom-color: var(--primary);
+            background-color: transparent; box-shadow: none;
         }
 
         /* 👁️ 비밀번호 토글 아이콘 스타일 */
@@ -459,10 +461,6 @@
 
                 <button type="submit" style="margin-top: 8px;">로그인하고 입장하기</button>
             </form>
-
-            <div class="switch-mode">
-                처음 왔나요? <span class="switch-link" onclick="toggleMode('register')">회원가입 하기</span>
-            </div>
         </div>
 
         <!-- 학생 회원가입 단계별 폼 카드 -->
@@ -671,11 +669,15 @@
                     </div>
                 </div>
             </form>
-            
-            <div class="switch-mode">
-                이미 계정이 있나요? <span class="switch-link" onclick="toggleMode('login')">로그인하러 가기</span>
-            </div>
         </div>
+        </div>
+
+        <!-- 🔗 네이버의 "아이디 찾기 | 비밀번호 찾기 | 회원가입" 링크 줄 자리 -->
+        <div class="switch-mode" id="loginSwitchMode">
+            처음 왔나요? <span class="switch-link" onclick="toggleMode('register')">회원가입 하기</span>
+        </div>
+        <div class="switch-mode hidden" id="registerSwitchMode">
+            이미 계정이 있나요? <span class="switch-link" onclick="toggleMode('login')">로그인하러 가기</span>
         </div>
 
         <!-- ⚡ Lite 모드 배너 — 네이버 로그인 화면에서 광고 배너가 있는 자리 -->
@@ -1021,14 +1023,18 @@
 
         function toggleMode(mode) {
             const liteBox = document.getElementById('liteModeBox');
+            const loginSwitch = document.getElementById('loginSwitchMode');
+            const registerSwitch = document.getElementById('registerSwitchMode');
 
             if(mode === 'register') {
                 document.getElementById('loginCard').classList.add('hidden');
                 document.getElementById('registerCard').classList.remove('hidden');
                 if (liteBox) liteBox.classList.add('hidden');
-                isMathflatSkipped = false; 
-                updateStepView(1); 
-                
+                if (loginSwitch) loginSwitch.classList.add('hidden');
+                if (registerSwitch) registerSwitch.classList.remove('hidden');
+                isMathflatSkipped = false;
+                updateStepView(1);
+
                 const regInput = document.getElementById('registerId');
                 if(!regInput.value.startsWith('ufes')) regInput.value = "ufes";
                 regInput.focus();
@@ -1037,6 +1043,8 @@
                 document.getElementById('registerCard').classList.add('hidden');
                 document.getElementById('loginCard').classList.remove('hidden');
                 if (liteBox) liteBox.classList.remove('hidden');
+                if (registerSwitch) registerSwitch.classList.add('hidden');
+                if (loginSwitch) loginSwitch.classList.remove('hidden');
 
                 const loginInput = document.getElementById('loginId');
                 if(!loginInput.value.startsWith('ufes')) loginInput.value = "ufes";
