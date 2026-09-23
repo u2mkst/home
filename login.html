@@ -202,12 +202,14 @@
                높이를 자동으로 잡아서 잘리는 부분 없이 그대로 보여준다. */
             .poster-card {
                 position: relative;
-                break-inside: avoid;
-                margin-bottom: 18px;
-                border-radius: 22px;
+                column-span: all;
+                width: 100%;
+                max-width: 340px;
+                margin: 0 auto 20px;
+                border-radius: 24px;
                 overflow: hidden;
                 aspect-ratio: 300 / 462;
-                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+                box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
                 animation: cardFloat 5s ease-in-out infinite;
                 animation-delay: 1.8s;
             }
@@ -582,6 +584,14 @@
          모아서 littly류 로그인 화면처럼 왼쪽에 배치. 좁은 화면에서는 CSS로 숨김. -->
     <div class="showcase-panel">
         <div class="showcase-grid">
+            <!-- 🖼️ 직접 만든 포스터 4장이 자동으로 크로스페이드되며 순환 — 그리드 맨 위에
+                 크게 배치해서 눈에 잘 띄게 한다. -->
+            <div class="poster-card">
+                <img class="poster-slide" src="assets/posters/poster1.png" alt="매일 만나는 작은 성장">
+                <img class="poster-slide" src="assets/posters/poster2.png" alt="매일 조금씩 확실하게">
+                <img class="poster-slide" src="assets/posters/poster3.png" alt="오늘도 한 걸음 더, 꾸준함이 만드는 변화">
+                <img class="poster-slide" src="assets/posters/poster4.png" alt="매일 쌓이는 나의 기록">
+            </div>
             <div class="showcase-card" style="background:linear-gradient(160deg,#1B2A4A,#0F172A);">
                 <div class="showcase-icon">📅</div>
                 <div class="showcase-label">실시간 시간표</div>
@@ -596,13 +606,6 @@
                 <div class="showcase-icon">📣</div>
                 <div class="showcase-label">학원 공지</div>
                 <div class="showcase-sub">놓치지 않게 바로 확인</div>
-            </div>
-            <!-- 🖼️ 직접 만든 포스터 4장이 자동으로 크로스페이드되며 순환 -->
-            <div class="poster-card">
-                <img class="poster-slide" src="assets/posters/poster1.png" alt="매일 만나는 작은 성장">
-                <img class="poster-slide" src="assets/posters/poster2.png" alt="매일 조금씩 확실하게">
-                <img class="poster-slide" src="assets/posters/poster3.png" alt="오늘도 한 걸음 더, 꾸준함이 만드는 변화">
-                <img class="poster-slide" src="assets/posters/poster4.png" alt="매일 쌓이는 나의 기록">
             </div>
             <div class="showcase-card" style="background:linear-gradient(160deg,#F59E0B,#D97706);">
                 <div class="showcase-icon">⚡</div>
