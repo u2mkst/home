@@ -36,6 +36,11 @@
             font-weight: 700;
             font-display: swap;
         }
+        @font-face {
+            font-family: 'Paperlogy';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+            font-weight: 500; font-display: swap;
+        }
 
         :root {
             --font-emoji: 'Mona12', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
@@ -143,14 +148,12 @@
             object-fit: cover; object-position: center 48%;
         }
 
-        .page-footer {
-            text-align: center;
-            margin-top: 28px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            letter-spacing: 0.2px;
-        }
+        /* index.html 하단 브랜드 표기와 동일하게 맞춘다 */
+        .page-footer { margin-top: 28px; text-align: center; }
+        .footer-brand { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.3px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .footer-brand span { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-weight: 700; }
+        .footer-brand img { height: 16px; width: auto; vertical-align: middle; }
+        .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.5px; }
 
         @keyframes cardFadeIn {
             from { opacity: 0; transform: translateY(20px) scale(0.97); }
@@ -442,7 +445,6 @@
         <div class="auth-shell">
         <!-- 학생 로그인 폼 카드 -->
         <div id="loginCard" class="card-body">
-            <h2>학생 로그인</h2>
             <form onsubmit="handleStudentLogin(event)">
                 <div class="form-group">
                     <label>유투엠 아이디</label>
@@ -695,7 +697,10 @@
             <div class="lite-arrow">→</div>
         </a>
 
-        <div class="page-footer">K&amp;P with KST</div>
+        <div class="page-footer">
+            <div class="footer-brand">K&amp;P 수학입시학원 <span>with</span> <img src="assets/logo-icon.png" alt="KST"></div>
+            <div class="footer-copyright">© 2026 KST</div>
+        </div>
     </div>
     </div>
 
