@@ -129,7 +129,7 @@
                 justify-content: center;
                 flex: 1 1 0;
                 background: #EEF1F5;
-                padding: 56px;
+                padding: 40px 24px;
                 overflow: hidden;
             }
 
@@ -163,27 +163,19 @@
             .showcase-grid {
                 position: relative;
                 z-index: 1;
-                width: 100%;
+                height: 100%;
                 display: flex;
+                align-items: center;
                 justify-content: center;
             }
 
-            @keyframes cardFloat {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-8px); }
-            }
-
-            /* 🖼️ 직접 만든 포스터 4장 자동 순환 카드만 크게 하나 — 이미지 원본
-               비율(300:462)에 맞춰 높이를 자동으로 잡아서 잘리는 부분 없이 보여준다. */
+            /* 🖼️ 카드 박스(둥근 모서리·그림자) 없이 포스터 이미지 자체를 패널
+               세로 길이에 맞춰 그대로 보여준다 — 원본 비율(300:462) 유지. */
             .poster-card {
                 position: relative;
-                width: 100%;
-                max-width: 420px;
-                border-radius: 28px;
-                overflow: hidden;
+                height: 100%;
+                width: auto;
                 aspect-ratio: 300 / 462;
-                box-shadow: 0 20px 44px rgba(15, 23, 42, 0.22);
-                animation: cardFloat 5s ease-in-out infinite;
             }
 
             .poster-slide {
@@ -191,7 +183,7 @@
                 inset: 0;
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
+                object-fit: contain;
                 opacity: 0;
                 animation: posterFade 16s infinite;
             }
@@ -209,7 +201,7 @@
             }
 
             @media (prefers-reduced-motion: reduce) {
-                .showcase-panel::before, .showcase-panel::after, .poster-card {
+                .showcase-panel::before, .showcase-panel::after {
                     animation: none;
                 }
                 .poster-slide { animation: none; opacity: 0; }
