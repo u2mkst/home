@@ -107,33 +107,35 @@
 
         @media (min-width: 700px) {
             .container { max-width: 460px; }
-            .auth-card { padding: 44px 40px; }
-            .header-zone { padding: 22px 24px; }
+            .auth-shell { padding: 28px 40px 40px; }
             .header-zone .logo-wrapper { max-width: 210px; height: 42px; }
             h2 { font-size: 1.6rem; margin-bottom: 28px; }
             input, select, button { font-size: 1rem; padding: 15px 18px; }
         }
 
-        .header-zone {
-            text-align: center;
-            margin-bottom: 18px;
+        /* 🔗 로고 + 로그인/회원가입 폼을 하나의 카드로 합친다 — 로고 영역은 카드
+           안의 상단 섹션일 뿐, 별도의 박스로 안 보이게 구분선만 살짝 준다. */
+        .auth-shell {
             background: var(--lg-surface-strong);
-            padding: 18px 20px;
+            padding: 24px 28px 32px;
             border-radius: var(--radius-lg);
-            border: 1px solid var(--lg-border);
             backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
+            border: 1.5px solid var(--lg-border);
             box-shadow: var(--lg-shadow);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; user-select: none;
-            transition: transform 0.4s var(--spring), background 0.3s ease, box-shadow 0.3s ease;
+            animation: cardFadeIn 0.5s var(--spring);
         }
 
-        .header-zone:hover {
-            transform: translateY(-3px);
-            background: var(--lg-surface-strong);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), inset 0 1px 1px var(--lg-highlight);
+        .header-zone {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--lg-border);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; user-select: none;
+            transition: opacity 0.2s ease;
         }
-        .header-zone:active { transform: scale(0.97); }
+
+        .header-zone:active { opacity: 0.7; }
 
         .header-zone .logo-wrapper {
             width: 100%; max-width: 190px; height: 38px;
@@ -144,16 +146,6 @@
         .header-zone .logo-img {
             width: 100%; height: 110px;
             object-fit: cover; object-position: center 48%;
-        }
-
-        .auth-card {
-            background: var(--lg-surface-strong);
-            padding: 36px 28px;
-            border-radius: var(--radius-lg);
-            backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
-            border: 1.5px solid var(--lg-border);
-            box-shadow: var(--lg-shadow);
-            animation: cardFadeIn 0.5s var(--spring);
         }
 
         @keyframes cardFadeIn {
@@ -435,6 +427,8 @@
 
     <div class="tablet-shell">
     <div class="container">
+        <!-- 로고와 로그인/회원가입 폼을 하나의 카드로 합친다 -->
+        <div class="auth-shell">
         <!-- 로고 상단 헤더 존 -->
         <div class="header-zone" id="logoZone">
             <div class="logo-wrapper">
@@ -443,7 +437,7 @@
         </div>
 
         <!-- 학생 로그인 폼 카드 -->
-        <div id="loginCard" class="auth-card">
+        <div id="loginCard" class="card-body">
             <h2>학생 로그인</h2>
             <form onsubmit="handleStudentLogin(event)">
                 <div class="form-group">
@@ -485,7 +479,7 @@
         </div>
 
         <!-- 학생 회원가입 단계별 폼 카드 -->
-        <div id="registerCard" class="auth-card hidden">
+        <div id="registerCard" class="card-body hidden">
             <h2>학생 회원가입</h2>
 
             <div class="step-bar">
@@ -694,6 +688,7 @@
             <div class="switch-mode">
                 이미 계정이 있나요? <span class="switch-link" onclick="toggleMode('login')">로그인하러 가기</span>
             </div>
+        </div>
         </div>
     </div>
     </div>
