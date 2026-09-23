@@ -163,55 +163,27 @@
             .showcase-grid {
                 position: relative;
                 z-index: 1;
-                columns: 2;
-                column-gap: 18px;
                 width: 100%;
-                max-width: 480px;
-            }
-
-            .showcase-card {
-                break-inside: avoid;
-                margin-bottom: 18px;
-                border-radius: 22px;
-                padding: 22px 20px;
-                color: #fff;
-                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
                 display: flex;
-                flex-direction: column;
-                gap: 6px;
-                height: 150px;
-                justify-content: flex-end;
-                animation: cardFloat 5s ease-in-out infinite;
+                justify-content: center;
             }
-            .showcase-card.tall { height: 220px; }
-
-            /* 카드마다 살짝 다른 타이밍으로 둥실거리게 */
-            .showcase-card:nth-child(1) { animation-delay: 0s; }
-            .showcase-card:nth-child(2) { animation-delay: 0.6s; }
-            .showcase-card:nth-child(3) { animation-delay: 1.2s; }
-            .showcase-card:nth-child(4) { animation-delay: 1.8s; }
-            .showcase-card:nth-child(5) { animation-delay: 2.4s; }
-            .showcase-card:nth-child(6) { animation-delay: 3s; }
 
             @keyframes cardFloat {
                 0%, 100% { transform: translateY(0); }
                 50% { transform: translateY(-8px); }
             }
 
-            /* 🖼️ 직접 만든 포스터 4장 자동 순환 카드 — 이미지 원본 비율(300:462)에 맞춰
-               높이를 자동으로 잡아서 잘리는 부분 없이 그대로 보여준다. */
+            /* 🖼️ 직접 만든 포스터 4장 자동 순환 카드만 크게 하나 — 이미지 원본
+               비율(300:462)에 맞춰 높이를 자동으로 잡아서 잘리는 부분 없이 보여준다. */
             .poster-card {
                 position: relative;
-                column-span: all;
                 width: 100%;
-                max-width: 340px;
-                margin: 0 auto 20px;
-                border-radius: 24px;
+                max-width: 420px;
+                border-radius: 28px;
                 overflow: hidden;
                 aspect-ratio: 300 / 462;
-                box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
+                box-shadow: 0 20px 44px rgba(15, 23, 42, 0.22);
                 animation: cardFloat 5s ease-in-out infinite;
-                animation-delay: 1.8s;
             }
 
             .poster-slide {
@@ -237,16 +209,12 @@
             }
 
             @media (prefers-reduced-motion: reduce) {
-                .showcase-panel::before, .showcase-panel::after, .showcase-card, .poster-card {
+                .showcase-panel::before, .showcase-panel::after, .poster-card {
                     animation: none;
                 }
                 .poster-slide { animation: none; opacity: 0; }
                 .poster-slide:first-child { opacity: 1; }
             }
-
-            .showcase-icon { font-size: 1.8rem; margin-bottom: 4px; }
-            .showcase-label { font-family: var(--font-title); font-size: 0.98rem; font-weight: 800; letter-spacing: -0.2px; }
-            .showcase-sub { font-size: 0.78rem; color: rgba(255,255,255,0.75); font-weight: 500; }
 
             .container {
                 flex: 1 1 0;
@@ -591,31 +559,6 @@
                 <img class="poster-slide" src="assets/posters/poster2.png" alt="매일 조금씩 확실하게">
                 <img class="poster-slide" src="assets/posters/poster3.png" alt="오늘도 한 걸음 더, 꾸준함이 만드는 변화">
                 <img class="poster-slide" src="assets/posters/poster4.png" alt="매일 쌓이는 나의 기록">
-            </div>
-            <div class="showcase-card" style="background:linear-gradient(160deg,#1B2A4A,#0F172A);">
-                <div class="showcase-icon">📅</div>
-                <div class="showcase-label">실시간 시간표</div>
-                <div class="showcase-sub">학사일정까지 한눈에</div>
-            </div>
-            <div class="showcase-card tall" style="background:linear-gradient(160deg,#0047AB,#003a94);">
-                <div class="showcase-icon">🏆</div>
-                <div class="showcase-label">출석 &amp; 학습 랭킹</div>
-                <div class="showcase-sub">친구들과 순위 확인</div>
-            </div>
-            <div class="showcase-card" style="background:linear-gradient(160deg,#0E9F6E,#057A55);">
-                <div class="showcase-icon">📣</div>
-                <div class="showcase-label">학원 공지</div>
-                <div class="showcase-sub">놓치지 않게 바로 확인</div>
-            </div>
-            <div class="showcase-card" style="background:linear-gradient(160deg,#F59E0B,#D97706);">
-                <div class="showcase-icon">⚡</div>
-                <div class="showcase-label">Lite 모드</div>
-                <div class="showcase-sub">로그인 없이 빠르게</div>
-            </div>
-            <div class="showcase-card" style="background:linear-gradient(160deg,#334155,#1E293B);">
-                <div class="showcase-icon">💬</div>
-                <div class="showcase-label">선생님 문의</div>
-                <div class="showcase-sub">1:1로 편하게 소통</div>
             </div>
         </div>
     </div>
