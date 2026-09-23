@@ -1084,6 +1084,32 @@
         </div>
     </div>
 
+    <!-- 🎓 매년 3월, 새 학년/반 진급 확인 바텀시트 (초6→중1, 중3→고1은 학교도 재선택) -->
+    <div id="gradePromotionBottomSheet" class="bottom-sheet-overlay" onclick="if(event.target.id==='gradePromotionBottomSheet') closeGradePromotionSheet()">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
+            <div class="sheet-drag-handle"></div>
+            <div class="sheet-title">🎓 새 학년이 시작됐어요!</div>
+            <div class="sheet-subtitle" id="gradePromoSubtitle">학년 정보를 확인해 주세요.</div>
+
+            <div id="gradePromoSchoolGroup" style="display:none; margin-bottom: 14px;">
+                <label style="display:block; font-weight:700; font-size:0.83rem; color:var(--text-main); margin-bottom:8px;">새로 진학하는 학교</label>
+                <div style="position:relative;">
+                    <input type="text" id="promoSchoolName" class="sheet-input" placeholder="예: 대치중" autocomplete="off">
+                    <div id="promoSchoolList" class="autocomplete-list hidden"></div>
+                </div>
+                <input type="hidden" id="promoSchoolCode">
+            </div>
+
+            <label style="display:block; font-weight:700; font-size:0.83rem; color:var(--text-main); margin-bottom:8px;">새 반 (숫자만 입력, 시간표 조회용)</label>
+            <input type="text" id="promoClassNum" class="sheet-input" placeholder="예: 3" inputmode="numeric" maxlength="2">
+
+            <div class="btn-flex-group" style="margin-top: 10px;">
+                <button type="button" class="btn-base btn-secondary" onclick="closeGradePromotionSheet()">나중에</button>
+                <button type="button" class="btn-base btn-primary" onclick="confirmGradePromotion()">진급 확인 완료</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🧮 오늘의 문제 바텀 시트 -->
     <div id="mathQuizBottomSheet" class="bottom-sheet-overlay" onclick="handleMathQuizOverlayClick(event)">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()" style="max-height: 82vh; overflow-y: auto;">
@@ -1669,6 +1695,7 @@
                         startDeviceStatusReporting(user.uid);
                         updateMathQuizTabDot();
                         checkMathflatIdConfirmation(user.uid, data);
+                        checkYearlyGradePromotion(user.uid, data);
 
                         hideLoading();
 
@@ -2019,6 +2046,141 @@
             showToast("저장 실패: " + err.message);
         }
     }
+
+    /* =====================================================================
+       🎓 매년 3월 1일, 새 학년/반 진급 확인 (초6→중1, 중3→고1은 학교도 재선택)
+    ===================================================================== */
+    const GRADE_ORDER = ['초1','초2','초3','초4','초5','초6','중1','중2','중3','고1','고2','고3'];
+    let pendingPromotion = null;
+
+    // 3월 1일을 새 학년도의 시작으로 보고, 1~2월은 이전 학년도로 취급한다.
+    function getAcademicYear(date) {
+        date = date || new Date();
+        const y = date.getFullYear();
+        const m = date.getMonth() + 1;
+        return m >= 3 ? y : y - 1;
+    }
+
+    function getNextGradeInfo(grade) {
+        const idx = GRADE_ORDER.indexOf(grade);
+        if (idx === -1 || idx === GRADE_ORDER.length - 1) return null; // 고3 등 다음 학년이 없는 경우
+        return {
+            nextGrade: GRADE_ORDER[idx + 1],
+            needsNewSchool: (grade === '초6' || grade === '중3') // 초→중, 중→고 전환 시 학교도 바뀜
+        };
+    }
+
+    function checkYearlyGradePromotion(uid, data) {
+        if (!data.grade) return;
+        if (new Date().getMonth() + 1 < 3) return; // 3월 전에는 물어보지 않음
+
+        const academicYear = getAcademicYear();
+        if (data.gradePromotionYear && Number(data.gradePromotionYear) >= academicYear) return; // 이미 이번 학년도에 처리함
+
+        const info = getNextGradeInfo(data.grade);
+        if (!info) {
+            // 고3처럼 다음 학년이 없으면 매번 다시 물어보지 않도록 조용히 기록만 남긴다.
+            database.ref(`students/${uid}/gradePromotionYear`).set(academicYear).catch(() => {});
+            if (currentStudentData) currentStudentData.gradePromotionYear = academicYear;
+            return;
+        }
+
+        pendingPromotion = { uid, currentGrade: data.grade, nextGrade: info.nextGrade, needsNewSchool: info.needsNewSchool, academicYear };
+        openGradePromotionSheet();
+    }
+
+    function openGradePromotionSheet() {
+        if (!pendingPromotion) return;
+        const { currentGrade, nextGrade, needsNewSchool } = pendingPromotion;
+        document.getElementById('gradePromoSubtitle').textContent =
+            `${currentGrade} → ${nextGrade}(으)로 진급합니다. ` + (needsNewSchool ? '새로 진학하는 학교와 반을 알려주세요.' : '새 반을 알려주세요.');
+        document.getElementById('gradePromoSchoolGroup').style.display = needsNewSchool ? 'block' : 'none';
+        document.getElementById('promoSchoolName').value = '';
+        document.getElementById('promoSchoolCode').value = '';
+        document.getElementById('promoClassNum').value = '';
+        const sheet = document.getElementById('gradePromotionBottomSheet');
+        if (sheet) sheet.classList.add('active');
+    }
+
+    function closeGradePromotionSheet() {
+        const sheet = document.getElementById('gradePromotionBottomSheet');
+        if (sheet) sheet.classList.remove('active');
+    }
+
+    async function confirmGradePromotion() {
+        if (!pendingPromotion || !currentUserUid) return;
+        const { nextGrade, needsNewSchool, academicYear } = pendingPromotion;
+
+        const classNum = document.getElementById('promoClassNum').value.trim().replace(/[^0-9]/g, '');
+        const updates = {
+            grade: nextGrade,
+            schoolClassNum: classNum,
+            class: classNum ? `${classNum}반` : '',
+            className: classNum ? `${classNum}반` : '',
+            gradePromotionYear: academicYear
+        };
+
+        if (needsNewSchool) {
+            const newSchoolName = document.getElementById('promoSchoolName').value.trim();
+            const newSchoolCode = document.getElementById('promoSchoolCode').value.trim();
+            if (!newSchoolName || !newSchoolCode) {
+                showToast('자동완성 목록에서 새로 진학하는 학교를 선택해 주세요.');
+                return;
+            }
+            updates.schoolName = newSchoolName;
+            updates.schoolCode = newSchoolCode;
+        }
+
+        try {
+            await database.ref(`students/${pendingPromotion.uid}`).update(updates);
+            Object.assign(currentStudentData, updates);
+            showToast(`🎉 ${nextGrade}(으)로 진급 처리됐어요!`);
+            closeGradePromotionSheet();
+            pendingPromotion = null;
+        } catch (err) {
+            showToast('저장 실패: ' + err.message);
+        }
+    }
+
+    // 진급 확인 바텀시트 전용 학교 자동완성 (마이페이지의 schoolName 자동완성과 별개)
+    document.addEventListener('DOMContentLoaded', () => {
+        const promoSchoolInput = document.getElementById('promoSchoolName');
+        const promoSchoolList = document.getElementById('promoSchoolList');
+        const promoSchoolCodeInput = document.getElementById('promoSchoolCode');
+        if (!promoSchoolInput) return;
+
+        promoSchoolInput.addEventListener('input', function () {
+            const query = this.value.trim();
+            if (query.length < 2) {
+                promoSchoolList.innerHTML = ''; promoSchoolList.classList.add('hidden'); promoSchoolCodeInput.value = ''; return;
+            }
+            const url = `${BACKEND_URL}/api/neis?endpoint=schoolInfo&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(query)}`;
+            fetch(url).then(response => response.json()).then(data => {
+                promoSchoolList.innerHTML = '';
+                if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                    const rows = data.schoolInfo[1].row;
+                    promoSchoolList.classList.remove('hidden');
+                    rows.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'autocomplete-item';
+                        li.innerHTML = `${escapeHTML(item.SCHUL_NM)} <span class="school-region">${escapeHTML(item.ATPT_OFCDC_SC_NM)}</span>`;
+                        li.addEventListener('click', () => {
+                            promoSchoolInput.value = item.SCHUL_NM;
+                            promoSchoolCodeInput.value = item.SD_SCHUL_CODE;
+                            promoSchoolList.innerHTML = ''; promoSchoolList.classList.add('hidden');
+                        });
+                        promoSchoolList.appendChild(li);
+                    });
+                } else { promoSchoolList.classList.add('hidden'); }
+            }).catch(err => { console.error(err); });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target !== promoSchoolInput && e.target !== promoSchoolList) {
+                promoSchoolList.innerHTML = ''; promoSchoolList.classList.add('hidden');
+            }
+        });
+    });
 
     /* =====================================================================
        5. 🧮 오늘의 문제 (바텀시트)
