@@ -120,11 +120,10 @@
             animation: cardFadeIn 0.5s var(--spring);
         }
 
+        /* 🟢 네이버 로그인처럼 로고를 카드 밖 맨 위에 크게 독립적으로 배치 */
         .header-zone {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid var(--lg-border);
+            margin-bottom: 32px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; user-select: none;
             transition: opacity 0.2s ease;
@@ -133,14 +132,23 @@
         .header-zone:active { opacity: 0.7; }
 
         .header-zone .logo-wrapper {
-            width: 100%; max-width: 190px; height: 38px;
+            width: 100%; max-width: 240px; height: 48px;
             overflow: hidden; display: flex; align-items: center; justify-content: center;
             pointer-events: none;
         }
 
         .header-zone .logo-img {
-            width: 100%; height: 110px;
+            width: 100%; height: 140px;
             object-fit: cover; object-position: center 48%;
+        }
+
+        .page-footer {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.2px;
         }
 
         @keyframes cardFadeIn {
@@ -422,15 +430,14 @@
 
     <div class="tablet-shell">
     <div class="container">
-        <!-- 로고와 로그인/회원가입 폼을 하나의 카드로 합친다 -->
-        <div class="auth-shell">
-        <!-- 로고 상단 헤더 존 -->
+        <!-- 🟢 네이버 로그인처럼 로고를 카드 밖 맨 위에 독립적으로 배치 -->
         <div class="header-zone" id="logoZone">
             <div class="logo-wrapper">
                 <img src="https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20250713_196%2F1752417299448f8dDm_PNG%2FKP%25BC%25F6%25C7%25D0%25C0%25D4%25BD%25C3%25C7%25D0%25BF%25F8_%25B7%25CE%25B0%25A1%25B7%25CE1.png" alt="K&amp;P 수학입시학원 로고" class="logo-img">
             </div>
         </div>
 
+        <div class="auth-shell">
         <!-- 학생 로그인 폼 카드 -->
         <div id="loginCard" class="card-body">
             <h2>학생 로그인</h2>
@@ -456,21 +463,6 @@
             <div class="switch-mode">
                 처음 왔나요? <span class="switch-link" onclick="toggleMode('register')">회원가입 하기</span>
             </div>
-
-            <!-- Lite 모드 이동 카드 -->
-            <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
-                <div class="lite-info">
-                    <div class="lite-icon"><i class="emoji-icon mona12">⚡</i></div>
-                    <div class="lite-text-group">
-                        <div class="lite-title-row">
-                            <span class="lite-title">Lite 모드 이용하기</span>
-                            <span class="lite-badge">로그인 없이</span>
-                        </div>
-                        <span class="lite-desc">계정 없이도 시간표·공지 바로 확인</span>
-                    </div>
-                </div>
-                <div class="lite-arrow">→</div>
-            </a>
         </div>
 
         <!-- 학생 회원가입 단계별 폼 카드 -->
@@ -685,6 +677,23 @@
             </div>
         </div>
         </div>
+
+        <!-- ⚡ Lite 모드 배너 — 네이버 로그인 화면에서 광고 배너가 있는 자리 -->
+        <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
+            <div class="lite-info">
+                <div class="lite-icon"><i class="emoji-icon mona12">⚡</i></div>
+                <div class="lite-text-group">
+                    <div class="lite-title-row">
+                        <span class="lite-title">Lite 모드 이용하기</span>
+                        <span class="lite-badge">로그인 없이</span>
+                    </div>
+                    <span class="lite-desc">계정 없이도 시간표·공지 바로 확인</span>
+                </div>
+            </div>
+            <div class="lite-arrow">→</div>
+        </a>
+
+        <div class="page-footer">K&amp;P with KST</div>
     </div>
     </div>
 
