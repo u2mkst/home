@@ -299,11 +299,11 @@
         .switch-link { color: var(--primary); text-decoration: none; font-weight: 700; margin-left: 4px; cursor: pointer; }
         .switch-link:hover { text-decoration: underline; }
 
-        /* 🔵⚪ 하늘색 톤 대신 블루 & 화이트로 뚜렷하게 대비 */
+        /* 🔵⚪ 아웃라인은 회색, 화살표·아이콘 박스 같은 주요 하이라이트만 블루로 */
         .lite-mode-card {
             margin-top: 20px; padding: 16px 18px;
             background: #FFFFFF;
-            border: 1.5px solid var(--primary); border-radius: var(--radius-md);
+            border: 1.5px solid var(--lg-border); border-radius: var(--radius-md);
             display: flex; align-items: center; justify-content: space-between;
             text-decoration: none;
             box-shadow: none;
@@ -312,8 +312,8 @@
         }
 
         .lite-mode-card:hover {
-            border-color: var(--primary-hover);
-            box-shadow: 0 6px 16px rgba(0, 75, 191, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 6px 16px rgba(0, 75, 191, 0.14);
             transform: translateY(-2px);
         }
 
@@ -686,7 +686,11 @@
         <!-- ⚡ Lite 모드 배너 — 네이버 로그인 화면에서 광고 배너가 있는 자리 -->
         <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
             <div class="lite-info">
-                <div class="lite-icon"><i class="emoji-icon mona12">⚡</i></div>
+                <div class="lite-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" fill="#FFFFFF"/>
+                    </svg>
+                </div>
                 <div class="lite-text-group">
                     <div class="lite-title-row">
                         <span class="lite-title">Lite 모드 이용하기</span>
