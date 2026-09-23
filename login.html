@@ -227,23 +227,20 @@
             }
         }
 
-        /* 🔗 로고 + 로그인/회원가입 폼을 하나의 카드로 합친다 — 로고 영역은 카드
-           안의 상단 섹션일 뿐, 별도의 박스로 안 보이게 구분선만 살짝 준다. */
+        /* 🔗 리틀리처럼 로그인 폼이 박스에 갇혀 있지 않고 배경 위에 바로 놓인
+           개방형 레이아웃 — 카드 배경/테두리/그림자를 없애고 여백으로만 구획한다. */
         .auth-shell {
-            background: var(--lg-surface-strong);
-            padding: 24px 28px 32px;
-            border-radius: var(--radius-lg);
-            backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
-            border: 1.5px solid var(--lg-border);
-            box-shadow: var(--lg-shadow);
+            background: transparent;
+            padding: 36px 6px 44px;
+            border-radius: 0;
+            border: none;
+            box-shadow: none;
             animation: cardFadeIn 0.5s var(--spring);
         }
 
         .header-zone {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid var(--lg-border);
+            margin-bottom: 28px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; user-select: none;
             transition: opacity 0.2s ease;
@@ -302,7 +299,7 @@
             border-color: var(--primary); background: var(--primary); color: #ffffff;
         }
 
-        .form-group { display: flex; flex-direction: column; margin-bottom: 18px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 22px; }
         .form-row { display: flex; gap: 10px; }
 
         label { display: block; font-weight: 700; font-size: 0.83rem; color: #334155; margin-bottom: 6px; padding-left: 2px; }
@@ -319,9 +316,9 @@
         }
 
         input, select {
-            width: 100%; padding: 13px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.6); border-radius: var(--radius-md);
-            font-size: 0.92rem; font-family: var(--font-body);
+            width: 100%; padding: 16px 18px;
+            border: 1px solid var(--lg-border); border-radius: var(--radius-md);
+            font-size: 0.95rem; font-family: var(--font-body);
             background-color: var(--input-bg); color: var(--text-main);
             transition: all 0.3s var(--ease-smooth);
         }
