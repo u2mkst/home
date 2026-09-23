@@ -95,15 +95,14 @@
             max-width: 420px;
         }
 
-        /* 네이버/카카오/토스 로그인 화면도 태블릿·데스크톱에서 억지로 2단으로 안 쪼개고,
-           그냥 같은 카드를 화면 가운데에 그대로 두는 방식이라 그걸 따른다. 대신 큰
-           화면에서 "회색 배경에 작은 박스 하나"처럼 휑해 보이지 않도록 배경에 은은한
-           브랜드 컬러 그러데이션을 깔고, 카드/글자를 화면 크기에 맞게 살짝 키운다. */
+        /* 좁은 화면(휴대폰)에서는 지금까지처럼 카드 하나만 가운데 뜬다. */
         .tablet-shell {
             width: 100%;
             display: flex;
             justify-content: center;
         }
+
+        .showcase-panel { display: none; }
 
         @media (min-width: 700px) {
             .container { max-width: 460px; }
@@ -111,6 +110,71 @@
             .header-zone .logo-wrapper { max-width: 210px; height: 42px; }
             h2 { font-size: 1.6rem; margin-bottom: 28px; }
             input, select, button { font-size: 1rem; padding: 15px 18px; }
+        }
+
+        /* 🖼️ 태블릿 이상 넓은 화면 — littly 로그인 화면처럼 좌측에 앱 화면 쇼케이스,
+           우측에 로그인 폼을 배치하는 풀블리드 2단 레이아웃으로 전환한다. */
+        @media (min-width: 900px) {
+            body { padding: 0; align-items: stretch; }
+
+            .tablet-shell {
+                min-height: 100vh;
+                align-items: stretch;
+            }
+
+            .showcase-panel {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex: 1 1 0;
+                background: #EEF1F5;
+                padding: 56px;
+                overflow: hidden;
+            }
+
+            .showcase-grid {
+                columns: 2;
+                column-gap: 18px;
+                width: 100%;
+                max-width: 480px;
+            }
+
+            .showcase-card {
+                break-inside: avoid;
+                margin-bottom: 18px;
+                border-radius: 22px;
+                padding: 22px 20px;
+                color: #fff;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                height: 150px;
+                justify-content: flex-end;
+            }
+            .showcase-card.tall { height: 220px; }
+
+            .showcase-icon { font-size: 1.8rem; margin-bottom: 4px; }
+            .showcase-label { font-family: var(--font-title); font-size: 0.98rem; font-weight: 800; letter-spacing: -0.2px; }
+            .showcase-sub { font-size: 0.78rem; color: rgba(255,255,255,0.75); font-weight: 500; }
+
+            .container {
+                flex: 1 1 0;
+                max-width: 520px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 56px;
+            }
+
+            .auth-shell {
+                width: 100%;
+                max-width: 400px;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
         }
 
         /* 🔗 로고 + 로그인/회원가입 폼을 하나의 카드로 합친다 — 로고 영역은 카드
@@ -426,6 +490,43 @@
     </div>
 
     <div class="tablet-shell">
+    <!-- 🖼️ 넓은 화면(태블릿 이상)에서만 보이는 좌측 쇼케이스 — 앱 화면들을 카드 형태로
+         모아서 littly류 로그인 화면처럼 왼쪽에 배치. 좁은 화면에서는 CSS로 숨김. -->
+    <div class="showcase-panel">
+        <div class="showcase-grid">
+            <div class="showcase-card" style="background:linear-gradient(160deg,#1B2A4A,#0F172A);">
+                <div class="showcase-icon">📅</div>
+                <div class="showcase-label">실시간 시간표</div>
+                <div class="showcase-sub">학사일정까지 한눈에</div>
+            </div>
+            <div class="showcase-card tall" style="background:linear-gradient(160deg,#0047AB,#003a94);">
+                <div class="showcase-icon">🏆</div>
+                <div class="showcase-label">출석 &amp; 학습 랭킹</div>
+                <div class="showcase-sub">친구들과 순위 확인</div>
+            </div>
+            <div class="showcase-card" style="background:linear-gradient(160deg,#0E9F6E,#057A55);">
+                <div class="showcase-icon">📣</div>
+                <div class="showcase-label">학원 공지</div>
+                <div class="showcase-sub">놓치지 않게 바로 확인</div>
+            </div>
+            <div class="showcase-card tall" style="background:linear-gradient(160deg,#7C3AED,#5B21B6);">
+                <div class="showcase-icon">🎯</div>
+                <div class="showcase-label">오늘의 수학 문제</div>
+                <div class="showcase-sub">매일 새로운 문제 풀이</div>
+            </div>
+            <div class="showcase-card" style="background:linear-gradient(160deg,#F59E0B,#D97706);">
+                <div class="showcase-icon">⚡</div>
+                <div class="showcase-label">Lite 모드</div>
+                <div class="showcase-sub">로그인 없이 빠르게</div>
+            </div>
+            <div class="showcase-card" style="background:linear-gradient(160deg,#334155,#1E293B);">
+                <div class="showcase-icon">💬</div>
+                <div class="showcase-label">선생님 문의</div>
+                <div class="showcase-sub">1:1로 편하게 소통</div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- 로고와 로그인/회원가입 폼을 하나의 카드로 합친다 -->
         <div class="auth-shell">
