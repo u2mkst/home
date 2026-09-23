@@ -5,11 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>K&P 수학입시학원 - KST 시스템 관리</title>
     
-    <!-- Firebase & CryptoJS -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <!-- 프리미엄 폰트 시스템 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -238,37 +233,14 @@
             color: var(--primary);
             text-decoration: underline;
         }
-
-        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="container">
         
-        <!-- 1. 관리자 비밀번호 입력 영역 (아이디 X) -->
-        <div id="authCard" class="glass-card">
-            <div class="header">
-                <span class="badge">SECURITY CHECK</span>
-                <h1>관리자 비밀번호 확인</h1>
-                <p class="sub-text">등록된 관리자 비밀번호를 입력해 주세요.</p>
-            </div>
-
-            <form onsubmit="handleAdminAuth(event)">
-                <div class="form-group">
-                    <label>비밀번호</label>
-                    <input type="password" id="adminPassword" placeholder="비밀번호 입력" required autofocus>
-                </div>
-                <button type="submit" class="btn btn-primary" style="margin-top: 6px;">인증하고 입장하기</button>
-            </form>
-
-            <div class="footer-action">
-                <a class="back-link" href="./login.html">← 이전 화면으로 돌아가기</a>
-            </div>
-        </div>
-
-        <!-- 2. 인증 성공 후 노출되는 메인 대시보드 영역 -->
-        <div id="dashboardCard" class="glass-card hidden">
+        <!-- 메인 대시보드 영역 -->
+        <div id="dashboardCard" class="glass-card">
             <div class="header">
                 <span class="badge">SYSTEM ADMIN</span>
                 <h1>KST 관리자 센터</h1>
@@ -305,38 +277,6 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
-            authDomain: "ksthome-76889.firebaseapp.com",
-            databaseURL: "https://ksthome-76889-default-rtdb.firebaseio.com",
-            projectId: "ksthome-76889",
-            storageBucket: "ksthome-76889.firebasestorage.app",
-            messagingSenderId: "411945142173",
-            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174",
-            measurementId: "G-72TJ0364MJ"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        // 파이어베이스 기본 관리자 계정 이메일 지정
-        const ADMIN_EMAIL = "admin@kst.com";
-
-        /* 관리자 비밀번호 검증 처리 */
-        function handleAdminAuth(e) {
-            e.preventDefault();
-            const inputPassword = document.getElementById('adminPassword').value.trim();
-
-            auth.signInWithEmailAndPassword(ADMIN_EMAIL, inputPassword)
-                .then((userCredential) => {
-                    // 인증 성공 시 대시보드 출력
-                    document.getElementById('authCard').classList.add('hidden');
-                    document.getElementById('dashboardCard').classList.remove('hidden');
-                })
-                .catch((error) => {
-                    alert("⚠️ 비밀번호 인증에 실패했습니다.\n비밀번호를 확인해 주세요.");
-                });
-        }
-
         /* APK 다운로드 함수 */
         function downloadApk() {
             // 캐시된 예전 apk가 내려가는 걸 막기 위해 매번 다른 쿼리스트링을 붙여
