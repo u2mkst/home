@@ -167,32 +167,20 @@
             margin-bottom: 24px; text-align: center; letter-spacing: -0.3px;
         }
 
-        .step-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 24px; position: relative;
+        /* 네이버 회원가입처럼 한 화면에 한 항목씩 — 진행 상황은 얇은 바 하나로 표시 */
+        .step-progress-label {
+            text-align: right; font-size: 0.76rem; font-weight: 700;
+            color: var(--text-muted); margin-bottom: 8px;
         }
 
-        .step-bar::before {
-            content: ''; position: absolute; top: 50%; left: 0; right: 0;
-            height: 2px; background: rgba(0, 0, 0, 0.08); z-index: 1;
-            transform: translateY(-50%);
+        .step-progress-bar {
+            width: 100%; height: 4px; background: var(--lg-border);
+            border-radius: 99px; overflow: hidden; margin-bottom: 24px;
         }
 
-        .step-item {
-            width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.7);
-            border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center;
-            font-size: 0.85rem; font-family: var(--font-title); font-weight: 700; color: #64748b;
-            position: relative; z-index: 2; transition: all 0.4s var(--spring);
-        }
-
-        .step-item.active {
-            border-color: var(--primary); background: var(--primary); color: #ffffff;
-            box-shadow: 0 0 0 4px var(--primary-glow);
-            transform: scale(1.1);
-        }
-
-        .step-item.completed {
-            border-color: var(--primary); background: var(--primary); color: #ffffff;
+        .step-progress-fill {
+            height: 100%; background: var(--primary); border-radius: 99px;
+            transition: width 0.35s var(--ease-smooth);
         }
 
         .form-group { display: flex; flex-direction: column; margin-bottom: 22px; }
@@ -466,30 +454,36 @@
             </form>
         </div>
 
-        <!-- 학생 회원가입 단계별 폼 카드 -->
+        <!-- 학생 회원가입 폼 카드 — 네이버 회원가입처럼 한 화면에 한 항목씩 입력 -->
         <div id="registerCard" class="card-body hidden">
-            <h2>학생 회원가입</h2>
-
-            <div class="step-bar">
-                <div class="step-item active" id="stepIndicator1">1</div>
-                <div class="step-item" id="stepIndicator2">2</div>
-                <div class="step-item" id="stepIndicator3">3</div>
-            </div>
+            <div class="step-progress-label" id="stepProgressLabel">STEP 1 / 8</div>
+            <div class="step-progress-bar"><div class="step-progress-fill" id="stepProgressFill" style="width:12.5%;"></div></div>
 
             <form id="registerForm" onsubmit="handleStudentRegister(event)">
-                <!-- STEP 1 -->
+                <!-- STEP 1: 이름 -->
                 <div id="step1" class="step-content">
                     <div class="form-group">
                         <label>학생 이름</label>
                         <input type="text" id="registerName" placeholder="실명을 입력하세요 (예: 홍길동)">
                     </div>
+                    <button type="button" onclick="nextStep()">다음</button>
+                </div>
 
+                <!-- STEP 2: 아이디 -->
+                <div id="step2" class="step-content hidden">
                     <div class="form-group">
                         <label>유투엠 아이디</label>
                         <input type="text" id="registerId" value="ufes" inputmode="numeric" oninput="handleFixedPrefix(this)" onkeydown="protectPrefix(event, this)">
                         <div class="info-text">※ ufes 뒤에 숫자만 연속으로 입력하세요.</div>
                     </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn-prev" onclick="prevStep()">이전</button>
+                        <button type="button" onclick="nextStep()">다음</button>
+                    </div>
+                </div>
 
+                <!-- STEP 3: 비밀번호 -->
+                <div id="step3" class="step-content hidden">
                     <div class="form-group">
                         <label>유투엠 비밀번호 (숫자 4자리)</label>
                         <div class="input-pw-wrapper">
@@ -500,49 +494,77 @@
                         </div>
                         <div class="info-text">※ 이 번호가 앞으로 로그인할 때 비밀번호가 됩니다.</div>
                     </div>
-                    
+                    <div class="btn-group">
+                        <button type="button" class="btn-prev" onclick="prevStep()">이전</button>
+                        <button type="button" onclick="nextStep()">다음</button>
+                    </div>
+                </div>
+
+                <!-- STEP 4: 학교 -->
+                <div id="step4" class="step-content hidden">
                     <div class="form-group">
                         <label>소속 학교</label>
                         <div class="autocomplete-wrapper">
                             <input type="text" id="registerSchool" placeholder="예: 대치중" autocomplete="off">
                             <div id="schoolList" class="autocomplete-list hidden"></div>
                         </div>
-                        <input type="hidden" id="registerSchoolCode"> 
+                        <input type="hidden" id="registerSchoolCode">
                     </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn-prev" onclick="prevStep()">이전</button>
+                        <button type="button" onclick="nextStep()">다음</button>
+                    </div>
+                </div>
 
+                <!-- STEP 5: 학년 / 반 -->
+                <div id="step5" class="step-content hidden">
                     <div class="form-group">
                         <label>학년 / 반</label>
                         <div class="form-row">
                             <select id="registerGrade">
                                 <option value="" disabled selected>학년 선택</option>
-                                <option value="1학년">1학년</option>
-                                <option value="2학년">2학년</option>
-                                <option value="3학년">3학년</option>
-                                <option value="4학년">4학년</option>
-                                <option value="5학년">5학년</option>
-                                <option value="6학년">6학년</option>
+                                <option value="초1">초1</option>
+                                <option value="초2">초2</option>
+                                <option value="초3">초3</option>
+                                <option value="초4">초4</option>
+                                <option value="초5">초5</option>
+                                <option value="초6">초6</option>
+                                <option value="중1">중1</option>
+                                <option value="중2">중2</option>
+                                <option value="중3">중3</option>
+                                <option value="고1">고1</option>
+                                <option value="고2">고2</option>
+                                <option value="고3">고3</option>
                             </select>
                             <select id="registerClass">
-                                <option value="선택 안함">반 선택 (선택사항)</option>
-                                <option value="1반">1반</option>
-                                <option value="2반">2반</option>
-                                <option value="3반">3반</option>
-                                <option value="4반">4반</option>
-                                <option value="5반">5반</option>
-                                <option value="6반">6반</option>
-                                <option value="7반">7반</option>
-                                <option value="8반">8반</option>
-                                <option value="9반">9반</option>
-                                <option value="10반">10반</option>
-                                <option value="11반">11반</option>
-                                <option value="12반">12반</option>
-                                <option value="13반">13반</option>
-                                <option value="14반">14반</option>
-                                <option value="15반">15반</option>
+                                <option value="" selected>반 선택 (선택사항)</option>
+                                <option value="1">1반</option>
+                                <option value="2">2반</option>
+                                <option value="3">3반</option>
+                                <option value="4">4반</option>
+                                <option value="5">5반</option>
+                                <option value="6">6반</option>
+                                <option value="7">7반</option>
+                                <option value="8">8반</option>
+                                <option value="9">9반</option>
+                                <option value="10">10반</option>
+                                <option value="11">11반</option>
+                                <option value="12">12반</option>
+                                <option value="13">13반</option>
+                                <option value="14">14반</option>
+                                <option value="15">15반</option>
                             </select>
                         </div>
+                        <div class="info-text">※ 반 번호는 학교 시간표 조회에 사용됩니다. 모르면 비워두고 나중에 마이페이지에서 입력할 수 있어요.</div>
                     </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn-prev" onclick="prevStep()">이전</button>
+                        <button type="button" onclick="nextStep()">다음</button>
+                    </div>
+                </div>
 
+                <!-- STEP 6: 담당 선생님 -->
+                <div id="step6" class="step-content hidden">
                     <div class="form-group">
                         <label>담당 선생님 선택</label>
                         <select id="registerTeacher">
@@ -556,12 +578,14 @@
                             <option value="김영호">김영호 선생님</option>
                         </select>
                     </div>
-
-                    <button type="button" onclick="nextStep(2)">다음</button>
+                    <div class="btn-group">
+                        <button type="button" class="btn-prev" onclick="prevStep()">이전</button>
+                        <button type="button" onclick="nextStep()">다음</button>
+                    </div>
                 </div>
 
-                <!-- STEP 2 -->
-                <div id="step2" class="step-content hidden">
+                <!-- STEP 7: 매쓰플랫 연동 -->
+                <div id="step7" class="step-content hidden">
                     <div style="margin-bottom: 14px; text-align: right;">
                         <button type="button" class="btn-sub-action" onclick="skipMathflat()">잘 모르겠어요 <i class="mona12">💡</i></button>
                     </div>
@@ -570,7 +594,7 @@
                         <label>매쓰플랫 아이디 (학생 휴대폰)</label>
                         <input type="text" id="registerMathflatPhone" placeholder="하이픈(-) 없이 숫자만" inputmode="numeric" oninput="resetMathflatSkip()">
                     </div>
-                    
+
                     <div class="form-group">
                         <label>매쓰플랫 비밀번호</label>
                         <div class="input-pw-wrapper">
@@ -582,14 +606,13 @@
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn-prev" onclick="prevStep(1)">이전</button>
-                        <button type="button" onclick="nextStep(3)">다음</button>
+                        <button type="button" class="btn-prev" onclick="prevStep()">이전</button>
+                        <button type="button" onclick="nextStep()">다음</button>
                     </div>
                 </div>
 
-                <!-- STEP 3 -->
-                <!-- STEP 3 -->
-<div id="step3" class="step-content hidden">
+                <!-- STEP 8 -->
+<div id="step8" class="step-content hidden">
     <div class="form-group">
         <label>이용약관 및 개인정보처리방침 전문</label>
         <textarea class="policy-text-box" style="height: 180px;" readonly>[K&P 수학입시학원 서비스 이용약관 및 개인정보 처리방침]
@@ -667,7 +690,7 @@
     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn-prev" onclick="prevStep(2)">이전</button>
+                        <button type="button" class="btn-prev" onclick="prevStep()">이전</button>
                         <button type="submit">가입 완료하기</button>
                     </div>
                 </div>
@@ -855,7 +878,7 @@
             document.getElementById('registerMathflatPhone').value = '';
             document.getElementById('registerMathflatPw').value = '';
             showToast('매쓰플랫 정보를 스킵하고 다음으로 이동합니다!', '💡');
-            updateStepView(3);
+            updateStepView(currentStep + 1);
         }
 
         function resetMathflatSkip() {
@@ -908,45 +931,54 @@
         });
         setTimeout(hideKstLoading, 2500); // 안전장치: 위 이벤트가 못 뜨는 경우에도 결국 사라지게
 
-        function updateStepView(targetStep) {
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step2').classList.add('hidden');
-            document.getElementById('step3').classList.add('hidden');
+        const TOTAL_REGISTER_STEPS = 8;
 
+        function updateStepView(targetStep) {
+            for (let i = 1; i <= TOTAL_REGISTER_STEPS; i++) {
+                document.getElementById(`step${i}`).classList.add('hidden');
+            }
             document.getElementById(`step${targetStep}`).classList.remove('hidden');
 
-            for (let i = 1; i <= 3; i++) {
-                const indicator = document.getElementById(`stepIndicator${i}`);
-                if (i === targetStep) {
-                    indicator.className = 'step-item active';
-                } else if (i < targetStep) {
-                    indicator.className = 'step-item completed';
-                } else {
-                    indicator.className = 'step-item';
-                }
-            }
+            document.getElementById('stepProgressLabel').textContent = `STEP ${targetStep} / ${TOTAL_REGISTER_STEPS}`;
+            document.getElementById('stepProgressFill').style.width = `${(targetStep / TOTAL_REGISTER_STEPS) * 100}%`;
+
             currentStep = targetStep;
         }
 
-        function nextStep(targetStep) {
-            if (targetStep === 2) {
+        // 현재 단계(currentStep)의 입력값만 검증하고 통과하면 다음 단계로 이동한다.
+        function nextStep() {
+            if (currentStep === 1) {
                 const studentName = document.getElementById('registerName').value.trim();
+                if (!studentName) { showToast('학생 이름을 입력하세요.', '✍️'); return; }
+            }
+
+            if (currentStep === 2) {
                 const u2mId = document.getElementById('registerId').value.trim().toLowerCase();
+                if (u2mId.length <= 4) { showToast('ufes 뒤에 숫자를 입력해 주세요.', '⚠️'); return; }
+            }
+
+            if (currentStep === 3) {
                 const phoneTail = document.getElementById('registerParentPhone').value.trim();
+                if (!/^\d{4}$/.test(phoneTail)) { showToast('유투엠 비밀번호는 숫자 4자리로 입력해주세요.', '🔑'); return; }
+            }
+
+            if (currentStep === 4) {
                 const schoolName = schoolInput.value.trim();
                 const schoolCode = schoolCodeInput.value.trim();
-                const studentGrade = gradeSelect.value;
-                const selectedTeacher = document.getElementById('registerTeacher').value;
-
-                if (!studentName) { showToast('학생 이름을 입력하세요.', '✍️'); return; }
-                if (u2mId.length <= 4) { showToast('ufes 뒤에 숫자를 입력해 주세요.', '⚠️'); return; }
-                if (!/^\d{4}$/.test(phoneTail)) { showToast('유투엠 비밀번호는 숫자 4자리로 입력해주세요.', '🔑'); return; }
                 if (!schoolName || !schoolCode) { showToast('자동완성 리스트에서 학교를 선택해 주세요.', '🏫'); return; }
+            }
+
+            if (currentStep === 5) {
+                const studentGrade = gradeSelect.value;
                 if (!studentGrade) { showToast('학년을 선택해 주세요.', '🎓'); return; }
+            }
+
+            if (currentStep === 6) {
+                const selectedTeacher = document.getElementById('registerTeacher').value;
                 if (!selectedTeacher) { showToast('담당 선생님을 선택해 주세요.', '👨‍🏫'); return; }
             }
 
-            if (targetStep === 3) {
+            if (currentStep === 7) {
                 if (!isMathflatSkipped) {
                     const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim();
                     const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
@@ -963,11 +995,11 @@
                 }
             }
 
-            updateStepView(targetStep);
+            updateStepView(currentStep + 1);
         }
 
-        function prevStep(targetStep) {
-            updateStepView(targetStep);
+        function prevStep() {
+            updateStepView(currentStep - 1);
         }
 
         let logoClickCount = 0;
@@ -1078,7 +1110,8 @@
             const schoolName = schoolInput.value.trim();
             const schoolCode = schoolCodeInput.value.trim();
             const studentGrade = gradeSelect.value;
-            const studentClass = document.getElementById('registerClass').value;
+            const schoolClassNum = document.getElementById('registerClass').value.trim();
+            const studentClassLabel = schoolClassNum ? `${schoolClassNum}반` : '';
             const selectedTeacher = document.getElementById('registerTeacher').value;
             const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
             const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
@@ -1103,8 +1136,10 @@
                         u2mId: u2mId,
                         schoolName: schoolName,
                         schoolCode: schoolCode,
-                        mathGradeCode: studentGrade,
-                        class: studentClass,
+                        grade: studentGrade,
+                        schoolClassNum: schoolClassNum,
+                        class: studentClassLabel,
+                        className: studentClassLabel,
                         teacher: selectedTeacher,
                         phone: encryptedPhoneTail,
                         studentPhone: mathflatPhone ? encryptedMfPhone : "",
