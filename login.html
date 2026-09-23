@@ -46,7 +46,10 @@
             --primary-hover: #003a94;
             --primary-glow: rgba(0, 75, 191, 0.15);
 
-            --bg-gradient: #F2F4F6;
+            --bg-gradient:
+                radial-gradient(circle at 15% 10%, rgba(0, 75, 191, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 90%, rgba(0, 75, 191, 0.06) 0%, transparent 45%),
+                #F2F4F6;
 
             --text-main: #191F28;
             --text-muted: #8B95A1;
@@ -92,40 +95,23 @@
             max-width: 420px;
         }
 
-        /* 🖥️ 태블릿/큰 화면 대응 — 좁은 화면(휴대폰)에서는 로고 → Lite 모드 카드 →
-           로그인 폼이 기존처럼 세로로 쌓이고, 화면이 넉넉히 넓을 때만 로고/Lite 카드가
-           왼쪽 열로, 로그인 폼이 오른쪽 열로 나란히 배치된다. 광고성 문구 없이
-           실제로 쓰는 요소만 그대로 위치만 옮기는 방식. */
+        /* 네이버/카카오/토스 로그인 화면도 태블릿·데스크톱에서 억지로 2단으로 안 쪼개고,
+           그냥 같은 카드를 화면 가운데에 그대로 두는 방식이라 그걸 따른다. 대신 큰
+           화면에서 "회색 배경에 작은 박스 하나"처럼 휑해 보이지 않도록 배경에 은은한
+           브랜드 컬러 그러데이션을 깔고, 카드/글자를 화면 크기에 맞게 살짝 키운다. */
         .tablet-shell {
             width: 100%;
-            max-width: 420px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center;
         }
 
-        .hero-panel {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        @media (min-width: 900px) {
-            .tablet-shell {
-                max-width: 820px;
-                flex-direction: row;
-                align-items: flex-start;
-                justify-content: center;
-                gap: 48px;
-            }
-
-            .hero-panel {
-                flex: 0 0 340px;
-                max-width: 340px;
-                padding-top: 4px;
-            }
-
-            .container { flex: 0 0 420px; max-width: 420px; }
+        @media (min-width: 700px) {
+            .container { max-width: 460px; }
+            .auth-card { padding: 44px 40px; }
+            .header-zone { padding: 22px 24px; }
+            .header-zone .logo-wrapper { max-width: 210px; height: 42px; }
+            h2 { font-size: 1.6rem; margin-bottom: 28px; }
+            input, select, button { font-size: 1rem; padding: 15px 18px; }
         }
 
         .header-zone {
@@ -448,9 +434,7 @@
     </div>
 
     <div class="tablet-shell">
-    <!-- 🖥️ 좌측 영역 — 로고와 Lite 모드 진입 카드. 좁은 화면(휴대폰)에서는 위아래로,
-         넓은 화면(태블릿)에서는 폼 카드 왼쪽에 나란히 배치된다. -->
-    <div class="hero-panel">
+    <div class="container">
         <!-- 로고 상단 헤더 존 -->
         <div class="header-zone" id="logoZone">
             <div class="logo-wrapper">
@@ -458,23 +442,6 @@
             </div>
         </div>
 
-        <!-- Lite 모드 이동 카드 -->
-        <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
-            <div class="lite-info">
-                <div class="lite-icon"><i class="emoji-icon mona12">⚡</i></div>
-                <div class="lite-text-group">
-                    <div class="lite-title-row">
-                        <span class="lite-title">Lite 모드 이용하기</span>
-                        <span class="lite-badge">로그인 없이</span>
-                    </div>
-                    <span class="lite-desc">계정 없이도 시간표·공지 바로 확인</span>
-                </div>
-            </div>
-            <div class="lite-arrow">→</div>
-        </a>
-    </div>
-
-    <div class="container">
         <!-- 학생 로그인 폼 카드 -->
         <div id="loginCard" class="auth-card">
             <h2>학생 로그인</h2>
@@ -500,6 +467,21 @@
             <div class="switch-mode">
                 처음 왔나요? <span class="switch-link" onclick="toggleMode('register')">회원가입 하기</span>
             </div>
+
+            <!-- Lite 모드 이동 카드 -->
+            <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
+                <div class="lite-info">
+                    <div class="lite-icon"><i class="emoji-icon mona12">⚡</i></div>
+                    <div class="lite-text-group">
+                        <div class="lite-title-row">
+                            <span class="lite-title">Lite 모드 이용하기</span>
+                            <span class="lite-badge">로그인 없이</span>
+                        </div>
+                        <span class="lite-desc">계정 없이도 시간표·공지 바로 확인</span>
+                    </div>
+                </div>
+                <div class="lite-arrow">→</div>
+            </a>
         </div>
 
         <!-- 학생 회원가입 단계별 폼 카드 -->
