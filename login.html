@@ -123,6 +123,7 @@
             }
 
             .showcase-panel {
+                position: relative;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -132,7 +133,36 @@
                 overflow: hidden;
             }
 
+            /* 🌊 계속 천천히 움직이는 배경 블롭 — 패널이 정적으로 안 느껴지게 */
+            .showcase-panel::before,
+            .showcase-panel::after {
+                content: '';
+                position: absolute;
+                border-radius: 50%;
+                filter: blur(70px);
+                z-index: 0;
+                animation: blobDrift 16s ease-in-out infinite alternate;
+                pointer-events: none;
+            }
+            .showcase-panel::before {
+                width: 340px; height: 340px;
+                background: rgba(0, 75, 191, 0.22);
+                top: -100px; left: -80px;
+            }
+            .showcase-panel::after {
+                width: 280px; height: 280px;
+                background: rgba(124, 58, 237, 0.16);
+                bottom: -80px; right: -60px;
+                animation-delay: -8s;
+            }
+            @keyframes blobDrift {
+                0% { transform: translate(0, 0) scale(1); }
+                100% { transform: translate(46px, 34px) scale(1.18); }
+            }
+
             .showcase-grid {
+                position: relative;
+                z-index: 1;
                 columns: 2;
                 column-gap: 18px;
                 width: 100%;
@@ -151,8 +181,28 @@
                 gap: 6px;
                 height: 150px;
                 justify-content: flex-end;
+                animation: cardFloat 5s ease-in-out infinite;
             }
             .showcase-card.tall { height: 220px; }
+
+            /* 카드마다 살짝 다른 타이밍으로 둥실거리게 */
+            .showcase-card:nth-child(1) { animation-delay: 0s; }
+            .showcase-card:nth-child(2) { animation-delay: 0.6s; }
+            .showcase-card:nth-child(3) { animation-delay: 1.2s; }
+            .showcase-card:nth-child(4) { animation-delay: 1.8s; }
+            .showcase-card:nth-child(5) { animation-delay: 2.4s; }
+            .showcase-card:nth-child(6) { animation-delay: 3s; }
+
+            @keyframes cardFloat {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-8px); }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .showcase-panel::before, .showcase-panel::after, .showcase-card {
+                    animation: none;
+                }
+            }
 
             .showcase-icon { font-size: 1.8rem; margin-bottom: 4px; }
             .showcase-label { font-family: var(--font-title); font-size: 0.98rem; font-weight: 800; letter-spacing: -0.2px; }
