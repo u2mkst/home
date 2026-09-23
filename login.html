@@ -198,10 +198,48 @@
                 50% { transform: translateY(-8px); }
             }
 
+            /* 🖼️ 직접 만든 포스터 4장 자동 순환 카드 — 이미지 원본 비율(300:462)에 맞춰
+               높이를 자동으로 잡아서 잘리는 부분 없이 그대로 보여준다. */
+            .poster-card {
+                position: relative;
+                break-inside: avoid;
+                margin-bottom: 18px;
+                border-radius: 22px;
+                overflow: hidden;
+                aspect-ratio: 300 / 462;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+                animation: cardFloat 5s ease-in-out infinite;
+                animation-delay: 1.8s;
+            }
+
+            .poster-slide {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                opacity: 0;
+                animation: posterFade 16s infinite;
+            }
+            .poster-slide:nth-child(1) { animation-delay: 0s; }
+            .poster-slide:nth-child(2) { animation-delay: 4s; }
+            .poster-slide:nth-child(3) { animation-delay: 8s; }
+            .poster-slide:nth-child(4) { animation-delay: 12s; }
+
+            @keyframes posterFade {
+                0% { opacity: 0; }
+                5% { opacity: 1; }
+                20% { opacity: 1; }
+                25% { opacity: 0; }
+                100% { opacity: 0; }
+            }
+
             @media (prefers-reduced-motion: reduce) {
-                .showcase-panel::before, .showcase-panel::after, .showcase-card {
+                .showcase-panel::before, .showcase-panel::after, .showcase-card, .poster-card {
                     animation: none;
                 }
+                .poster-slide { animation: none; opacity: 0; }
+                .poster-slide:first-child { opacity: 1; }
             }
 
             .showcase-icon { font-size: 1.8rem; margin-bottom: 4px; }
@@ -559,10 +597,12 @@
                 <div class="showcase-label">학원 공지</div>
                 <div class="showcase-sub">놓치지 않게 바로 확인</div>
             </div>
-            <div class="showcase-card tall" style="background:linear-gradient(160deg,#7C3AED,#5B21B6);">
-                <div class="showcase-icon">🎯</div>
-                <div class="showcase-label">오늘의 수학 문제</div>
-                <div class="showcase-sub">매일 새로운 문제 풀이</div>
+            <!-- 🖼️ 직접 만든 포스터 4장이 자동으로 크로스페이드되며 순환 -->
+            <div class="poster-card">
+                <img class="poster-slide" src="assets/posters/poster1.png" alt="매일 만나는 작은 성장">
+                <img class="poster-slide" src="assets/posters/poster2.png" alt="매일 조금씩 확실하게">
+                <img class="poster-slide" src="assets/posters/poster3.png" alt="오늘도 한 걸음 더, 꾸준함이 만드는 변화">
+                <img class="poster-slide" src="assets/posters/poster4.png" alt="매일 쌓이는 나의 기록">
             </div>
             <div class="showcase-card" style="background:linear-gradient(160deg,#F59E0B,#D97706);">
                 <div class="showcase-icon">⚡</div>
