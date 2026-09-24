@@ -1590,20 +1590,25 @@
         return result;
     }
 
+    // ⚠️ 이 정리 작업이 빠지면(또는 auth.signOut()이 실패했다고 건너뛰면) 안드로이드 앱의
+    // 쿠키/웹스토리지 및 유투엠·매쓰플랫 자동로그인용 캐시 자격증명이 그대로 남아, 같은 기기를
+    // 이어서 쓰는 다음 학생에게 이전 학생의 세션(자동로그인)이 넘어가는 사고로 이어진다.
+    // 그래서 auth.signOut()의 성공/실패 여부와 무관하게 항상 실행되어야 한다.
+    function clearLocalSessionArtifacts() {
+        localStorage.removeItem('u2m_id');
+        localStorage.removeItem('u2m_pw');
+        if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
+            window.AndroidApp.logoutAll();
+        }
+    }
+
     function logoutUser() { showModal('logoutCheckModal'); }
     function confirmLogoutAction() {
         closeModal('logoutCheckModal');
-        auth.signOut().then(() => {
-            localStorage.removeItem('u2m_id');
-            localStorage.removeItem('u2m_pw');
-            // ⚠️ 이 호출이 빠지면 안드로이드 앱의 쿠키/웹스토리지 및 유투엠·매쓰플랫 자동로그인용
-            // 캐시 자격증명이 그대로 남아, 같은 기기를 이어서 쓰는 다음 학생에게
-            // 이전 학생의 세션(자동로그인)이 넘어가는 사고로 이어진다.
-            if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
-                window.AndroidApp.logoutAll();
-            }
+        auth.signOut().catch(() => {}).then(() => {
+            clearLocalSessionArtifacts();
             window.location.href = 'login.html';
-        }).catch(() => { showToast("로그아웃 오류가 발생했습니다."); });
+        });
     }
 
     /* =====================================================================
@@ -1732,14 +1737,8 @@
         if (noteListener) noteListener.off();
         applyDarkModePreference(false);
         localStorage.removeItem('kst_dark_mode');
-        auth.signOut().then(() => {
-            localStorage.removeItem('u2m_id');
-            localStorage.removeItem('u2m_pw');
-            // 안드로이드 앱의 쿠키/웹스토리지/유투엠·매쓰플랫 자동로그인용 캐시 자격증명까지
-            // 지워야 같은 기기의 다음 학생에게 이전 학생 세션이 넘어가지 않는다.
-            if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
-                window.AndroidApp.logoutAll();
-            }
+        auth.signOut().catch(() => {}).then(() => {
+            clearLocalSessionArtifacts();
             if (window.location.pathname.indexOf('login.html') === -1) {
                 window.location.replace('login.html');
             }
@@ -1781,14 +1780,10 @@
     function triggerAutoLogout() {
         clearInterval(countdownTimer);
         clearTimeout(idleTimer);
-        auth.signOut().then(() => {
-            localStorage.removeItem('u2m_id');
-            localStorage.removeItem('u2m_pw');
-            if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
-                window.AndroidApp.logoutAll();
-            }
+        auth.signOut().catch(() => {}).then(() => {
+            clearLocalSessionArtifacts();
             window.location.replace('login.html');
-        }).catch(() => { window.location.replace('login.html'); });
+        });
     }
 
     /* =====================================================================
