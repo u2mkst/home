@@ -3210,7 +3210,8 @@
             user.updatePassword(newAuthPw)
                 .then(() => {
                     originalPhoneTail = phoneTail;
-                    localStorage.setItem('u2m_pw', newAuthPw);
+                    // ⚠️ 실제 Firebase 로그인 비밀번호를 평문으로 저장하지 않는다 — 아무 곳에서도
+                    // 읽지 않는 값이라 저장해봐야 기기 탈취 시 노출 위험만 남는다.
                     return database.ref(`students/${user.uid}`).update(updatedObject);
                 })
                 .then(() => {

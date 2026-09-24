@@ -1192,9 +1192,11 @@
                 .then((userCredential) => {
                     loginFailCount = 0;
                     const savedId = studentEmail.split('@')[0];
+                    // ⚠️ 실제 Firebase 로그인 비밀번호("00"+PIN)를 평문으로 저장하면 안 된다 —
+                    // 기기 탈취/루팅/XSS 시 계정 자체가 그대로 노출된다. 이 값을 읽는 곳이
+                    // 코드 어디에도 없어 순수 위험만 있던 캐시였으므로 저장하지 않는다.
                     localStorage.setItem('u2m_id', savedId);
-                    localStorage.setItem('u2m_pw', studentPassword);
-                    window.location.href = './index.html'; 
+                    window.location.href = './index.html';
                 })
                 .catch((error) => {
                     loginFailCount++;
