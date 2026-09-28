@@ -1084,6 +1084,16 @@
         </div>
     </div>
 
+    <!-- 🎯 시험 주간 화이팅 / 시험 마지막 날 수고했어요 바텀시트 (중·고등학생 한정) -->
+    <div id="examPeriodBottomSheet" class="bottom-sheet-overlay" onclick="if(event.target.id==='examPeriodBottomSheet') closeExamPeriodSheet()">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
+            <div class="sheet-drag-handle"></div>
+            <div id="examPeriodEmoji" style="font-size:3rem; text-align:center; margin-bottom:10px;">💪</div>
+            <div class="sheet-title" id="examPeriodMessage" style="margin-bottom:20px;">시험 화이팅!</div>
+            <button type="button" class="btn-base btn-primary" style="width:100%;" onclick="closeExamPeriodSheet()">확인</button>
+        </div>
+    </div>
+
     <!-- 🎓 매년 3월, 새 학년/반 진급 확인 바텀시트 (초6→중1, 중3→고1은 학교도 재선택) -->
     <div id="gradePromotionBottomSheet" class="bottom-sheet-overlay" onclick="if(event.target.id==='gradePromotionBottomSheet') closeGradePromotionSheet()">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()">
@@ -2553,6 +2563,21 @@
     // 🎓 중·고등학생 한정 — 시험 기간에는 화이팅 메시지, 그 주 시험이 끝난 날엔 수고했다는
     // 메시지를 한 번씩 띄운다. NEIS 학사일정은 여러 날짜의 시험을 같은 이름으로 각각의
     // 행(row)으로 내려주므로, 이름별로 날짜를 모아 [최초일~최종일]을 그 시험의 기간으로 본다.
+    function ymdToDate(ymd) {
+        return new Date(`${ymd.substring(0,4)}-${ymd.substring(4,6)}-${ymd.substring(6,8)}T00:00:00`);
+    }
+    function dateToYmd(d) {
+        return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    }
+    // 시험 마지막 날이 속한 주의 월요일~일요일 범위를 구한다 — "화이팅"은 이 주 전체 동안 띄운다.
+    function getWeekRange(ymd) {
+        const d = ymdToDate(ymd);
+        const mondayOffset = (d.getDay() + 6) % 7; // 월=0 기준으로 오늘까지 며칠 지났는지
+        const monday = new Date(d); monday.setDate(d.getDate() - mondayOffset);
+        const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+        return { weekStart: dateToYmd(monday), weekEnd: dateToYmd(sunday) };
+    }
+
     function checkExamPeriodMessage(rows, todayStr) {
         if (!currentStudentData || !currentUserUid) return;
         if (currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) return;
@@ -2571,8 +2596,9 @@
         let status = null;
         Object.keys(examGroups).forEach(name => {
             const dates = examGroups[name].slice().sort();
-            const start = dates[0], end = dates[dates.length - 1];
-            if (todayStr >= start && todayStr <= end) {
+            const end = dates[dates.length - 1];
+            const { weekStart, weekEnd } = getWeekRange(end);
+            if (todayStr >= weekStart && todayStr <= weekEnd) {
                 status = { name, isLastDay: todayStr === end };
             }
         });
@@ -2583,10 +2609,23 @@
         try { localStorage.setItem(dedupeKey, '1'); } catch {}
 
         if (status.isLastDay) {
-            showToast(`🎉 ${status.name} 끝! 그동안 정말 고생 많았어요.`, 4000);
+            openExamPeriodSheet('🎉', `${status.name} 끝!\n그동안 정말 고생 많았어요.`);
         } else {
-            showToast(`💪 ${status.name} 기간이에요, 시험 화이팅!`, 4000);
+            openExamPeriodSheet('💪', `${status.name} 기간이에요,\n시험 화이팅!`);
         }
+    }
+
+    function openExamPeriodSheet(emoji, message) {
+        document.getElementById('examPeriodEmoji').textContent = emoji;
+        document.getElementById('examPeriodMessage').style.whiteSpace = 'pre-line';
+        document.getElementById('examPeriodMessage').textContent = message;
+        const sheet = document.getElementById('examPeriodBottomSheet');
+        if (sheet) sheet.classList.add('active');
+    }
+
+    function closeExamPeriodSheet() {
+        const sheet = document.getElementById('examPeriodBottomSheet');
+        if (sheet) sheet.classList.remove('active');
     }
 
     function fetchExamDateFromNeis(schoolName) {
