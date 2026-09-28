@@ -1084,13 +1084,14 @@
         </div>
     </div>
 
-    <!-- 🎯 시험 주간 화이팅 / 시험 마지막 날 수고했어요 바텀시트 (중·고등학생 한정) -->
-    <div id="examPeriodBottomSheet" class="bottom-sheet-overlay" onclick="if(event.target.id==='examPeriodBottomSheet') closeExamPeriodSheet()">
+    <!-- 🎯 학사일정 알림 공용 바텀시트 — 시험 주간 화이팅/수고했어요, 방학식·개학식,
+         특별 행사(소풍·체육대회 등), 재량휴업일 등을 모두 이 시트 하나로 띄운다. -->
+    <div id="schoolNoticeBottomSheet" class="bottom-sheet-overlay" onclick="if(event.target.id==='schoolNoticeBottomSheet') closeSchoolNoticeSheet()">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()">
             <div class="sheet-drag-handle"></div>
-            <div id="examPeriodEmoji" style="font-size:3rem; text-align:center; margin-bottom:10px;">💪</div>
-            <div class="sheet-title" id="examPeriodMessage" style="margin-bottom:20px;">시험 화이팅!</div>
-            <button type="button" class="btn-base btn-primary" style="width:100%;" onclick="closeExamPeriodSheet()">확인</button>
+            <div id="schoolNoticeEmoji" style="font-size:3rem; text-align:center; margin-bottom:10px;">💪</div>
+            <div class="sheet-title" id="schoolNoticeMessage" style="margin-bottom:20px;">시험 화이팅!</div>
+            <button type="button" class="btn-base btn-primary" style="width:100%;" onclick="closeSchoolNoticeSheet()">확인</button>
         </div>
     </div>
 
@@ -2611,23 +2612,66 @@
         try { localStorage.setItem(dedupeKey, '1'); } catch {}
 
         if (status.isDone) {
-            openExamPeriodSheet('🎉', `${status.name} 끝!\n그동안 정말 고생 많았어요.`);
+            openSchoolNoticeSheet('🎉', `${status.name} 끝!\n그동안 정말 고생 많았어요.`);
         } else {
-            openExamPeriodSheet('💪', `${status.name} 기간이에요,\n시험 화이팅!`);
+            openSchoolNoticeSheet('💪', `${status.name} 기간이에요,\n시험 화이팅!`);
         }
     }
 
-    function openExamPeriodSheet(emoji, message) {
-        document.getElementById('examPeriodEmoji').textContent = emoji;
-        document.getElementById('examPeriodMessage').style.whiteSpace = 'pre-line';
-        document.getElementById('examPeriodMessage').textContent = message;
-        const sheet = document.getElementById('examPeriodBottomSheet');
+    function openSchoolNoticeSheet(emoji, message) {
+        document.getElementById('schoolNoticeEmoji').textContent = emoji;
+        document.getElementById('schoolNoticeMessage').style.whiteSpace = 'pre-line';
+        document.getElementById('schoolNoticeMessage').textContent = message;
+        const sheet = document.getElementById('schoolNoticeBottomSheet');
         if (sheet) sheet.classList.add('active');
     }
 
-    function closeExamPeriodSheet() {
-        const sheet = document.getElementById('examPeriodBottomSheet');
+    function closeSchoolNoticeSheet() {
+        const sheet = document.getElementById('schoolNoticeBottomSheet');
         if (sheet) sheet.classList.remove('active');
+    }
+
+    // 📅 방학식/개학식, 소풍·체육대회 등 특별 행사, 재량휴업일 — 전날에 한 번씩 미리 알려준다.
+    // 오늘 이미 시험 관련 시트가 떴다면(checkExamPeriodMessage) 겹치지 않도록 건너뛴다.
+    function checkSchoolEventNotices(rows, todayStr) {
+        if (!currentStudentData || !currentUserUid) return;
+
+        const examDedupeKey = `examMsgShown_${currentUserUid}_${todayStr}`;
+        if (localStorage.getItem(examDedupeKey)) return;
+
+        const dedupeKey = `schoolEventShown_${currentUserUid}_${todayStr}`;
+        if (localStorage.getItem(dedupeKey)) return;
+
+        const tomorrowStr = dateToYmd(new Date(ymdToDate(todayStr).getTime() + 24 * 60 * 60 * 1000));
+        const tomorrowRows = rows.filter(item => item.AA_YMD === tomorrowStr);
+        if (tomorrowRows.length === 0) return;
+
+        // 우선순위: 방학식/개학식 > 특별 행사 > 재량휴업일·공휴일
+        const vacationStart = tomorrowRows.find(item => (item.EVENT_NM || "").includes("방학식"));
+        const vacationEnd = tomorrowRows.find(item => {
+            const name = item.EVENT_NM || "";
+            return name.includes("개학식") || name.includes("개학");
+        });
+        const specialEvent = tomorrowRows.find(item => {
+            const name = item.EVENT_NM || "";
+            return name.includes("소풍") || name.includes("체육대회") || name.includes("운동회") ||
+                   name.includes("수학여행") || name.includes("현장학습") || name.includes("축제");
+        });
+        const dayOff = tomorrowRows.find(item => {
+            const name = item.EVENT_NM || "";
+            return name.includes("재량휴업일") || name.includes("휴업일") || name.includes("임시공휴일");
+        });
+
+        let notice = null;
+        if (vacationStart) notice = { emoji: '🏖️', message: `내일은 ${vacationStart.EVENT_NM}이에요!\n방학 잘 보내세요.` };
+        else if (vacationEnd) notice = { emoji: '📚', message: `내일 ${vacationEnd.EVENT_NM}이에요!\n새 학기 화이팅!` };
+        else if (specialEvent) notice = { emoji: '🎉', message: `내일 ${specialEvent.EVENT_NM}이에요!\n즐겁게 다녀오세요.` };
+        else if (dayOff) notice = { emoji: '🎈', message: `내일은 ${dayOff.EVENT_NM}이라\n학교에 안 가는 날이에요.` };
+
+        if (!notice) return;
+
+        try { localStorage.setItem(dedupeKey, '1'); } catch {}
+        openSchoolNoticeSheet(notice.emoji, notice.message);
     }
 
     function fetchExamDateFromNeis(schoolName) {
@@ -2639,6 +2683,7 @@
             const now = new Date();
             const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
             checkExamPeriodMessage(rows, todayStr);
+            checkSchoolEventNotices(rows, todayStr);
             let upcomingExamDates = [];
             rows.forEach(item => {
                 const eventName = item.EVENT_NM || "";
