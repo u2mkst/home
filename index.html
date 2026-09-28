@@ -1745,12 +1745,12 @@
                         const cachedName = rawName ? getCachedName(user.uid, rawName) : null;
                         if (cachedName) {
                             currentStudentName = cachedName;
-                            document.getElementById('welcome-message').innerText = `안녕하세요, ${cachedName}님`;
+                            document.getElementById('welcome-message').innerText = `${cachedName}님 화이팅!`;
                         } else {
                             (rawName ? decryptAES(rawName) : Promise.resolve(user.displayName || "학생"))
                                 .then(actualName => {
                                     currentStudentName = actualName;
-                                    document.getElementById('welcome-message').innerText = `안녕하세요, ${actualName}님`;
+                                    document.getElementById('welcome-message').innerText = `${actualName}님 화이팅!`;
                                     if (rawName) setCachedName(user.uid, rawName, actualName);
                                 });
                         }
@@ -2792,7 +2792,7 @@
         let schoolTag = currentStudentData.schoolName ? currentStudentData.schoolName.replace("대한민국", "").substring(0,5) : "학교";
 
         if (diffDays > 0) { ddayZone.innerText = `${schoolTag} [${examName}] D-${diffDays}`; }
-        else if (diffDays === 0) { ddayZone.innerHTML = `⚠️ [${examName}] 오늘 D-DAY 🎉`; }
+        else if (diffDays === 0) { ddayZone.innerText = `${schoolTag} [${examName}] D-DAY`; }
         else { ddayZone.innerText = "예정된 시험 없음"; }
     }
 
