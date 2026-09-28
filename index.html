@@ -239,11 +239,12 @@
         }
         .bottom-sheet-overlay.active .bottom-sheet-container { transform: translateY(0); }
         .sheet-drag-handle {
-            width: 36px; height: 4px; background: rgba(120,120,128,0.4); border-radius: 2px;
+            width: 36px; height: 4px; background: rgba(120,120,128,0.55); border-radius: 2px;
             margin: 0 auto 18px; padding: 10px 30px; margin-top: -10px; margin-bottom: 8px;
             background-clip: content-box; cursor: grab; touch-action: none;
         }
         .sheet-drag-handle:active { cursor: grabbing; }
+        :root[data-theme="dark"] .sheet-drag-handle { background: rgba(255,255,255,0.32); }
         .sheet-title { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; text-align: center; }
         .sheet-subtitle { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; text-align: center; }
 
