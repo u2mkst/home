@@ -238,28 +238,18 @@
             overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch;
         }
         .bottom-sheet-overlay.active .bottom-sheet-container { transform: translateY(0); }
-        .sheet-drag-handle { width: 36px; height: 4px; background: rgba(120,120,128,0.4); border-radius: 2px; margin: 0 auto 18px; }
+        .sheet-drag-handle {
+            width: 36px; height: 4px; background: rgba(120,120,128,0.4); border-radius: 2px;
+            margin: 0 auto 18px; padding: 10px 30px; margin-top: -10px; margin-bottom: 8px;
+            background-clip: content-box; cursor: grab; touch-action: none;
+        }
+        .sheet-drag-handle:active { cursor: grabbing; }
         .sheet-title { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; text-align: center; }
         .sheet-subtitle { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; text-align: center; }
 
-        /* 🎯 시험 화이팅/수고했어요 — 캡처해서 SNS에 올리고 싶은 카드.
-           로고는 맨 하단에 아이콘만 작게, 위쪽은 문구 중심의 타이포그래피로 구성. */
-        .exam-wish-card { text-align: center; padding: 10px 6px 6px; }
-        .exam-wish-kicker { font-size: 2.4rem; margin-bottom: 14px; line-height: 1; }
-        .exam-wish-brand {
-            font-family: 'Paperlogy', sans-serif; font-size: 0.78rem; font-weight: 700;
-            color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 12px;
-        }
-        .exam-wish-line1 {
-            font-family: 'Paperlogy', sans-serif; font-size: 1.2rem; font-weight: 800;
-            color: var(--text-main); line-height: 1.55; letter-spacing: -0.3px;
-        }
-        .exam-wish-line2 {
-            font-family: 'Paperlogy', sans-serif; font-size: 1.2rem; font-weight: 800;
-            color: var(--primary); line-height: 1.55; letter-spacing: -0.3px; margin-bottom: 26px;
-        }
-        .exam-wish-divider { width: 32px; height: 2px; background: var(--lg-border); margin: 0 auto 18px; border-radius: 2px; }
-        .exam-wish-icon { height: 20px; width: auto; display: block; margin: 0 auto; opacity: 0.5; }
+        /* 🎯 시험 화이팅/수고했어요 카드용 — 다른 바텀시트와 같은 sheet-title/subtitle을
+           쓰고, KST 아이콘만 하단에 작게 추가한다. */
+        .exam-wish-icon { height: 20px; width: auto; display: block; margin: 4px auto 18px; opacity: 0.5; }
         .sheet-input { width: 100%; padding: 14px 16px; border: 1px solid var(--lg-border-soft); border-radius: var(--radius-md); font-size: 0.95rem; font-family: inherit; background: var(--lg-surface-soft); margin-bottom: 10px; box-sizing: border-box; transition: all 0.25s var(--ease-smooth); }
         .sheet-input:focus { outline: none; border-color: var(--accent); background: #FFFFFF; box-shadow: 0 0 0 3px rgba(0,75,191,0.15); }
 
@@ -1109,23 +1099,15 @@
         <div class="bottom-sheet-container" onclick="event.stopPropagation()">
             <div class="sheet-drag-handle"></div>
 
-            <!-- 방학식/개학식/특별행사/재량휴업일 — 짧은 안내용 -->
-            <div id="schoolNoticeSimple">
-                <div id="schoolNoticeEmoji" style="font-size:3rem; text-align:center; margin-bottom:10px;">💪</div>
-                <div class="sheet-title" id="schoolNoticeMessage" style="margin-bottom:20px;">시험 화이팅!</div>
-            </div>
+            <!-- 방학식/개학식/특별행사/재량휴업일 및 시험 화이팅/수고했어요 모두
+                 다른 바텀시트와 같은 sheet-title/sheet-subtitle 타이포그래피를 쓴다. -->
+            <div class="sheet-title" id="schoolNoticeTitle">시험 화이팅!</div>
+            <div class="sheet-subtitle" id="schoolNoticeMessage" style="white-space:pre-line;">화이팅!</div>
 
-            <!-- 시험 화이팅/수고했어요 — 캡처해서 SNS에 올리고 싶은 카드 (버튼 없이 바깥 탭으로 닫기) -->
-            <div id="examShareCard" class="exam-wish-card hidden">
-                <div class="exam-wish-kicker" id="examShareKicker">🍀</div>
-                <div class="exam-wish-brand">K&amp;P 수학입시학원이</div>
-                <div class="exam-wish-line1" id="examShareLine1"></div>
-                <div class="exam-wish-line2" id="examShareLine2"></div>
-                <div class="exam-wish-divider"></div>
-                <img src="assets/logo-icon.png" alt="KST" class="exam-wish-icon">
-            </div>
+            <!-- 시험 화이팅/수고했어요일 때만 KST 아이콘을 하단에 작게 — 버튼 없이 바깥 탭으로 닫는다 -->
+            <img src="assets/logo-icon.png" alt="KST" id="examShareIcon" class="exam-wish-icon hidden">
 
-            <button type="button" id="schoolNoticeConfirmBtn" class="btn-base btn-primary" style="width:100%; margin-top:16px;" onclick="closeSchoolNoticeSheet()">확인</button>
+            <button type="button" id="schoolNoticeConfirmBtn" class="btn-base btn-primary" style="width:100%;" onclick="closeSchoolNoticeSheet()">확인</button>
         </div>
     </div>
 
@@ -2647,31 +2629,28 @@
 
         const studentName = currentStudentName || "학생";
         if (status.isDone) {
-            openExamShareCard('🎉', `${studentName}님의 ${status.name}`, '그동안의 노력이 좋은 결실을 맺기를 응원합니다!');
+            openExamShareCard(`🎉 ${studentName}님의 ${status.name}`, '그동안의 노력이 좋은 결실을 맺기를 응원합니다!');
         } else {
-            openExamShareCard('🍀', `${studentName}님의 ${status.name}`, '만점을 진심으로 기원합니다!');
+            openExamShareCard(`🍀 ${studentName}님의 ${status.name}`, '만점을 진심으로 기원합니다!');
         }
     }
 
-    function openSchoolNoticeSheet(emoji, message) {
-        document.getElementById('schoolNoticeSimple').classList.remove('hidden');
-        document.getElementById('examShareCard').classList.add('hidden');
+    function openSchoolNoticeSheet(title, subtitle) {
+        document.getElementById('examShareIcon').classList.add('hidden');
         document.getElementById('schoolNoticeConfirmBtn').classList.remove('hidden');
-        document.getElementById('schoolNoticeEmoji').textContent = emoji;
-        document.getElementById('schoolNoticeMessage').style.whiteSpace = 'pre-line';
-        document.getElementById('schoolNoticeMessage').textContent = message;
+        document.getElementById('schoolNoticeTitle').textContent = title;
+        document.getElementById('schoolNoticeMessage').textContent = subtitle;
         const sheet = document.getElementById('schoolNoticeBottomSheet');
         if (sheet) sheet.classList.add('active');
     }
 
-    // 🎯 시험 화이팅/수고했어요 전용 — 로고 + 한 줄 메시지만, 버튼 없이 바깥을 탭해서 닫는다.
-    function openExamShareCard(kicker, line1, line2) {
-        document.getElementById('schoolNoticeSimple').classList.add('hidden');
-        document.getElementById('examShareCard').classList.remove('hidden');
+    // 🎯 시험 화이팅/수고했어요 전용 — 다른 시트와 같은 타이포그래피 + KST 아이콘,
+    // 버튼 없이 바깥을 탭해서 닫는다.
+    function openExamShareCard(title, subtitle) {
+        document.getElementById('examShareIcon').classList.remove('hidden');
         document.getElementById('schoolNoticeConfirmBtn').classList.add('hidden');
-        document.getElementById('examShareKicker').textContent = kicker;
-        document.getElementById('examShareLine1').textContent = line1;
-        document.getElementById('examShareLine2').textContent = line2;
+        document.getElementById('schoolNoticeTitle').textContent = title;
+        document.getElementById('schoolNoticeMessage').textContent = subtitle;
         const sheet = document.getElementById('schoolNoticeBottomSheet');
         if (sheet) sheet.classList.add('active');
     }
@@ -2713,15 +2692,15 @@
         });
 
         let notice = null;
-        if (vacationStart) notice = { emoji: '🏖️', message: `내일은 ${vacationStart.EVENT_NM}이에요!\n방학 잘 보내세요.` };
-        else if (vacationEnd) notice = { emoji: '📚', message: `내일 ${vacationEnd.EVENT_NM}이에요!\n새 학기 화이팅!` };
-        else if (specialEvent) notice = { emoji: '🎉', message: `내일 ${specialEvent.EVENT_NM}이에요!\n즐겁게 다녀오세요.` };
-        else if (dayOff) notice = { emoji: '🎈', message: `내일은 ${dayOff.EVENT_NM}이라\n학교에 안 가는 날이에요.` };
+        if (vacationStart) notice = { title: '🏖️ 방학이 시작돼요!', subtitle: `내일은 ${vacationStart.EVENT_NM}이에요. 방학 잘 보내세요!` };
+        else if (vacationEnd) notice = { title: '📚 개학이에요!', subtitle: `내일 ${vacationEnd.EVENT_NM}이에요. 새 학기 화이팅!` };
+        else if (specialEvent) notice = { title: '🎉 특별한 하루예요!', subtitle: `내일 ${specialEvent.EVENT_NM}이에요. 즐겁게 다녀오세요.` };
+        else if (dayOff) notice = { title: '🎈 쉬는 날이에요!', subtitle: `내일은 ${dayOff.EVENT_NM}이라 학교에 안 가는 날이에요.` };
 
         if (!notice) return;
 
         try { localStorage.setItem(dedupeKey, '1'); } catch {}
-        openSchoolNoticeSheet(notice.emoji, notice.message);
+        openSchoolNoticeSheet(notice.title, notice.subtitle);
     }
 
     function fetchExamDateFromNeis(schoolName) {
@@ -4228,6 +4207,50 @@
             listEl.appendChild(item);
         });
     }
+
+    /* =====================================================================
+       9.5 🖐️ 바텀시트 드래그 핸들 — 아래로 끌어서 닫기
+       모든 .bottom-sheet-overlay에 공통으로 붙는다. 핸들을 잡고 일정 거리 이상
+       아래로 끌면 시트를 닫는데, 시트마다 닫는 함수 이름이 다 달라서(closeXxx) 직접
+       부르는 대신 오버레이 자체에 합성 클릭을 발생시킨다 — 오버레이 배경을 탭했을 때와
+       똑같이 동작해서, 그 시트의 onclick 핸들러가 알아서 맞는 닫기 함수를 실행한다.
+    ===================================================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.bottom-sheet-overlay').forEach(overlay => {
+            const container = overlay.querySelector('.bottom-sheet-container');
+            const handle = overlay.querySelector('.sheet-drag-handle');
+            if (!container || !handle) return;
+
+            let startY = 0, deltaY = 0, dragging = false;
+            const DISMISS_THRESHOLD = 90;
+
+            function start(clientY) {
+                dragging = true; startY = clientY; deltaY = 0;
+                container.style.transition = 'none';
+            }
+            function move(clientY) {
+                if (!dragging) return;
+                deltaY = Math.max(0, clientY - startY);
+                container.style.transform = `translateY(${deltaY}px)`;
+            }
+            function end() {
+                if (!dragging) return;
+                dragging = false;
+                container.style.transition = '';
+                container.style.transform = '';
+                if (deltaY > DISMISS_THRESHOLD) overlay.click();
+                deltaY = 0;
+            }
+
+            handle.addEventListener('touchstart', (e) => start(e.touches[0].clientY), { passive: true });
+            handle.addEventListener('touchmove', (e) => move(e.touches[0].clientY), { passive: true });
+            handle.addEventListener('touchend', end);
+
+            handle.addEventListener('mousedown', (e) => { e.preventDefault(); start(e.clientY); });
+            window.addEventListener('mousemove', (e) => move(e.clientY));
+            window.addEventListener('mouseup', end);
+        });
+    });
 
     /* =====================================================================
        10. 채팅 FAB / 초기 부팅
