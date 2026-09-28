@@ -2550,6 +2550,45 @@
     }
     setInterval(updateClock, 1000);
 
+    // 🎓 중·고등학생 한정 — 시험 기간에는 화이팅 메시지, 그 주 시험이 끝난 날엔 수고했다는
+    // 메시지를 한 번씩 띄운다. NEIS 학사일정은 여러 날짜의 시험을 같은 이름으로 각각의
+    // 행(row)으로 내려주므로, 이름별로 날짜를 모아 [최초일~최종일]을 그 시험의 기간으로 본다.
+    function checkExamPeriodMessage(rows, todayStr) {
+        if (!currentStudentData || !currentUserUid) return;
+        if (currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) return;
+
+        const examGroups = {};
+        rows.forEach(item => {
+            const eventName = item.EVENT_NM || "";
+            const eventDate = item.AA_YMD;
+            if (eventName.includes("고사") || eventName.includes("중간") || eventName.includes("기말") ||
+                eventName.includes("지필") || eventName.includes("시험") || eventName.includes("정규")) {
+                if (!examGroups[eventName]) examGroups[eventName] = [];
+                examGroups[eventName].push(eventDate);
+            }
+        });
+
+        let status = null;
+        Object.keys(examGroups).forEach(name => {
+            const dates = examGroups[name].slice().sort();
+            const start = dates[0], end = dates[dates.length - 1];
+            if (todayStr >= start && todayStr <= end) {
+                status = { name, isLastDay: todayStr === end };
+            }
+        });
+        if (!status) return;
+
+        const dedupeKey = `examMsgShown_${currentUserUid}_${todayStr}`;
+        if (localStorage.getItem(dedupeKey)) return;
+        try { localStorage.setItem(dedupeKey, '1'); } catch {}
+
+        if (status.isLastDay) {
+            showToast(`🎉 ${status.name} 끝! 그동안 정말 고생 많았어요.`, 4000);
+        } else {
+            showToast(`💪 ${status.name} 기간이에요, 시험 화이팅!`, 4000);
+        }
+    }
+
     function fetchExamDateFromNeis(schoolName) {
         if (!schoolName) { renderDDayBadge(null); return; }
 
@@ -2558,6 +2597,7 @@
             const rows = data.SchoolSchedule[1].row;
             const now = new Date();
             const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+            checkExamPeriodMessage(rows, todayStr);
             let upcomingExamDates = [];
             rows.forEach(item => {
                 const eventName = item.EVENT_NM || "";
