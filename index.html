@@ -242,31 +242,12 @@
         .sheet-title { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; text-align: center; }
         .sheet-subtitle { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; text-align: center; }
 
-        /* 🎯 시험 화이팅/수고했어요 — 캡처해서 SNS에 올리고 싶어지는 카드 */
-        .notice-share-card {
-            position: relative; overflow: hidden;
-            background: linear-gradient(150deg, #004bbf 0%, #4338CA 55%, #7C3AED 100%);
-            border-radius: 24px; padding: 40px 26px 28px; text-align: center; color: #fff;
-        }
-        .notice-share-card::before, .notice-share-card::after {
-            content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-        }
-        .notice-share-card::before { width: 180px; height: 180px; background: rgba(255,255,255,0.14); top: -70px; left: -50px; }
-        .notice-share-card::after { width: 140px; height: 140px; background: rgba(255,255,255,0.10); bottom: -60px; right: -40px; }
-        .notice-share-emoji { position: relative; z-index: 1; font-size: 3.6rem; margin-bottom: 14px; }
-        .notice-share-title {
-            position: relative; z-index: 1;
-            font-family: 'Paperlogy', sans-serif; font-size: 1.3rem; font-weight: 800;
-            margin-bottom: 14px; letter-spacing: -0.3px;
-        }
-        .notice-share-body {
-            position: relative; z-index: 1;
-            font-size: 0.92rem; line-height: 1.7; white-space: pre-line; color: rgba(255,255,255,0.94);
-        }
-        .notice-share-brand {
-            position: relative; z-index: 1;
-            margin-top: 22px; font-size: 0.72rem; font-weight: 700;
-            letter-spacing: 0.08em; color: rgba(255,255,255,0.75); text-transform: uppercase;
+        /* 🎯 시험 화이팅/수고했어요 — 깔끔한 KST 로고 + 한 줄 메시지 카드 */
+        .exam-wish-card { text-align: center; padding: 4px 8px 8px; }
+        .exam-wish-logo { height: 52px; width: auto; margin: 0 auto 22px; display: block; }
+        .exam-wish-text {
+            font-family: 'Paperlogy', sans-serif; font-size: 1.08rem; font-weight: 700;
+            line-height: 1.75; color: var(--text-main); white-space: pre-line;
         }
         .sheet-input { width: 100%; padding: 14px 16px; border: 1px solid var(--lg-border-soft); border-radius: var(--radius-md); font-size: 0.95rem; font-family: inherit; background: var(--lg-surface-soft); margin-bottom: 10px; box-sizing: border-box; transition: all 0.25s var(--ease-smooth); }
         .sheet-input:focus { outline: none; border-color: var(--accent); background: #FFFFFF; box-shadow: 0 0 0 3px rgba(0,75,191,0.15); }
@@ -1123,15 +1104,13 @@
                 <div class="sheet-title" id="schoolNoticeMessage" style="margin-bottom:20px;">시험 화이팅!</div>
             </div>
 
-            <!-- 시험 화이팅/수고했어요 — 캡처해서 SNS에 올리고 싶은 카드 -->
-            <div id="examShareCard" class="notice-share-card hidden">
-                <div class="notice-share-emoji" id="examShareEmoji">💪</div>
-                <div class="notice-share-title" id="examShareTitle">시험 화이팅!</div>
-                <div class="notice-share-body" id="examShareBody"></div>
-                <div class="notice-share-brand">K&amp;P 수학입시학원</div>
+            <!-- 시험 화이팅/수고했어요 — 캡처해서 SNS에 올리고 싶은 카드 (버튼 없이 바깥 탭으로 닫기) -->
+            <div id="examShareCard" class="exam-wish-card hidden">
+                <img src="assets/logo-stacked.png" alt="KST" class="exam-wish-logo">
+                <div class="exam-wish-text" id="examShareBody"></div>
             </div>
 
-            <button type="button" class="btn-base btn-primary" style="width:100%; margin-top:16px;" onclick="closeSchoolNoticeSheet()">확인</button>
+            <button type="button" id="schoolNoticeConfirmBtn" class="btn-base btn-primary" style="width:100%; margin-top:16px;" onclick="closeSchoolNoticeSheet()">확인</button>
         </div>
     </div>
 
@@ -2651,24 +2630,18 @@
         if (localStorage.getItem(dedupeKey)) return;
         try { localStorage.setItem(dedupeKey, '1'); } catch {}
 
+        const studentName = currentStudentName || "학생";
         if (status.isDone) {
-            openExamShareCard(
-                '🎉',
-                `${status.name} 완주 축하해요!`,
-                `밤늦게까지 문제집 붙잡고 있던 시간,\n틀린 문제 몇 번이고 다시 풀어보던 순간,\n그 모든 노력을 K&P가 다 지켜봤어요.\n\n이제는 마음 편히 쉬면서\n스스로에게 잘했다고 말해주세요.\n\n수고했어요, 진짜 잘했어요 👏`
-            );
+            openExamShareCard(`K&P 수학입시학원이\n${studentName}님의 ${status.name} 완주를\n진심으로 축하합니다!`);
         } else {
-            openExamShareCard(
-                '💪',
-                `${status.name} 기간, 화이팅!`,
-                `떨리는 마음도, 긴장되는 순간도\n전부 너가 열심히 준비했다는 증거예요.\n\n지금까지 쌓아온 노력은\n절대 배신하지 않아요.\n\n오늘 하루도 자신을 믿고,\n끝까지 힘내봐요 🔥`
-            );
+            openExamShareCard(`K&P 수학입시학원이\n${studentName}님의 ${status.name} 만점을\n진심으로 기원합니다!`);
         }
     }
 
     function openSchoolNoticeSheet(emoji, message) {
         document.getElementById('schoolNoticeSimple').classList.remove('hidden');
         document.getElementById('examShareCard').classList.add('hidden');
+        document.getElementById('schoolNoticeConfirmBtn').classList.remove('hidden');
         document.getElementById('schoolNoticeEmoji').textContent = emoji;
         document.getElementById('schoolNoticeMessage').style.whiteSpace = 'pre-line';
         document.getElementById('schoolNoticeMessage').textContent = message;
@@ -2676,13 +2649,12 @@
         if (sheet) sheet.classList.add('active');
     }
 
-    // 🎯 시험 화이팅/수고했어요 전용 — 캡처해서 SNS에 올리고 싶은 그라데이션 카드로 띄운다.
-    function openExamShareCard(emoji, title, body) {
+    // 🎯 시험 화이팅/수고했어요 전용 — 로고 + 한 줄 메시지만, 버튼 없이 바깥을 탭해서 닫는다.
+    function openExamShareCard(message) {
         document.getElementById('schoolNoticeSimple').classList.add('hidden');
         document.getElementById('examShareCard').classList.remove('hidden');
-        document.getElementById('examShareEmoji').textContent = emoji;
-        document.getElementById('examShareTitle').textContent = title;
-        document.getElementById('examShareBody').textContent = body;
+        document.getElementById('schoolNoticeConfirmBtn').classList.add('hidden');
+        document.getElementById('examShareBody').textContent = message;
         const sheet = document.getElementById('schoolNoticeBottomSheet');
         if (sheet) sheet.classList.add('active');
     }
