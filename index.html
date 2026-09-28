@@ -1745,12 +1745,12 @@
                         const cachedName = rawName ? getCachedName(user.uid, rawName) : null;
                         if (cachedName) {
                             currentStudentName = cachedName;
-                            document.getElementById('welcome-message').innerText = `${cachedName}님 화이팅!`;
+                            updateWelcomeMessage();
                         } else {
                             (rawName ? decryptAES(rawName) : Promise.resolve(user.displayName || "학생"))
                                 .then(actualName => {
                                     currentStudentName = actualName;
-                                    document.getElementById('welcome-message').innerText = `${actualName}님 화이팅!`;
+                                    updateWelcomeMessage();
                                     if (rawName) setCachedName(user.uid, rawName, actualName);
                                 });
                         }
@@ -2773,14 +2773,24 @@
             }).catch(() => renderDDayBadge(null));
     }
 
+    // "화이팅!" 인사말은 실제로 다가오는/오늘인 시험이 있는 학생한테만 보여준다.
+    let hasUpcomingExamForGreeting = false;
+
     function renderDDayBadge(examDate, examName = "정기고사") {
         const ddayZone = document.getElementById('ddayText');
         if (!ddayZone) return;
         if (currentStudentData && currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) {
             ddayZone.style.display = 'none';
+            hasUpcomingExamForGreeting = false;
+            updateWelcomeMessage();
             return;
         }
-        if (!examDate) { ddayZone.innerText = "학사 일정 분석불가"; return; }
+        if (!examDate) {
+            ddayZone.innerText = "학사 일정 분석불가";
+            hasUpcomingExamForGreeting = false;
+            updateWelcomeMessage();
+            return;
+        }
 
         const targetDate = new Date(examDate + "T00:00:00");
         const today = new Date();
@@ -2794,6 +2804,17 @@
         if (diffDays > 0) { ddayZone.innerText = `${schoolTag} [${examName}] D-${diffDays}`; }
         else if (diffDays === 0) { ddayZone.innerText = `${schoolTag} [${examName}] D-DAY`; }
         else { ddayZone.innerText = "예정된 시험 없음"; }
+
+        hasUpcomingExamForGreeting = diffDays >= 0;
+        updateWelcomeMessage();
+    }
+
+    // 이름 로딩과 시험 여부 판별이 서로 다른 시점(비동기)에 끝나므로, 둘 다 준비됐을 때만
+    // 인사말을 그린다 — 이름이 아직이면 대기, 시험 여부가 아직 안 정해졌으면 기본 인사말.
+    function updateWelcomeMessage() {
+        const el = document.getElementById('welcome-message');
+        if (!el || !currentStudentName || currentStudentName === "학생") return;
+        el.innerText = hasUpcomingExamForGreeting ? `${currentStudentName}님 화이팅!` : `안녕하세요, ${currentStudentName}님`;
     }
 
     function displayDefaultAdvice() {
