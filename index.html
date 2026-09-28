@@ -251,6 +251,10 @@
         /* 🎯 시험 화이팅/수고했어요 카드용 — 다른 바텀시트와 같은 sheet-title/subtitle을
            쓰고, KST 아이콘만 하단에 작게 추가한다. */
         .exam-wish-kicker { text-align: center; font-size: 3rem; line-height: 1; margin-bottom: 16px; }
+        .exam-wish-brand {
+            font-family: 'Paperlogy', sans-serif; font-size: 0.78rem; font-weight: 700;
+            color: var(--text-muted); letter-spacing: 0.03em; text-align: center; margin-bottom: 10px;
+        }
         .exam-wish-headline {
             font-family: 'Paperlogy', sans-serif; font-size: 1.25rem; font-weight: 800;
             color: var(--text-main); line-height: 1.5; text-align: center; margin-bottom: 8px;
@@ -1110,6 +1114,7 @@
         <div class="bottom-sheet-container" onclick="event.stopPropagation()">
             <div class="sheet-drag-handle"></div>
             <div class="exam-wish-kicker" id="examShareKicker">🍀</div>
+            <div class="exam-wish-brand">K&amp;P 수학입시학원이</div>
             <div class="exam-wish-headline" id="examShareHeadline"></div>
             <div class="exam-wish-message" id="examShareMessage"></div>
             <img src="assets/logo-icon.png" alt="KST" class="exam-wish-icon">
