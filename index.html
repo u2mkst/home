@@ -2599,7 +2599,9 @@
             const end = dates[dates.length - 1];
             const { weekStart, weekEnd } = getWeekRange(end);
             if (todayStr >= weekStart && todayStr <= weekEnd) {
-                status = { name, isLastDay: todayStr === end };
+                // 시험 마지막 날 당일뿐 아니라, 그 이후 남은 요일도 "화이팅"은 어색하므로
+                // 계속 "수고했어요"로 남긴다 (예: 수요일에 끝나면 수~일 전부 수고했어요).
+                status = { name, isDone: todayStr >= end };
             }
         });
         if (!status) return;
@@ -2608,7 +2610,7 @@
         if (localStorage.getItem(dedupeKey)) return;
         try { localStorage.setItem(dedupeKey, '1'); } catch {}
 
-        if (status.isLastDay) {
+        if (status.isDone) {
             openExamPeriodSheet('🎉', `${status.name} 끝!\n그동안 정말 고생 많았어요.`);
         } else {
             openExamPeriodSheet('💪', `${status.name} 기간이에요,\n시험 화이팅!`);
