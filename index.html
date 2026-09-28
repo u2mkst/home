@@ -239,12 +239,12 @@
         }
         .bottom-sheet-overlay.active .bottom-sheet-container { transform: translateY(0); }
         .sheet-drag-handle {
-            width: 36px; height: 4px; background: rgba(120,120,128,0.55); border-radius: 2px;
+            width: 40px; height: 5px; background: #B8BCC4; border-radius: 3px;
             margin: 0 auto 18px; padding: 10px 30px; margin-top: -10px; margin-bottom: 8px;
             background-clip: content-box; cursor: grab; touch-action: none;
         }
         .sheet-drag-handle:active { cursor: grabbing; }
-        :root[data-theme="dark"] .sheet-drag-handle { background: rgba(255,255,255,0.32); }
+        :root[data-theme="dark"] .sheet-drag-handle { background: #565B64; }
         .sheet-title { font-family: 'Paperlogy', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; text-align: center; }
         .sheet-subtitle { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; text-align: center; }
 
@@ -2600,6 +2600,12 @@
         return { weekStart: dateToYmd(monday), weekEnd: dateToYmd(sunday) };
     }
 
+    // 🧪 테스트 계정(ufes0603)은 localStorage에 표시 기록을 남기지 않아서
+    // 새로고침할 때마다 학사일정 알림이 다시 뜬다.
+    function isDedupeTestAccount() {
+        return !!(currentStudentData && currentStudentData.u2mId === 'ufes0603');
+    }
+
     function checkExamPeriodMessage(rows, todayStr) {
         if (!currentStudentData || !currentUserUid) return;
         if (currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) return;
@@ -2629,8 +2635,9 @@
         if (!status) return;
 
         const dedupeKey = `examMsgShown_${currentUserUid}_${todayStr}`;
-        if (localStorage.getItem(dedupeKey)) return;
-        try { localStorage.setItem(dedupeKey, '1'); } catch {}
+        const skipDedupe = isDedupeTestAccount();
+        if (!skipDedupe && localStorage.getItem(dedupeKey)) return;
+        if (!skipDedupe) { try { localStorage.setItem(dedupeKey, '1'); } catch {} }
 
         const studentName = currentStudentName || "학생";
         if (status.isDone) {
@@ -2660,12 +2667,13 @@
     // 오늘 이미 시험 관련 시트가 떴다면(checkExamPeriodMessage) 겹치지 않도록 건너뛴다.
     function checkSchoolEventNotices(rows, todayStr) {
         if (!currentStudentData || !currentUserUid) return;
+        const skipDedupe = isDedupeTestAccount();
 
         const examDedupeKey = `examMsgShown_${currentUserUid}_${todayStr}`;
-        if (localStorage.getItem(examDedupeKey)) return;
+        if (!skipDedupe && localStorage.getItem(examDedupeKey)) return;
 
         const dedupeKey = `schoolEventShown_${currentUserUid}_${todayStr}`;
-        if (localStorage.getItem(dedupeKey)) return;
+        if (!skipDedupe && localStorage.getItem(dedupeKey)) return;
 
         const tomorrowStr = dateToYmd(new Date(ymdToDate(todayStr).getTime() + 24 * 60 * 60 * 1000));
         const tomorrowRows = rows.filter(item => item.AA_YMD === tomorrowStr);
@@ -2696,7 +2704,7 @@
 
         if (!message) return;
 
-        try { localStorage.setItem(dedupeKey, '1'); } catch {}
+        if (!skipDedupe) { try { localStorage.setItem(dedupeKey, '1'); } catch {} }
         showToast(message, 4000);
     }
 
