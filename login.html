@@ -287,49 +287,33 @@
         .switch-link { color: var(--primary); text-decoration: none; font-weight: 700; margin-left: 4px; cursor: pointer; }
         .switch-link:hover { text-decoration: underline; }
 
-        /* 🔵⚪ 아웃라인은 회색, 화살표·아이콘 박스 같은 주요 하이라이트만 블루로 */
-        .lite-mode-card {
-            margin-top: 20px; padding: 16px 18px;
+        /* 🔵⚪ 유투엠 | 매쓰플랫 바로가기 카드 — 기존 라이트모드 카드와 같은 라운딩/
+           아웃라인을 유지하되, 가운데 세로선으로 2단 분할한다. */
+        .quick-link-card {
+            margin-top: 20px;
+            display: flex; align-items: stretch;
             background: #FFFFFF;
             border: 1.5px solid var(--lg-border); border-radius: var(--radius-md);
-            display: flex; align-items: center; justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .quick-link-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 8px; padding: 18px 12px;
             text-decoration: none;
-            box-shadow: none;
-            transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), border-color 0.2s ease;
-            position: relative; overflow: hidden;
+            transition: background 0.2s ease;
+        }
+        .quick-link-item:hover { background: rgba(0, 75, 191, 0.06); }
+
+        .quick-link-icon {
+            width: 36px; height: 36px; flex-shrink: 0;
+            background: var(--primary); color: #fff; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 1rem;
         }
 
-        .lite-mode-card:hover {
-            border-color: var(--primary);
-            box-shadow: 0 6px 16px rgba(0, 75, 191, 0.14);
-            transform: translateY(-2px);
-        }
+        .quick-link-label { font-size: 0.87rem; font-weight: 800; color: var(--text-main); font-family: var(--font-title); }
 
-        .lite-info { display: flex; align-items: center; gap: 12px; }
-
-        .lite-icon {
-            width: 40px; height: 40px; flex-shrink: 0;
-            background: var(--primary);
-            border: none;
-            color: #fff; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
-        }
-
-        .lite-text-group { display: flex; flex-direction: column; gap: 2px; text-align: left; }
-
-        .lite-title-row { display: flex; align-items: center; gap: 6px; }
-        .lite-title { font-size: 0.87rem; font-weight: 800; color: var(--text-main); font-family: var(--font-title); }
-        .lite-badge {
-            font-size: 0.64rem; font-weight: 700; padding: 2px 7px; border-radius: 99px;
-            background: var(--primary);
-            color: #fff; letter-spacing: 0.02em; line-height: 1.5;
-        }
-        .lite-desc { font-size: 0.74rem; color: var(--text-muted); font-weight: 500; }
-        .lite-arrow {
-            font-size: 1rem; color: #fff; font-weight: bold; flex-shrink: 0;
-            background: var(--primary); width: 28px; height: 28px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-        }
+        .quick-link-divider { width: 1.5px; background: var(--lg-border); margin: 14px 0; }
 
         /* reCAPTCHA 바텀시트 모달 스타일 */
         .captcha-overlay {
@@ -710,24 +694,18 @@
             이미 계정이 있나요? <span class="switch-link" onclick="toggleMode('login')">로그인하러 가기</span>
         </div>
 
-        <!-- ⚡ Lite 모드 배너 — 네이버 로그인 화면에서 광고 배너가 있는 자리 -->
-        <a href="https://u2mkst.github.io/home/lite.html" id="liteModeBox" class="lite-mode-card">
-            <div class="lite-info">
-                <div class="lite-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" fill="#FFFFFF"/>
-                    </svg>
-                </div>
-                <div class="lite-text-group">
-                    <div class="lite-title-row">
-                        <span class="lite-title">Lite 모드 이용하기</span>
-                        <span class="lite-badge">로그인 없이</span>
-                    </div>
-                    <span class="lite-desc">계정 없이도 시간표·공지 바로 확인</span>
-                </div>
-            </div>
-            <div class="lite-arrow">→</div>
-        </a>
+        <!-- 🔗 유투엠 | 매쓰플랫 바로가기 — 네이버 로그인 화면에서 광고 배너가 있는 자리 -->
+        <div class="quick-link-card" id="quickLinkCard">
+            <a href="https://www.u2math.co.kr/Login/Index?returnUrl=/Mypage/MyMenu" target="_blank" rel="noopener" class="quick-link-item">
+                <div class="quick-link-icon">🎓</div>
+                <span class="quick-link-label">유투엠</span>
+            </a>
+            <div class="quick-link-divider"></div>
+            <a href="https://student.mathflat.com/" target="_blank" rel="noopener" class="quick-link-item">
+                <div class="quick-link-icon">📐</div>
+                <span class="quick-link-label">매쓰플랫</span>
+            </a>
+        </div>
 
         <div class="page-footer">
             <div class="footer-brand">K&amp;P 수학입시학원 <span>with</span> <img src="assets/logo-icon.png" alt="KST"></div>
@@ -1068,14 +1046,14 @@
         });
 
         function toggleMode(mode) {
-            const liteBox = document.getElementById('liteModeBox');
+            const quickLinkCard = document.getElementById('quickLinkCard');
             const loginSwitch = document.getElementById('loginSwitchMode');
             const registerSwitch = document.getElementById('registerSwitchMode');
 
             if(mode === 'register') {
                 document.getElementById('loginCard').classList.add('hidden');
                 document.getElementById('registerCard').classList.remove('hidden');
-                if (liteBox) liteBox.classList.add('hidden');
+                if (quickLinkCard) quickLinkCard.classList.add('hidden');
                 if (loginSwitch) loginSwitch.classList.add('hidden');
                 if (registerSwitch) registerSwitch.classList.remove('hidden');
                 isMathflatSkipped = false;
@@ -1088,7 +1066,7 @@
             } else {
                 document.getElementById('registerCard').classList.add('hidden');
                 document.getElementById('loginCard').classList.remove('hidden');
-                if (liteBox) liteBox.classList.remove('hidden');
+                if (quickLinkCard) quickLinkCard.classList.remove('hidden');
                 if (registerSwitch) registerSwitch.classList.add('hidden');
                 if (loginSwitch) loginSwitch.classList.remove('hidden');
 
