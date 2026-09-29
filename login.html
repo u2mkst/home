@@ -299,21 +299,23 @@
 
         .quick-link-item {
             flex: 1; display: flex; flex-direction: row; align-items: center; justify-content: center;
-            gap: 10px; padding: 16px 12px;
+            gap: 7px; padding: 11px 12px;
             text-decoration: none;
-            transition: background 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.2s ease, transform 0.12s ease;
         }
         .quick-link-item:hover { background: rgba(0, 75, 191, 0.06); }
+        .quick-link-item:active { background: rgba(0, 75, 191, 0.12); transform: scale(0.94); transition: background 0.05s ease, transform 0.05s ease; }
 
         .quick-link-icon {
-            width: 34px; height: 34px; flex-shrink: 0;
+            width: 22px; height: 22px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
         }
         .quick-link-icon img { width: 100%; height: 100%; object-fit: contain; }
 
-        .quick-link-label { font-size: 0.87rem; font-weight: 800; color: var(--text-main); font-family: var(--font-title); }
+        .quick-link-label { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); font-family: var(--font-title); }
 
-        .quick-link-divider { width: 1.5px; background: var(--lg-border); margin: 14px 0; }
+        .quick-link-divider { width: 1.5px; background: var(--lg-border); margin: 11px 0; }
 
         /* reCAPTCHA 바텀시트 모달 스타일 */
         .captcha-overlay {
