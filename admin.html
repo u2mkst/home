@@ -608,7 +608,23 @@
             localStorage.removeItem('admin_password');
         });
 
+        // 🔒 [보안 취약점 수정] 학생 계정은 전부 `{학생 u2m아이디}@kst.com` 형태의
+        // 합성 이메일을 쓴다. 이 페이지는 "로그인에 성공했는지"만 보고 관리자 화면을
+        // 보여줬는데, admin.html은 학생용 로그인과 같은 Firebase 프로젝트를 쓰기 때문에
+        // 학생이 자기 자신의 실제 계정(자기 아이디+비밀번호)으로 이 페이지에 로그인해도
+        // 그대로 인증에 성공해 담당 선생님의 학생 목록/메시지함이 열려버렸다. 선생님
+        // 계정은 실제 이메일(@kst.com이 아님)을 쓰므로, 학생 합성 이메일이면 즉시
+        // 로그아웃시켜 관리자 화면에 들어오지 못하게 막는다.
+        function isStudentSyntheticEmail(email) {
+            return typeof email === 'string' && email.toLowerCase().endsWith('@kst.com');
+        }
+
         auth.onAuthStateChanged((user) => {
+            if (user && isStudentSyntheticEmail(user.email)) {
+                auth.signOut();
+                alert("관리자 계정으로 로그인해 주세요.");
+                return;
+            }
             if (user) {
                 document.getElementById('loginCard').style.display = 'none';
                 document.getElementById('controlPanel').style.display = 'block';
