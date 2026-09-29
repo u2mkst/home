@@ -1634,6 +1634,18 @@
     function clearLocalSessionArtifacts() {
         localStorage.removeItem('u2m_id');
         localStorage.removeItem('u2m_pw');
+        // AndroidApp.logoutAll()은 앱(WebView) 안에서만 localStorage를 통째로 지워준다.
+        // 일반 브라우저로 접속한 경우엔 이 통로가 없어서, 이름 캐시 등 학생별 데이터가
+        // 로그아웃 후에도 이 기기에 그대로 남아 다음 학생에게 노출될 수 있다 — 그래서
+        // 현재 로그인된 학생의 uid로 저장된 항목들은 여기서 직접 지운다.
+        if (currentUserUid) {
+            localStorage.removeItem(`kst_name_${currentUserUid}`);
+            localStorage.removeItem(`ranking_cooldown_until_${currentUserUid}`);
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+            localStorage.removeItem(`examMsgShown_${currentUserUid}_${todayStr}`);
+            localStorage.removeItem(`schoolEventShown_${currentUserUid}_${todayStr}`);
+        }
         if (window.AndroidApp && typeof window.AndroidApp.logoutAll === 'function') {
             window.AndroidApp.logoutAll();
         }
