@@ -1188,6 +1188,22 @@
                     window.location.href = './index.html';
                 })
                 .catch(async (error) => {
+                    // 인터넷이 끊기거나(auth/network-request-failed) Firebase 자체 문제로 난
+                    // 에러까지 "비밀번호 틀림"으로 세면 안 된다 — 실제로 아이디/비밀번호가
+                    // 틀렸을 때 나는 에러 코드만 실패로 집계한다.
+                    const isWrongCredentialError = [
+                        'auth/wrong-password',
+                        'auth/user-not-found',
+                        'auth/invalid-credential',
+                        'auth/invalid-login-credentials',
+                        'auth/invalid-email',
+                    ].includes(error.code);
+
+                    if (!isWrongCredentialError) {
+                        showToast("네트워크 오류로 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.", "📡");
+                        return;
+                    }
+
                     const lockout = await loginGuardRequest({ id: u2mId, action: 'fail' });
                     const remainingMs = (lockout.lockedUntil || 0) - Date.now();
 
