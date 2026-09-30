@@ -14,8 +14,8 @@
     <!-- Font Awesome (눈모양 아이콘용) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Google reCAPTCHA v2 API Script -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Google reCAPTCHA v3 (로그인 시도마다 백그라운드로 사람/봇 점수를 매김 — 체크박스 없음) -->
+    <script src="https://www.google.com/recaptcha/api.js?render=6LduItctAAAAAMgDi0RUTLCaM_GwoNVqYk3IXuvW"></script>
 
     <!-- Mona12 폰트 라이브러리 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css">
@@ -316,39 +316,6 @@
         .quick-link-label { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); font-family: var(--font-title); }
 
         .quick-link-divider { width: 1.5px; background: var(--lg-border); margin: 11px 0; }
-
-        /* reCAPTCHA 바텀시트 모달 스타일 */
-        .captcha-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.4);
-            z-index: 9999; display: flex; justify-content: center; align-items: flex-end;
-            opacity: 0; visibility: hidden;
-            transition: opacity 0.3s var(--ease-smooth), visibility 0.3s var(--ease-smooth);
-        }
-
-        .captcha-overlay.active { opacity: 1; visibility: visible; }
-
-        .captcha-bottom-sheet {
-            width: 100%; max-width: 440px; background: var(--lg-surface-sheet);
-            border: 1.5px solid var(--lg-border-sheet); border-bottom: none;
-            border-top-left-radius: 34px; border-top-right-radius: 34px;
-            padding: 28px 24px 36px 24px; box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.1);
-            transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .captcha-overlay.active .captcha-bottom-sheet { transform: translateY(0); }
-
-        .sheet-handle {
-            width: 42px; height: 5px; background: rgba(120,120,128,0.4); border-radius: 3px; margin: 0 auto 16px auto;
-        }
-
-        .captcha-header { text-align: center; margin-bottom: 20px; }
-        .captcha-title { font-size: 1.15rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; }
-        .captcha-subtext { font-size: 0.82rem; color: #64748b; margin-top: 6px; margin-bottom: 0; line-height: 1.4; }
-
-        .recaptcha-box {
-            display: flex; justify-content: center; align-items: center; margin-top: 10px; min-height: 78px;
-        }
 
         /* 🏝️ 다이내믹 아일랜드 스타일 토스트 */
         .toast-container {
@@ -716,22 +683,6 @@
     </div>
     </div>
 
-    <!-- 구글 reCAPTCHA 바텀시트 모달 -->
-    <div id="captchaModal" class="captcha-overlay">
-        <div class="captcha-bottom-sheet">
-            <div class="sheet-handle"></div>
-            
-            <div class="captcha-header">
-                <div class="captcha-title">보안 인증 진행</div>
-                <p class="captcha-subtext">비밀번호 오류로 인해 인증이 필요합니다.<br>아래 체크박스를 클릭해 주세요.</p>
-            </div>
-            
-            <div class="recaptcha-box">
-                <div class="g-recaptcha" data-sitekey="6LcoRYAtAAAAAP_83dJyhmTfWrTrer3QUYf8Pof1" data-callback="onCaptchaSuccess"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- 토스트(Toast) 시스템 UI -->
     <div id="toast" class="toast-container">
         <span class="toast-icon mona12" id="toastIcon">💡</span>
@@ -795,7 +746,6 @@
             return results;
         }
 
-        let loginFailCount = 0;
         let toastTimeout = null;
         let isMathflatSkipped = false; 
 
@@ -878,15 +828,17 @@
             }
         });
 
-        function openCaptchaModal() {
-            if (window.grecaptcha) {
-                grecaptcha.reset(); 
-            }
-            document.getElementById('captchaModal').classList.add('active');
-        }
-
-        function closeCaptchaModal() {
-            document.getElementById('captchaModal').classList.remove('active');
+        // reCAPTCHA v3 토큰 발급 (체크박스 없이 백그라운드에서 사람/봇 점수를 매김).
+        // grecaptcha 로딩이 늦거나 실패해도 로그인 자체는 막지 않도록 null을 반환한다.
+        function getRecaptchaV3Token() {
+            return new Promise((resolve) => {
+                if (!window.grecaptcha || !window.grecaptcha.execute) { resolve(null); return; }
+                grecaptcha.ready(() => {
+                    grecaptcha.execute('6LduItctAAAAAMgDi0RUTLCaM_GwoNVqYk3IXuvW', { action: 'login' })
+                        .then(resolve)
+                        .catch(() => resolve(null));
+                });
+            });
         }
 
         function handleFixedPrefix(input) {
@@ -1189,7 +1141,8 @@
             e.preventDefault();
 
             const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
-            const lockout = await loginGuardRequest({ id: u2mId, action: 'check' });
+            const recaptchaToken = await getRecaptchaV3Token();
+            const lockout = await loginGuardRequest({ id: u2mId, action: 'check', recaptchaToken });
             const remainingMs = (lockout.lockedUntil || 0) - Date.now();
 
             if (remainingMs > 0) {
@@ -1198,8 +1151,10 @@
                 return;
             }
 
-            if (loginFailCount >= 1) {
-                openCaptchaModal();
+            // botScoreOk가 명시적으로 false인 경우만 막는다 — recaptcha 토큰 발급/검증이
+            // 안 된 경우(botScoreOk === undefined)는 판단 보류로 보고 로그인을 막지 않는다.
+            if (lockout.botScoreOk === false) {
+                showToast('보안 인증에 실패했어요. 잠시 후 다시 시도해 주세요.', '🔒', 3000);
                 return;
             }
 
@@ -1215,7 +1170,6 @@
 
             auth.signInWithEmailAndPassword(studentEmail, studentPassword)
                 .then(async (userCredential) => {
-                    loginFailCount = 0;
                     const savedId = studentEmail.split('@')[0];
                     // ⚠️ 실제 Firebase 로그인 비밀번호("00"+PIN)를 평문으로 저장하면 안 된다 —
                     // 기기 탈취/루팅/XSS 시 계정 자체가 그대로 노출된다. 이 값을 읽는 곳이
@@ -1234,8 +1188,6 @@
                     window.location.href = './index.html';
                 })
                 .catch(async (error) => {
-                    loginFailCount++;
-
                     const lockout = await loginGuardRequest({ id: u2mId, action: 'fail' });
                     const remainingMs = (lockout.lockedUntil || 0) - Date.now();
 
@@ -1244,22 +1196,7 @@
                     } else {
                         showToast("아이디 또는 비밀번호가 일치하지 않습니다.", "🔒");
                     }
-
-                    if (loginFailCount >= 1) {
-                        openCaptchaModal();
-                    }
                 });
-        }
-
-        function onCaptchaSuccess(token) {
-            loginFailCount = 0; 
-            closeCaptchaModal();
-            
-            const passInput = document.getElementById('loginPassword');
-            passInput.value = '';
-            passInput.focus();
-            
-            showToast("보안 인증 완료! 비밀번호를 다시 입력해 주세요.", "✅");
         }
     </script>
 </body>

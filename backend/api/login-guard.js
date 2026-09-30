@@ -15,12 +15,37 @@ const { admin, requireAuth } = require("../lib/firebaseAdmin");
 // 수준의 문제라, "다른 학생의 비밀번호를 무차별 대입으로 알아내는" 문제보다는
 // 훨씬 가볍다고 보고 감수한다.
 const MAX_BATCH_ID_LEN = 100;
+const RECAPTCHA_SCORE_THRESHOLD = 0.5;
 
 function computeLockoutMs(failCount) {
     if (failCount >= 8) return 10 * 60 * 1000;   // 10분
     if (failCount >= 5) return 2 * 60 * 1000;    // 2분
     if (failCount >= 3) return 30 * 1000;        // 30초
     return 0;
+}
+
+// reCAPTCHA v3 점수 확인. 토큰이 없거나, 시크릿 키가 아직 설정 안 됐거나, 구글
+// 쪽 장애 등으로 판단이 안 서면 null을 반환해 "판단 보류"로 처리한다 — 로그인
+// 페이지 로딩이 늦어 토큰이 없는 정상 사용자를 봇으로 오판해 막으면 안 되기
+// 때문에, 오직 "점수가 실제로 낮게 나온" 경우만 차단한다.
+async function checkRecaptchaScore(token) {
+    if (!token || !process.env.RECAPTCHA_V3_SECRET_KEY) return null;
+    try {
+        const params = new URLSearchParams({
+            secret: process.env.RECAPTCHA_V3_SECRET_KEY,
+            response: token,
+        });
+        const verifyRes = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString(),
+        });
+        const json = await verifyRes.json();
+        if (!json.success || typeof json.score !== "number") return null;
+        return json.score;
+    } catch (e) {
+        return null;
+    }
 }
 
 module.exports = async (req, res) => {
@@ -31,7 +56,7 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const { id, action } = req.body || {};
+        const { id, action, recaptchaToken } = req.body || {};
         if (!id || typeof id !== "string" || id.length > MAX_BATCH_ID_LEN) {
             const err = new Error("`id`가 필요합니다");
             err.statusCode = 400;
@@ -49,6 +74,9 @@ module.exports = async (req, res) => {
         if (action === "check") {
             const snap = await ref.once("value");
             const state = snap.val() || { failCount: 0, lockedUntil: 0 };
+            const score = await checkRecaptchaScore(recaptchaToken);
+            // score === null(판단 보류)이면 botScoreOk를 true로 둬서 로그인을 막지 않는다.
+            state.botScoreOk = score === null ? true : score >= RECAPTCHA_SCORE_THRESHOLD;
             return res.status(200).json(state);
         }
 
