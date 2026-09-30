@@ -1163,37 +1163,34 @@
         }
 
         // 🔒 로그인 비밀번호가 숫자 4자리뿐이라(경우의 수 1만) 브루트포스에 취약하다.
-        // loginFailCount는 새로고침하면 0으로 리셋되는 메모리 변수라 그것만으론 막을 수 없어서,
-        // 시도한 아이디 기준으로 실패 횟수·잠금 해제 시각을 localStorage에 남겨 새로고침에도
-        // 유지되는 점점 길어지는 잠금(exponential backoff)을 건다.
+        // 예전엔 실패 횟수·잠금 해제 시각을 localStorage에만 남겼는데, 이건 브라우저
+        // 저장소를 지우거나 다른 브라우저/기기로 바꾸면 그냥 풀려버려서 실제로는 방어가
+        // 거의 안 됐다. 그래서 이 카운터는 서버(Firebase, backend/api/login-guard.js)에
+        // 저장해 기기를 바꿔도 풀리지 않게 한다.
         // ⚠️ 이건 우리 로그인 화면(UI)을 거치는 시도만 막는다 — Firebase Auth REST API를
-        // 우리 페이지 없이 직접 두드리는 공격까지 막으려면 Firebase App Check(콘솔 설정 필요)를
-        // 별도로 켜야 한다.
-        function getLoginLockoutKey(id) { return `login_lockout_${id}`; }
-
-        function getLoginLockoutState(id) {
+        // 우리 페이지 없이 직접 두드리는 공격까지 막으려면 Firebase App Check(콘솔에서
+        // 카드 등록 등 추가 설정 필요)를 별도로 켜야 한다.
+        async function loginGuardRequest(payload) {
             try {
-                return JSON.parse(localStorage.getItem(getLoginLockoutKey(id)) || 'null') || { failCount: 0, lockedUntil: 0 };
-            } catch { return { failCount: 0, lockedUntil: 0 }; }
+                const res = await fetch(`${BACKEND_URL}/api/login-guard`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) return { failCount: 0, lockedUntil: 0 };
+                return await res.json();
+            } catch {
+                // 백엔드가 잠깐 안 되더라도 로그인 자체는 막지 않는다(가용성 우선).
+                return { failCount: 0, lockedUntil: 0 };
+            }
         }
 
-        function saveLoginLockoutState(id, state) {
-            try { localStorage.setItem(getLoginLockoutKey(id), JSON.stringify(state)); } catch {}
-        }
-
-        function computeLockoutMs(failCount) {
-            if (failCount >= 8) return 10 * 60 * 1000; // 10분
-            if (failCount >= 5) return 2 * 60 * 1000;  // 2분
-            if (failCount >= 3) return 30 * 1000;      // 30초
-            return 0;
-        }
-
-        function handleStudentLogin(e) {
+        async function handleStudentLogin(e) {
             e.preventDefault();
 
             const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
-            const lockout = getLoginLockoutState(u2mId);
-            const remainingMs = lockout.lockedUntil - Date.now();
+            const lockout = await loginGuardRequest({ id: u2mId, action: 'check' });
+            const remainingMs = (lockout.lockedUntil || 0) - Date.now();
 
             if (remainingMs > 0) {
                 const remainingSec = Math.ceil(remainingMs / 1000);
@@ -1217,27 +1214,33 @@
             const studentPassword = "00" + phoneTail;
 
             auth.signInWithEmailAndPassword(studentEmail, studentPassword)
-                .then((userCredential) => {
+                .then(async (userCredential) => {
                     loginFailCount = 0;
-                    localStorage.removeItem(getLoginLockoutKey(u2mId));
                     const savedId = studentEmail.split('@')[0];
                     // ⚠️ 실제 Firebase 로그인 비밀번호("00"+PIN)를 평문으로 저장하면 안 된다 —
                     // 기기 탈취/루팅/XSS 시 계정 자체가 그대로 노출된다. 이 값을 읽는 곳이
                     // 코드 어디에도 없어 순수 위험만 있던 캐시였으므로 저장하지 않는다.
                     localStorage.setItem('u2m_id', savedId);
+                    try {
+                        const idToken = await userCredential.user.getIdToken();
+                        // reset은 본인 인증(ID 토큰)이 필요해서 loginGuardRequest 대신
+                        // Authorization 헤더를 직접 실어 보낸다.
+                        fetch(`${BACKEND_URL}/api/login-guard`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                            body: JSON.stringify({ id: u2mId, action: 'reset' })
+                        }).catch(() => {});
+                    } catch {}
                     window.location.href = './index.html';
                 })
-                .catch((error) => {
+                .catch(async (error) => {
                     loginFailCount++;
 
-                    const lockout = getLoginLockoutState(u2mId);
-                    lockout.failCount++;
-                    const lockoutMs = computeLockoutMs(lockout.failCount);
-                    if (lockoutMs > 0) lockout.lockedUntil = Date.now() + lockoutMs;
-                    saveLoginLockoutState(u2mId, lockout);
+                    const lockout = await loginGuardRequest({ id: u2mId, action: 'fail' });
+                    const remainingMs = (lockout.lockedUntil || 0) - Date.now();
 
-                    if (lockoutMs > 0) {
-                        showToast(`너무 많이 시도했어요.\n${Math.ceil(lockoutMs / 1000)}초 후 다시 시도해 주세요.`, '⏳', 3000);
+                    if (remainingMs > 0) {
+                        showToast(`너무 많이 시도했어요.\n${Math.ceil(remainingMs / 1000)}초 후 다시 시도해 주세요.`, '⏳', 3000);
                     } else {
                         showToast("아이디 또는 비밀번호가 일치하지 않습니다.", "🔒");
                     }
