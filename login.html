@@ -403,7 +403,7 @@
                     </div>
                 </div>
 
-                <button type="submit" style="margin-top: 8px;">로그인하고 입장하기</button>
+                <button type="submit" id="loginSubmitBtn" style="margin-top: 8px;">로그인하고 입장하기</button>
             </form>
         </div>
 
@@ -1137,28 +1137,44 @@
             }
         }
 
+        // 🔒 로그인 버튼에 중복 클릭 방지가 없으면, 인터넷이 느리거나 끊겼을 때 사용자가
+        // 같은 아이디/비밀번호로 버튼을 연타하는 것도 매번 별개의 로그인 시도로 처리돼
+        // 락아웃 카운터가 억울하게 올라간다. 요청이 진행 중일 때는 버튼을 비활성화해서
+        // 막는다.
+        let isLoginSubmitting = false;
+
         async function handleStudentLogin(e) {
             e.preventDefault();
+            if (isLoginSubmitting) return;
 
-            const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
-            const recaptchaToken = await getRecaptchaV3Token();
-            const lockout = await loginGuardRequest({ id: u2mId, action: 'check', recaptchaToken });
-            const remainingMs = (lockout.lockedUntil || 0) - Date.now();
+            const submitBtn = document.getElementById('loginSubmitBtn');
+            isLoginSubmitting = true;
+            if (submitBtn) submitBtn.disabled = true;
 
-            if (remainingMs > 0) {
-                const remainingSec = Math.ceil(remainingMs / 1000);
-                showToast(`너무 많이 시도했어요.\n${remainingSec}초 후 다시 시도해 주세요.`, '⏳', 3000);
-                return;
+            try {
+                const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
+                const recaptchaToken = await getRecaptchaV3Token();
+                const lockout = await loginGuardRequest({ id: u2mId, action: 'check', recaptchaToken });
+                const remainingMs = (lockout.lockedUntil || 0) - Date.now();
+
+                if (remainingMs > 0) {
+                    const remainingSec = Math.ceil(remainingMs / 1000);
+                    showToast(`너무 많이 시도했어요.\n${remainingSec}초 후 다시 시도해 주세요.`, '⏳', 3000);
+                    return;
+                }
+
+                // botScoreOk가 명시적으로 false인 경우만 막는다 — recaptcha 토큰 발급/검증이
+                // 안 된 경우(botScoreOk === undefined)는 판단 보류로 보고 로그인을 막지 않는다.
+                if (lockout.botScoreOk === false) {
+                    showToast('보안 인증에 실패했어요. 잠시 후 다시 시도해 주세요.', '🔒', 3000);
+                    return;
+                }
+
+                await executeFirebaseLogin();
+            } finally {
+                isLoginSubmitting = false;
+                if (submitBtn) submitBtn.disabled = false;
             }
-
-            // botScoreOk가 명시적으로 false인 경우만 막는다 — recaptcha 토큰 발급/검증이
-            // 안 된 경우(botScoreOk === undefined)는 판단 보류로 보고 로그인을 막지 않는다.
-            if (lockout.botScoreOk === false) {
-                showToast('보안 인증에 실패했어요. 잠시 후 다시 시도해 주세요.', '🔒', 3000);
-                return;
-            }
-
-            executeFirebaseLogin();
         }
 
         function executeFirebaseLogin() {
@@ -1168,7 +1184,7 @@
             const studentEmail = u2mId.includes('@') ? u2mId : u2mId + "@kst.com";
             const studentPassword = "00" + phoneTail;
 
-            auth.signInWithEmailAndPassword(studentEmail, studentPassword)
+            return auth.signInWithEmailAndPassword(studentEmail, studentPassword)
                 .then(async (userCredential) => {
                     const savedId = studentEmail.split('@')[0];
                     // ⚠️ 실제 Firebase 로그인 비밀번호("00"+PIN)를 평문으로 저장하면 안 된다 —
