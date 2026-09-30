@@ -1115,23 +1115,35 @@
                     ]);
 
                     await user.updateProfile({ displayName: studentName });
-                    return database.ref('students/' + user.uid).set({
-                        name: encryptedName,
-                        u2mId: u2mId,
-                        schoolName: schoolName,
-                        schoolCode: schoolCode,
-                        grade: studentGrade,
-                        schoolClassNum: schoolClassNum,
-                        class: studentClassLabel,
-                        className: studentClassLabel,
-                        gradePromotionYear: (new Date().getMonth() + 1 >= 3) ? new Date().getFullYear() : new Date().getFullYear() - 1,
-                        teacher: selectedTeacher,
-                        phone: encryptedPhoneTail,
-                        studentPhone: mathflatPhone ? encryptedMfPhone : "",
-                        mathflatPw: mathflatPw ? encryptedMfPw : "",
-                        mathflatId: mathflatPhone,
-                        joinedAt: firebase.database.ServerValue.TIMESTAMP
-                    });
+                    // ⚠️ 랭킹 화면(출석/로또)은 다른 학생의 이름/학교/담당쌤만 필요한데,
+                    // students/{uid}를 통째로 열어버리면 phone/mathflatPw 같은 민감 필드까지
+                    // 전부 노출된다. 그래서 랭킹용으로 공개해도 되는 필드만 별도로
+                    // public_students/{uid}에 복사해 둔다 (Firebase Rules에서 students는
+                    // 본인만, public_students는 로그인한 모두가 읽도록 분리).
+                    return Promise.all([
+                        database.ref('students/' + user.uid).set({
+                            name: encryptedName,
+                            u2mId: u2mId,
+                            schoolName: schoolName,
+                            schoolCode: schoolCode,
+                            grade: studentGrade,
+                            schoolClassNum: schoolClassNum,
+                            class: studentClassLabel,
+                            className: studentClassLabel,
+                            gradePromotionYear: (new Date().getMonth() + 1 >= 3) ? new Date().getFullYear() : new Date().getFullYear() - 1,
+                            teacher: selectedTeacher,
+                            phone: encryptedPhoneTail,
+                            studentPhone: mathflatPhone ? encryptedMfPhone : "",
+                            mathflatPw: mathflatPw ? encryptedMfPw : "",
+                            mathflatId: mathflatPhone,
+                            joinedAt: firebase.database.ServerValue.TIMESTAMP
+                        }),
+                        database.ref('public_students/' + user.uid).set({
+                            name: encryptedName,
+                            schoolName: schoolName,
+                            teacher: selectedTeacher
+                        })
+                    ]);
                 })
                 .then(() => {
                     showToast('회원가입 완료! 발급된 정보로 로그인해 주세요.', '🎉', 4000);
