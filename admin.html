@@ -394,7 +394,31 @@
         .kst-loading-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #004bbf, #8FB8FA); animation: kstLoadingProgress 1.4s infinite ease-in-out; transform-origin: left; }
         @keyframes kstLoadingProgress { 0% { transform: scaleX(0); } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); opacity: 0; } }
         .kst-loading-subtext { font-family: 'Paperlogy', -apple-system, sans-serif; font-size: 0.85rem; color: #86868b; font-weight: 600; }
-    </style>
+    
+/* === KST FLAT DESIGN OVERRIDES === */
+
+/* KST Flat UI — login-aligned, flat surfaces */
+:root{--font-title:'FlightSans','Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;--font-body:'Pretendard',-apple-system,sans-serif;--glass-bg:#F2F4F6;--glass-card:#FFFFFF;--glass-border:#E5E8EB;--glass-shine:none;--glass-blur:none;--primary:#004bbf;--primary-light:rgba(0,75,191,.08);--text-main:#191F28;--text-sub:#6B7280;--shadow-glass:0 2px 10px rgba(15,23,42,.05);--spring:cubic-bezier(.22,1,.36,1)}
+body{background:#F2F4F6;color:#191F28}
+.header-zone p{background:#fff;border:1px solid #E5E8EB;backdrop-filter:none;-webkit-backdrop-filter:none;border-radius:12px}
+.card,.modal-box{background:#fff;border:1px solid #E5E8EB;border-radius:24px;box-shadow:0 2px 10px rgba(15,23,42,.05);backdrop-filter:none;-webkit-backdrop-filter:none}
+.card:before{display:none}h2{border-bottom-color:#EEF1F4}
+textarea,input[type=text],input[type=email],input[type=password],select,.reply-mini-textarea,.chat-input-row input{background:#F7F8FA;border:1px solid #E5E8EB;border-radius:12px;backdrop-filter:none;-webkit-backdrop-filter:none}
+textarea:focus,input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,select:focus{background:#fff;border-color:#004bbf;box-shadow:0 0 0 3px rgba(0,75,191,.1)}
+button{background:#004bbf;border:1px solid #004bbf;border-radius:12px;box-shadow:none;transition:background-color .18s ease,border-color .18s ease}
+button:hover{background:#003a94;box-shadow:none;transform:none}button:active{transform:scale(.99)}
+.btn-delete{background:#FFF1F2;color:#D92D20;border-color:#FECACA}.btn-delete:hover{background:#D92D20;color:#fff}
+.btn-logout{background:#fff;color:#475569;border-color:#E5E8EB}.btn-logout:hover{background:#F7F8FA;color:#191F28}
+.student-item,.device-info-header{background:#F7F8FA;border:1px solid #EEF1F4;border-radius:12px}
+.btn-note,.reply-toggle-btn{background:#EAF2FF;color:#004bbf;border:1px solid transparent;box-shadow:none}.btn-note:hover,.reply-toggle-btn:hover{background:#DCE9FF;color:#003a94}
+.msg-fab{background:#004bbf;border:0;box-shadow:0 4px 12px rgba(0,75,191,.22)}.msg-fab:hover{background:#003a94;box-shadow:0 4px 12px rgba(0,75,191,.22);transform:none}
+.modal-overlay{background:rgba(25,31,40,.35);backdrop-filter:none;-webkit-backdrop-filter:none}
+.msg-item{background:#F7F8FA;border:1px solid #EEF1F4;border-left:3px solid var(--primary);border-radius:12px}.msg-item.unread{background:#FFF7F7}
+.chat-container{background:#F7F8FA;border:1px solid #E5E8EB;border-radius:16px}.admin-bubble.student{background:#fff;border:1px solid #E5E8EB;box-shadow:none}.admin-bubble.teacher{background:#004bbf}
+.kst-loading-overlay{background:rgba(242,244,246,.98)}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+</style>
 </head>
 <body>
 
