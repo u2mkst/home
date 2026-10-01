@@ -22,8 +22,11 @@
 /* Existing page classes mapped to the same action hierarchy */
 .admin-page button, body:has(.btn-delete) .btn-delete,
 body:has(.btn-logout) .btn-logout { border-radius: var(--kst-radius-md); box-shadow: none; }
-.btn-delete, .btn-red, .btn-danger, .delete-btn { color: var(--kst-danger); background: var(--kst-danger-soft); border: 1px solid var(--kst-danger-border); }
-.btn-delete:hover, .btn-red:hover, .btn-danger:hover, .delete-btn:hover { color: #fff; background: var(--kst-danger); border-color: var(--kst-danger); }
+.btn-delete, .btn-red, .btn-danger, .delete-btn, .btn-block.btn-red { color: var(--kst-danger); background: var(--kst-danger-soft); border: 1px solid var(--kst-danger-border); }
+.btn-delete:hover, .btn-red:hover, .btn-danger:hover, .delete-btn:hover, .btn-block.btn-red:hover { color: #fff; background: var(--kst-danger); border-color: var(--kst-danger); }
+.btn-block.btn-green { color: #fff; background: var(--kst-success); border-color: var(--kst-success); }
+.btn-block.btn-orange, .btn-base.btn-glass, .close-btn, .tt-nav-btn { color: var(--kst-text); background: var(--kst-surface); border: 1px solid var(--kst-border-strong); box-shadow: none; }
+.btn-block.btn-orange:hover, .btn-base.btn-glass:hover, .close-btn:hover, .tt-nav-btn:hover { background: var(--kst-surface-soft); }
 .btn-logout, .btn-gray, .btn-secondary, .btn-base.btn-secondary { color: var(--kst-text); background: var(--kst-surface); border: 1px solid var(--kst-border-strong); box-shadow: none; }
 .btn-logout:hover, .btn-gray:hover, .btn-secondary:hover, .btn-base.btn-secondary:hover { background: var(--kst-surface-soft); }
 .btn-note, .reply-toggle-btn, .btn-note:hover, .reply-toggle-btn:hover { box-shadow: none; }
