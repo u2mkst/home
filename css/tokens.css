@@ -1,0 +1,24 @@
+/* KST HUB shared design tokens */
+:root {
+  --kst-blue: #004bbf;
+  --kst-blue-hover: #003a94;
+  --kst-blue-soft: #eaf2ff;
+  --kst-text: #191f28;
+  --kst-text-muted: #667085;
+  --kst-page: #f2f4f6;
+  --kst-surface: #ffffff;
+  --kst-surface-soft: #f7f8fa;
+  --kst-border: #e5e8eb;
+  --kst-border-strong: #d0d5dd;
+  --kst-danger: #d92d20;
+  --kst-danger-soft: #fff1f2;
+  --kst-danger-border: #fecaca;
+  --kst-success: #087443;
+  --kst-radius-sm: 8px;
+  --kst-radius-md: 12px;
+  --kst-radius-lg: 16px;
+  --kst-radius-xl: 20px;
+  --kst-shadow-card: 0 2px 10px rgba(15, 23, 42, .05);
+  --kst-shadow-modal: 0 4px 18px rgba(15, 23, 42, .08);
+  --kst-focus-ring: 0 0 0 3px rgba(0, 75, 191, .14);
+}
