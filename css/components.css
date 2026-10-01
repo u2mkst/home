@@ -1,0 +1,40 @@
+/* KST HUB shared components and action hierarchy */
+/* Optional semantic classes for new UI */
+.kst-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 9px 16px; border: 1px solid transparent;
+  border-radius: var(--kst-radius-md); font: inherit; font-weight: 700;
+  line-height: 1.2; text-decoration: none; cursor: pointer;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+.kst-btn:focus-visible { outline: none; box-shadow: var(--kst-focus-ring); }
+.kst-btn:disabled, .kst-btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+.kst-btn-primary { color: #fff; background: var(--kst-blue); border-color: var(--kst-blue); }
+.kst-btn-primary:hover { color: #fff; background: var(--kst-blue-hover); border-color: var(--kst-blue-hover); }
+.kst-btn-secondary { color: var(--kst-text); background: var(--kst-surface); border-color: var(--kst-border-strong); }
+.kst-btn-secondary:hover { background: var(--kst-surface-soft); }
+.kst-btn-danger { color: var(--kst-danger); background: var(--kst-danger-soft); border-color: var(--kst-danger-border); }
+.kst-btn-danger:hover { color: #fff; background: var(--kst-danger); border-color: var(--kst-danger); }
+.kst-btn-ghost { color: var(--kst-blue); background: transparent; border-color: transparent; }
+.kst-btn-ghost:hover { background: var(--kst-blue-soft); }
+.kst-btn:active { transform: translateY(1px); }
+
+/* Existing page classes mapped to the same action hierarchy */
+.admin-page button, body:has(.btn-delete) .btn-delete,
+body:has(.btn-logout) .btn-logout { border-radius: var(--kst-radius-md); box-shadow: none; }
+.btn-delete, .btn-red, .btn-danger, .delete-btn { color: var(--kst-danger); background: var(--kst-danger-soft); border: 1px solid var(--kst-danger-border); }
+.btn-delete:hover, .btn-red:hover, .btn-danger:hover, .delete-btn:hover { color: #fff; background: var(--kst-danger); border-color: var(--kst-danger); }
+.btn-logout, .btn-gray, .btn-secondary, .btn-base.btn-secondary { color: var(--kst-text); background: var(--kst-surface); border: 1px solid var(--kst-border-strong); box-shadow: none; }
+.btn-logout:hover, .btn-gray:hover, .btn-secondary:hover, .btn-base.btn-secondary:hover { background: var(--kst-surface-soft); }
+.btn-note, .reply-toggle-btn, .btn-note:hover, .reply-toggle-btn:hover { box-shadow: none; }
+.btn-block, .btn-purple, .btn-primary, .btn-base.btn-primary, .rank-btn-primary, .chat-send-btn, .reply-send-btn, .msg-fab {
+  box-shadow: none;
+}
+.btn-block.btn-purple, .btn-block.btn-green, .btn-block.btn-orange, .btn-block.btn-red,
+.btn-base, .rank-btn-base { border-radius: var(--kst-radius-md); }
+.btn-block.btn-purple, .btn-base.btn-primary, .rank-btn-primary { background: var(--kst-blue); border-color: var(--kst-blue); }
+.btn-block.btn-purple:hover, .btn-base.btn-primary:hover, .rank-btn-primary:hover { background: var(--kst-blue-hover); border-color: var(--kst-blue-hover); }
+.kst-loading-overlay { background-color: var(--kst-page); }
+@media (prefers-reduced-motion: reduce) {
+  .kst-btn { transition: none; }
+}
