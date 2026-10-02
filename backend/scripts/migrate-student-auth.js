@@ -9,10 +9,13 @@
 //   (그런 계정도 첫 로그인 때 서버가 같은 방식으로 이전한다.)
 //
 // 실행 (backend 폴더에서, 서비스 계정 키 + 서버 환경변수와 같은 AES_KEY/PIN_PEPPER 필요):
-//   미리보기:  FIREBASE_SERVICE_ACCOUNT_PATH=... AES_KEY=... PIN_PEPPER=... node scripts/migrate-student-auth.js
-//   실제 적용: (위와 같이) node scripts/migrate-student-auth.js --apply
+//   미리보기:        node scripts/migrate-student-auth.js
+//   한 명만 적용:    node scripts/migrate-student-auth.js --apply --only ufes0123
+//   전체 적용:       node scripts/migrate-student-auth.js --apply
+//   (복구) 한 명 해시 다시 만들기: node scripts/migrate-student-auth.js --apply --only ufes0123 --force
 //
-// ⚠️ PIN_PEPPER는 Vercel에 넣은 값과 반드시 같아야 한다(다르면 서버가 PIN을 검증하지 못한다).
+// ⚠️ PIN_PEPPER는 Vercel에 넣은 값과 반드시 같아야 한다(다르면 서버가 PIN을 검증하지 못해 이전된
+//    학생이 로그인하지 못한다). 그래서 먼저 --only 로 한 명만 이전해 실제 로그인으로 확인한 뒤 전체를 적용한다.
 
 const crypto = require("crypto");
 const fs = require("fs");
@@ -33,6 +36,10 @@ const { hashPin, isValidPin } = require("../lib/pin");
 const { ADMIN_UIDS } = require("../lib/adminUids");
 
 const APPLY = process.argv.includes("--apply");
+const FORCE = process.argv.includes("--force");
+const onlyIdx = process.argv.indexOf("--only");
+const ONLY = onlyIdx >= 0 ? String(process.argv[onlyIdx + 1] || "").toLowerCase() : null;
+if (FORCE && !ONLY) { console.error("--force 는 --only <아이디> 와 함께만 쓸 수 있습니다."); process.exit(1); }
 const FIREBASE_WEB_API_KEY = "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -58,23 +65,25 @@ async function passwordWorks(email, pin) {
     for (const uid of Object.keys(students)) {
         stats.total++;
         if (ADMIN_UIDS.has(uid)) { stats.skippedAdmin++; continue; }
-        if (secrets[uid]) { stats.alreadyDone++; continue; }
-
         const s = students[uid] || {};
+        if (ONLY && String(s.u2mId || "").toLowerCase() !== ONLY) continue;
+        if (secrets[uid] && !FORCE) { stats.alreadyDone++; continue; }
         const label = `${s.u2mId || uid}`;
         try {
             const pin = decryptOne(process.env.AES_KEY, s.phone);
             if (!isValidPin(pin)) { stats.noPin.push(label); continue; }
 
             const user = await admin.auth().getUser(uid);
-            const result = await passwordWorks(user.email, pin);
-            await sleep(300);
-            if (result === "throttled") { stats.throttled.push(label); continue; }
-            if (result !== "ok") { stats.mismatched.push(label); continue; }
+            if (!FORCE) {
+                const result = await passwordWorks(user.email, pin);
+                await sleep(300);
+                if (result === "throttled") { stats.throttled.push(label); continue; }
+                if (result !== "ok") { stats.mismatched.push(label); continue; }
+            }
 
             if (APPLY) {
                 await db.ref(`loginSecrets/${uid}`).set({ ...hashPin(pin), migratedAt: admin.database.ServerValue.TIMESTAMP });
-                await admin.auth().updateUser(uid, { password: crypto.randomBytes(32).toString("base64url") });
+                if (!FORCE) await admin.auth().updateUser(uid, { password: crypto.randomBytes(32).toString("base64url") });
             }
             stats.migrated++;
             console.log(`${APPLY ? "이전 완료" : "이전 가능"}: ${label}`);
@@ -89,6 +98,8 @@ async function passwordWorks(email, pin) {
     if (stats.noPin.length) console.log(`PIN 정보 없음/형식 오류 ${stats.noPin.length}명: ${stats.noPin.join(", ")}`);
     if (stats.throttled.length) console.log(`Firebase가 잠시 제한함(나중에 다시 실행) ${stats.throttled.length}명: ${stats.throttled.join(", ")}`);
     if (stats.errors.length) console.log(`오류 ${stats.errors.length}건:\n  ${stats.errors.join("\n  ")}`);
+    if (ONLY && stats.total && !stats.migrated && !stats.alreadyDone && !stats.mismatched.length && !stats.errors.length) console.log(`'${ONLY}' 아이디의 학생을 찾지 못했습니다.`);
     if (!APPLY) console.log("\n실제로 적용하려면 --apply 를 붙여 다시 실행하세요.");
+    if (APPLY && ONLY) console.log("\n👉 이제 이 학생 계정으로 실제 사이트에서 로그인해 보세요. 로그인이 되면 PIN_PEPPER가 맞는 겁니다. 그때 --only 없이 전체를 적용하세요.");
     process.exit(0);
 })().catch((e) => { console.error(e); process.exit(1); });
