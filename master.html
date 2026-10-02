@@ -696,6 +696,14 @@ body{background:#F2F4F6;color:#191F28}
             );
         }
 
+        // 🔒 onclick="fn('...')" 같은 인라인 핸들러 안에 값을 넣을 때는 escapeHTML만으론 부족하다 —
+        // HTML 파서가 &#39;를 다시 '로 되돌린 뒤 JS로 실행하기 때문에 값에 ');...;(' 같은 걸
+        // 넣으면 JS 문자열을 탈출해 코드가 실행된다(Firebase 키는 학생이 임의로 정할 수 있음).
+        // JSON.stringify로 올바른 JS 문자열 리터럴을 만든 뒤 HTML 이스케이프해서 넣는다.
+        function jsArg(value) {
+            return escapeHTML(JSON.stringify(String(value)));
+        }
+
         // 명언 게시 모달에 넘길 학생 제안 원문(복호화된 실제 텍스트) 보관용.
         // HTML/onclick 문자열에 직접 끼워넣지 않고 key로만 조회해 XSS를 피한다.
         let feedRawDataByKey = {};
@@ -793,7 +801,7 @@ body{background:#F2F4F6;color:#191F28}
                             <span class="status-date-badge">📋 ${escapeHTML(selectedDate)} 예약 완료</span>
                             <div style="font-size:0.95rem; font-weight:bold; color:var(--text-main); margin: 6px 0;">"${escapeHTML(data.message)}"</div>
                             <div style="font-size:0.8rem; color:var(--text-sub);">👤 인물: ${escapeHTML(data.author)} (${escapeHTML(data.authorProfile || '-')})</div>
-                            <button class="btn-block btn-red" style="padding:6px; margin-top:10px; font-size:0.78rem; border-radius:10px;" onclick="deleteReservedQuote('${escapeHTML(selectedDate)}')">예약 취소</button>
+                            <button class="btn-block btn-red" style="padding:6px; margin-top:10px; font-size:0.78rem; border-radius:10px;" onclick="deleteReservedQuote(${jsArg(selectedDate)})">예약 취소</button>
                         </div>
                     `;
                     document.getElementById('quote-message').value = data.message;
@@ -919,12 +927,12 @@ body{background:#F2F4F6;color:#191F28}
                         subInfoRow = `<div class="feed-sub">말한 사람: <b>${escapeHTML(realAuthor)}</b>${profileString}</div>`;
                     }
 
-                    let commandButtons = `<button class="btn-block btn-red" onclick="deleteFeedItem('${escapeHTML(key)}')">기록 삭제</button>`;
+                    let commandButtons = `<button class="btn-block btn-red" onclick="deleteFeedItem(${jsArg(key)})">기록 삭제</button>`;
                     if (isSuggestion) {
                         commandButtons = `
                             ${looksLikeCipherText(realContent)
                                 ? '<button class="btn-block btn-secondary" disabled title="복호화 실패 - 새로고침 후 다시 시도해 주세요">명언 게시 (복호화 실패)</button>'
-                                : `<button class="btn-block btn-green" onclick="openPublishBridgeModal('${escapeHTML(key)}')">명언 게시</button>`}
+                                : `<button class="btn-block btn-green" onclick="openPublishBridgeModal(${jsArg(key)})">명언 게시</button>`}
                             ${commandButtons}
                         `;
                     }
@@ -1035,7 +1043,7 @@ body{background:#F2F4F6;color:#191F28}
                             <div class="feed-item">
                                 <div class="feed-meta"><b>${escapeHTML(schoolName)}</b> (${escapeHTML(schoolCode)})</div>
                                 <div style="font-size:0.9rem; color:var(--text-main); margin-bottom:8px;">컴시간 등록명: <b>${escapeHTML(overrideName)}</b></div>
-                                <button class="btn-block btn-red" style="padding:6px; font-size:0.78rem; border-radius:10px;" onclick="deleteComciganOverride('${escapeHTML(schoolCode)}')">삭제</button>
+                                <button class="btn-block btn-red" style="padding:6px; font-size:0.78rem; border-radius:10px;" onclick="deleteComciganOverride(${jsArg(schoolCode)})">삭제</button>
                             </div>
                         `);
                     });
