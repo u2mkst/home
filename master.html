@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script>
+        // 클릭재킹 방지: GitHub Pages는 X-Frame-Options 헤더를 못 붙이므로, 다른 사이트의
+        // iframe 안에 로드되면 화면을 숨기고 최상위 창으로 빠져나온다.
+        if (window.top !== window.self) {
+            document.documentElement.style.display = 'none';
+            try { window.top.location.href = window.self.location.href; } catch (e) {}
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>K&P 수학입시학원 마스터</title>
