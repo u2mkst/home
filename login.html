@@ -739,23 +739,6 @@
             );
         }
 
-        async function getIdToken() {
-            return auth.currentUser ? await auth.currentUser.getIdToken() : null;
-        }
-
-        async function encryptAESBatch(plainTexts) {
-            const token = await getIdToken();
-            if (!token) throw new Error('로그인 상태를 확인할 수 없습니다.');
-            const res = await fetch(`${BACKEND_URL}/api/encrypt`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ texts: plainTexts })
-            });
-            if (!res.ok) throw new Error('암호화 서버 오류');
-            const { results } = await res.json();
-            return results;
-        }
-
         let toastTimeout = null;
         let isMathflatSkipped = false; 
 
@@ -840,11 +823,11 @@
 
         // reCAPTCHA v3 토큰 발급 (체크박스 없이 백그라운드에서 사람/봇 점수를 매김).
         // grecaptcha 로딩이 늦거나 실패해도 로그인 자체는 막지 않도록 null을 반환한다.
-        function getRecaptchaV3Token() {
+        function getRecaptchaV3Token(action) {
             return new Promise((resolve) => {
                 if (!window.grecaptcha || !window.grecaptcha.execute) { resolve(null); return; }
                 grecaptcha.ready(() => {
-                    grecaptcha.execute('6LduItctAAAAAMgDi0RUTLCaM_GwoNVqYk3IXuvW', { action: 'login' })
+                    grecaptcha.execute('6LduItctAAAAAMgDi0RUTLCaM_GwoNVqYk3IXuvW', { action })
                         .then(resolve)
                         .catch(() => resolve(null));
                 });
@@ -1041,8 +1024,14 @@
             }
         }
 
-        function handleStudentRegister(e) {
+        // 🔒 회원가입 — 계정 생성·암호화·DB 기록은 전부 서버(/api/register)가 한다. 예전엔 브라우저가
+        // Firebase에 "00"+PIN 비밀번호로 직접 계정을 만들어서, 가입 API가 공개된 상태로 계정 남발과
+        // 4자리 비밀번호 대입이 가능했다.
+        let isRegisterSubmitting = false;
+
+        async function handleStudentRegister(e) {
             e.preventDefault();
+            if (isRegisterSubmitting) return;
 
             const isAgreed = document.getElementById('registerAgreement').checked;
             if (!isAgreed) {
@@ -1050,108 +1039,70 @@
                 return;
             }
 
-            const studentName = document.getElementById('registerName').value.trim();
-            const u2mId = document.getElementById('registerId').value.trim().toLowerCase();
-            const phoneTail = document.getElementById('registerParentPhone').value.trim();
-            const schoolName = schoolInput.value.trim();
-            const schoolCode = schoolCodeInput.value.trim();
-            const studentGrade = gradeSelect.value;
-            const schoolClassNum = document.getElementById('registerClass').value.trim();
-            const studentClassLabel = schoolClassNum ? `${schoolClassNum}반` : '';
-            const selectedTeacher = document.getElementById('registerTeacher').value;
-            const mathflatPhone = document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, '');
-            const mathflatPw = document.getElementById('registerMathflatPw').value.trim();
+            const payload = {
+                id: document.getElementById('registerId').value.trim().toLowerCase(),
+                name: document.getElementById('registerName').value.trim(),
+                pin: document.getElementById('registerParentPhone').value.trim(),
+                schoolName: schoolInput.value.trim(),
+                schoolCode: schoolCodeInput.value.trim(),
+                grade: gradeSelect.value,
+                schoolClassNum: document.getElementById('registerClass').value.trim(),
+                teacher: document.getElementById('registerTeacher').value,
+                mathflatPhone: document.getElementById('registerMathflatPhone').value.trim().replace(/[^0-9]/g, ''),
+                mathflatPw: document.getElementById('registerMathflatPw').value.trim()
+            };
 
-            const studentEmail = u2mId + "@kst.com";
-            const studentPassword = "00" + phoneTail;
+            isRegisterSubmitting = true;
+            const submitBtn = document.querySelector('#registerForm button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
 
-            auth.createUserWithEmailAndPassword(studentEmail, studentPassword)
-                .then(async (userCredential) => {
-                    const user = userCredential.user;
-
-                    const [encryptedName, encryptedPhoneTail, encryptedMfPhone, encryptedMfPw] = await encryptAESBatch([
-                        studentName,
-                        phoneTail,
-                        mathflatPhone || "",
-                        mathflatPw || ""
-                    ]);
-
-                    await user.updateProfile({ displayName: studentName });
-                    // ⚠️ 랭킹 화면(출석/로또)은 다른 학생의 이름/학교/담당쌤만 필요한데,
-                    // students/{uid}를 통째로 열어버리면 phone/mathflatPw 같은 민감 필드까지
-                    // 전부 노출된다. 그래서 랭킹용으로 공개해도 되는 필드만 별도로
-                    // public_students/{uid}에 복사해 둔다 (Firebase Rules에서 students는
-                    // 본인만, public_students는 로그인한 모두가 읽도록 분리).
-                    return Promise.all([
-                        database.ref('students/' + user.uid).set({
-                            name: encryptedName,
-                            u2mId: u2mId,
-                            schoolName: schoolName,
-                            schoolCode: schoolCode,
-                            grade: studentGrade,
-                            schoolClassNum: schoolClassNum,
-                            class: studentClassLabel,
-                            className: studentClassLabel,
-                            gradePromotionYear: (new Date().getMonth() + 1 >= 3) ? new Date().getFullYear() : new Date().getFullYear() - 1,
-                            teacher: selectedTeacher,
-                            phone: encryptedPhoneTail,
-                            studentPhone: mathflatPhone ? encryptedMfPhone : "",
-                            mathflatPw: mathflatPw ? encryptedMfPw : "",
-                            mathflatId: mathflatPhone,
-                            joinedAt: firebase.database.ServerValue.TIMESTAMP
-                        }),
-                        database.ref('public_students/' + user.uid).set({
-                            name: encryptedName,
-                            schoolName: schoolName,
-                            teacher: selectedTeacher
-                        })
-                    ]);
-                })
-                .then(() => {
-                    showToast('회원가입 완료! 발급된 정보로 로그인해 주세요.', '🎉', 4000);
-                    setTimeout(() => {
-                        document.getElementById('registerForm').reset();
-                        toggleMode('login');
-                        document.getElementById('loginId').value = u2mId;
-                    }, 1200);
-                })
-                .catch((error) => {
-                    if(error.code === "auth/email-already-in-use") {
-                        showToast("이미 등록된 유투엠 아이디입니다.", "⚠️");
-                    } else {
-                        showToast('회원가입 실패: ' + error.message, '❌');
-                    }
-                });
-        }
-
-        // 🔒 로그인 비밀번호가 숫자 4자리뿐이라(경우의 수 1만) 브루트포스에 취약하다.
-        // 예전엔 실패 횟수·잠금 해제 시각을 localStorage에만 남겼는데, 이건 브라우저
-        // 저장소를 지우거나 다른 브라우저/기기로 바꾸면 그냥 풀려버려서 실제로는 방어가
-        // 거의 안 됐다. 그래서 이 카운터는 서버(Firebase, backend/api/login-guard.js)에
-        // 저장해 기기를 바꿔도 풀리지 않게 한다.
-        // ⚠️ 이건 우리 로그인 화면(UI)을 거치는 시도만 막는다 — Firebase Auth REST API를
-        // 우리 페이지 없이 직접 두드리는 공격까지 막으려면 Firebase App Check(콘솔에서
-        // 카드 등록 등 추가 설정 필요)를 별도로 켜야 한다.
-        async function loginGuardRequest(payload) {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/login-guard`, {
+                payload.recaptchaToken = await getRecaptchaV3Token('register');
+                const res = await fetch(`${BACKEND_URL}/api/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (!res.ok) return { failCount: 0, lockedUntil: 0 };
-                return await res.json();
-            } catch {
-                // 백엔드가 잠깐 안 되더라도 로그인 자체는 막지 않는다(가용성 우선).
-                return { failCount: 0, lockedUntil: 0 };
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    showToast('회원가입 완료! 발급된 정보로 로그인해 주세요.', '🎉', 4000);
+                    setTimeout(() => {
+                        document.getElementById('registerForm').reset();
+                        toggleMode('login');
+                        document.getElementById('loginId').value = payload.id;
+                    }, 1200);
+                } else if (res.status === 409) {
+                    showToast("이미 등록된 유투엠 아이디입니다.", "⚠️");
+                } else if (res.status === 429) {
+                    showToast("가입 시도가 너무 많아요. 잠시 후 다시 시도해 주세요.", "⏳");
+                } else if (res.status === 403 && data.error === 'bot') {
+                    showToast("보안 인증에 실패했어요. 잠시 후 다시 시도해 주세요.", "🔒");
+                } else if (res.status === 400 && data.error) {
+                    showToast(data.error, "⚠️");
+                } else {
+                    showToast("회원가입에 실패했어요. 잠시 후 다시 시도해 주세요.", "❌");
+                }
+            } catch (err) {
+                showToast("네트워크 오류로 가입에 실패했어요. 잠시 후 다시 시도해 주세요.", "📡");
+            } finally {
+                isRegisterSubmitting = false;
+                if (submitBtn) submitBtn.disabled = false;
             }
         }
 
-        // 🔒 로그인 버튼에 중복 클릭 방지가 없으면, 인터넷이 느리거나 끊겼을 때 사용자가
-        // 같은 아이디/비밀번호로 버튼을 연타하는 것도 매번 별개의 로그인 시도로 처리돼
-        // 락아웃 카운터가 억울하게 올라간다. 요청이 진행 중일 때는 버튼을 비활성화해서
-        // 막는다.
+        // 🔒 학생 로그인 — PIN(전화번호 뒷 4자리, 경우의 수 1만) 검증은 서버(/api/student-login)가 한다.
+        // 서버가 계정별 락아웃 / IP 한도 / reCAPTCHA를 강제한 뒤 Firebase 커스텀 토큰을 내려주고,
+        // 브라우저는 그 토큰으로 로그인한다. (학생의 Firebase 비밀번호는 무작위 값이라 Firebase REST API를
+        // 직접 두드려서는 로그인할 수 없다.)
+        // 버튼 연타로 같은 시도가 여러 번 집계되지 않도록 요청 중에는 버튼을 비활성화한다.
         let isLoginSubmitting = false;
+
+        function formatWaitMessage(lockedUntil) {
+            const sec = Math.max(1, Math.ceil((lockedUntil - Date.now()) / 1000));
+            const label = sec >= 120 ? `${Math.ceil(sec / 60)}분` : `${sec}초`;
+            return `너무 많이 시도했어요.\n${label} 후 다시 시도해 주세요.`;
+        }
 
         async function handleStudentLogin(e) {
             e.preventDefault();
@@ -1163,82 +1114,54 @@
 
             try {
                 const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
-                const recaptchaToken = await getRecaptchaV3Token();
-                const lockout = await loginGuardRequest({ id: u2mId, action: 'check', recaptchaToken });
-                const remainingMs = (lockout.lockedUntil || 0) - Date.now();
-
-                if (remainingMs > 0) {
-                    const remainingSec = Math.ceil(remainingMs / 1000);
-                    showToast(`너무 많이 시도했어요.\n${remainingSec}초 후 다시 시도해 주세요.`, '⏳', 3000);
+                const pin = document.getElementById('loginPassword').value.trim();
+                if (!/^\d{4}$/.test(pin)) {
+                    showToast('전화번호 뒷자리 4자리를 입력해 주세요.', '🔒');
                     return;
                 }
 
-                // botScoreOk가 명시적으로 false인 경우만 막는다 — recaptcha 토큰 발급/검증이
-                // 안 된 경우(botScoreOk === undefined)는 판단 보류로 보고 로그인을 막지 않는다.
-                if (lockout.botScoreOk === false) {
+                const recaptchaToken = await getRecaptchaV3Token('login');
+                let res;
+                try {
+                    res = await fetch(`${BACKEND_URL}/api/student-login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: u2mId, pin, recaptchaToken })
+                    });
+                } catch (netErr) {
+                    // 인터넷이 끊긴 경우는 "비밀번호 틀림"이 아니다 — 서버에 도달하지 못했으니 집계도 안 된다.
+                    showToast("네트워크 오류로 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.", "📡");
+                    return;
+                }
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data.token) {
+                    await auth.signInWithCustomToken(data.token);
+                    // 아이디만 기억한다(비밀번호/PIN은 어디에도 저장하지 않는다).
+                    localStorage.setItem('u2m_id', u2mId.split('@')[0]);
+                    window.location.href = './index.html';
+                    return;
+                }
+
+                if (res.status === 429 && data.lockedUntil) {
+                    showToast(formatWaitMessage(data.lockedUntil), '⏳', 3000);
+                } else if (res.status === 429) {
+                    showToast('요청이 너무 많아요. 잠시 후 다시 시도해 주세요.', '⏳', 3000);
+                } else if (res.status === 403 && data.error === 'bot') {
                     showToast('보안 인증에 실패했어요. 잠시 후 다시 시도해 주세요.', '🔒', 3000);
-                    return;
+                } else if (res.status === 401) {
+                    showToast(data.lockedUntil ? formatWaitMessage(data.lockedUntil) : "아이디 또는 비밀번호가 일치하지 않습니다.", data.lockedUntil ? '⏳' : '🔒', 3000);
+                } else if (res.status === 400) {
+                    showToast('아이디와 전화번호 뒷자리를 확인해 주세요.', '🔒');
+                } else {
+                    showToast('로그인 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.', '⚠️');
                 }
-
-                await executeFirebaseLogin();
+            } catch (err) {
+                showToast('로그인 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.', '⚠️');
             } finally {
                 isLoginSubmitting = false;
                 if (submitBtn) submitBtn.disabled = false;
             }
-        }
-
-        function executeFirebaseLogin() {
-            const u2mId = document.getElementById('loginId').value.trim().toLowerCase();
-            const phoneTail = document.getElementById('loginPassword').value.trim();
-
-            const studentEmail = u2mId.includes('@') ? u2mId : u2mId + "@kst.com";
-            const studentPassword = "00" + phoneTail;
-
-            return auth.signInWithEmailAndPassword(studentEmail, studentPassword)
-                .then(async (userCredential) => {
-                    const savedId = studentEmail.split('@')[0];
-                    // ⚠️ 실제 Firebase 로그인 비밀번호("00"+PIN)를 평문으로 저장하면 안 된다 —
-                    // 기기 탈취/루팅/XSS 시 계정 자체가 그대로 노출된다. 이 값을 읽는 곳이
-                    // 코드 어디에도 없어 순수 위험만 있던 캐시였으므로 저장하지 않는다.
-                    localStorage.setItem('u2m_id', savedId);
-                    try {
-                        const idToken = await userCredential.user.getIdToken();
-                        // reset은 본인 인증(ID 토큰)이 필요해서 loginGuardRequest 대신
-                        // Authorization 헤더를 직접 실어 보낸다.
-                        fetch(`${BACKEND_URL}/api/login-guard`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-                            body: JSON.stringify({ id: u2mId, action: 'reset' })
-                        }).catch(() => {});
-                    } catch {}
-                    window.location.href = './index.html';
-                })
-                .catch(async (error) => {
-                    // 인터넷이 끊기거나(auth/network-request-failed) Firebase 자체 문제로 난
-                    // 에러까지 "비밀번호 틀림"으로 세면 안 된다 — 실제로 아이디/비밀번호가
-                    // 틀렸을 때 나는 에러 코드만 실패로 집계한다.
-                    const isWrongCredentialError = [
-                        'auth/wrong-password',
-                        'auth/user-not-found',
-                        'auth/invalid-credential',
-                        'auth/invalid-login-credentials',
-                        'auth/invalid-email',
-                    ].includes(error.code);
-
-                    if (!isWrongCredentialError) {
-                        showToast("네트워크 오류로 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.", "📡");
-                        return;
-                    }
-
-                    const lockout = await loginGuardRequest({ id: u2mId, action: 'fail' });
-                    const remainingMs = (lockout.lockedUntil || 0) - Date.now();
-
-                    if (remainingMs > 0) {
-                        showToast(`너무 많이 시도했어요.\n${Math.ceil(remainingMs / 1000)}초 후 다시 시도해 주세요.`, '⏳', 3000);
-                    } else {
-                        showToast("아이디 또는 비밀번호가 일치하지 않습니다.", "🔒");
-                    }
-                });
         }
     </script>
 </body>
