@@ -17,7 +17,6 @@
 // ⚠️ PIN_PEPPER는 Vercel에 넣은 값과 반드시 같아야 한다(다르면 서버가 PIN을 검증하지 못해 이전된
 //    학생이 로그인하지 못한다). 그래서 먼저 --only 로 한 명만 이전해 실제 로그인으로 확인한 뒤 전체를 적용한다.
 
-const crypto = require("crypto");
 const fs = require("fs");
 
 if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH && !process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -33,6 +32,7 @@ for (const name of ["FIREBASE_SERVICE_ACCOUNT", "AES_KEY", "PIN_PEPPER"]) {
 const { admin } = require("../lib/firebaseAdmin");
 const { decryptOne } = require("../lib/aes");
 const { hashPin, isValidPin } = require("../lib/pin");
+const { randomAuthPassword } = require("../lib/authPassword");
 const { ADMIN_UIDS } = require("../lib/adminUids");
 
 const APPLY = process.argv.includes("--apply");
@@ -67,7 +67,7 @@ async function passwordWorks(email, pin) {
         if (ADMIN_UIDS.has(uid)) { stats.skippedAdmin++; continue; }
         const s = students[uid] || {};
         if (ONLY && String(s.u2mId || "").toLowerCase() !== ONLY) continue;
-        if (secrets[uid] && !FORCE) { stats.alreadyDone++; continue; }
+        if (secrets[uid] && secrets[uid].randomized && !FORCE) { stats.alreadyDone++; continue; }
         const label = `${s.u2mId || uid}`;
         try {
             const pin = decryptOne(process.env.AES_KEY, s.phone);
@@ -82,8 +82,13 @@ async function passwordWorks(email, pin) {
             }
 
             if (APPLY) {
-                await db.ref(`loginSecrets/${uid}`).set({ ...hashPin(pin), migratedAt: admin.database.ServerValue.TIMESTAMP });
-                if (!FORCE) await admin.auth().updateUser(uid, { password: crypto.randomBytes(32).toString("base64url") });
+                // 해시를 먼저 저장(이후 서버가 해시로 로그인시킴) → 그 다음 Firebase 비밀번호를 무작위로 교체.
+                // 교체에 실패해도 해시는 남아 로그인은 되고, randomized 표시가 없으니 다음 실행/로그인 때 다시 시도한다.
+                await db.ref(`loginSecrets/${uid}`).update({ ...hashPin(pin), migratedAt: admin.database.ServerValue.TIMESTAMP });
+                if (!FORCE) {
+                    await admin.auth().updateUser(uid, { password: randomAuthPassword() });
+                    await db.ref(`loginSecrets/${uid}/randomized`).set(true);
+                }
             }
             stats.migrated++;
             console.log(`${APPLY ? "이전 완료" : "이전 가능"}: ${label}`);

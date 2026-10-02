@@ -1,8 +1,8 @@
-const crypto = require("crypto");
 const { applyCors } = require("../lib/cors");
 const { admin } = require("../lib/firebaseAdmin");
 const { encryptOne } = require("../lib/aes");
 const { hashPin, isValidPin } = require("../lib/pin");
+const { randomAuthPassword } = require("../lib/authPassword");
 const { toLoginEmail, isBotSuspected, consumeIpQuota } = require("../lib/guard");
 
 // 🔒 학생 회원가입. 예전엔 클라이언트가 createUserWithEmailAndPassword(아이디, "00"+PIN)로 계정을
@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
 
         const user = await admin.auth().createUser({
             email,
-            password: crypto.randomBytes(32).toString("base64url"),
+            password: randomAuthPassword(),
             displayName: name,
         });
         createdUid = user.uid;
@@ -106,7 +106,7 @@ module.exports = async (req, res) => {
                 joinedAt: ts,
             },
             [`public_students/${user.uid}`]: { name: encName, schoolName, teacher: b.teacher },
-            [`loginSecrets/${user.uid}`]: { ...hashPin(b.pin), migratedAt: ts },
+            [`loginSecrets/${user.uid}`]: { ...hashPin(b.pin), randomized: true, migratedAt: ts },
         });
 
         return res.status(200).json({ ok: true });

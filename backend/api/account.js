@@ -19,8 +19,12 @@ async function setPin(decoded, body, res) {
     }
     if (!isValidPin(body.pin)) return res.status(400).json({ error: "bad_request" });
 
+    // salt/hash만 갈아끼운다(randomized 같은 다른 표시는 그대로 둔다).
+    const { salt, hash } = hashPin(body.pin);
     await admin.database().ref().update({
-        [`loginSecrets/${decoded.uid}`]: { ...hashPin(body.pin), migratedAt: admin.database.ServerValue.TIMESTAMP },
+        [`loginSecrets/${decoded.uid}/salt`]: salt,
+        [`loginSecrets/${decoded.uid}/hash`]: hash,
+        [`loginSecrets/${decoded.uid}/migratedAt`]: admin.database.ServerValue.TIMESTAMP,
         [`students/${decoded.uid}/phone`]: encryptOne(process.env.AES_KEY, body.pin),
     });
     return res.status(200).json({ ok: true });

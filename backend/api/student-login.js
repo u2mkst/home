@@ -1,8 +1,8 @@
-const crypto = require("crypto");
 const { applyCors } = require("../lib/cors");
 const { admin } = require("../lib/firebaseAdmin");
 const { ADMIN_UIDS } = require("../lib/adminUids");
 const { hashPin, verifyPin, isValidPin } = require("../lib/pin");
+const { randomAuthPassword } = require("../lib/authPassword");
 const {
     normalizeLoginId,
     toLoginEmail,
@@ -95,6 +95,7 @@ module.exports = async (req, res) => {
         const secret = secretSnap.val();
 
         let ok = false;
+        let randomized = Boolean(secret && secret.randomized);
         if (secret) {
             ok = verifyPin(pin, secret);
         } else {
@@ -103,10 +104,18 @@ module.exports = async (req, res) => {
                 return res.status(429).json({ error: "locked", lockedUntil: Date.now() + 60 * 1000 });
             }
             ok = legacy.ok;
-            if (ok) {
-                // 지연 이전: PIN 해시 저장 + Firebase 비밀번호를 무작위 값으로 교체.
-                await secretRef.set({ ...hashPin(pin), migratedAt: admin.database.ServerValue.TIMESTAMP });
-                await admin.auth().updateUser(uid, { password: crypto.randomBytes(32).toString("base64url") });
+            // 지연 이전: PIN 해시를 먼저 저장해 두면 이후엔 해시로 로그인된다.
+            if (ok) await secretRef.set({ ...hashPin(pin), migratedAt: admin.database.ServerValue.TIMESTAMP });
+        }
+
+        // Firebase 비밀번호를 무작위 값으로 바꾸는 건 "로그인 성공 뒤에" best-effort로 한다 — 실패해도
+        // (정책 오류 등) 로그인을 막지 않고, randomized 표시가 없으면 다음 로그인 때 다시 시도한다.
+        if (ok && !randomized) {
+            try {
+                await admin.auth().updateUser(uid, { password: randomAuthPassword() });
+                await secretRef.child("randomized").set(true);
+            } catch (e) {
+                console.error("Firebase 비밀번호 무작위화 실패:", uid, e.message);
             }
         }
 
