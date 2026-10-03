@@ -55,6 +55,10 @@ function decryptLayer(keys, clean) {
             const unpadded = stripValidPkcs7(raw);
             if (!unpadded) continue;
             const plain = unpadded.toString(CryptoJS.enc.Utf8);
+            // 빈 문자열을 암호화한 값(예: 건의사항에서 비워둔 "인물 설명")은 패딩 16바이트뿐인 한 블록이라
+            // 복호화하면 ''가 나온다. 틀린 키가 우연히 이 패딩(0x10이 16개)을 만들 확률은 2^-128이므로
+            // 패딩이 정확히 맞은 빈 값은 정상으로 인정한다.
+            if (plain === "" && unpadded.sigBytes === 0) return { plain, keyIndex: i };
             if (isPlausibleText(plain)) return { plain, keyIndex: i };
         } catch (e) {
             // 이 키로는 안 풀림 → 다음 키
