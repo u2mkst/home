@@ -2,3 +2,6 @@ node_modules
 .env
 .env.local
 .vercel
+
+# AES 키 교체 백업(옛 암호문 포함) — 절대 커밋하지 않는다
+aes-rotation-backup-*.json

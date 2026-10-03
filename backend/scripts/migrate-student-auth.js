@@ -30,7 +30,7 @@ for (const name of ["FIREBASE_SERVICE_ACCOUNT", "AES_KEY", "PIN_PEPPER"]) {
 }
 
 const { admin } = require("../lib/firebaseAdmin");
-const { decryptOne } = require("../lib/aes");
+const { decryptOne, getDecryptKeys } = require("../lib/aes");
 const { hashPin, isValidPin } = require("../lib/pin");
 const { randomAuthPassword } = require("../lib/authPassword");
 const { ADMIN_UIDS } = require("../lib/adminUids");
@@ -70,7 +70,7 @@ async function passwordWorks(email, pin) {
         if (secrets[uid] && secrets[uid].randomized && !FORCE) { stats.alreadyDone++; continue; }
         const label = `${s.u2mId || uid}`;
         try {
-            const pin = decryptOne(process.env.AES_KEY, s.phone);
+            const pin = decryptOne(getDecryptKeys(), s.phone);
             if (!isValidPin(pin)) { stats.noPin.push(label); continue; }
 
             const user = await admin.auth().getUser(uid);

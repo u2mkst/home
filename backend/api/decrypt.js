@@ -1,6 +1,6 @@
 const { applyCors } = require("../lib/cors");
 const { admin, requireAuth } = require("../lib/firebaseAdmin");
-const { decryptOne, assertValidBatch } = require("../lib/aes");
+const { decryptOne, getDecryptKeys, assertValidBatch } = require("../lib/aes");
 const { ADMIN_UIDS } = require("../lib/adminUids");
 
 // 관리자 계정만 아무 학생의 암호문이나 복호화할 수 있다. 그 외에는 본인 데이터거나,
@@ -92,7 +92,7 @@ module.exports = async (req, res) => {
                     (await isVerifiedOtherStudentName(ownerUid, text));
 
                 if (!allowed) return "";
-                return decryptOne(process.env.AES_KEY, text);
+                return decryptOne(getDecryptKeys(), text);
             })
         );
 
