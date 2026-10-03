@@ -93,7 +93,12 @@ function topLevelCounts(paths) {
 
 async function replaceIfUnchanged(item) {
     const ref = db.ref(item.path);
-    const tx = await ref.transaction((cur) => (cur === item.oldValue ? item.newCipher : undefined));
+    // 방금 서버 값이 점검 때와 같은지 먼저 확인(삭제/수정된 값은 건드리지 않음).
+    if ((await ref.once("value")).val() !== item.oldValue) return false;
+    // Firebase transaction은 처음에 "로컬 캐시 값(보통 null)"으로 함수를 한 번 부른다. 여기서 undefined를
+    // 돌려주면 서버 값을 확인하지도 않고 중단되므로, null일 땐 값을 돌려줘 서버 값으로 재시도하게 한다.
+    // 서버 값이 실제로 옛 값이 아니면 재시도 때 undefined로 중단된다.
+    const tx = await ref.transaction((cur) => (cur === null || cur === item.oldValue ? item.newCipher : undefined));
     return tx.committed;
 }
 
