@@ -679,10 +679,9 @@ body{background:#F2F4F6;color:#191F28}
         // 페이지 소스만 보고 마스터 계정의 실제 이메일 주소를 알아낼 수 있었다(피싱/무차별
         // 대입 공격의 표적이 되기 쉬움). UID는 이메일과 달리 그 자체로는 계정을 특정할 수
         // 없는 무작위 문자열이라 노출되어도 정보 가치가 없다.
-        // 마스터로 인정하는 UID 목록(Firebase 규칙·백엔드 lib/adminUids.js와 같아야 한다).
-        // 옛 계정(Rkd6…)은 새 마스터로 로그인되는 걸 확인한 뒤 제거한다.
-        const MASTER_ALLOWED_UIDS = ["Rkd6EHSpWibkSbQuQN9spYZ9p1i1", "OUcTOJNMDVXaMwouAqUluSvd2nH2"];
-        const MASTER_ALLOWED_UID = MASTER_ALLOWED_UIDS[MASTER_ALLOWED_UIDS.length - 1]; // 안내 문구에 표시할 대표 UID
+        // 마스터로 인정하는 UID(Firebase 규칙·백엔드 lib/adminUids.js와 같아야 한다).
+        const MASTER_ALLOWED_UIDS = ["OUcTOJNMDVXaMwouAqUluSvd2nH2"];
+        const MASTER_ALLOWED_UID = MASTER_ALLOWED_UIDS[0]; // 안내 문구에 표시할 대표 UID
 
         const firebaseConfig = {
             apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
