@@ -674,8 +674,10 @@
         </div>
 
         <!-- 🔗 유투엠 | 매쓰플랫 바로가기 — 네이버 로그인 화면에서 광고 배너가 있는 자리 -->
+        <!-- 유투엠 바로가기는 www가 아니라 학원 전용 주소로 직접 연다: www에서 로그인하면 유투엠이 http://swgwanggyo...로 넘겨서
+             업데이트 전 앱(usesCleartextTraffic=false)이 ERR_CLEARTEXT_NOT_PERMITTED로 막는다. 학원 주소에서 직접 로그인하면 https로만 이동한다. -->
         <div class="quick-link-card" id="quickLinkCard">
-            <a href="https://www.u2math.co.kr/Login/Index" target="_blank" rel="noopener" class="quick-link-item">
+            <a href="https://swgwanggyo.u2math.co.kr/Login/Index" target="_blank" rel="noopener" class="quick-link-item">
                 <div class="quick-link-icon"><img src="assets/u2m-icon.png" alt="유투엠"></div>
                 <span class="quick-link-label">유투엠</span>
             </a>
@@ -685,8 +687,6 @@
                 <span class="quick-link-label">매쓰플랫</span>
             </a>
         </div>
-        <!-- 임시: 업데이트 안 된 태블릿에서 유투엠 연결 경로 시험용 (확인 후 삭제) -->
-        <div style="text-align:center; margin-top:10px;"><a href="u2m-link-test.html" style="font-size:0.7rem; color:#a8afb8; text-decoration:none;">연결 테스트</a></div>
 
         <div class="page-footer">
             <div class="footer-brand">K&amp;P 수학입시학원 <span>with</span> <img src="assets/logo-icon.png" alt="KST"></div>
