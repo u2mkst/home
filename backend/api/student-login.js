@@ -23,6 +23,7 @@ const {
 // 원천) PIN 해시를 저장하고 Firebase 비밀번호를 무작위 값으로 바꾼다(지연 이전).
 const FIREBASE_WEB_API_KEY = "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg"; // 공개 웹 키(클라이언트에도 노출됨)
 const IP_LOGIN_LIMIT = 300;                 // IP당 시간당 로그인 시도(학원 와이파이 공유 감안)
+const IP_LOGIN_NOTOKEN_LIMIT = 40;          // reCAPTCHA 토큰 없는 요청의 IP당 시간당 한도
 const IP_WINDOW_MS = 60 * 60 * 1000;
 
 const DUMMY_SECRET = { salt: "00".repeat(16), hash: "00".repeat(32) };
@@ -70,6 +71,12 @@ module.exports = async (req, res) => {
             return res.status(429).json({ error: "locked", lockedUntil: lockout.lockedUntil });
         }
 
+        // reCAPTCHA 토큰이 없으면(구글 스크립트 차단 등) 로그인은 허용하되, 토큰 없이 직접 API를 두드리는
+        // 자동화 공격을 줄이기 위해 훨씬 낮은 IP 한도를 적용한다.
+        if (!recaptchaToken) {
+            const strict = await consumeIpQuota(req, "login-notoken", IP_LOGIN_NOTOKEN_LIMIT, IP_WINDOW_MS);
+            if (!strict.allowed) return res.status(429).json({ error: "ip_limited", retryAfterMs: strict.retryAfterMs });
+        }
         if (await isBotSuspected(recaptchaToken, "login")) {
             return res.status(403).json({ error: "bot" });
         }

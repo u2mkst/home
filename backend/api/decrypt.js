@@ -83,7 +83,7 @@ module.exports = async (req, res) => {
         const results = await Promise.all(
             items.map(async (item) => {
                 const text = (item && item.text) || "";
-                const ownerUid = item && item.ownerUid;
+                const ownerUid = item && typeof item.ownerUid === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(item.ownerUid) ? item.ownerUid : null;
                 if (!text) return "";
 
                 const allowed =

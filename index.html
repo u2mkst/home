@@ -2982,7 +2982,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     <div class="flex items-start gap-2.5 my-1.5">
                         <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[11px] font-bold shrink-0 select-none shadow-sm">선</div>
                         <div>
-                            <div class="text-[11px] font-bold text-gray-500 mb-0.5 select-none ml-1">${chat.teacher || '담당교사'}</div>
+                            <div class="text-[11px] font-bold text-gray-500 mb-0.5 select-none ml-1">${escapeHTML(chat.teacher || '담당교사')}</div>
                             <div class="flex items-end gap-1.5">
                                 <div class="bg-white text-gray-800 text-[13px] font-medium p-3 rounded-2xl rounded-tl-none max-w-[240px] shadow-sm border border-gray-200 whitespace-pre-line break-all">
                                     ${escapeHTML(rawMessage)}
@@ -3099,7 +3099,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         else if (weatherId > 800) emoji = '☁️';
 
         const description = data.weather[0].description;
-        document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" id="weatherIcon" class="emoji-font">${emoji}</span> ${description}`;
+        document.getElementById('weatherStatus').innerHTML = `<span style="font-size:1rem;" id="weatherIcon" class="emoji-font">${emoji}</span> ${escapeHTML(description)}`;
         document.getElementById('weatherDetails').innerHTML = `<span><span class="emoji-font">☔</span> 강수확률 ${data.main.precipProb}%</span> <span><span class="emoji-font">💨</span> 풍향 ${escapeHTML(data.wind.dir)}</span>`;
     }
 
