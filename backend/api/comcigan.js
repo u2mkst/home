@@ -1,4 +1,5 @@
 const { applyCors } = require("../lib/cors");
+const { rejectIfRateLimited } = require("../lib/guard");
 
 async function fetchTimetable(school, search) {
     const url = `https://sch-5bnq.onrender.com/timetable/${encodeURIComponent(school)}?${search.toString()}`;
@@ -21,9 +22,12 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: "Method not allowed" });
     }
 
+    if (await rejectIfRateLimited(req, res, "comcigan", 300, 60 * 60 * 1000)) return;
+
     const { school, grade, class_num, region } = req.query || {};
 
-    if (!school || !grade || !class_num) {
+    const tooLong = [school, grade, class_num, region].some((v) => typeof v === "string" && v.length > 60);
+    if (!school || !grade || !class_num || [school, grade, class_num].some((v) => typeof v !== "string") || tooLong) {
         return res.status(400).json({ error: "`school`, `grade` and `class_num` are required" });
     }
 

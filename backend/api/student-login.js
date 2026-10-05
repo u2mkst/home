@@ -8,7 +8,7 @@ const {
     toLoginEmail,
     isBotSuspected,
     getLockout,
-    registerFailure,
+    beginAttempt,
     clearLockout,
     consumeIpQuota,
 } = require("../lib/guard");
@@ -96,6 +96,12 @@ module.exports = async (req, res) => {
             return sendInvalid(res, null);
         }
 
+        // PIN을 맞춰보기 전에 시도를 원자적으로 센다(병렬 요청으로 횟수 제한을 피하지 못하게).
+        const attempt = await beginAttempt(normalizedId);
+        if (!attempt.allowed) {
+            return res.status(429).json({ error: "locked", lockedUntil: attempt.state.lockedUntil || 0 });
+        }
+
         const uid = userRecord.uid;
         const secretRef = admin.database().ref(`loginSecrets/${uid}`);
         const secretSnap = await secretRef.once("value");
@@ -126,10 +132,7 @@ module.exports = async (req, res) => {
             }
         }
 
-        if (!ok) {
-            const state = await registerFailure(normalizedId);
-            return sendInvalid(res, state);
-        }
+        if (!ok) return sendInvalid(res, attempt.state);
 
         if (userRecord.disabled) return res.status(403).json({ error: "disabled" });
         await clearLockout(normalizedId);

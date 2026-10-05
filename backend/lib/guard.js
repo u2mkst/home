@@ -84,14 +84,24 @@ async function getLockout(normalizedId) {
     return state;
 }
 
-async function registerFailure(normalizedId) {
-    const state = await getLockout(normalizedId);
-    state.failCount = (state.failCount || 0) + 1;
-    state.lastFailAt = Date.now();
-    const lockoutMs = computeLockoutMs(state.failCount);
-    if (lockoutMs > 0) state.lockedUntil = Date.now() + lockoutMs;
-    await lockoutRef(normalizedId).set(state);
-    return state;
+// 로그인/탈퇴 확인 같은 "PIN을 맞춰보는" 요청마다 시도를 먼저 센다(원자적 트랜잭션).
+// 예전엔 "읽고 → 검증하고 → 실패하면 +1"이라, 같은 순간에 보낸 수십 개의 요청이 전부 "실패 0회"를 읽고
+// 통과해서 시도 횟수가 거의 세어지지 않았다(병렬 대입 공격). 이제 검증 전에 +1을 먼저 반영하고,
+// 성공하면 clearLockout으로 지운다. 잠금 중이면 allowed=false.
+async function beginAttempt(normalizedId) {
+    const now = Date.now();
+    let blocked = false;
+    const tx = await lockoutRef(normalizedId).transaction((cur) => {
+        blocked = false;
+        let state = cur || { failCount: 0, lockedUntil: 0 };
+        if (state.lastFailAt && now - state.lastFailAt > FAIL_MEMORY_MS) state = { failCount: 0, lockedUntil: 0 };
+        if ((state.lockedUntil || 0) > now) { blocked = true; return undefined; } // 잠금 중 → 변경 없이 중단
+        const failCount = (state.failCount || 0) + 1;
+        const lockoutMs = computeLockoutMs(failCount);
+        return { failCount, lastFailAt: now, lockedUntil: lockoutMs > 0 ? now + lockoutMs : 0 };
+    });
+    const state = tx.snapshot.val() || { failCount: 0, lockedUntil: 0 };
+    return { allowed: !blocked && tx.committed, state };
 }
 
 async function clearLockout(normalizedId) {
@@ -115,6 +125,19 @@ async function consumeIpQuota(req, bucket, maxPerWindow, windowMs) {
     };
 }
 
+// 로그인이 필요 없는 공개 프록시 API(NEIS/컴시간/날씨)의 남용을 막는 IP별 시간당 한도. DB 오류면 막지 않는다.
+async function rejectIfRateLimited(req, res, bucket, maxPerWindow, windowMs) {
+    try {
+        const quota = await consumeIpQuota(req, bucket, maxPerWindow, windowMs);
+        if (!quota.allowed) {
+            res.setHeader("Retry-After", String(Math.ceil(quota.retryAfterMs / 1000)));
+            res.status(429).json({ error: "ip_limited", retryAfterMs: quota.retryAfterMs });
+            return true;
+        }
+    } catch (e) { /* fail-open */ }
+    return false;
+}
+
 module.exports = {
     normalizeLoginId,
     toLoginEmail,
@@ -123,7 +146,8 @@ module.exports = {
     checkRecaptchaScore,
     isBotSuspected,
     getLockout,
-    registerFailure,
+    beginAttempt,
+    rejectIfRateLimited,
     clearLockout,
     consumeIpQuota,
 };

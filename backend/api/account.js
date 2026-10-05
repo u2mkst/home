@@ -4,7 +4,7 @@ const { encryptOne } = require("../lib/aes");
 const { ADMIN_UIDS } = require("../lib/adminUids");
 const { hashPin, verifyPin, isValidPin } = require("../lib/pin");
 const { purgeStudentData } = require("../lib/purge");
-const { normalizeLoginId, getLockout, registerFailure, clearLockout } = require("../lib/guard");
+const { normalizeLoginId, beginAttempt, clearLockout } = require("../lib/guard");
 
 // 로그인한 학생 본인의 계정 관리(PIN 변경 / 회원 탈퇴).
 // ※ Vercel 무료(Hobby) 플랜은 서버 함수를 12개까지만 배포할 수 있어서 한 파일로 묶었다.
@@ -39,15 +39,14 @@ async function deleteAccount(decoded, body, res) {
     const normalizedId = normalizeLoginId(userRecord.email);
     if (!normalizedId) return res.status(400).json({ error: "bad_request" });
 
-    const lockout = await getLockout(normalizedId);
-    if ((lockout.lockedUntil || 0) > Date.now()) {
-        return res.status(429).json({ error: "locked", lockedUntil: lockout.lockedUntil });
+    const attempt = await beginAttempt(normalizedId);
+    if (!attempt.allowed) {
+        return res.status(429).json({ error: "locked", lockedUntil: attempt.state.lockedUntil || 0 });
     }
 
     const secretSnap = await admin.database().ref(`loginSecrets/${uid}`).once("value");
     if (!verifyPin(body.pin, secretSnap.val())) {
-        const state = await registerFailure(normalizedId);
-        return res.status(401).json({ error: "invalid", lockedUntil: state.lockedUntil > Date.now() ? state.lockedUntil : 0 });
+        return res.status(401).json({ error: "invalid", lockedUntil: attempt.state.lockedUntil > Date.now() ? attempt.state.lockedUntil : 0 });
     }
     await clearLockout(normalizedId);
 

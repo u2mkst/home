@@ -1,4 +1,5 @@
 const { applyCors } = require("../lib/cors");
+const { rejectIfRateLimited } = require("../lib/guard");
 
 const ALLOWED_ENDPOINTS = new Set([
     "schoolInfo",
@@ -15,6 +16,9 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: "Method not allowed" });
     }
 
+    // 로그인 없이 호출되는 프록시라 IP별 한도를 둔다(학원 와이파이를 여러 명이 같이 쓰는 점을 감안해 넉넉하게).
+    if (await rejectIfRateLimited(req, res, "neis", 600, 60 * 60 * 1000)) return;
+
     const { endpoint, ...params } = req.query || {};
 
     if (!endpoint || !ALLOWED_ENDPOINTS.has(endpoint)) {
@@ -26,9 +30,12 @@ module.exports = async (req, res) => {
     }
 
     const search = new URLSearchParams();
-    for (const [key, value] of Object.entries(params)) {
-        if (value === undefined) continue;
-        search.set(key, Array.isArray(value) ? value[0] : value);
+    // 파라미터 이름/길이를 제한해서 임의 값을 NEIS에 그대로 넘기지 않는다(KEY/Type은 서버가 덮어쓴다).
+    for (const [key, value] of Object.entries(params).slice(0, 20)) {
+        if (value === undefined || !/^[A-Za-z_]{1,32}$/.test(key)) continue;
+        const v = String(Array.isArray(value) ? value[0] : value);
+        if (v.length > 100) continue;
+        search.set(key, v);
     }
     search.set("KEY", process.env.NEIS_API_KEY);
     search.set("Type", "json");

@@ -1,4 +1,5 @@
 const { applyCors } = require("../lib/cors");
+const { rejectIfRateLimited } = require("../lib/guard");
 
 // 학원 위치(경기도 수원시 영통구) 기준 기상청 단기예보구역코드.
 // https://apihub.kma.go.kr/api/typ01/url/fct_shrt_reg.php?tmfc=0&authKey=... 조회 결과 "수원" 매칭.
@@ -77,6 +78,8 @@ module.exports = async (req, res) => {
     if (req.method !== "GET") {
         return res.status(405).json({ error: "Method not allowed" });
     }
+
+    if (await rejectIfRateLimited(req, res, "weather", 300, 60 * 60 * 1000)) return;
 
     if (!process.env.KMA_API_KEY) {
         return res.status(500).json({ error: "KMA_API_KEY is not configured on the server" });

@@ -22,30 +22,36 @@ async function isVerifiedOtherStudentName(ownerUid, cipherText) {
     }
 }
 
-// 🔒 [보안 취약점 수정] ownerUid가 호출자 본인이라고 주장하는 것만으로는 부족하다 —
-// Firebase Realtime Database의 `students` 컬렉션은 랭킹 기능 때문에 로그인한 모든
-// 학생이 다른 학생의 phone/mathflatPw 등 암호문까지 통째로 읽을 수 있다(클라이언트
-// SDK로 직접 조회 가능, 이 서버를 거치지 않음). 따라서 공격자가 다른 학생의 phone
-// 암호문을 그대로 가져와 `{text: 그 암호문, ownerUid: 자기 자신의 uid}`로 이 API를
-// 호출하면, 예전 코드는 "ownerUid === decoded.uid"만 보고 그대로 복호화해줬다 —
-// phone은 로그인 비밀번호("00"+뒷자리4자리)의 원본이라 실질적으로 계정 탈취로
-// 이어질 수 있는 심각한 문제였다. 이제 "본인 것"이라는 주장도 실제 그 학생 레코드에
-// 저장된 값과 일치하는지 서버가 대조해서 검증한다.
-// cache는 매 요청(invocation)마다 새로 만들어 넘긴다 — 서버리스 함수가 인스턴스를
-// 재사용(warm start)해도 요청 간에 캐시가 새거나 무한히 쌓이지 않도록.
+// 본인 데이터 판정: "이 암호문이 정말 호출자 본인의 기록에 들어 있는가"를 서버가 DB에서 직접 확인한다
+// (클라이언트가 ownerUid만 본인이라고 주장하는 것으로는 부족 — 예전에 남의 값을 그대로 복호화하던 취약점이 있었다).
+// 본인 기록 = students/{uid}, 본인이 보낸 문의(messages, studentUid=본인), 선생님이 보낸 쪽지(student_messages/{uid}).
+// ※ students 전체 노드는 규칙상 본인/관리자만 읽을 수 있고, 다른 학생의 전화번호 등은 이 서버가 풀어주지 않는다.
+// cache는 요청마다 새로 만든다(서버리스 인스턴스를 재사용해도 요청 간에 새거나 쌓이지 않도록).
+function collectStrings(node, out, depth = 0) {
+    if (typeof node === "string") out.add(node);
+    else if (node && typeof node === "object" && depth < 4) Object.values(node).forEach((v) => collectStrings(v, out, depth + 1));
+}
+
 function makeOwnFieldChecker() {
     const cache = new Map();
     return async function isOwnStudentField(uid, cipherText) {
         if (!uid || !cipherText) return false;
         try {
-            let dataPromise = cache.get(uid);
-            if (!dataPromise) {
-                dataPromise = admin.database().ref(`students/${uid}`).get().then((snap) => snap.val());
-                cache.set(uid, dataPromise);
+            let setPromise = cache.get(uid);
+            if (!setPromise) {
+                const db = admin.database();
+                setPromise = Promise.all([
+                    db.ref(`students/${uid}`).get(),
+                    db.ref("messages").orderByChild("studentUid").equalTo(uid).get(),
+                    db.ref(`student_messages/${uid}`).get(),
+                ]).then((snaps) => {
+                    const set = new Set();
+                    snaps.forEach((snap) => collectStrings(snap.val(), set));
+                    return set;
+                });
+                cache.set(uid, setPromise);
             }
-            const data = await dataPromise;
-            if (!data || typeof data !== "object") return false;
-            return Object.values(data).some((v) => v === cipherText);
+            return (await setPromise).has(cipherText);
         } catch (e) {
             return false;
         }
