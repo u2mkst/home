@@ -1,6 +1,6 @@
 const { applyCors } = require("../lib/cors");
 const { admin, requireAuth } = require("../lib/firebaseAdmin");
-const { lottoBadgeUpdates } = require("../lib/achievements");
+const { lottoBadgeUpdates, lottoBonusBadgeUpdates, grantLottoParticipationBadges } = require("../lib/achievements");
 
 // 🔒 로또 예측 이벤트를 서버가 관리한다. 예전엔 클라이언트가 외부 API에서 당첨번호를 직접
 // 받아오고(그 응답을 학생이 조작 가능), 예측을 직접 DB에 써서 — 발표 후에 번호를 제출하거나
@@ -108,8 +108,10 @@ async function finalizeRound(round, draw) {
         const p = predictions[uid];
         const matched = p.numbers.filter((n) => winSet.has(n)).length;
         updates[`lotto_predictions/${round}/${uid}/matchedCount`] = matched;
-        updates[`lotto_predictions/${round}/${uid}/bonusHit`] = p.bonus === draw.bonus;
+        const bonusHit = p.bonus === draw.bonus;
+        updates[`lotto_predictions/${round}/${uid}/bonusHit`] = bonusHit;
         Object.assign(updates, lottoBadgeUpdates(uid, achSnaps[i].val(), matched));
+        Object.assign(updates, lottoBonusBadgeUpdates(uid, achSnaps[i].val(), bonusHit));
     });
     updates[`lottoDraws/${round}/finalizedAt`] = Date.now();
     await db().ref().update(updates);
@@ -211,6 +213,7 @@ const handler = async (req, res) => {
             const sorted = numbers.sort((a, b) => a - b);
             const result = await ref.transaction((cur) => (cur ? undefined : { numbers: sorted, bonus, submittedAt: Date.now() }));
             if (!result.committed) return res.status(409).json({ error: "already_submitted" });
+            await grantLottoParticipationBadges(uid, status.targetRound).catch((e) => console.error("로또 참여 배지 지급 실패:", e.message));
             return res.status(200).json({ ok: true, targetRound: status.targetRound, numbers: sorted, bonus });
         }
 

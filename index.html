@@ -115,7 +115,6 @@
         :root[data-theme="dark"] .mathq-input-group input,
         :root[data-theme="dark"] .input-wrapper input,
         :root[data-theme="dark"] .input-wrapper select,
-        :root[data-theme="dark"] .lotto-ball-input,
         :root[data-theme="dark"] .mathq-tool-btn,
         :root[data-theme="dark"] .sheet-input,
         :root[data-theme="dark"] .mathq-select {
@@ -668,21 +667,59 @@
         .calendar-day { padding: 10px 0; font-size: 0.95rem; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.4); border: 1px solid var(--lg-border-soft); transition: all 0.35s var(--spring); }
         .calendar-day.attended { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; font-weight: 800; box-shadow: 0 8px 18px rgba(0, 75, 191, 0.4); border-color: var(--accent); }
 
-        .lotto-ball { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 0.95rem; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.08); flex-shrink: 0; }
-        .ball-yellow { background: #fbc531; color: #3d2e00; }
-        .ball-blue { background: #00a8ff; }
-        .ball-red { background: #e84118; }
-        .ball-gray { background: #718093; }
-        .ball-green { background: #4cd137; }
-        .lotto-ball-input {
-            width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.95);
-            border: 2px solid rgba(210, 210, 225, 0.85); text-align: center; font-weight: 800; font-size: 1.15rem; color: var(--text-main);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.04), 0 4px 10px rgba(0,0,0,0.03);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); -moz-appearance: textfield;
-        }
-        .lotto-ball-input::-webkit-outer-spin-button, .lotto-ball-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .lotto-ball-input:focus { outline: none; border-color: var(--accent); background: #ffffff; transform: scale(1.1); box-shadow: 0 0 18px rgba(0, 75, 191, 0.4); }
-        .lotto-ball-input.bonus-style { border-color: var(--accent-light); background: rgba(240, 236, 255, 0.95); }
+        /* ============ 🎰 로또: 공 / 숫자판 / 결과 / 기록 / 랭킹 ============ */
+        .lotto-ball { position: relative; width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 0.95rem; text-shadow: 0 1px 1px rgba(0,0,0,0.28); box-shadow: inset -3px -4px 7px rgba(0,0,0,0.20), inset 2px 2px 4px rgba(255,255,255,0.40), 0 5px 10px rgba(0,0,0,0.14); flex-shrink: 0; transition: transform 0.25s var(--spring), opacity 0.25s ease; }
+        .lotto-ball::after { content: ''; position: absolute; top: 11%; left: 19%; width: 36%; height: 26%; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(255,255,255,0.85), rgba(255,255,255,0)); transform: rotate(-32deg); pointer-events: none; }
+        .ball-yellow { background: radial-gradient(circle at 36% 30%, #ffe680, #fbc531 55%, #d49400); color: #3d2e00; text-shadow: none; }
+        .ball-blue { background: radial-gradient(circle at 36% 30%, #78d4ff, #00a8ff 55%, #0070b5); }
+        .ball-red { background: radial-gradient(circle at 36% 30%, #ff9078, #e84118 55%, #a52509); }
+        .ball-gray { background: radial-gradient(circle at 36% 30%, #b3bfce, #718093 55%, #485466); }
+        .ball-green { background: radial-gradient(circle at 36% 30%, #a2ec91, #4cd137 55%, #28961a); }
+        .lotto-ball.sm { width: 30px; height: 30px; font-size: 0.8rem; }
+        .lotto-ball.hit { transform: scale(1.06); outline: 2px solid var(--accent); outline-offset: 1px; animation: lottoHitPulse 1.8s ease-in-out infinite; }
+        .lotto-ball.miss { opacity: 0.35; filter: grayscale(0.7); }
+        .lotto-ball.bonus-ring { outline: 2px dashed var(--text-muted); outline-offset: 2px; }
+        .lotto-ball.bonus-ring.hit { outline-style: solid; outline-color: var(--accent); }
+        .lotto-ball.empty { background: transparent; box-shadow: none; border: 2px dashed var(--lg-border); color: var(--text-muted); text-shadow: none; cursor: pointer; }
+        .lotto-ball.empty::after { display: none; }
+        @keyframes lottoHitPulse { 0%, 100% { box-shadow: inset -3px -4px 7px rgba(0,0,0,0.20), inset 2px 2px 4px rgba(255,255,255,0.40), 0 0 0 0 rgba(76,154,255,0.55); } 50% { box-shadow: inset -3px -4px 7px rgba(0,0,0,0.20), inset 2px 2px 4px rgba(255,255,255,0.40), 0 0 0 9px rgba(76,154,255,0); } }
+
+        .lotto-panel { background: var(--lg-surface); border: 1px solid var(--lg-border-soft); border-radius: 18px; padding: 16px; margin-bottom: 16px; }
+        .lotto-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .lotto-actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+        #lottoMyResult { margin-top: 14px; }
+        #lottoMyResult .lotto-panel { margin-bottom: 0; }
+        .lotto-tray { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .lotto-tray .plus { font-weight: 800; color: var(--text-muted); }
+        .lotto-pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 7px; margin-top: 14px; }
+        .lotto-pad-btn { aspect-ratio: 1; min-width: 0; border-radius: 50%; border: 1.5px solid var(--lg-border); color: var(--text-main); font-weight: 800; font-size: 0.85rem; cursor: pointer; padding: 0; position: relative; transition: transform 0.18s var(--spring), box-shadow 0.2s ease; -webkit-tap-highlight-color: transparent; }
+        .lotto-pad-btn:not(.sel) { background: var(--lg-surface-soft); }
+        .lotto-pad-btn:active { transform: scale(0.84); }
+        .lotto-pad-btn.sel { color: #fff; border-color: transparent; text-shadow: 0 1px 1px rgba(0,0,0,0.28); box-shadow: inset -2px -3px 5px rgba(0,0,0,0.2), inset 1px 1px 3px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.15); transform: scale(1.06); }
+        .lotto-pad-btn.sel.ball-yellow { color: #3d2e00; text-shadow: none; }
+        .lotto-pad-btn.sel.is-bonus { outline: 2px dashed var(--accent); outline-offset: 2px; }
+        .lotto-pad-btn.sel.is-bonus::after { content: 'B'; position: absolute; top: -5px; right: -5px; width: 15px; height: 15px; line-height: 15px; font-size: 0.6rem; border-radius: 50%; background: var(--accent); color: #fff; text-shadow: none; }
+        .lotto-mini-btn { font-size: 0.78rem; font-weight: 800; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--lg-border); background: var(--lg-surface-soft); color: var(--text-main); cursor: pointer; }
+        .lotto-mini-btn:active { transform: scale(0.94); }
+        .lotto-count-text { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-align: center; margin-top: 10px; }
+        .lotto-countdown { font-size: 0.82rem; font-weight: 800; color: var(--accent); background: var(--accent-light); border-radius: 12px; padding: 8px 12px; text-align: center; margin-bottom: 12px; }
+        .lotto-countdown.urgent { color: #fff; background: #e84118; animation: lottoUrgent 1.1s ease-in-out infinite; }
+        @keyframes lottoUrgent { 0%, 100% { opacity: 1; } 50% { opacity: 0.72; } }
+        .lotto-result-title { font-weight: 800; font-size: 1rem; color: var(--text-main); text-align: center; margin-bottom: 10px; }
+        .lotto-result-prob { font-size: 0.78rem; color: var(--text-muted); text-align: center; margin-top: 10px; line-height: 1.5; }
+        .lotto-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+        .lotto-stat { background: var(--lg-surface-soft); border-radius: 12px; padding: 10px 4px; text-align: center; }
+        .lotto-stat b { display: block; font-size: 1.1rem; color: var(--text-main); }
+        .lotto-stat span { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; }
+        .lotto-hist-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; border-top: 1px solid var(--lg-border-soft); flex-wrap: wrap; }
+        .lotto-hist-row .balls { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+        .lotto-hist-meta { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-align: right; }
+        .lotto-rank-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+        .lotto-seg { display: inline-flex; background: var(--lg-surface-soft); border-radius: 999px; padding: 3px; border: 1px solid var(--lg-border-soft); }
+        .lotto-seg button { border: none; background: transparent; color: var(--text-muted); font-weight: 800; font-size: 0.78rem; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+        .lotto-seg button.active { background: var(--accent); color: #fff; }
+        .lotto-select { font-size: 0.78rem; font-weight: 700; padding: 7px 10px; border-radius: 999px; border: 1px solid var(--lg-border); background: var(--lg-surface-soft); color: var(--text-main); max-width: 150px; }
+        @media (prefers-reduced-motion: reduce) { .lotto-ball.hit, .lotto-countdown.urgent { animation: none; } }
 
         .rank-btn-base { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; padding: 14px 22px; border-radius: var(--radius-md); transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), background 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .rank-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; box-shadow: 0 10px 24px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
@@ -1003,15 +1040,16 @@ body{background-color:var(--bg-page);color:var(--text-main)}
 
         <!-- 3-2. 이주의 로또 -->
         <div id="rankview-lotto" class="tablet-grid animate-tab-switch" style="display: none;">
-            <div class="rank-card flex flex-col justify-center space-y-6">
+            <div class="rank-card flex flex-col space-y-6">
                 <div>
-                    <div class="mb-6">
+                    <div class="mb-5">
                         <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
                             <span class="emoji-font">🎉</span> <span id="lottoResultRoundText">지난 회차 당첨 결과</span>
                         </h2>
                         <div id="lottoWinningBox" class="min-h-[72px] flex flex-col items-center justify-center gap-2 bg-white/70 p-4 rounded-2xl border border-white shadow-sm">
                             <span class="text-sm text-gray-400">당첨 번호를 불러오는 중...</span>
                         </div>
+                        <div id="lottoMyResult" class="mt-3"></div>
                     </div>
 
                     <div class="pt-4 border-t border-gray-200/60">
@@ -1019,26 +1057,19 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                             <h2 class="text-lg font-bold flex items-center gap-2 tip-text" data-tip="번호 6개와 보너스 번호 1개를 예측해서 제출하면, 실제 추첨 결과와 비교해 적중 개수로 랭킹이 매겨져요.">
                                 <span class="emoji-font">🔮</span> <span id="lottoChallengeRoundText">나의 예측</span>
                             </h2>
-                            <button onclick="generateAutoLotto()" class="text-xs text-indigo-600 font-bold hover:underline bg-indigo-50 px-3 py-1.5 rounded-full">
-                                🎲 번호 자동 생성
-                            </button>
                         </div>
-                        <p id="lottoChallengeSubtext" class="text-xs text-gray-500 mb-5">* 회차 정보를 불러오는 중입니다...</p>
+                        <p id="lottoChallengeSubtext" class="text-xs text-gray-500 mb-3">* 회차 정보를 불러오는 중입니다...</p>
+                        <div id="lottoCountdown" class="lotto-countdown" style="display:none;"></div>
 
                         <div id="myLottoStatus">
                             <div id="lottoInputForm">
-                                <div class="flex flex-col items-center gap-4 mb-6 bg-white/60 p-5 rounded-2xl border border-white/80">
-                                    <div class="flex justify-center gap-2.5 w-full flex-wrap">
-                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                        <input type="number" min="1" max="45" class="lotto-in lotto-ball-input">
-                                    </div>
-                                    <div class="flex items-center gap-3 pt-3 border-t border-dashed border-gray-300 w-full justify-center">
-                                        <span class="text-sm font-bold text-indigo-600">+ 보너스</span>
-                                        <input type="number" id="lottoBonusInput" min="1" max="45" class="lotto-ball-input bonus-style">
+                                <div class="lotto-panel">
+                                    <div id="lottoTray" class="lotto-tray"></div>
+                                    <div id="lottoPickCount" class="lotto-count-text"></div>
+                                    <div id="lottoPad" class="lotto-pad"></div>
+                                    <div class="lotto-actions">
+                                        <button type="button" class="lotto-mini-btn" onclick="generateAutoLotto()">🎲 자동 선택 (남은 번호 채우기)</button>
+                                        <button type="button" class="lotto-mini-btn" onclick="resetLottoPick()">↺ 초기화</button>
                                     </div>
                                 </div>
 
@@ -1047,16 +1078,31 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                             <div id="lottoSubmittedView" style="display:none;"></div>
                         </div>
                     </div>
+
+                    <div class="pt-4 mt-5 border-t border-gray-200/60">
+                        <button type="button" id="lottoHistoryToggle" class="lotto-mini-btn w-full" style="padding:11px 12px;" onclick="toggleLottoHistory()">📜 내 로또 기록 보기</button>
+                        <div id="lottoHistoryBox" class="mt-3" style="display:none;"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="rank-card fixed-rank-card">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
                     <span class="emoji-font">🎯</span> <span id="lottoRankTitleText">적중 랭킹 Top 10</span>
                 </h2>
+                <div class="lotto-rank-controls">
+                    <div class="lotto-seg" id="lottoRankSeg">
+                        <button type="button" data-mode="week" class="active" onclick="setLottoRankMode('week')">이번 회차</button>
+                        <button type="button" data-mode="month" onclick="setLottoRankMode('month')">이번 달</button>
+                        <button type="button" data-mode="all" onclick="setLottoRankMode('all')">누적</button>
+                    </div>
+                    <select id="lottoRankTeacher" class="lotto-select" onchange="setLottoRankTeacher(this.value)">
+                        <option value="">전체 선생님</option>
+                    </select>
+                </div>
                 <div class="rank-scroll-area">
                     <div id="lottoRankList" class="space-y-2.5">
-                        <div class="text-center py-10 text-gray-400"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5a2 2 0 0 0 0 4h1M16 5h3a2 2 0 0 1 0 4h-1"/><path d="M12 13v3M9 20h6M10 17h4v3h-4z"/></svg>랭킹 불러오는 중...</div>
+                        <div class="text-center py-10 text-gray-400">랭킹을 불러오는 중...</div>
                     </div>
                 </div>
             </div>
@@ -3209,7 +3255,9 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         { id: 'quiz_7',  icon: '🔥', name: '꾸준한 도전자', desc: '오늘의 문제 누적 7일',  category: 'quizDays', threshold: 7 },
         { id: 'quiz_30', icon: '🔥', name: '문제 마스터',   desc: '오늘의 문제 누적 30일', category: 'quizDays', threshold: 30 },
         { id: 'lotto_3', icon: '🎯', name: '예측왕',       desc: '로또 3개 이상 적중',   category: 'lottoMatch', threshold: 3 },
-        { id: 'lotto_5', icon: '🎰', name: '적중 고수',    desc: '로또 5개 이상 적중',   category: 'lottoMatch', threshold: 5 },
+        { id: 'lotto_first',   icon: '🎟️', name: '첫 도전',      desc: '로또 예측 첫 참여',       category: 'lottoJoin' },
+        { id: 'lotto_bonus',   icon: '✨', name: '보너스 명중',  desc: '로또 보너스 번호 적중',    category: 'lottoBonus' },
+        { id: 'lotto_streak4', icon: '🔁', name: '4주 연속 도전', desc: '로또 4주 연속 참여',       category: 'lottoStreak' },
     ];
 
     // 조건을 한 번 채운 배지는 studentAchievements/{uid}에 영구 기록해, 이후 상황이 바뀌어도
@@ -3752,24 +3800,56 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     let cachedDrawnRound = null;
     let cachedTargetRound = null;
     let cachedLottoCanSubmit = false;
+    let cachedClosesAt = null;
+    let lottoServerOffset = 0;            // 서버 시각 - 내 기기 시각 (카운트다운을 서버 기준으로 맞춘다)
+    let lottoCountdownTimer = null;
+    let lottoCountdownExpiredHandled = false;
+    let lottoPick = { main: [], bonus: null };
+
+    // 1회차 = 2002-12-07 20:35 KST, 매주 토요일. 서버(api/lotto.js)와 같은 계산.
+    const LOTTO_ROUND1_MS = Date.UTC(2002, 11, 7, 20, 35) - 9 * 60 * 60 * 1000;
+    const LOTTO_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const lottoDrawMs = (round) => LOTTO_ROUND1_MS + (round - 1) * LOTTO_WEEK_MS;
+    const kstYearMonthOf = (ms) => { const d = new Date(ms + 9 * 60 * 60 * 1000); return d.getUTCFullYear() * 100 + d.getUTCMonth() + 1; };
+
+    /* ---------- 확률 (번호 6개를 아무렇게나 골랐을 때, 당첨번호 6개와 k개 겹칠 확률) ---------- */
+    function lottoComb(n, k) {
+        if (k < 0 || k > n) return 0;
+        let r = 1;
+        for (let i = 1; i <= k; i++) r = r * (n - k + i) / i;
+        return Math.round(r);
+    }
+    const LOTTO_TOTAL_COMBOS = lottoComb(45, 6); // 8,145,060
+    function lottoMatchProbability(k) { return lottoComb(6, k) * lottoComb(39, 6 - k) / LOTTO_TOTAL_COMBOS; }
+    function formatLottoProbability(k) {
+        const p = lottoMatchProbability(k);
+        const pct = p >= 0.01 ? (p * 100).toFixed(1) : p >= 0.0001 ? (p * 100).toFixed(3) : (p * 100).toFixed(5);
+        const oneIn = Math.max(1, Math.round(1 / p));
+        return `${pct}% (약 ${oneIn.toLocaleString('ko-KR')}번에 1번)`;
+    }
+
+    function getBallColorClass(num) {
+        if (num <= 10) return 'ball-yellow';
+        if (num <= 20) return 'ball-blue';
+        if (num <= 30) return 'ball-red';
+        if (num <= 40) return 'ball-gray';
+        return 'ball-green';
+    }
+    function lottoBallHtml(n, extra) {
+        return `<div class="lotto-ball ${getBallColorClass(n)} ${extra || ''}">${n}</div>`;
+    }
 
     function updateLottoChallengeTitle() {
         const resultTitle = document.getElementById('lottoResultRoundText');
         const challengeTitle = document.getElementById('lottoChallengeRoundText');
         const challengeSub = document.getElementById('lottoChallengeSubtext');
-        const rankTitle = document.getElementById('lottoRankTitleText');
 
-        if (cachedDrawnRound) {
-            if (resultTitle) resultTitle.innerText = `제 ${cachedDrawnRound}회 당첨 결과`;
-            if (rankTitle) rankTitle.innerText = `제 ${cachedDrawnRound}회 적중 랭킹 Top 10`;
-        } else {
-            if (resultTitle) resultTitle.innerText = `당첨 결과`;
-            if (rankTitle) rankTitle.innerText = `적중 랭킹 Top 10`;
-        }
+        if (resultTitle) resultTitle.innerText = cachedDrawnRound ? `제 ${cachedDrawnRound}회 당첨 결과` : `당첨 결과`;
+        updateLottoRankTitle();
 
         if (cachedTargetRound) {
             if (challengeTitle) challengeTitle.innerText = `제 ${cachedTargetRound}회 도전! 나의 예측`;
-            if (challengeSub) challengeSub.innerText = `* 1~45 사이의 중복 없는 6개 번호 + 보너스 번호를 채워주세요. 제출하면 다음 발표(제 ${cachedTargetRound}회)에서 결과를 확인할 수 있어요.`;
+            if (challengeSub) challengeSub.innerText = `* 숫자판에서 번호 6개를 고른 뒤, 보너스 번호 1개를 더 고르세요. 제출하면 제 ${cachedTargetRound}회 발표에서 결과를 확인할 수 있어요.`;
         } else {
             if (challengeTitle) challengeTitle.innerText = `나의 예측`;
             if (challengeSub) challengeSub.innerText = `* 회차 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.`;
@@ -3779,6 +3859,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     function loadLottoData() {
         const box = document.getElementById('lottoWinningBox');
         if (box) box.innerHTML = `<span class="text-sm text-gray-400">당첨 번호를 불러오는 중...</span>`;
+        lottoPredictionCache = {};
+        lottoDrawsCache = null;
 
         fetchLottoStatus()
             .then(result => {
@@ -3787,6 +3869,9 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 cachedDrawnRound = result.drawnRound || null;
                 cachedTargetRound = result.targetRound || null;
                 cachedLottoCanSubmit = !!result.canSubmit;
+                cachedClosesAt = result.closesAt || null;
+                lottoServerOffset = (result.serverNow || Date.now()) - Date.now();
+                lottoCountdownExpiredHandled = false;
                 renderLottoWinningBalls(result.numbers, result.bonus);
             })
             .catch(() => {
@@ -3795,20 +3880,14 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 cachedDrawnRound = null;
                 cachedTargetRound = null;
                 cachedLottoCanSubmit = false;
+                cachedClosesAt = null;
                 if (box) box.innerHTML = `<span class="text-xs text-red-500 font-bold">당첨 번호를 불러올 수 없어요. 잠시 후 다시 시도해 주세요.</span>`;
             })
             .finally(() => {
                 updateLottoChallengeTitle();
-
-                // 지난(발표된) 회차 예측 결과 랭킹
-                if (cachedDrawnRound) {
-                    database.ref(`lotto_predictions/${cachedDrawnRound}`).once('value', (snapshot) => {
-                        const predictions = snapshot.val() || {};
-                        renderLottoRank(predictions, cachedDrawnRound);
-                    });
-                } else {
-                    renderLottoRank({}, null);
-                }
+                renderMyLottoResult();
+                loadLottoRanking();
+                startLottoCountdown();
 
                 // 이번 주(아직 미발표) 도전 현황 확인
                 if (cachedTargetRound && currentUserUid) {
@@ -3855,92 +3934,333 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         }
     }
 
-    function getBallColorClass(num) {
-        if (num <= 10) return 'ball-yellow';
-        if (num <= 20) return 'ball-blue';
-        if (num <= 30) return 'ball-red';
-        if (num <= 40) return 'ball-gray';
-        return 'ball-green';
-    }
-
     function renderLottoWinningBalls(numbers, bonus) {
         const box = document.getElementById('lottoWinningBox');
         if (!box) return;
-        box.innerHTML = '';
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-center gap-2 flex-wrap';
-        numbers.forEach(n => { row.innerHTML += `<div class="lotto-ball ${getBallColorClass(n)}">${n}</div>`; });
-        row.innerHTML += `<span class="font-bold text-gray-400 mx-1.5">+</span>`;
-        row.innerHTML += `<div class="lotto-ball ${getBallColorClass(bonus)}">${bonus}</div>`;
-        box.appendChild(row);
+        box.innerHTML = `<div class="flex items-center justify-center gap-2 flex-wrap">${numbers.map(n => lottoBallHtml(n)).join('')}<span class="font-bold text-gray-400 mx-1.5">+</span>${lottoBallHtml(bonus)}</div>`;
     }
 
-    function computeMatchedCount(predictionNumbers) {
-        if (!cachedWinningNumbers || !Array.isArray(predictionNumbers)) return null;
-        const winSet = new Set(cachedWinningNumbers);
+    function computeMatchedCount(predictionNumbers, winning) {
+        const win = winning || cachedWinningNumbers;
+        if (!win || !Array.isArray(predictionNumbers)) return null;
+        const winSet = new Set(win);
         return predictionNumbers.filter(n => winSet.has(n)).length;
     }
     function isBonusMatched(predictionBonus) {
         return cachedBonusNumber != null && predictionBonus === cachedBonusNumber;
     }
 
-    function renderLottoRank(predictions, round) {
-        const container = document.getElementById('lottoRankList');
-        if (!container) return;
-        container.innerHTML = '';
+    /* ---------- 내 지난 회차 결과 + 축하 연출 ---------- */
+    function launchConfetti(level) {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99999;';
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        const count = [110, 190, 320][level - 1] || 110;
+        const duration = [2800, 3800, 5200][level - 1] || 2800;
+        const colors = ['#fbc531', '#00a8ff', '#e84118', '#4cd137', '#9c88ff', '#ff9ff3'];
+        const parts = Array.from({ length: count }, () => ({
+            x: Math.random() * canvas.width, y: -20 - Math.random() * canvas.height * 0.5,
+            vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 4,
+            size: 6 + Math.random() * 7, rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
+            color: colors[Math.floor(Math.random() * colors.length)]
+        }));
+        const start = performance.now();
+        (function frame(now) {
+            const t = now - start;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            parts.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.vy += 0.03;
+                ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+                ctx.globalAlpha = Math.max(0, Math.min(1, (duration - t) / 900));
+                ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+                ctx.restore();
+            });
+            if (t < duration) requestAnimationFrame(frame); else canvas.remove();
+        })(start);
+    }
 
-        const keys = Object.keys(predictions || {});
-        if (keys.length === 0) {
-            container.innerHTML = `<div class="text-center py-10 text-gray-400">${round ? `제 ${round}회` : '이번'} 예측 결과가 아직 없습니다.</div>`;
+    function celebrateLottoOnce(round, matched) {
+        if (matched < 3 || !currentUserUid) return;
+        const key = `kst_lotto_celebrated_${currentUserUid}_${round}`;
+        try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) { /* 저장 불가면 그냥 보여준다 */ }
+        launchConfetti(matched >= 5 ? 3 : matched === 4 ? 2 : 1);
+    }
+
+    function lottoResultBallsHtml(pred, winning, winBonus, small) {
+        const winSet = new Set(winning || []);
+        const cls = small ? 'sm ' : '';
+        const balls = pred.numbers.map(n => lottoBallHtml(n, cls + (winSet.has(n) ? 'hit' : 'miss'))).join('');
+        const bonus = pred.bonus ? `<span class="font-bold text-gray-400 mx-0.5">+</span>${lottoBallHtml(pred.bonus, cls + 'bonus-ring ' + (pred.bonus === winBonus ? 'hit' : 'miss'))}` : '';
+        return balls + bonus;
+    }
+
+    async function renderMyLottoResult() {
+        const el = document.getElementById('lottoMyResult');
+        if (!el) return;
+        if (!cachedDrawnRound || !currentUserUid) { el.innerHTML = ''; return; }
+        const round = cachedDrawnRound;
+        let pred = null;
+        try { pred = (await database.ref(`lotto_predictions/${round}/${currentUserUid}`).once('value')).val(); } catch (e) { el.innerHTML = ''; return; }
+        if (round !== cachedDrawnRound) return;
+        if (!pred || !Array.isArray(pred.numbers)) {
+            el.innerHTML = `<div class="lotto-panel"><div class="lotto-result-title">제 ${round}회에는 참여하지 않았어요</div><div class="lotto-result-prob">아래에서 이번 회차에 도전해 보세요! 🍀</div></div>`;
             return;
         }
+        const matched = computeMatchedCount(pred.numbers);
+        const bonusHit = isBonusMatched(pred.bonus);
+        const headline = matched >= 3 ? `🎉 내 제 ${round}회 결과: ${matched}개 적중!` : `내 제 ${round}회 결과: ${matched}개 적중`;
+        el.innerHTML = `
+            <div class="lotto-panel">
+                <div class="lotto-result-title">${headline}${bonusHit ? ' ✨ 보너스 번호 적중' : ''}</div>
+                <div class="lotto-row">${lottoResultBallsHtml(pred, cachedWinningNumbers, cachedBonusNumber, false)}</div>
+                <div class="lotto-result-prob">번호 6개를 아무렇게나 골랐을 때 <b>${matched}개</b>가 맞을 확률은<br><b>${formatLottoProbability(matched)}</b> 이에요.</div>
+            </div>`;
+        celebrateLottoOnce(round, matched);
+    }
 
-        // 🔒 students 전체 노드는 본인만 읽을 수 있게 잠겨있어서, 랭킹은 공개용으로
-        // 미러링해 둔 public_students에서 가져온다.
-        database.ref('public_students').once('value', async (stdSnap) => {
-            const stds = stdSnap.val() || {};
+    /* ---------- 내 기록 ---------- */
+    let lottoDrawsCache = null;
+    let lottoPredictionCache = {};
+    async function getLottoDraws() {
+        if (!lottoDrawsCache) lottoDrawsCache = (await database.ref('lottoDraws').once('value')).val() || {};
+        return lottoDrawsCache;
+    }
+
+    async function toggleLottoHistory() {
+        const box = document.getElementById('lottoHistoryBox');
+        const btn = document.getElementById('lottoHistoryToggle');
+        if (box.style.display !== 'none') { box.style.display = 'none'; btn.textContent = '📜 내 로또 기록 보기'; return; }
+        box.style.display = '';
+        btn.textContent = '📜 내 로또 기록 닫기';
+        box.innerHTML = `<div class="text-center py-6 text-gray-400 text-sm">불러오는 중...</div>`;
+        try {
+            const draws = await getLottoDraws();
+            const rounds = Object.keys(draws).map(Number).sort((a, b) => b - a).slice(0, 30);
+            const snaps = await Promise.all(rounds.map(r => database.ref(`lotto_predictions/${r}/${currentUserUid}`).once('value')));
             const rows = [];
+            rounds.forEach((r, i) => {
+                const pred = snaps[i].val();
+                if (!pred || !Array.isArray(pred.numbers)) return;
+                const draw = draws[r] || {};
+                rows.push({ round: r, pred, draw, matched: computeMatchedCount(pred.numbers, draw.numbers) || 0, bonusHit: pred.bonus === draw.bonus });
+            });
+            if (!rows.length) { box.innerHTML = `<div class="text-center py-6 text-gray-400 text-sm">아직 참여한 회차가 없어요. 첫 예측에 도전해 보세요!</div>`; return; }
+            const total = rows.length;
+            const best = Math.max(...rows.map(r => r.matched));
+            const avg = (rows.reduce((s, r) => s + r.matched, 0) / total).toFixed(1);
+            const c3 = rows.filter(r => r.matched >= 3).length;
+            box.innerHTML = `
+                <div class="lotto-stat-grid">
+                    <div class="lotto-stat"><b>${total}</b><span>참여 회차</span></div>
+                    <div class="lotto-stat"><b>${best}</b><span>최고 적중</span></div>
+                    <div class="lotto-stat"><b>${avg}</b><span>평균 적중</span></div>
+                    <div class="lotto-stat"><b>${c3}</b><span>3개 이상</span></div>
+                </div>
+                ${rows.map(r => `
+                    <div class="lotto-hist-row">
+                        <div>
+                            <div class="text-xs font-bold text-gray-500 mb-1">제 ${r.round}회</div>
+                            <div class="balls">${lottoResultBallsHtml(r.pred, r.draw.numbers, r.draw.bonus, true)}</div>
+                        </div>
+                        <div class="lotto-hist-meta">${r.matched}개 적중${r.bonusHit ? ' + 보너스' : ''}<br>확률 ${(lottoMatchProbability(r.matched) * 100).toFixed(lottoMatchProbability(r.matched) >= 0.01 ? 1 : 3)}%</div>
+                    </div>`).join('')}`;
+        } catch (e) {
+            box.innerHTML = `<div class="text-center py-6 text-red-500 text-sm font-bold">기록을 불러오지 못했어요.</div>`;
+        }
+    }
 
-            keys.forEach(uid => {
-                const item = predictions[uid];
-                const std = stds[uid] || {};
-                const rawName = std.name;
-                rows.push({
-                    uid: uid, rawName: rawName,
-                    school: std.schoolName || "학교 미기재",
-                    teacher: std.teacher ? `${std.teacher} 선생님` : "선생님 미기재",
-                    matched: computeMatchedCount(item.numbers),
-                    bonusHit: isBonusMatched(item.bonus)
+    /* ---------- 랭킹 (이번 회차 / 이번 달 / 누적, 선생님별) ---------- */
+    let lottoRankMode = 'week';
+    let lottoRankTeacher = '';
+    let lottoRankRequestId = 0;
+
+    function updateLottoRankTitle() {
+        const el = document.getElementById('lottoRankTitleText');
+        if (!el) return;
+        if (lottoRankMode === 'week') el.innerText = cachedDrawnRound ? `제 ${cachedDrawnRound}회 적중 랭킹 Top 10` : '적중 랭킹 Top 10';
+        else if (lottoRankMode === 'month') el.innerText = '이번 달 적중 랭킹 Top 10';
+        else el.innerText = '누적 적중 랭킹 Top 10';
+    }
+    function setLottoRankMode(mode) {
+        lottoRankMode = mode;
+        document.querySelectorAll('#lottoRankSeg button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        updateLottoRankTitle();
+        loadLottoRanking();
+    }
+    function setLottoRankTeacher(t) { lottoRankTeacher = t; loadLottoRanking(); }
+
+    async function getRoundPredictions(round) {
+        if (!lottoPredictionCache[round]) lottoPredictionCache[round] = (await database.ref(`lotto_predictions/${round}`).once('value')).val() || {};
+        return lottoPredictionCache[round];
+    }
+
+    async function loadLottoRanking() {
+        const container = document.getElementById('lottoRankList');
+        if (!container) return;
+        const reqId = ++lottoRankRequestId;
+        if (!cachedDrawnRound) { container.innerHTML = `<div class="text-center py-10 text-gray-400">아직 발표된 회차가 없습니다.</div>`; return; }
+        container.innerHTML = `<div class="text-center py-10 text-gray-400">랭킹을 불러오는 중...</div>`;
+
+        try {
+            const draws = await getLottoDraws();
+            let rounds;
+            if (lottoRankMode === 'week') rounds = [cachedDrawnRound];
+            else {
+                const all = Object.keys(draws).map(Number).filter(r => r <= cachedDrawnRound).sort((a, b) => b - a);
+                if (lottoRankMode === 'month') {
+                    const nowKst = kstYearMonthOf(Date.now() + lottoServerOffset);
+                    rounds = all.filter(r => kstYearMonthOf(lottoDrawMs(r)) === nowKst);
+                } else rounds = all.slice(0, 52);
+            }
+            const predsByRound = await Promise.all(rounds.map(getRoundPredictions));
+            const stdSnap = await database.ref('public_students').once('value');
+            if (reqId !== lottoRankRequestId) return;
+            const stds = stdSnap.val() || {};
+
+            // 선생님 목록(필터) 갱신
+            const sel = document.getElementById('lottoRankTeacher');
+            const teachers = Array.from(new Set(Object.values(stds).map(s => s && s.teacher).filter(Boolean))).sort();
+            if (sel && sel.options.length - 1 !== teachers.length) {
+                sel.innerHTML = `<option value="">전체 선생님</option>` + teachers.map(t => `<option value="${escapeHTML(t)}">${escapeHTML(t)} 선생님</option>`).join('');
+                sel.value = lottoRankTeacher;
+            }
+
+            const agg = {};
+            rounds.forEach((r, idx) => {
+                const winning = (draws[r] || {}).numbers;
+                const winBonus = (draws[r] || {}).bonus;
+                Object.entries(predsByRound[idx]).forEach(([uid, p]) => {
+                    if (!p || !Array.isArray(p.numbers)) return;
+                    const matched = typeof p.matchedCount === 'number' ? p.matchedCount : (computeMatchedCount(p.numbers, winning) || 0);
+                    const bonusHit = typeof p.bonusHit === 'boolean' ? p.bonusHit : p.bonus === winBonus;
+                    const a = agg[uid] || (agg[uid] = { uid, n: 0, sum: 0, max: 0, c3: 0, bonus: 0 });
+                    a.n++; a.sum += matched; a.max = Math.max(a.max, matched); if (matched >= 3) a.c3++; if (bonusHit) a.bonus++;
                 });
             });
 
-            const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''), rows.map(r => r.uid));
-            const rankArray = rows.map((r, i) => ({ ...r, name: r.rawName ? decrypted[i] : "학생" }));
+            let list = Object.values(agg).filter(a => !lottoRankTeacher || (stds[a.uid] && stds[a.uid].teacher === lottoRankTeacher));
+            if (lottoRankMode === 'week') list.sort((a, b) => b.sum - a.sum || b.bonus - a.bonus);
+            else list.sort((a, b) => b.sum - a.sum || b.c3 - a.c3 || b.bonus - a.bonus || a.n - b.n);
 
-            rankArray.sort((a, b) => {
-                const am = a.matched === null ? -1 : a.matched;
-                const bm = b.matched === null ? -1 : b.matched;
-                if (bm !== am) return bm - am;
-                return (b.bonusHit ? 1 : 0) - (a.bonusHit ? 1 : 0);
-            });
+            if (!list.length) {
+                container.innerHTML = `<div class="text-center py-10 text-gray-400">${lottoRankMode === 'week' ? `제 ${cachedDrawnRound}회` : lottoRankMode === 'month' ? '이번 달' : '지금까지'} 예측 결과가 아직 없습니다.</div>`;
+                return;
+            }
 
-            rankArray.slice(0, 10).forEach((item, idx) => {
-                const isMe = item.uid === currentUserUid;
-                const badgeClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
-                const matchedLabel = item.matched === null ? '집계 대기중' : `${item.matched}개 적중${item.bonusHit ? ' +보너스' : ''}`;
-                container.innerHTML += `
+            const top = list.slice(0, 10);
+            const myIdx = list.findIndex(a => a.uid === currentUserUid);
+            const shown = myIdx >= 10 ? top.concat(list[myIdx]) : top;
+            const ciphers = shown.map(a => (stds[a.uid] || {}).name || '');
+            const names = await decryptAESBatch(ciphers, shown.map(a => a.uid));
+            if (reqId !== lottoRankRequestId) return;
+
+            container.innerHTML = shown.map((a, i) => {
+                const rank = a === list[myIdx] && myIdx >= 10 ? myIdx + 1 : i + 1;
+                const std = stds[a.uid] || {};
+                const isMe = a.uid === currentUserUid;
+                const badgeClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+                const label = lottoRankMode === 'week'
+                    ? `${a.sum}개 적중${a.bonus ? ' +보너스' : ''}`
+                    : `합계 ${a.sum}개<div class="text-[11px] font-bold text-gray-500">${a.n}회 참여 · 최고 ${a.max}개</div>`;
+                return `
                     <div class="rank-item ${isMe ? 'my-rank' : ''}">
                         <div class="flex items-center gap-3">
-                            <div class="rank-badge ${badgeClass}">${idx + 1}</div>
+                            <div class="rank-badge ${badgeClass}">${rank}</div>
                             <div>
-                                <div class="font-bold">${escapeHTML(item.name)} ${isMe ? '(나)' : ''}</div>
-                                <div class="text-xs text-gray-500">🏫 ${escapeHTML(item.school)} | 👨‍🏫 ${escapeHTML(item.teacher)}</div>
+                                <div class="font-bold">${escapeHTML(ciphers[i] ? names[i] : '학생')} ${isMe ? '(나)' : ''}</div>
+                                <div class="text-xs text-gray-500">🏫 ${escapeHTML(std.schoolName || '학교 미기재')} | 👨‍🏫 ${escapeHTML(std.teacher ? std.teacher + ' 선생님' : '선생님 미기재')}</div>
                             </div>
                         </div>
-                        <span class="font-black text-indigo-600">${matchedLabel}</span>
+                        <span class="font-black text-indigo-600 text-right">${label}</span>
                     </div>`;
-            });
+            }).join('');
+        } catch (e) {
+            if (reqId === lottoRankRequestId) container.innerHTML = `<div class="text-center py-10 text-red-500 text-sm font-bold">랭킹을 불러오지 못했어요.</div>`;
+        }
+    }
+
+    /* ---------- 마감 카운트다운 ---------- */
+    function formatLottoRemaining(ms) {
+        const s = Math.max(0, Math.floor(ms / 1000));
+        const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+        if (d > 0) return `${d}일 ${h}시간 ${m}분`;
+        if (h > 0) return `${h}시간 ${m}분`;
+        return `${m}분 ${String(sec).padStart(2, '0')}초`;
+    }
+    function tickLottoCountdown() {
+        const el = document.getElementById('lottoCountdown');
+        if (!el) return;
+        if (!cachedLottoCanSubmit || !cachedClosesAt) { el.style.display = 'none'; return; }
+        const remaining = cachedClosesAt - (Date.now() + lottoServerOffset);
+        if (remaining <= 0) {
+            el.style.display = 'none';
+            if (!lottoCountdownExpiredHandled) {
+                lottoCountdownExpiredHandled = true;
+                cachedLottoCanSubmit = false;
+                showToast('이번 회차 접수가 마감됐어요.');
+                checkMyLottoSubmission(null);
+            }
+            return;
+        }
+        el.style.display = '';
+        el.classList.toggle('urgent', remaining < 60 * 60 * 1000);
+        el.textContent = `⏰ 접수 마감까지 ${formatLottoRemaining(remaining)}` + (remaining < 60 * 60 * 1000 ? ' — 서두르세요!' : '');
+    }
+    function startLottoCountdown() {
+        if (lottoCountdownTimer) clearInterval(lottoCountdownTimer);
+        tickLottoCountdown();
+        lottoCountdownTimer = setInterval(tickLottoCountdown, 1000);
+    }
+
+    /* ---------- 숫자판 입력 ---------- */
+    function renderLottoPad() {
+        const pad = document.getElementById('lottoPad');
+        const tray = document.getElementById('lottoTray');
+        const countEl = document.getElementById('lottoPickCount');
+        if (!pad || !tray) return;
+        if (!pad.children.length) {
+            pad.innerHTML = Array.from({ length: 45 }, (_, i) => `<button type="button" class="lotto-pad-btn" data-n="${i + 1}" onclick="toggleLottoNumber(${i + 1})">${i + 1}</button>`).join('');
+        }
+        pad.querySelectorAll('.lotto-pad-btn').forEach(btn => {
+            const n = Number(btn.dataset.n);
+            const isMain = lottoPick.main.includes(n);
+            const isBonus = lottoPick.bonus === n;
+            btn.className = 'lotto-pad-btn' + (isMain || isBonus ? ` sel ${getBallColorClass(n)}` : '') + (isBonus ? ' is-bonus' : '');
+            btn.setAttribute('aria-pressed', isMain || isBonus ? 'true' : 'false');
         });
+        const sorted = lottoPick.main.slice().sort((a, b) => a - b);
+        let html = '';
+        for (let i = 0; i < 6; i++) {
+            html += sorted[i] ? `<div onclick="toggleLottoNumber(${sorted[i]})" style="cursor:pointer;">${lottoBallHtml(sorted[i])}</div>` : `<div class="lotto-ball empty">${i + 1}</div>`;
+        }
+        html += `<span class="plus">+</span>`;
+        html += lottoPick.bonus ? `<div onclick="toggleLottoNumber(${lottoPick.bonus})" style="cursor:pointer;">${lottoBallHtml(lottoPick.bonus, 'bonus-ring')}</div>` : `<div class="lotto-ball empty">B</div>`;
+        tray.innerHTML = html;
+        if (countEl) {
+            const m = lottoPick.main.length;
+            countEl.textContent = m < 6 ? `번호 ${m}/6개 선택 (${6 - m}개 더 고르세요)` : lottoPick.bonus ? '✅ 번호 6개 + 보너스 1개 선택 완료!' : '이제 보너스 번호 1개를 골라 주세요';
+        }
+    }
+    function toggleLottoNumber(n) {
+        const mi = lottoPick.main.indexOf(n);
+        if (mi >= 0) lottoPick.main.splice(mi, 1);
+        else if (lottoPick.bonus === n) lottoPick.bonus = null;
+        else if (lottoPick.main.length < 6) lottoPick.main.push(n);
+        else if (lottoPick.bonus === null) lottoPick.bonus = n;
+        else { showToast('이미 7개를 모두 골랐어요. 바꾸려면 고른 번호를 눌러 빼 주세요.'); return; }
+        renderLottoPad();
+    }
+    function resetLottoPick() { lottoPick = { main: [], bonus: null }; renderLottoPad(); }
+    function generateAutoLotto() {
+        const used = new Set([...lottoPick.main, ...(lottoPick.bonus ? [lottoPick.bonus] : [])]);
+        const pool = Array.from({ length: 45 }, (_, i) => i + 1).filter(n => !used.has(n));
+        for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+        while (lottoPick.main.length < 6) lottoPick.main.push(pool.pop());
+        if (lottoPick.bonus === null) lottoPick.bonus = pool.pop();
+        renderLottoPad();
     }
 
     function showLottoInputForm() {
@@ -3949,10 +4269,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (!inputForm || !submittedView) return;
         inputForm.style.display = '';
         submittedView.style.display = 'none';
-        // 새 회차 도전이므로 이전에 남아있을 수 있는 입력값을 초기화
-        document.querySelectorAll('#lottoInputForm .lotto-in').forEach(input => input.value = '');
-        const bonusInput = document.getElementById('lottoBonusInput');
-        if (bonusInput) bonusInput.value = '';
+        resetLottoPick(); // 새 회차 도전이므로 이전에 고른 번호를 초기화
     }
 
     function checkMyLottoSubmission(myPrediction) {
@@ -3961,8 +4278,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (!inputForm || !submittedView) return;
 
         if (myPrediction) {
-            const balls = myPrediction.numbers.map(n => `<div class="lotto-ball ${getBallColorClass(n)}">${n}</div>`).join(' ');
-            const bonusBall = myPrediction.bonus ? `<div class="lotto-ball ${getBallColorClass(myPrediction.bonus)}">${myPrediction.bonus}</div>` : '';
+            const balls = myPrediction.numbers.map(n => lottoBallHtml(n)).join(' ');
+            const bonusBall = myPrediction.bonus ? lottoBallHtml(myPrediction.bonus, 'bonus-ring') : '';
             const roundLabel = cachedTargetRound ? `제 ${cachedTargetRound}회` : '이번 회차';
 
             submittedView.innerHTML = `
@@ -3989,39 +4306,14 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         }
     }
 
-    function generateAutoLotto() {
-        let nums = new Set();
-        while (nums.size < 7) { nums.add(Math.floor(Math.random() * 45) + 1); }
-        const arr = Array.from(nums);
-        const bonus = arr.pop();
-        const sorted = arr.sort((a, b) => a - b);
-
-        const inputs = document.querySelectorAll('#lottoInputForm .lotto-in');
-        inputs.forEach((input, idx) => input.value = sorted[idx]);
-        document.getElementById('lottoBonusInput').value = bonus;
-    }
-
     async function submitLottoPrediction() {
         if (!cachedTargetRound) { showToast("회차 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
         if (!currentUserUid) { showToast("로그인 정보를 확인할 수 없습니다."); return; }
+        if (lottoPick.main.length !== 6) { showToast(`번호를 6개 골라 주세요. (지금 ${lottoPick.main.length}개)`); return; }
+        if (lottoPick.bonus === null) { showToast("보너스 번호 1개를 골라 주세요."); return; }
 
-        const inputs = document.querySelectorAll('#lottoInputForm .lotto-in');
-        const bonusInput = document.getElementById('lottoBonusInput');
-
-        let selected = [];
-        for (let input of inputs) {
-            const val = parseInt(input.value);
-            if (isNaN(val) || val < 1 || val > 45) { showToast("1~45 사이의 숫자를 올바르게 입력해주세요."); return; }
-            selected.push(val);
-        }
-
-        const bonusVal = parseInt(bonusInput.value);
-        if (isNaN(bonusVal) || bonusVal < 1 || bonusVal > 45) { showToast("보너스 번호(1~45)를 입력해주세요."); return; }
-
-        const totalSet = new Set([...selected, bonusVal]);
-        if (totalSet.size !== 7) { showToast("중복된 번호가 있습니다. 7개 번호를 모두 다르게 입력해주세요."); return; }
-
-        selected.sort((a, b) => a - b);
+        const selected = lottoPick.main.slice().sort((a, b) => a - b);
+        const bonusVal = lottoPick.bonus;
 
         // 접수 마감/회차 판단은 서버가 한다(서버 시각 기준, 추첨 10분 전 마감).
         try {
@@ -4054,6 +4346,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             showToast("제출 실패: 네트워크 상태를 확인해 주세요.");
         }
     }
+    renderLottoPad();
 
     /* =====================================================================
        9. 🗓️ 학교 시간표 (바텀시트) — NICE API + 컴시간 API 보강

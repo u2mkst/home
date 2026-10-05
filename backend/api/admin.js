@@ -255,6 +255,28 @@ async function lottoClearPredictions(body) {
     return { ok: true, round };
 }
 
+// 최근 회차별 참여자 수와 적중 개수 분포
+async function lottoSummary() {
+    const db = admin.database();
+    const drawsSnap = await db.ref("lottoDraws").orderByKey().limitToLast(12).once("value");
+    const draws = drawsSnap.val() || {};
+    const rounds = Object.keys(draws).map(Number).sort((a, b) => b - a);
+    const snaps = await Promise.all(rounds.map((r) => db.ref(`lotto_predictions/${r}`).once("value")));
+    const rows = rounds.map((round, i) => {
+        const preds = Object.values(snaps[i].val() || {}).filter((p) => p && Array.isArray(p.numbers));
+        const distribution = [0, 0, 0, 0, 0, 0, 0];
+        let bonusHits = 0;
+        let pending = 0;
+        preds.forEach((p) => {
+            if (typeof p.matchedCount === "number" && p.matchedCount >= 0 && p.matchedCount <= 6) distribution[p.matchedCount]++;
+            else pending++;
+            if (p.bonusHit) bonusHits++;
+        });
+        return { round, numbers: draws[round].numbers || [], bonus: draws[round].bonus || null, participants: preds.length, distribution, bonusHits, pending };
+    });
+    return { rounds: rows };
+}
+
 const ACTIONS = {
     locks: listLocks,
     unlock,
@@ -268,6 +290,7 @@ const ACTIONS = {
     "lotto-resync": lottoResync,
     "lotto-set-draw": lottoSetDraw,
     "lotto-clear-predictions": lottoClearPredictions,
+    "lotto-summary": lottoSummary,
 };
 
 module.exports = async (req, res) => {

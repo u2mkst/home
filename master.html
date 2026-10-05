@@ -744,6 +744,13 @@ body{background:#F2F4F6;color:#191F28}
                             <button class="btn-block btn-purple" onclick="lottoResync()">지금 당첨번호 다시 받아오기</button>
                         </div>
                         <div class="panel-card">
+                            <h3>📊 회차별 참여 · 적중 분포</h3>
+                            <p class="panel-desc">최근 12개 회차의 참여자 수와 적중 개수별 인원입니다.</p>
+                            <button class="btn-block btn-purple adm-small" onclick="loadLottoSummary()">🔄 새로고침</button>
+                            <div style="height: 12px;"></div>
+                            <div id="adm-lotto-summary" class="feed-container"><div class="no-data">불러오는 중...</div></div>
+                        </div>
+                        <div class="panel-card">
                             <h3>✍️ 당첨번호 수동 입력</h3>
                             <p class="panel-desc">이미 추첨이 끝난 회차만 입력할 수 있습니다. 저장하면 그 회차 예측을 다시 판정하고, 새로 달성한 업적은 지급합니다(이미 준 업적은 회수되지 않습니다).</p>
                             <div class="adm-row">
@@ -1722,6 +1729,26 @@ body{background:#F2F4F6;color:#191F28}
             catch (e) { admError('삭제 실패', e); }
         }
 
+        async function loadLottoSummary() {
+            const box = document.getElementById('adm-lotto-summary');
+            try {
+                const { rounds } = await adminApi('lotto-summary');
+                if (!rounds.length) { box.replaceChildren(admEl('div', 'no-data', '저장된 회차가 없습니다.')); return; }
+                const frag = document.createDocumentFragment();
+                rounds.forEach(r => {
+                    const row = admEl('div', 'adm-item');
+                    const main = admEl('div', 'adm-main');
+                    main.appendChild(admEl('div', 'adm-name', `제 ${r.round}회 · 참여 ${r.participants}명`));
+                    main.appendChild(admEl('div', 'adm-meta', `당첨번호 ${(r.numbers || []).join(', ')} + ${r.bonus || '-'}`));
+                    const dist = r.distribution.map((n, k) => `${k}개 ${n}명`).filter((_, k) => r.distribution[k] > 0).join(' · ');
+                    main.appendChild(admEl('div', 'adm-meta', (dist || '판정된 예측 없음') + (r.bonusHits ? ` · 보너스 적중 ${r.bonusHits}명` : '') + (r.pending ? ` · 집계 대기 ${r.pending}명` : '')));
+                    row.appendChild(main);
+                    frag.appendChild(row);
+                });
+                box.replaceChildren(frag);
+            } catch (e) { box.replaceChildren(admEl('div', 'no-data', '불러오지 못했습니다: ' + e.message)); }
+        }
+
         // ---------- 공지 예약 (서버 없이: DB에 시간대를 저장, 학생 화면이 시간에 맞춰 표시) ----------
         function initNoticeSchedulePanel() {
             database.ref('noticeSchedule').on('value', snap => {
@@ -1774,7 +1801,7 @@ body{background:#F2F4F6;color:#191F28}
                 if (id === 'section-students') loadStudents();
                 else if (id === 'section-locks') loadLocks();
                 else if (id === 'section-status') loadStatus();
-                else if (id === 'section-lotto') refreshLottoStatus();
+                else if (id === 'section-lotto') { refreshLottoStatus(); loadLottoSummary(); }
             };
         })();
     </script>
