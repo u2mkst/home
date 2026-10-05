@@ -1678,8 +1678,9 @@ body{background:#F2F4F6;color:#191F28}
                 const lag = st.lotto.expectedRound - (st.lotto.storedRound || 0);
                 const info = admEl('div', 'adm-count', '');
                 info.style.marginTop = '14px'; info.style.fontSize = '0.9rem';
+                info.style.whiteSpace = 'pre-line';
                 info.textContent = `🎰 로또: 저장 ${st.lotto.storedRound || '-'}회 / 현재 기대 ${st.lotto.expectedRound}회` + (lag > 0 ? ` (⚠️ ${lag}회 뒤처짐 — 로또 메뉴에서 다시 받아오기)` : ' (정상)')
-                    + `  ·  👥 학생 ${st.logins.students}명 · 지금 잠긴 계정 ${st.logins.lockedNow}개 · 최근 24시간 로그인 실패 계정 ${st.logins.failedLast24h}개`;
+                    + (st.lotto.lastError ? `\n⚠️ 마지막 실패 이유: ${st.lotto.lastError}` : '') + `\n👥 학생 ${st.logins.students}명 · 지금 잠긴 계정 ${st.logins.lockedNow}개 · 최근 24시간 로그인 실패 계정 ${st.logins.failedLast24h}개`;
                 frag.appendChild(info);
                 box.replaceChildren(frag);
             } catch (e) { box.replaceChildren(admEl('div', 'no-data', '불러오지 못했습니다: ' + e.message)); }
@@ -1692,6 +1693,8 @@ body{background:#F2F4F6;color:#191F28}
                 const st = await adminApi('status');
                 const lag = st.lotto.expectedRound - (st.lotto.storedRound || 0);
                 el.textContent = `저장된 최신 회차: ${st.lotto.storedRound || '-'}회 / 현재 기대 회차: ${st.lotto.expectedRound}회` + (lag > 0 ? ` — ⚠️ ${lag}회 뒤처짐` : ' — 정상');
+                if (st.lotto.lastError) el.textContent += `\n마지막 실패 이유: ${st.lotto.lastError}`;
+                el.style.whiteSpace = 'pre-line';
                 const r = document.getElementById('adm-draw-round');
                 if (!r.value) r.value = st.lotto.expectedRound || '';
                 const c = document.getElementById('adm-clear-round');
@@ -1699,7 +1702,7 @@ body{background:#F2F4F6;color:#191F28}
             } catch (e) { el.textContent = '상태를 불러오지 못했습니다: ' + e.message; }
         }
         async function lottoResync() {
-            try { const r = await adminApi('lotto-resync'); alert(`동기화 완료: 저장 ${r.storedRound || '-'}회 / 기대 ${r.expectedRound}회`); refreshLottoStatus(); }
+            try { const r = await adminApi('lotto-resync'); alert(`동기화 결과: 저장 ${r.storedRound || '-'}회 / 기대 ${r.expectedRound}회` + (r.lastError ? `\n실패 이유: ${r.lastError}` : '')); refreshLottoStatus(); }
             catch (e) { admError('동기화 실패', e); }
         }
         async function lottoSetDraw() {

@@ -215,6 +215,7 @@ async function systemStatus() {
             storedRound: latestRound,
             expectedRound: lotto.expectedLatestRound(now),
             lastAttemptAt: (metaSnap.val() || {}).lastAttemptAt || 0,
+            lastError: (metaSnap.val() || {}).lastError || "",
         },
         logins: {
             students: Object.keys(studentSnap.val() || {}).length,
@@ -228,7 +229,8 @@ async function systemStatus() {
 // ---------- 로또 ----------
 async function lottoResync() {
     const state = await lotto.syncNow();
-    return { ok: true, storedRound: state.latest ? state.latest.round : null, expectedRound: state.expected };
+    const meta = (await admin.database().ref("lottoMeta").once("value")).val() || {};
+    return { ok: true, storedRound: state.latest ? state.latest.round : null, expectedRound: state.expected, lastError: meta.lastError || "" };
 }
 
 async function lottoSetDraw(body) {

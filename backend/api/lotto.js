@@ -10,13 +10,15 @@ const { lottoBadgeUpdates } = require("../lib/achievements");
 //   3) 새 회차가 저장되면 서버가 그 회차 예측을 판정(matchedCount/bonusHit)하고 로또 업적을 지급한다.
 // 학생은 lotto_predictions / lottoDraws에 직접 쓸 수 없다(Firebase 규칙).
 const DRAW_API = "https://lotto-vzqu.onrender.com/";
+const FALLBACK_API = "https://smok95.github.io/lotto/results/latest.json";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const ROUND1_DRAW_MS = Date.UTC(2002, 11, 7, 20, 35) - 9 * 60 * 60 * 1000; // 1회차: 2002-12-07 20:35 KST
 const SYNC_BUFFER_MS = 15 * 60 * 1000;            // 추첨 방송 후 외부 API에 반영될 때까지의 여유
 const SUBMIT_CLOSE_BEFORE_DRAW_MS = 10 * 60 * 1000;
 const ATTEMPT_THROTTLE_MS = 20 * 1000;            // 외부 API 호출 최소 간격
 const LOCK_MS = 60 * 1000;
-const FETCH_TIMEOUT_MS = 25 * 1000;
+const FETCH_TIMEOUT_MS = 22 * 1000;
+const FALLBACK_TIMEOUT_MS = 10 * 1000;
 
 const db = () => admin.database();
 
@@ -42,28 +44,55 @@ async function getLatestStored() {
     return { round, numbers: val[round].numbers, bonus: val[round].bonus };
 }
 
-async function fetchLatestDraw() {
+function parseDraw(d) {
+    if (!d || typeof d !== "object") return null;
+    const round = Number(d.round || d.drwNo || d.draw_no);
+    const rawNumbers = Array.isArray(d.numbers) ? d.numbers : [d.drwtNo1, d.drwtNo2, d.drwtNo3, d.drwtNo4, d.drwtNo5, d.drwtNo6];
+    const numbers = rawNumbers.map(Number);
+    const bonus = Number(d.bonusNo !== undefined ? d.bonusNo : d.bonus_no !== undefined ? d.bonus_no : d.bnusNo);
+    const valid =
+        Number.isInteger(round) && round >= 1 &&
+        numbers.length === 6 && numbers.every(isBall) && new Set(numbers).size === 6 &&
+        isBall(bonus) && !numbers.includes(bonus);
+    return valid ? { round, numbers: numbers.sort((a, b) => a - b), bonus } : null;
+}
+
+async function fetchJson(url, timeoutMs) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-        const res = await fetch(DRAW_API, { signal: controller.signal });
-        const json = await res.json();
-        if (!json || json.status !== "success" || !json.data) return null;
-        const d = json.data;
-        const round = Number(d.round || d.drwNo);
-        const numbers = (Array.isArray(d.numbers) ? d.numbers : []).map(Number);
-        const bonus = Number(d.bonusNo);
-        const valid =
-            Number.isInteger(round) && round >= 1 &&
-            numbers.length === 6 && numbers.every(isBall) && new Set(numbers).size === 6 &&
-            isBall(bonus) && !numbers.includes(bonus);
-        if (!valid) return null;
-        return { round, numbers: numbers.sort((a, b) => a - b), bonus };
-    } catch (e) {
-        return null;
+        const res = await fetch(url, { signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
     } finally {
         clearTimeout(timer);
     }
+}
+
+// 1순위 API가 느리거나(무료 서버 콜드스타트) 아직 새 회차를 못 받았으면 2순위(GitHub Pages 미러)로 넘어간다.
+// 어느 쪽이든 형식 검증을 통과한 값만 쓰고, 실패 이유는 lottoMeta/lastError에 남겨 마스터 화면에서 볼 수 있게 한다.
+async function fetchLatestDraw(minRound) {
+    const errors = [];
+    try {
+        const json = await fetchJson(DRAW_API, FETCH_TIMEOUT_MS);
+        if (!json || json.status !== "success" || !json.data) throw new Error("응답 형식 다름");
+        const draw = parseDraw(json.data);
+        if (!draw) throw new Error("값 검증 실패");
+        if (draw.round >= minRound) return { draw, errors };
+        errors.push(`1순위 API가 아직 ${draw.round}회까지만 제공`);
+    } catch (e) {
+        errors.push(`1순위 API 실패: ${e.name === "AbortError" ? "시간 초과" : e.message}`);
+    }
+    try {
+        const json = await fetchJson(FALLBACK_API, FALLBACK_TIMEOUT_MS);
+        const draw = parseDraw(json);
+        if (!draw) throw new Error("값 검증 실패");
+        if (draw.round >= minRound) return { draw, errors };
+        errors.push(`2순위 API가 아직 ${draw.round}회까지만 제공`);
+    } catch (e) {
+        errors.push(`2순위 API 실패: ${e.name === "AbortError" ? "시간 초과" : e.message}`);
+    }
+    return { draw: null, errors };
 }
 
 // 발표된 회차의 예측을 판정하고 로또 업적을 지급한다(여러 번 실행돼도 결과가 같다).
@@ -103,12 +132,16 @@ async function ensureSynced() {
     if (!lock.committed) return { latest, expected };
 
     try {
-        const draw = await fetchLatestDraw();
+        const { draw, errors } = await fetchLatestDraw(expected);
         // 아직 오지 않은 회차거나(조작/오류) 이미 저장된 회차보다 오래된 값은 버린다.
         if (draw && draw.round <= expected && (!latest || draw.round > latest.round)) {
             await db().ref(`lottoDraws/${draw.round}`).set({ numbers: draw.numbers, bonus: draw.bonus, syncedAt: now });
             await finalizeRound(draw.round, draw);
             latest = { round: draw.round, numbers: draw.numbers, bonus: draw.bonus };
+            await db().ref("lottoMeta/lastError").remove().catch(() => {});
+        } else {
+            const why = draw ? `받은 회차(${draw.round})가 기대 회차(${expected})와 맞지 않음` : errors.join(" / ");
+            await db().ref("lottoMeta/lastError").set(`${new Date(now).toISOString()} ${why}`.slice(0, 500)).catch(() => {});
         }
     } finally {
         await db().ref("lottoMeta/lockUntil").set(0).catch(() => {});
