@@ -15,7 +15,7 @@ Vercel 서버리스 함수. AES 키·NEIS 키·Firebase 관리자 권한처럼 �
 | `GET /api/lotto` | `CRON_SECRET` | Vercel 크론: 추첨 직후 당첨번호 저장 + 예측 판정 + 로또 업적 지급 |
 | `POST /api/encrypt`, `/api/decrypt` | ID 토큰 | AES 암복호화(복호화는 본인/검증된 이름/관리자만) |
 | `GET /api/neis`, `/api/comcigan`, `/api/weather` | 없음 | 외부 API 프록시 |
-| `GET /api/health` | 없음 | 필수 환경변수가 들어갔는지만 true/false로 확인(값은 노출 안 함) |
+| `GET /api/health` | 없음(상세는 마스터 토큰) | 익명이면 `{ok:true}`만. 마스터 ID 토큰을 보내면 필수 환경변수 설정 여부를 true/false로 보여줌(값은 노출 안 함) |
 
 ## 학생 인증 구조
 
