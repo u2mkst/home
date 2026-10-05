@@ -131,6 +131,7 @@ module.exports = async (req, res) => {
             return sendInvalid(res, state);
         }
 
+        if (userRecord.disabled) return res.status(403).json({ error: "disabled" });
         await clearLockout(normalizedId);
         const token = await admin.auth().createCustomToken(uid);
         return res.status(200).json({ token });

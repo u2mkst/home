@@ -135,7 +135,7 @@ function buildStatus({ latest, expected }, now) {
     };
 }
 
-module.exports = async (req, res) => {
+const handler = async (req, res) => {
     if (applyCors(req, res)) return;
 
     try {
@@ -187,3 +187,13 @@ module.exports = async (req, res) => {
         return res.status(status).json({ error: status === 500 ? "server_error" : err.message });
     }
 };
+
+// 마스터 도구(api/admin.js)용
+handler.expectedLatestRound = expectedLatestRound;
+handler.finalizeRound = finalizeRound;
+handler.isBall = isBall;
+handler.syncNow = async () => {
+    await db().ref("lottoMeta").update({ lockUntil: 0, lastAttemptAt: 0 }); // 호출 간격 제한 해제
+    return ensureSynced();
+};
+module.exports = handler;

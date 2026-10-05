@@ -3,6 +3,7 @@ const { admin, requireAuth } = require("../lib/firebaseAdmin");
 const { encryptOne } = require("../lib/aes");
 const { ADMIN_UIDS } = require("../lib/adminUids");
 const { hashPin, verifyPin, isValidPin } = require("../lib/pin");
+const { purgeStudentData } = require("../lib/purge");
 const { normalizeLoginId, getLockout, registerFailure, clearLockout } = require("../lib/guard");
 
 // 로그인한 학생 본인의 계정 관리(PIN 변경 / 회원 탈퇴).
@@ -50,29 +51,7 @@ async function deleteAccount(decoded, body, res) {
     }
     await clearLockout(normalizedId);
 
-    const db = admin.database();
-    const updates = {};
-    for (const path of [
-        "students", "public_students", "loginSecrets", "attendance", "public_attendance_counts",
-        "mathQuizProgress", "studentAchievements", "device_status", "student_messages",
-    ]) {
-        updates[`${path}/${uid}`] = null;
-    }
-
-    // 로또 예측(회차별), 학생이 보낸 메시지/건의사항
-    const [lottoSnap, msgSnap, sugSnap] = await Promise.all([
-        db.ref("lotto_predictions").once("value"),
-        db.ref("messages").orderByChild("studentUid").equalTo(uid).once("value"),
-        db.ref("suggestions").once("value"),
-    ]);
-    Object.keys(lottoSnap.val() || {}).forEach((round) => { updates[`lotto_predictions/${round}/${uid}`] = null; });
-    Object.keys(msgSnap.val() || {}).forEach((key) => { updates[`messages/${key}`] = null; });
-    const suggestions = sugSnap.val() || {};
-    Object.keys(suggestions).forEach((key) => {
-        if (suggestions[key] && suggestions[key].studentUid === uid) updates[`suggestions/${key}`] = null;
-    });
-
-    await db.ref().update(updates);
+    await purgeStudentData(uid);
     await admin.auth().deleteUser(uid);
     return res.status(200).json({ ok: true });
 }

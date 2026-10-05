@@ -4,4 +4,7 @@ const ADMIN_UIDS = new Set([
     "OUcTOJNMDVXaMwouAqUluSvd2nH2", // 마스터
 ]);
 
-module.exports = { ADMIN_UIDS };
+// 마스터 전용 기능(api/admin.js)을 쓸 수 있는 UID. master.html의 MASTER_ALLOWED_UIDS, 규칙의 마스터 UID와 같아야 한다.
+const MASTER_UIDS = new Set(["OUcTOJNMDVXaMwouAqUluSvd2nH2"]);
+
+module.exports = { ADMIN_UIDS, MASTER_UIDS };

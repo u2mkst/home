@@ -9,6 +9,7 @@ Vercel 서버리스 함수. AES 키·NEIS 키·Firebase 관리자 권한처럼 �
 | `POST /api/student-login` | 없음(reCAPTCHA·락아웃·IP 한도) | 아이디+PIN을 서버가 검증하고 Firebase 커스텀 토큰 발급 |
 | `POST /api/register` | 없음(reCAPTCHA·IP 한도) | 학생 가입(계정 생성·암호화·DB 기록을 서버가 수행) |
 | `POST /api/account` | ID 토큰 | `set-pin`(로그인 PIN 변경) / `delete`(PIN 확인 후 회원 탈퇴, 관련 기록 전부 삭제) |
+| `POST /api/admin` | ID 토큰(마스터 UID만) | 마스터 운영 도구: `locks`/`unlock`, `reset-pin`, `students`, `set-disabled`, `delete-student`, `attendance-get`/`attendance-set`, `status`, `lotto-resync`/`lotto-set-draw`/`lotto-clear-predictions` |
 | `POST /api/attendance` | ID 토큰 | 서버 시각 기준 오늘 출석 기록 + 랭킹용 횟수 + 출석 업적 |
 | `POST /api/lotto` | ID 토큰 | `status`(당첨번호·회차·접수 가능 여부) / `submit`(예측 제출) |
 | `GET /api/lotto` | `CRON_SECRET` | Vercel 크론: 추첨 직후 당첨번호 저장 + 예측 판정 + 로또 업적 지급 |

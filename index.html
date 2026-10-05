@@ -1,3 +1,37 @@
+        // 즉시 공지(notice)가 있으면 그것을, 없으면 지금 시간대에 해당하는 예약 공지(noticeSchedule)를 보여준다.
+        let liveNoticeText = "";
+        let noticeSchedule = {};
+        let lastShownNotice = null;
+        const applyNotice = (force) => {
+            let text = (liveNoticeText || "").trim();
+            if (!text) {
+                const now = Date.now();
+                const active = Object.values(noticeSchedule || {})
+                    .filter(v => v && typeof v.text === 'string' && v.text.trim() && v.startAt <= now && (!v.endAt || now < v.endAt))
+                    .sort((a, b) => b.startAt - a.startAt)[0];
+                if (active) text = active.text.trim();
+            }
+            if (text) {
+                if (!force && text === lastShownNotice) return;
+                lastShownNotice = text;
+                document.getElementById('modalTitle').innerText = "📢 안내 말씀 드립니다";
+                document.getElementById('modalNoticeContent').innerText = text;
+                showModal('noticeModal');
+            } else {
+                lastShownNotice = null;
+                closeModal('noticeModal');
+            }
+        };
+        database.ref('notice').on('value', (snapshot) => {
+            liveNoticeText = snapshot.val() || "";
+            applyNotice(true);
+        });
+        database.ref('noticeSchedule').on('value', (snapshot) => {
+            noticeSchedule = snapshot.val() || {};
+            applyNotice(false);
+        });
+        setInterval(() => applyNotice(false), 60 * 1000);
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>

@@ -415,6 +415,34 @@ body{background:#F2F4F6;color:#191F28}
 .sidebar{box-shadow:none}.kst-loading-overlay{background:rgba(242,244,246,.98)}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
+
+        /* ---- 운영 도구(학생/잠금/상태/로또) ---- */
+        .adm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .adm-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .adm-toolbar .form-control { flex: 1 1 180px; min-width: 0; }
+        .adm-small { width: auto !important; padding: 10px 16px !important; font-size: 0.85rem !important; }
+        .adm-count { font-size: 0.82rem; color: var(--text-sub); margin: 4px 2px 10px; }
+        .adm-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid rgba(15,23,42,0.08); border-radius: 12px; background: rgba(255,255,255,0.7); margin-bottom: 8px; }
+        .adm-item .adm-main { min-width: 180px; flex: 1 1 220px; }
+        .adm-item .adm-name { font-weight: 800; color: var(--text-main); }
+        .adm-item .adm-meta { font-size: 0.78rem; color: var(--text-sub); margin-top: 2px; word-break: break-all; }
+        .adm-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+        .adm-btn { border: 1px solid rgba(15,23,42,0.12); background: #fff; color: var(--text-main); border-radius: 8px; padding: 6px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+        .adm-btn:hover { background: #f1f5f9; }
+        .adm-btn.danger { color: var(--danger); border-color: rgba(239,68,68,0.35); }
+        .adm-tag { display: inline-block; font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+        .adm-tag.red { background: rgba(239,68,68,0.12); color: var(--danger); }
+        .adm-tag.amber { background: rgba(245,158,11,0.15); color: #b45309; }
+        .adm-balls { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+        .adm-status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+        .adm-status-cell { padding: 10px 12px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.10); color: #047857; }
+        .adm-status-cell.bad { background: rgba(239,68,68,0.10); color: var(--danger); }
+        .adm-status-cell.warn { background: rgba(245,158,11,0.14); color: #b45309; }
+        .adm-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.45); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
+        .adm-overlay.open { display: flex; }
+        .adm-modal { background: #fff; border-radius: 16px; width: min(480px, 100%); max-height: 86vh; overflow: auto; padding: 22px; }
+        .adm-days { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+        @media (max-width: 640px) { .adm-row { grid-template-columns: 1fr; } .adm-balls { grid-template-columns: repeat(3, 1fr); } }
 </style>
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/components.css">
@@ -476,7 +504,22 @@ body{background:#F2F4F6;color:#191F28}
                     <span id="inboxNavBadge" class="nav-badge hidden">0</span>
                 </div>
 
+                <div class="nav-group-label">학생 · 계정</div>
+                <div class="nav-item" data-section="section-students" onclick="switchSection('section-students')">
+                    <span class="nav-icon">👥</span> 학생 관리
+                </div>
+                <div class="nav-item" data-section="section-locks" onclick="switchSection('section-locks')">
+                    <span class="nav-icon">🔒</span> 로그인 잠금
+                    <span id="locksNavBadge" class="nav-badge hidden">0</span>
+                </div>
+
                 <div class="nav-group-label">시스템</div>
+                <div class="nav-item" data-section="section-status" onclick="switchSection('section-status')">
+                    <span class="nav-icon">🩺</span> 시스템 상태
+                </div>
+                <div class="nav-item" data-section="section-lotto" onclick="switchSection('section-lotto')">
+                    <span class="nav-icon">🎰</span> 로또 · 랭킹
+                </div>
                 <div class="nav-item" data-section="section-dbexplorer" onclick="switchSection('section-dbexplorer')">
                     <span class="nav-icon">🗄️</span> DB 탐색기
                 </div>
@@ -585,6 +628,22 @@ body{background:#F2F4F6;color:#191F28}
                             </div>
                             <button class="btn-block btn-orange" onclick="saveReminderData()">전광판 배너 적용</button>
                         </div>
+
+                        <div class="panel-card">
+                            <h3>⏰ 공지 예약</h3>
+                            <p class="panel-desc">정해둔 시간 동안만 학생 화면에 공지 팝업이 뜹니다. 위의 "즉시 배포" 공지가 비어 있을 때만 예약 공지가 보입니다. 기록은 보관하지 않고, 끝난 예약은 목록에서 지워도 됩니다.</p>
+                            <div class="form-group">
+                                <label for="sched-text">예약 공지 내용</label>
+                                <textarea id="sched-text" class="form-control" rows="3" maxlength="1000" placeholder="예: 10/9(목) 한글날은 휴강입니다."></textarea>
+                            </div>
+                            <div class="adm-row">
+                                <div class="form-group"><label for="sched-start">시작</label><input type="datetime-local" id="sched-start" class="form-control"></div>
+                                <div class="form-group"><label for="sched-end">종료</label><input type="datetime-local" id="sched-end" class="form-control"></div>
+                            </div>
+                            <button class="btn-block btn-purple" onclick="saveScheduledNotice()">예약 등록</button>
+                            <div style="height: 12px;"></div>
+                            <div id="sched-list" class="feed-container"><div class="no-data">예약된 공지가 없습니다.</div></div>
+                        </div>
                     </section>
 
                     <!-- 컴시간 등록 -->
@@ -633,6 +692,80 @@ body{background:#F2F4F6;color:#191F28}
                         </div>
                     </section>
 
+                    <!-- 학생 관리 -->
+                    <section id="section-students" class="content-section">
+                        <div class="panel-card">
+                            <h3>👥 학생 관리</h3>
+                            <p class="panel-desc">PIN 초기화, 계정 정지/해제, 출석 보정, 삭제를 할 수 있습니다. 연락처·매쓰플랫 비밀번호는 이 화면에 표시하거나 내보내지 않습니다.</p>
+                            <div class="adm-toolbar">
+                                <input type="text" id="adm-student-search" class="form-control" placeholder="이름·아이디·학교·선생님 검색" oninput="renderStudents()">
+                                <select id="adm-student-filter" class="form-control" onchange="renderStudents()">
+                                    <option value="all">전체</option>
+                                    <option value="disabled">정지된 계정</option>
+                                    <option value="locked">로그인 잠김</option>
+                                    <option value="inactive30">30일 이상 미접속</option>
+                                    <option value="never">한 번도 접속 안 함</option>
+                                </select>
+                                <button class="btn-block btn-purple adm-small" onclick="loadStudents()">🔄 새로고침</button>
+                                <button class="btn-block btn-orange adm-small" onclick="exportStudentsCsv()">⬇️ 엑셀(CSV) 내보내기</button>
+                            </div>
+                            <div id="adm-student-count" class="adm-count"></div>
+                            <div id="adm-student-list" class="feed-container"><div class="no-data">불러오는 중...</div></div>
+                        </div>
+                    </section>
+
+                    <!-- 로그인 잠금 -->
+                    <section id="section-locks" class="content-section">
+                        <div class="panel-card">
+                            <h3>🔒 로그인 잠금</h3>
+                            <p class="panel-desc">PIN을 여러 번 틀리면 계정이 잠깁니다. 학생 본인이 맞다고 확인되면 여기서 바로 풀어 주세요.</p>
+                            <button class="btn-block btn-purple adm-small" onclick="loadLocks()">🔄 새로고침</button>
+                            <div style="height: 12px;"></div>
+                            <div id="adm-lock-list" class="feed-container"><div class="no-data">불러오는 중...</div></div>
+                        </div>
+                    </section>
+
+                    <!-- 시스템 상태 -->
+                    <section id="section-status" class="content-section">
+                        <div class="panel-card">
+                            <h3>🩺 시스템 상태</h3>
+                            <button class="btn-block btn-purple adm-small" onclick="loadStatus()">🔄 새로고침</button>
+                            <div style="height: 12px;"></div>
+                            <div id="adm-status-box"><div class="no-data">불러오는 중...</div></div>
+                        </div>
+                    </section>
+
+                    <!-- 로또 · 랭킹 -->
+                    <section id="section-lotto" class="content-section">
+                        <div class="panel-card">
+                            <h3>🎰 로또 결과 관리</h3>
+                            <p class="panel-desc">당첨번호는 토요일 추첨 뒤 서버가 자동으로 받아 저장합니다. 외부 API가 늦거나 틀렸을 때만 사용하세요.</p>
+                            <div id="adm-lotto-status" style="font-weight:700; margin-bottom:12px;">상태 확인 중...</div>
+                            <button class="btn-block btn-purple" onclick="lottoResync()">지금 당첨번호 다시 받아오기</button>
+                        </div>
+                        <div class="panel-card">
+                            <h3>✍️ 당첨번호 수동 입력</h3>
+                            <p class="panel-desc">이미 추첨이 끝난 회차만 입력할 수 있습니다. 저장하면 그 회차 예측을 다시 판정하고, 새로 달성한 업적은 지급합니다(이미 준 업적은 회수되지 않습니다).</p>
+                            <div class="adm-row">
+                                <div class="form-group"><label for="adm-draw-round">회차</label><input type="number" id="adm-draw-round" class="form-control" min="1"></div>
+                                <div class="form-group"><label for="adm-draw-bonus">보너스</label><input type="number" id="adm-draw-bonus" class="form-control" min="1" max="45"></div>
+                            </div>
+                            <div class="form-group"><label>당첨번호 6개 (1~45)</label>
+                                <div class="adm-balls">
+                                    <input type="number" class="form-control adm-draw-num" min="1" max="45"><input type="number" class="form-control adm-draw-num" min="1" max="45"><input type="number" class="form-control adm-draw-num" min="1" max="45">
+                                    <input type="number" class="form-control adm-draw-num" min="1" max="45"><input type="number" class="form-control adm-draw-num" min="1" max="45"><input type="number" class="form-control adm-draw-num" min="1" max="45">
+                                </div>
+                            </div>
+                            <button class="btn-block btn-orange" onclick="lottoSetDraw()">수동 저장 및 재판정</button>
+                        </div>
+                        <div class="panel-card">
+                            <h3>🧹 회차 예측 초기화 (랭킹 초기화)</h3>
+                            <p class="panel-desc">선택한 회차의 모든 학생 예측을 삭제합니다. 되돌릴 수 없습니다.</p>
+                            <div class="form-group"><label for="adm-clear-round">회차</label><input type="number" id="adm-clear-round" class="form-control" min="1"></div>
+                            <button class="btn-block btn-red" onclick="lottoClearPredictions()">이 회차 예측 모두 삭제</button>
+                        </div>
+                    </section>
+
                     <!-- DB 탐색기 -->
                     <section id="section-dbexplorer" class="content-section">
                         <div class="panel-card">
@@ -652,6 +785,21 @@ body{background:#F2F4F6;color:#191F28}
 
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 출석 보정 모달 -->
+    <div id="admAttendanceOverlay" class="adm-overlay" onclick="if(event.target===this) closeAttendanceModal()">
+        <div class="adm-modal">
+            <h3 id="admAttTitle" style="margin:0 0 6px;">출석 보정</h3>
+            <p class="panel-desc" style="margin-bottom:8px;">날짜를 골라 출석을 추가하거나, 아래 목록에서 눌러 취소합니다. 미래 날짜는 안 됩니다. 이미 지급된 업적은 회수되지 않습니다.</p>
+            <div class="adm-toolbar">
+                <input type="date" id="admAttDate" class="form-control">
+                <button class="btn-block btn-purple adm-small" onclick="addAttendanceDay()">출석 추가</button>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-sub);">최근 출석 기록 (누르면 취소)</div>
+            <div id="admAttDays" class="adm-days"></div>
+            <button class="btn-block btn-red adm-small" onclick="closeAttendanceModal()">닫기</button>
         </div>
     </div>
 
@@ -779,6 +927,8 @@ body{background:#F2F4F6;color:#191F28}
 
                 initAdminDataFeed();
                 initComciganOverridePanel();
+                initNoticeSchedulePanel();
+                loadLocks();
             } else {
                 // 로그인은 되어 있지만(예: 학생 계정) 허용 목록에 없는 경우에도 관리자 화면 대신 로그인 화면을 보여준다.
                 // 여기서 signOut()을 호출하면 다른 탭(index.html 등)의 학생 세션까지 끊기므로 호출하지 않는다.
@@ -1300,6 +1450,330 @@ body{background:#F2F4F6;color:#191F28}
             const childWrap = root.querySelector('.db-children');
             Array.from(childWrap ? childWrap.children : []).forEach(child => container.appendChild(child));
         }
+
+        /* =====================================================================
+           운영 도구 — 학생 관리 / 로그인 잠금 / 시스템 상태 / 로또 / 공지 예약
+           (서버 /api/admin 은 마스터 UID만 허용. 화면에는 항상 textContent로만 출력한다.)
+        ===================================================================== */
+        async function adminApi(action, extra) {
+            const token = await getIdToken();
+            if (!token) throw new Error('로그인이 필요합니다.');
+            const res = await fetch(`${BACKEND_URL}/api/admin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(Object.assign({ action }, extra || {}))
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `오류(${res.status})`);
+            return data;
+        }
+
+        function admEl(tag, cls, text) {
+            const el = document.createElement(tag);
+            if (cls) el.className = cls;
+            if (text !== undefined) el.textContent = text;
+            return el;
+        }
+        function admBtn(label, onClick, danger) {
+            const b = admEl('button', 'adm-btn' + (danger ? ' danger' : ''), label);
+            b.type = 'button';
+            b.onclick = onClick;
+            return b;
+        }
+        function admTag(text, cls) { return admEl('span', 'adm-tag ' + cls, text); }
+        function fmtDateTime(ms) {
+            if (!ms) return '-';
+            const d = new Date(ms);
+            const p = (n) => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+        function fmtDate(ms) { return ms ? fmtDateTime(ms).slice(0, 10) : '-'; }
+        function admError(prefix, e) { alert(`${prefix}: ${e.message}`); }
+
+        // ---------- 학생 관리 ----------
+        let admStudents = [];
+        let admServerNow = Date.now();
+
+        async function loadStudents() {
+            const box = document.getElementById('adm-student-list');
+            box.replaceChildren(admEl('div', 'no-data', '불러오는 중...'));
+            try {
+                const data = await adminApi('students');
+                admStudents = data.students || [];
+                admServerNow = data.serverNow || Date.now();
+                renderStudents();
+            } catch (e) { box.replaceChildren(admEl('div', 'no-data', '불러오지 못했습니다: ' + e.message)); }
+        }
+
+        function filteredStudents() {
+            const q = document.getElementById('adm-student-search').value.trim().toLowerCase();
+            const f = document.getElementById('adm-student-filter').value;
+            const monthAgo = admServerNow - 30 * 24 * 3600 * 1000;
+            return admStudents.filter(s => {
+                if (q && ![s.name, s.u2mId, s.schoolName, s.teacher, s.grade].some(v => String(v || '').toLowerCase().includes(q))) return false;
+                if (f === 'disabled') return s.disabled;
+                if (f === 'locked') return s.locked;
+                if (f === 'inactive30') return s.lastSignInAt && s.lastSignInAt < monthAgo;
+                if (f === 'never') return !s.lastSignInAt;
+                return true;
+            });
+        }
+
+        function renderStudents() {
+            const list = filteredStudents();
+            document.getElementById('adm-student-count').textContent = `${list.length}명 표시 (전체 ${admStudents.length}명)`;
+            const box = document.getElementById('adm-student-list');
+            if (!list.length) { box.replaceChildren(admEl('div', 'no-data', '조건에 맞는 학생이 없습니다.')); return; }
+            const frag = document.createDocumentFragment();
+            list.forEach(s => {
+                const row = admEl('div', 'adm-item');
+                const main = admEl('div', 'adm-main');
+                const nm = admEl('div', 'adm-name', s.name || '(이름 없음)');
+                if (s.disabled) nm.appendChild(admTag('정지', 'red'));
+                if (s.locked) nm.appendChild(admTag('잠김', 'amber'));
+                main.appendChild(nm);
+                main.appendChild(admEl('div', 'adm-meta', `${s.u2mId || '-'} · ${s.schoolName || '-'} ${s.grade || ''} ${s.class || ''} · ${s.teacher || '-'} 선생님`));
+                main.appendChild(admEl('div', 'adm-meta', `가입 ${fmtDate(s.joinedAt)} · 최근 접속 ${s.lastSignInAt ? fmtDateTime(s.lastSignInAt) : '없음'}`));
+                row.appendChild(main);
+                const act = admEl('div', 'adm-actions');
+                act.appendChild(admBtn('PIN 초기화', () => resetStudentPin(s)));
+                act.appendChild(admBtn('출석', () => openAttendanceModal(s)));
+                act.appendChild(admBtn(s.disabled ? '정지 해제' : '정지', () => toggleDisabled(s)));
+                act.appendChild(admBtn('삭제', () => deleteStudentAccount(s), true));
+                row.appendChild(act);
+                frag.appendChild(row);
+            });
+            box.replaceChildren(frag);
+        }
+
+        async function resetStudentPin(s) {
+            const pin = prompt(`${s.name || s.u2mId} 학생의 새 PIN(전화번호 뒷 4자리)을 입력하세요.\n입력한 PIN으로 바로 로그인할 수 있게 되고, 로그인 잠금도 풀립니다.`);
+            if (pin === null) return;
+            if (!/^\d{4}$/.test(pin)) { alert('숫자 4자리여야 합니다.'); return; }
+            try { await adminApi('reset-pin', { uid: s.uid, pin }); alert('PIN을 초기화했습니다.'); loadStudents(); }
+            catch (e) { admError('PIN 초기화 실패', e); }
+        }
+
+        async function toggleDisabled(s) {
+            const next = !s.disabled;
+            if (!confirm(`${s.name || s.u2mId} 계정을 ${next ? '정지' : '정지 해제'}할까요?${next ? '\n이미 로그인한 기기에서도 곧 로그아웃됩니다.' : ''}`)) return;
+            try { await adminApi('set-disabled', { uid: s.uid, disabled: next }); loadStudents(); }
+            catch (e) { admError('변경 실패', e); }
+        }
+
+        async function deleteStudentAccount(s) {
+            const label = s.name || s.u2mId;
+            const typed = prompt(`⚠️ ${label} 학생의 계정과 모든 기록(출석·메시지·로또·업적)을 영구 삭제합니다.\n되돌릴 수 없습니다. 계속하려면 학생 이름(또는 아이디)을 그대로 입력하세요.`);
+            if (typed === null) return;
+            if (typed.trim() !== label) { alert('입력한 내용이 달라 취소했습니다.'); return; }
+            try { await adminApi('delete-student', { uid: s.uid }); alert('삭제했습니다.'); loadStudents(); }
+            catch (e) { admError('삭제 실패', e); }
+        }
+
+        function csvCell(v) {
+            let t = String(v == null ? '' : v);
+            if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; // 엑셀 수식 주입 방지
+            return `"${t.replace(/"/g, '""')}"`;
+        }
+        function exportStudentsCsv() {
+            if (!admStudents.length) { alert('먼저 학생 목록을 불러와 주세요.'); return; }
+            if (!confirm('학생 명단(이름·아이디·학교·학년·반·선생님·가입일·최근 접속)을 파일로 내려받습니다.\n개인정보이니 보관/전달에 주의하세요. 계속할까요?')) return;
+            const rows = [['이름', '유투엠 아이디', '학교', '학년', '반', '선생님', '가입일', '최근 접속', '상태']];
+            filteredStudents().forEach(s => rows.push([s.name, s.u2mId, s.schoolName, s.grade, s.class, s.teacher, fmtDate(s.joinedAt), s.lastSignInAt ? fmtDateTime(s.lastSignInAt) : '', s.disabled ? '정지' : '정상']));
+            const csv = '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+            const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `students_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        // ---------- 출석 보정 ----------
+        let admAttStudent = null;
+        function openAttendanceModal(s) {
+            admAttStudent = s;
+            document.getElementById('admAttTitle').textContent = `${s.name || s.u2mId} 출석 보정`;
+            const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+            const dateEl = document.getElementById('admAttDate');
+            dateEl.value = today; dateEl.max = today;
+            document.getElementById('admAttendanceOverlay').classList.add('open');
+            refreshAttendanceDays();
+        }
+        function closeAttendanceModal() {
+            document.getElementById('admAttendanceOverlay').classList.remove('open');
+            admAttStudent = null;
+        }
+        async function refreshAttendanceDays() {
+            const box = document.getElementById('admAttDays');
+            box.replaceChildren(admEl('span', 'adm-meta', '불러오는 중...'));
+            try {
+                const { days } = await adminApi('attendance-get', { uid: admAttStudent.uid });
+                const recent = days.slice(-40).reverse();
+                if (!recent.length) { box.replaceChildren(admEl('span', 'adm-meta', '출석 기록이 없습니다.')); return; }
+                const frag = document.createDocumentFragment();
+                recent.forEach(d => frag.appendChild(admBtn(d + ' ✕', () => setAttendanceDay(d, false), true)));
+                box.replaceChildren(frag);
+            } catch (e) { box.replaceChildren(admEl('span', 'adm-meta', '불러오지 못했습니다: ' + e.message)); }
+        }
+        async function setAttendanceDay(date, present) {
+            if (!admAttStudent) return;
+            try { await adminApi('attendance-set', { uid: admAttStudent.uid, date, present }); refreshAttendanceDays(); }
+            catch (e) { admError(present ? '출석 추가 실패' : '출석 취소 실패', e); }
+        }
+        function addAttendanceDay() {
+            const date = document.getElementById('admAttDate').value;
+            if (!date) { alert('날짜를 선택하세요.'); return; }
+            setAttendanceDay(date, true);
+        }
+
+        // ---------- 로그인 잠금 ----------
+        async function loadLocks() {
+            const box = document.getElementById('adm-lock-list');
+            try {
+                const { locks } = await adminApi('locks');
+                const active = locks.filter(l => l.locked).length;
+                const badge = document.getElementById('locksNavBadge');
+                badge.textContent = active; badge.classList.toggle('hidden', !active);
+                if (!locks.length) { box.replaceChildren(admEl('div', 'no-data', '잠금/실패 기록이 없습니다.')); return; }
+                const frag = document.createDocumentFragment();
+                locks.forEach(l => {
+                    const row = admEl('div', 'adm-item');
+                    const main = admEl('div', 'adm-main');
+                    const nm = admEl('div', 'adm-name', l.id);
+                    if (l.locked) nm.appendChild(admTag('잠김', 'amber'));
+                    main.appendChild(nm);
+                    main.appendChild(admEl('div', 'adm-meta', `연속 실패 ${l.failCount}회 · 마지막 실패 ${fmtDateTime(l.lastFailAt)}` + (l.locked ? ` · ${fmtDateTime(l.lockedUntil)}까지 잠김` : '')));
+                    row.appendChild(main);
+                    const act = admEl('div', 'adm-actions');
+                    act.appendChild(admBtn('잠금 해제', async () => {
+                        try { await adminApi('unlock', { id: l.id }); loadLocks(); } catch (e) { admError('해제 실패', e); }
+                    }));
+                    row.appendChild(act);
+                    frag.appendChild(row);
+                });
+                box.replaceChildren(frag);
+            } catch (e) { box.replaceChildren(admEl('div', 'no-data', '불러오지 못했습니다: ' + e.message)); }
+        }
+
+        // ---------- 시스템 상태 ----------
+        const ADM_ENV_LABELS = {
+            AES_KEY: ['AES 암호화 키', true], AES_KEY_STRONG: ['AES 키 길이(32자 이상)', true], AES_KEY_OLD: ['옛 AES 키 (교체 끝났다면 꺼져 있어야 함)', false],
+            FIREBASE_SERVICE_ACCOUNT: ['Firebase 서비스 계정', true], PIN_PEPPER: ['PIN 후추값(PIN_PEPPER)', true], RECAPTCHA_V3_SECRET_KEY: ['reCAPTCHA 비밀키', true],
+            CRON_SECRET: ['크론 비밀값', true], ALLOWED_ORIGIN: ['허용 출처(CORS)', true], NEIS_API_KEY: ['NEIS 키', true], KMA_API_KEY: ['기상청 키', true]
+        };
+        async function loadStatus() {
+            const box = document.getElementById('adm-status-box');
+            try {
+                const st = await adminApi('status');
+                const frag = document.createDocumentFragment();
+                const grid = admEl('div', 'adm-status-grid');
+                Object.keys(ADM_ENV_LABELS).forEach(k => {
+                    const [label, shouldBeOn] = ADM_ENV_LABELS[k];
+                    const on = Boolean(st.env[k]);
+                    const good = on === shouldBeOn;
+                    grid.appendChild(admEl('div', 'adm-status-cell' + (good ? '' : (shouldBeOn ? ' bad' : ' warn')), `${good ? '✅' : (shouldBeOn ? '❌' : '⚠️')} ${label}`));
+                });
+                frag.appendChild(grid);
+                const lag = st.lotto.expectedRound - (st.lotto.storedRound || 0);
+                const info = admEl('div', 'adm-count', '');
+                info.style.marginTop = '14px'; info.style.fontSize = '0.9rem';
+                info.textContent = `🎰 로또: 저장 ${st.lotto.storedRound || '-'}회 / 현재 기대 ${st.lotto.expectedRound}회` + (lag > 0 ? ` (⚠️ ${lag}회 뒤처짐 — 로또 메뉴에서 다시 받아오기)` : ' (정상)')
+                    + `  ·  👥 학생 ${st.logins.students}명 · 지금 잠긴 계정 ${st.logins.lockedNow}개 · 최근 24시간 로그인 실패 계정 ${st.logins.failedLast24h}개`;
+                frag.appendChild(info);
+                box.replaceChildren(frag);
+            } catch (e) { box.replaceChildren(admEl('div', 'no-data', '불러오지 못했습니다: ' + e.message)); }
+        }
+
+        // ---------- 로또 ----------
+        async function refreshLottoStatus() {
+            const el = document.getElementById('adm-lotto-status');
+            try {
+                const st = await adminApi('status');
+                const lag = st.lotto.expectedRound - (st.lotto.storedRound || 0);
+                el.textContent = `저장된 최신 회차: ${st.lotto.storedRound || '-'}회 / 현재 기대 회차: ${st.lotto.expectedRound}회` + (lag > 0 ? ` — ⚠️ ${lag}회 뒤처짐` : ' — 정상');
+                const r = document.getElementById('adm-draw-round');
+                if (!r.value) r.value = st.lotto.expectedRound || '';
+                const c = document.getElementById('adm-clear-round');
+                if (!c.value) c.value = (st.lotto.storedRound || 0) + 1;
+            } catch (e) { el.textContent = '상태를 불러오지 못했습니다: ' + e.message; }
+        }
+        async function lottoResync() {
+            try { const r = await adminApi('lotto-resync'); alert(`동기화 완료: 저장 ${r.storedRound || '-'}회 / 기대 ${r.expectedRound}회`); refreshLottoStatus(); }
+            catch (e) { admError('동기화 실패', e); }
+        }
+        async function lottoSetDraw() {
+            const round = Number(document.getElementById('adm-draw-round').value);
+            const bonus = Number(document.getElementById('adm-draw-bonus').value);
+            const numbers = Array.from(document.querySelectorAll('.adm-draw-num')).map(i => Number(i.value));
+            if (!round || numbers.length !== 6 || numbers.some(n => !n) || !bonus) { alert('회차, 번호 6개, 보너스를 모두 입력하세요.'); return; }
+            if (!confirm(`${round}회 당첨번호를 [${numbers.join(', ')}] + ${bonus} 로 저장하고 예측을 다시 판정합니다. 계속할까요?`)) return;
+            try { await adminApi('lotto-set-draw', { round, numbers, bonus }); alert('저장하고 재판정했습니다.'); refreshLottoStatus(); }
+            catch (e) { admError('저장 실패', e); }
+        }
+        async function lottoClearPredictions() {
+            const round = Number(document.getElementById('adm-clear-round').value);
+            if (!round) { alert('회차를 입력하세요.'); return; }
+            if (!confirm(`${round}회차 학생 예측을 모두 삭제합니다. 되돌릴 수 없습니다. 계속할까요?`)) return;
+            try { await adminApi('lotto-clear-predictions', { round }); alert('삭제했습니다.'); }
+            catch (e) { admError('삭제 실패', e); }
+        }
+
+        // ---------- 공지 예약 (서버 없이: DB에 시간대를 저장, 학생 화면이 시간에 맞춰 표시) ----------
+        function initNoticeSchedulePanel() {
+            database.ref('noticeSchedule').on('value', snap => {
+                const box = document.getElementById('sched-list');
+                const val = snap.val() || {};
+                const items = Object.entries(val).filter(([, v]) => v && v.text).sort((a, b) => (b[1].startAt || 0) - (a[1].startAt || 0));
+                if (!items.length) { box.replaceChildren(admEl('div', 'no-data', '예약된 공지가 없습니다.')); return; }
+                const now = Date.now();
+                const frag = document.createDocumentFragment();
+                items.forEach(([key, v]) => {
+                    const row = admEl('div', 'adm-item');
+                    const main = admEl('div', 'adm-main');
+                    const active = v.startAt <= now && (!v.endAt || now < v.endAt);
+                    const ended = v.endAt && now >= v.endAt;
+                    const nm = admEl('div', 'adm-name', v.text.length > 60 ? v.text.slice(0, 60) + '…' : v.text);
+                    nm.appendChild(admTag(active ? '게시 중' : (ended ? '종료' : '예약'), active ? 'red' : 'amber'));
+                    main.appendChild(nm);
+                    main.appendChild(admEl('div', 'adm-meta', `${fmtDateTime(v.startAt)} ~ ${v.endAt ? fmtDateTime(v.endAt) : '계속'}`));
+                    row.appendChild(main);
+                    const act = admEl('div', 'adm-actions');
+                    act.appendChild(admBtn('삭제', () => { if (confirm('이 예약 공지를 삭제할까요?')) database.ref(`noticeSchedule/${key}`).remove().catch(e => admError('삭제 실패', e)); }, true));
+                    row.appendChild(act);
+                    frag.appendChild(row);
+                });
+                box.replaceChildren(frag);
+            });
+        }
+        function saveScheduledNotice() {
+            const text = document.getElementById('sched-text').value.trim();
+            const startVal = document.getElementById('sched-start').value;
+            const endVal = document.getElementById('sched-end').value;
+            if (!text) { alert('공지 내용을 입력하세요.'); return; }
+            if (!startVal) { alert('시작 시간을 선택하세요.'); return; }
+            const startAt = new Date(startVal).getTime();
+            const endAt = endVal ? new Date(endVal).getTime() : 0;
+            if (endAt && endAt <= startAt) { alert('종료는 시작보다 늦어야 합니다.'); return; }
+            const data = { text, startAt, createdAt: Date.now() };
+            if (endAt) data.endAt = endAt;
+            database.ref('noticeSchedule').push(data).then(() => {
+                document.getElementById('sched-text').value = '';
+                alert('예약했습니다.');
+            }).catch(e => admError('예약 실패', e));
+        }
+
+        // 섹션 진입 시 필요한 데이터 불러오기
+        (function () {
+            const original = switchSection;
+            switchSection = function (id) {
+                original(id);
+                if (id === 'section-students') loadStudents();
+                else if (id === 'section-locks') loadLocks();
+                else if (id === 'section-status') loadStatus();
+                else if (id === 'section-lotto') refreshLottoStatus();
+            };
+        })();
     </script>
 </body>
 </html>

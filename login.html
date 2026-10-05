@@ -1149,6 +1149,8 @@
                     showToast(formatWaitMessage(data.lockedUntil), '⏳', 3000);
                 } else if (res.status === 429) {
                     showToast('요청이 너무 많아요. 잠시 후 다시 시도해 주세요.', '⏳', 3000);
+                } else if (res.status === 403 && data.error === 'disabled') {
+                    showToast('사용이 정지된 계정이에요. 학원에 문의해 주세요.', '🚫', 3500);
                 } else if (res.status === 403 && data.error === 'bot') {
                     showToast('보안 인증에 실패했어요. 잠시 후 다시 시도해 주세요.', '🔒', 3000);
                 } else if (res.status === 401) {
