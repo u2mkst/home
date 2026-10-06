@@ -716,48 +716,59 @@
         .lotto-seg button.active { background: var(--accent); color: #fff; }
         .lotto-select { font-size: 0.78rem; font-weight: 700; padding: 7px 10px; border-radius: 999px; border: none; background: var(--lg-surface-soft); color: var(--text-main); max-width: 150px; }
 
-        /* ============ 홈: 아날로그 시계 / D-Day / 매쓰플랫 학습 카드 ============ */
-        .info-card .clock-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-        .mf-analog { width: 140px; height: 140px; flex: 0 0 auto; }
-        .mf-analog .face { fill: var(--lg-surface-soft); stroke: var(--lg-border); }
-        .mf-analog .tick { stroke: var(--text-muted); stroke-width: 2; stroke-linecap: round; }
-        .mf-analog .tick.big { stroke: var(--text-main); stroke-width: 3.2; }
-        .mf-analog .hh, .mf-analog .mh { stroke: var(--text-main); stroke-linecap: round; }
-        .mf-analog .sh { stroke: var(--accent); stroke-linecap: round; }
-        .mf-analog .cap { fill: var(--accent); }
-        .dday-row { padding: 12px 0 0; border-top: 1px solid var(--lg-border-soft); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        /* ============ 홈: 왼쪽 매쓰플랫 학습 카드 / 오른쪽 시계·날씨 + 바로가기 ============ */
+        @media (min-width: 768px) { #view-home .main-grid { grid-template-columns: 1.15fr 1fr; } }
+        .home-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+        .home-right .info-card { min-height: 0; }
+        .home-right .menu-card { flex: 1; min-height: 130px; padding: 12px; flex-direction: row; gap: 12px; }
+        .home-right .menu-item { flex: 1; position: relative; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding: 18px 20px; gap: 6px; background: rgba(0, 75, 191, 0.09); }
+        .home-right .menu-item::before { content: '🎓'; font-size: 1.7rem; line-height: 1; margin-bottom: auto; }
+        .home-right .menu-item.mf-link { background: rgba(61, 185, 125, 0.13); }
+        .home-right .menu-item.mf-link::before { content: '🧮'; }
+        :root[data-theme="dark"] .home-right .menu-item { background: rgba(76, 154, 255, 0.16); }
+        :root[data-theme="dark"] .home-right .menu-item.mf-link { background: rgba(61, 185, 125, 0.18); }
+        .home-right .menu-item:hover { padding-left: 20px; filter: brightness(0.97); }
+        .home-right .menu-item-text { font-size: 1.1rem; font-weight: 700; padding-right: 24px; }
+        .home-right .arrow-icon { position: absolute; right: 18px; bottom: 18px; font-size: 1.1rem; color: var(--accent); }
+        .home-right .menu-item.mf-link .arrow-icon { color: #2a9a68; }
+        .dday-row { padding: 12px 0 0; border-top: 1px solid var(--lg-border-soft); }
         .dday-row .dday-badge { font-size: 1.05rem; }
-        .mf-col { display: flex; flex-direction: column; gap: 16px; }
-        .mf-card { padding: 22px 24px 18px; display: block; }
-        .mf-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--lg-border-soft); padding-bottom: 12px; margin-bottom: 6px; }
-        .mf-head h2 { margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--text-muted); letter-spacing: -0.02em; }
-        .mf-upd { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
-        .mf-refresh { border: none; background: transparent; color: var(--text-muted); font-size: 1.05rem; cursor: pointer; padding: 0 2px; line-height: 1; }
+
+        .mf-card { padding: 24px 26px 20px; display: flex; flex-direction: column; min-width: 0; }
+        .mf-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .mf-head h2 { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.03em; }
+        .mf-upd { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .mf-refresh { border: none; background: transparent; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; padding: 0 2px; line-height: 1; }
         .mf-refresh:active { transform: rotate(120deg); }
-        .mf-big { display: flex; align-items: flex-end; padding: 10px 0 6px; }
-        .mf-big .cell { flex: 1; min-width: 0; }
-        .mf-big .cell + .cell { border-left: 1px solid var(--lg-border-soft); padding-left: 22px; }
-        .mf-big .l { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); }
-        .mf-big .v { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 3.1rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; line-height: 1.05; margin-top: 2px; }
-        .mf-big .v small { font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); margin-left: 4px; letter-spacing: 0; }
-        .mf-chart { position: relative; margin-top: 6px; }
-        .mf-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
-        .mf-legend { display: flex; justify-content: flex-end; gap: 12px; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+        #mfBody { flex: 1; display: flex; flex-direction: column; }
+        .mf-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .mf-stat { background: var(--lg-surface-soft); border-radius: 20px; padding: 24px 10px 20px; text-align: center; }
+        .mf-stat .l { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+        .mf-stat .v { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 3.3rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; line-height: 1.1; margin-top: 4px; }
+        .mf-stat .v small { font-family: inherit; font-size: 0.95rem; font-weight: 700; color: var(--text-muted); margin-left: 4px; letter-spacing: 0; }
+        .mf-sub { font-size: 0.98rem; font-weight: 800; color: var(--text-main); margin: 22px 0 6px; display: flex; align-items: center; justify-content: space-between; letter-spacing: -0.02em; }
+        .mf-legend { display: flex; gap: 12px; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
         .mf-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 3px; margin-right: 5px; }
-        .mf-foot { display: flex; justify-content: space-between; gap: 8px; font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-top: 4px; flex-wrap: wrap; }
+        .mf-chart { position: relative; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+        .mf-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+        .mf-foot { display: flex; justify-content: space-between; gap: 8px; font-size: 0.72rem; color: var(--text-muted); font-weight: 600; margin-top: 8px; flex-wrap: wrap; }
         .mf-tip { position: absolute; pointer-events: none; background: rgba(60,64,72,0.94); color: #fff; border-radius: 12px; padding: 9px 13px; font-size: 0.74rem; line-height: 1.7; min-width: 146px; transform: translateX(-50%); display: none; z-index: 3; }
         :root[data-theme="dark"] .mf-tip { background: rgba(240,244,250,0.96); color: #111; }
         .mf-tip b { display: block; font-size: 0.7rem; opacity: 0.85; }
         .mf-tip em { font-style: normal; font-weight: 800; }
         .mf-tip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
-        .mf-msg { text-align: center; padding: 26px 8px 22px; color: var(--text-muted); font-weight: 700; line-height: 1.6; font-size: 0.85rem; }
-        .mf-msg b { display: block; color: var(--text-main); font-size: 1rem; margin-bottom: 4px; }
-        .mf-msg button { margin-top: 12px; border: none; background: var(--accent); color: #fff; font-weight: 800; border-radius: 12px; padding: 9px 16px; cursor: pointer; font-size: 0.82rem; }
-        .mf-note { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-top: 8px; text-align: center; }
-        .mf-col .menu-card { min-height: 0; padding: 10px; flex-direction: row; gap: 10px; }
-        .mf-col .menu-card .menu-item { flex: 1; padding: 14px 18px; }
-        .mf-col .menu-card .menu-item-text { font-size: 0.95rem; }
-        @media (max-width: 767px) { .mf-analog { width: 110px; height: 110px; } .mf-big .v { font-size: 2.7rem; } .mf-card { padding: 20px 18px 16px; } }
+        .mf-msg { text-align: center; padding: 60px 8px; color: var(--text-muted); font-weight: 700; line-height: 1.6; font-size: 0.88rem; }
+        .mf-msg b { display: block; color: var(--text-main); font-size: 1.05rem; margin-bottom: 4px; }
+        .mf-msg button { margin-top: 14px; border: none; background: var(--accent); color: #fff; font-weight: 800; border-radius: 12px; padding: 10px 18px; cursor: pointer; font-size: 0.85rem; }
+        .mf-note { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-top: 8px; text-align: center; }
+        @media (max-width: 767px) {
+            .home-right { order: -1; }
+            .home-right .menu-card { min-height: 0; }
+            .home-right .menu-item-text { font-size: 1rem; padding-right: 0; }
+            .home-right .arrow-icon { bottom: auto; top: 18px; }
+            .mf-card { padding: 20px 18px 16px; }
+            .mf-stat .v { font-size: 2.7rem; }
+        }
 
         .rank-btn-base { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; padding: 14px 22px; border-radius: var(--radius-md); transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), background 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .rank-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; box-shadow: 0 10px 24px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
@@ -831,49 +842,45 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         </div>
 
         <div class="main-grid">
-            <div class="glass-card info-card">
-                <div class="weather-row" style="align-items: flex-start; flex-direction: column; gap: 4px;">
-                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                        <span class="weather-status" id="weatherStatus">
-                            <span style="font-size:1rem;" id="weatherIcon" class="emoji-font">⏳</span> 위치 확인 중...
-                        </span>
-                        <span class="weather-temp" id="weatherTemp">--°C</span>
-                    </div>
-                    <div id="weatherDetails" class="weather-details-text"></div>
+            <div class="glass-card mf-card" id="mfCard">
+                <div class="mf-head">
+                    <h2>📚 이번 주 학습정보</h2>
+                    <div class="mf-upd"><span id="mfUpdated"></span><button type="button" class="mf-refresh" id="mfRefresh" title="새로고침" onclick="mathflatRefresh(true)">↻</button></div>
                 </div>
+                <div id="mfBody"><div class="mf-msg">불러오는 중...</div></div>
+            </div>
+            <div class="home-right">
+                <div class="glass-card info-card">
+                    <div class="weather-row" style="align-items: flex-start; flex-direction: column; gap: 4px;">
+                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                            <span class="weather-status" id="weatherStatus">
+                                <span style="font-size:1rem;" id="weatherIcon" class="emoji-font">⏳</span> 위치 확인 중...
+                            </span>
+                            <span class="weather-temp" id="weatherTemp">--°C</span>
+                        </div>
+                        <div id="weatherDetails" class="weather-details-text"></div>
+                    </div>
 
-                <div class="clock-row">
-                    <div>
+                    <div class="clock-row">
                         <div class="clock-date" id="dateText">동기화 중...</div>
                         <div class="clock-time" id="timeText">00:00:00</div>
                     </div>
-                    <svg class="mf-analog" id="analogClock" viewBox="0 0 200 200" aria-hidden="true"></svg>
-                </div>
 
-                <div class="dday-row">
-                    <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
-                </div>
-
-                <div class="quote-row">
-                    <b id="quote-header">오늘의 한마디:</b> <span id="quoteText">문구를 불러오는 중...</span>
-                    <span id="quoteAuthor" class="quote-author"></span>
-                </div>
-            </div>
-
-            <div class="mf-col">
-                <div class="glass-card mf-card" id="mfCard">
-                    <div class="mf-head">
-                        <h2>📚 이번 주 학습</h2>
-                        <div class="mf-upd"><span id="mfUpdated"></span><button type="button" class="mf-refresh" id="mfRefresh" title="새로고침" onclick="mathflatRefresh(true)">↻</button></div>
+                    <div class="dday-row">
+                        <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
                     </div>
-                    <div id="mfBody"><div class="mf-msg">불러오는 중...</div></div>
+
+                    <div class="quote-row">
+                        <b id="quote-header">오늘의 한마디:</b> <span id="quoteText">문구를 불러오는 중...</span>
+                        <span id="quoteAuthor" class="quote-author"></span>
+                    </div>
                 </div>
                 <div class="glass-card menu-card" id="shortcutMenuCard">
                     <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
                         <span class="menu-item-text">유투엠 바로가기</span>
                         <span class="arrow-icon">➔</span>
                     </a>
-                    <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
+                    <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item mf-link">
                         <span class="menu-item-text">매쓰플랫 바로가기</span>
                         <span class="arrow-icon">➔</span>
                     </a>
@@ -2061,28 +2068,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
        - 로그인 실패는 한 번만 시도하고, 저장된 비밀번호가 바뀌기 전까지는 다시 시도하지 않는다
          (매쓰플랫 계정이 잠기는 것을 막기 위해).
     ===================================================================== */
-    (function buildAnalogClock() {
-        const svg = document.getElementById('analogClock');
-        if (!svg) return;
-        let t = '';
-        for (let i = 0; i < 60; i++) {
-            const a = i * 6 * Math.PI / 180, big = i % 5 === 0, r1 = big ? 80 : 85, r2 = 92;
-            t += `<line class="tick${big ? ' big' : ''}" x1="${(100 + Math.sin(a) * r1).toFixed(1)}" y1="${(100 - Math.cos(a) * r1).toFixed(1)}" x2="${(100 + Math.sin(a) * r2).toFixed(1)}" y2="${(100 - Math.cos(a) * r2).toFixed(1)}"/>`;
-        }
-        svg.innerHTML = `<circle class="face" cx="100" cy="100" r="97" stroke-width="2"/>${t}
-            <line class="hh" id="anH" x1="100" y1="100" x2="100" y2="58" stroke-width="7"/>
-            <line class="mh" id="anM" x1="100" y1="100" x2="100" y2="34" stroke-width="5"/>
-            <line class="sh" id="anS" x1="100" y1="112" x2="100" y2="26" stroke-width="2.4"/>
-            <circle class="cap" cx="100" cy="100" r="6"/>`;
-    })();
-    function updateAnalogClock(h, m, s) {
-        const H = document.getElementById('anH'), M = document.getElementById('anM'), S = document.getElementById('anS');
-        if (!H || !M || !S) return;
-        H.setAttribute('transform', `rotate(${((h % 12) + m / 60) * 30} 100 100)`);
-        M.setAttribute('transform', `rotate(${(m + s / 60) * 6} 100 100)`);
-        S.setAttribute('transform', `rotate(${s * 6} 100 100)`);
-    }
-
     const MF_LOGIN_URL = 'https://api.mathflat.com/v2/login';
     const MF_WEEKLY_URL = 'https://api.mathflat.com/student-history/analysis/summary/weekly/';
     const MF_CACHE_TTL = 60 * 60 * 1000;          // 결과 재사용 시간
@@ -2146,33 +2131,42 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     function mfRenderData() {
         const weeks = mfData.weeks, cur = weeks[3];
         const body = document.createElement('div');
-        const big = document.createElement('div'); big.className = 'mf-big';
-        [['푼 문제 수', String(cur.n), '문제'], ['정답률', cur.n ? String(cur.rate) : '-', cur.n ? '%' : '']].forEach(([label, val, unit]) => {
-            const cell = document.createElement('div'); cell.className = 'cell';
+        body.style.cssText = 'flex:1;display:flex;flex-direction:column;';
+
+        // 매쓰플랫처럼 정답률 / 푼 문제 수를 먼저 크게
+        const stats = document.createElement('div'); stats.className = 'mf-stats';
+        [['정답률', cur.n ? String(cur.rate) : '-', cur.n ? '%' : ''], ['푼 문제 수', String(cur.n), '문제']].forEach(([label, val, unit]) => {
+            const cell = document.createElement('div'); cell.className = 'mf-stat';
             const l = document.createElement('div'); l.className = 'l'; l.textContent = label;
             const v = document.createElement('div'); v.className = 'v'; v.textContent = val;
             if (unit) { const u = document.createElement('small'); u.textContent = unit; v.appendChild(u); }
-            cell.append(l, v); big.appendChild(cell);
+            cell.append(l, v); stats.appendChild(cell);
         });
-        body.appendChild(big);
+        body.appendChild(stats);
+
+        const sub = document.createElement('div'); sub.className = 'mf-sub';
+        const subTitle = document.createElement('span'); subTitle.textContent = '최근 4주간 푼 문제';
+        const legend = document.createElement('span'); legend.className = 'mf-legend';
+        legend.innerHTML = '<span><i style="background:rgba(91,163,247,0.35)"></i>푼 문제 수</span><span><i style="background:#5BA3F7"></i>정답률</span>';
+        sub.append(subTitle, legend); body.appendChild(sub);
 
         // 차트(숫자와 우리가 만든 라벨만 들어가므로 innerHTML 사용 가능)
-        const W = 520, H = 150, yT = 14, bot = 112, step = W / 4, max = Math.max(1, ...weeks.map(w => w.n)) * 1.12;
+        const W = 520, H = 250, yT = 18, bot = 208, step = W / 4, max = Math.max(1, ...weeks.map(w => w.n)) * 1.12;
         const pts = weeks.map((w, i) => ({ x: step * i + step / 2, y: bot - (bot - yT) * w.rate / 100, ok: w.n > 0 }));
         let h = `<line x1="0" x2="${W}" y1="${bot}" y2="${bot}" stroke="var(--lg-border)"/>`;
         weeks.forEach((w, i) => {
             const bh = (bot - yT) * w.n / max;
-            h += `<rect x="${pts[i].x - 22}" y="${bot - bh}" width="44" height="${bh}" rx="8" fill="rgba(91,163,247,0.22)"/>`;
-            h += `<text x="${pts[i].x}" y="${bot + 24}" text-anchor="middle" fill="var(--text-muted)" font-size="14" font-weight="${i === 3 ? 800 : 600}">${i === 3 ? '이번주' : mfWeekLabel(mfMonday(new Date(w.start + 'T00:00:00')))}</text>`;
+            h += `<rect x="${pts[i].x - 26}" y="${bot - bh}" width="52" height="${bh}" rx="10" fill="rgba(91,163,247,0.22)"/>`;
+            h += `<text x="${pts[i].x}" y="${bot + 28}" text-anchor="middle" fill="var(--text-muted)" font-size="15" font-weight="${i === 3 ? 800 : 600}">${i === 3 ? '이번주' : mfWeekLabel(mfMonday(new Date(w.start + 'T00:00:00')))}</text>`;
         });
         let path = '';
         pts.forEach((p, i) => { if (p.ok) path += `${pts[i - 1] && pts[i - 1].ok ? 'L' : 'M'}${p.x},${p.y} `; });
-        if (path) h += `<path d="${path}" fill="none" stroke="#5BA3F7" stroke-width="2.6" stroke-linejoin="round"/>`;
-        pts.forEach(p => { if (p.ok) h += `<circle cx="${p.x}" cy="${p.y}" r="5.5" fill="#5BA3F7" stroke="var(--lg-surface-strong, #fff)" stroke-width="2.5"/>`; });
-        weeks.forEach((w, i) => { h += `<rect class="mf-hit" data-i="${i}" x="${step * i}" y="0" width="${step}" height="${bot + 8}" fill="transparent" style="cursor:pointer"/>`; });
+        if (path) h += `<path d="${path}" fill="none" stroke="#5BA3F7" stroke-width="3" stroke-linejoin="round"/>`;
+        pts.forEach(p => { if (p.ok) h += `<circle cx="${p.x}" cy="${p.y}" r="6.5" fill="#5BA3F7" stroke="var(--lg-surface-strong, #fff)" stroke-width="3"/>`; });
+        weeks.forEach((w, i) => { h += `<rect class="mf-hit" data-i="${i}" x="${step * i}" y="0" width="${step}" height="${bot + 10}" fill="transparent" style="cursor:pointer"/>`; });
 
         const chart = document.createElement('div'); chart.className = 'mf-chart';
-        chart.innerHTML = `<div class="mf-legend"><span><i style="background:rgba(91,163,247,0.35)"></i>푼 문제 수</span><span><i style="background:#5BA3F7"></i>정답률</span></div><svg viewBox="0 0 ${W} ${H}">${h}</svg>`;
+        chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}">${h}</svg>`;
         const tip = document.createElement('div'); tip.className = 'mf-tip'; chart.appendChild(tip);
         const svg = chart.querySelector('svg');
         svg.addEventListener('click', (e) => {
@@ -2185,10 +2179,10 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 const em = document.createElement('em'); em.textContent = v;
                 row.append(dot, document.createTextNode(`${k} `), em); tip.appendChild(row);
             });
-            // 큰 숫자를 가리지 않도록 점 아래쪽에 띄우고, 카드 밖으로 나가지 않게 좌우를 맞춘다.
+            // 점 아래쪽에 띄우고, 카드 밖으로 나가지 않게 좌우를 맞춘다.
             const half = 75, x = (pts[i].x / W) * b.width + (b.left - c.left);
             tip.style.left = `${Math.min(Math.max(x, half), c.width - half)}px`;
-            tip.style.top = `${(pts[i].y / H) * b.height + (b.top - c.top) + 16}px`;
+            tip.style.top = `${(pts[i].y / H) * b.height + (b.top - c.top) + 18}px`;
             tip.style.display = 'block';
         });
         body.appendChild(chart);
@@ -2957,7 +2951,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         const dateEl = document.getElementById('dateText');
         if (timeEl) timeEl.innerText = `${hour}:${minute}:${second}`;
         if (dateEl) dateEl.innerText = `${parseInt(month)}월 ${parseInt(day)}일 ${weekday}`;
-        updateAnalogClock(parseInt(hour) % 24, parseInt(minute), parseInt(second));
     }
     setInterval(updateClock, 1000);
 
