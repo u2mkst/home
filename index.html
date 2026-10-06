@@ -720,17 +720,7 @@
         @media (min-width: 768px) { #view-home .main-grid { grid-template-columns: 1.15fr 1fr; } }
         .home-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
         .home-right .info-card { min-height: 0; }
-        .home-right .menu-card { flex: 1; min-height: 130px; padding: 12px; flex-direction: row; gap: 12px; }
-        .home-right .menu-item { flex: 1; position: relative; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding: 18px 20px; gap: 6px; background: rgba(0, 75, 191, 0.09); }
-        .home-right .menu-item::before { content: '🎓'; font-size: 1.7rem; line-height: 1; margin-bottom: auto; }
-        .home-right .menu-item.mf-link { background: rgba(61, 185, 125, 0.13); }
-        .home-right .menu-item.mf-link::before { content: '🧮'; }
-        :root[data-theme="dark"] .home-right .menu-item { background: rgba(76, 154, 255, 0.16); }
-        :root[data-theme="dark"] .home-right .menu-item.mf-link { background: rgba(61, 185, 125, 0.18); }
-        .home-right .menu-item:hover { padding-left: 20px; filter: brightness(0.97); }
-        .home-right .menu-item-text { font-size: 1.1rem; font-weight: 700; padding-right: 24px; }
-        .home-right .arrow-icon { position: absolute; right: 18px; bottom: 18px; font-size: 1.1rem; color: var(--accent); }
-        .home-right .menu-item.mf-link .arrow-icon { color: #2a9a68; }
+        .home-right .menu-card { flex: 1; min-height: 0; }
         .dday-row { padding: 12px 0 0; border-top: 1px solid var(--lg-border-soft); }
         .dday-row .dday-badge { font-size: 1.05rem; }
 
@@ -763,9 +753,6 @@
         .mf-note { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-top: 8px; text-align: center; }
         @media (max-width: 767px) {
             .home-right { order: -1; }
-            .home-right .menu-card { min-height: 0; }
-            .home-right .menu-item-text { font-size: 1rem; padding-right: 0; }
-            .home-right .arrow-icon { bottom: auto; top: 18px; }
             .mf-card { padding: 20px 18px 16px; }
             .mf-stat .v { font-size: 2.7rem; }
         }
@@ -880,7 +867,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                         <span class="menu-item-text">유투엠 바로가기</span>
                         <span class="arrow-icon">➔</span>
                     </a>
-                    <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item mf-link">
+                    <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
                         <span class="menu-item-text">매쓰플랫 바로가기</span>
                         <span class="arrow-icon">➔</span>
                     </a>
