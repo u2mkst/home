@@ -716,13 +716,16 @@
         .lotto-seg button.active { background: var(--accent); color: #fff; }
         .lotto-select { font-size: 0.78rem; font-weight: 700; padding: 7px 10px; border-radius: 999px; border: none; background: var(--lg-surface-soft); color: var(--text-main); max-width: 150px; }
 
-        /* ============ 홈: 왼쪽 매쓰플랫 학습 카드 / 오른쪽 시계·날씨 + 바로가기 ============ */
-        @media (min-width: 768px) { #view-home .main-grid { grid-template-columns: 1.15fr 1fr; } }
-        .home-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-        .home-right .info-card { min-height: 0; }
-        .home-right .menu-card { flex: 1; min-height: 0; }
-        .dday-row { padding: 12px 0 0; border-top: 1px solid var(--lg-border-soft); }
-        .dday-row .dday-badge { font-size: 1.05rem; }
+        /* ============ 홈: 매쓰플랫 학습 카드 레이아웃 ============
+           기본(#view-home)은 예전 모양(시계·날씨 카드 + 바로가기 카드 2개).
+           마스터가 켜 두고 학생이 매쓰플랫 정보를 등록했을 때만 .mf-layout-on 으로
+           "왼쪽 학습 카드 / 오른쪽 시계·날씨 + 바로가기" 배치로 바뀐다. */
+        #view-home:not(.mf-layout-on) .mf-card { display: none; }
+        #view-home:not(.mf-layout-on) .home-right { display: contents; }
+        @media (min-width: 768px) { #view-home.mf-layout-on .main-grid { grid-template-columns: 1.15fr 1fr; } }
+        .mf-layout-on .home-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+        .mf-layout-on .home-right .info-card { min-height: 0; }
+        .mf-layout-on .home-right .menu-card { flex: 1; min-height: 0; }
 
         .mf-card { padding: 24px 26px 20px; display: flex; flex-direction: column; min-width: 0; }
         .mf-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -752,10 +755,11 @@
         .mf-msg button { margin-top: 14px; border: none; background: var(--accent); color: #fff; font-weight: 800; border-radius: 12px; padding: 10px 18px; cursor: pointer; font-size: 0.85rem; }
         .mf-note { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-top: 8px; text-align: center; }
         @media (max-width: 767px) {
-            .home-right { order: -1; }
+            .mf-layout-on .home-right { order: -1; }
             .mf-card { padding: 20px 18px 16px; }
             .mf-stat .v { font-size: 2.7rem; }
         }
+
 
         .rank-btn-base { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; padding: 14px 22px; border-radius: var(--radius-md); transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), background 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .rank-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; box-shadow: 0 10px 24px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
@@ -825,6 +829,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         <div class="header-zone" onclick="showView('home')" title="홈">
             <h1 class="welcome-text" id="welcome-message">학생 정보를 불러오는 중...</h1>
             <div style="display:flex; align-items:center; gap:6px;">
+                <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
             </div>
         </div>
 
@@ -851,10 +856,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     <div class="clock-row">
                         <div class="clock-date" id="dateText">동기화 중...</div>
                         <div class="clock-time" id="timeText">00:00:00</div>
-                    </div>
-
-                    <div class="dday-row">
-                        <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
                     </div>
 
                     <div class="quote-row">
@@ -2184,9 +2185,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     }
 
     function mfRenderState(state) {
-        if (state === 'off') mfMessage('학습 현황이 잠시 꺼져 있어요', '학원에서 점검 중이에요. 곧 다시 열릴 예정이에요.');
-        else if (state === 'nocreds') mfMessage('매쓰플랫 정보를 등록해 주세요', '아이디와 비밀번호를 등록하면 이번 주 학습 현황을 볼 수 있어요.', '등록하기', () => openMathflatBottomSheet());
-        else if (state === 'pw') mfMessage('매쓰플랫 로그인에 실패했어요', '비밀번호가 바뀌었다면 다시 등록해 주세요.', '다시 등록하기', () => openMathflatBottomSheet());
+        if (state === 'pw') mfMessage('매쓰플랫 로그인에 실패했어요', '비밀번호가 바뀌었다면 다시 등록해 주세요.', '다시 등록하기', () => openMathflatBottomSheet());
         else if (state === 'down') mfMessage('지금은 매쓰플랫에 연결할 수 없어요', '잠시 후 다시 시도해 주세요.', '다시 시도', () => mathflatRefresh(true));
         else mfMessage('불러오는 중...', '');
         const el = document.getElementById('mfUpdated'); if (el) el.textContent = '';
@@ -2202,11 +2201,25 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         } finally { clearTimeout(timer); }
     }
 
+    // 학습 카드를 쓸 수 있을 때만(마스터가 켬 + 학생이 매쓰플랫 정보를 등록) 새 배치로 바꾸고,
+    // 아니면 예전 모양(시계·날씨 카드 + 바로가기 카드 2개)으로 돌려놓는다.
+    function mfApplyLayout(on) {
+        const home = document.getElementById('view-home');
+        if (home) home.classList.toggle('mf-layout-on', !!on);
+        try { localStorage.setItem('kst_mf_layout', on ? 'on' : 'off'); } catch (e) { /* 저장 불가 */ }
+    }
+    // 화면이 깜빡이지 않도록 마지막 상태를 먼저 적용해 둔다(곧 실제 상태로 갱신됨).
+    try { if (localStorage.getItem('kst_mf_layout') === 'on') { const h = document.getElementById('view-home'); if (h) h.classList.add('mf-layout-on'); } } catch (e) { /* 무시 */ }
+
     async function mathflatRefresh(force) {
         if (!document.getElementById('mfCard')) return;
         if (mfEnabled === null) return;                                   // 마스터 스위치 확인 전
-        if (mfEnabled !== true) { mfRenderState('off'); return; }
+        if (mfEnabled !== true) { mfApplyLayout(false); return; }         // 마스터가 꺼 둠 → 예전 모양
         if (!currentStudentData || mfBusy) return;
+        if (!((currentStudentData.mathflatId || currentStudentData.studentPhone) && currentStudentData.mathflatPw)) {
+            mfData = null; mfApplyLayout(false); return;                  // 매쓰플랫 정보 없음 → 예전 모양
+        }
+        mfApplyLayout(true);
 
         // 저장된 매쓰플랫 아이디/비밀번호(암호문)가 바뀌면 이전 결과/실패 기록은 무효다.
         const credTag = `${currentStudentData.mathflatId || currentStudentData.studentPhone || ''}|${currentStudentData.mathflatPw || ''}`;
@@ -2228,7 +2241,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             const rawId = currentStudentData.mathflatId || currentStudentData.studentPhone || '';
             const rawPw = currentStudentData.mathflatPw || '';
             const [mId, mPw] = (rawId && rawPw) ? (await decryptAESBatch([rawId, rawPw])).map(v => (v || '').trim()) : ['', ''];
-            if (!mId || !mPw) { mfData = null; mfRenderState('nocreds'); return; }
+            if (!mId || !mPw) { mfData = null; mfApplyLayout(false); return; }
             if (looksLikeCipherText(mId) || looksLikeCipherText(mPw)) { mfRenderState('down'); return; }
 
             // 같은 (암호화된) 비밀번호로 이미 로그인에 실패했다면 다시 시도하지 않는다.
@@ -3135,7 +3148,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (!ddayZone) return;
         if (currentStudentData && currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) {
             ddayZone.style.display = 'none';
-            const ddayRow = ddayZone.closest('.dday-row'); if (ddayRow) ddayRow.style.display = 'none';
             hasUpcomingExamForGreeting = false;
             updateWelcomeMessage();
             return;
