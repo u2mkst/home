@@ -608,6 +608,15 @@ body{background:#F2F4F6;color:#191F28}
                             <div id="maintenanceStatusText" style="font-weight:700; margin-bottom:14px;">현재 상태 확인 중...</div>
                             <button id="maintenanceToggleBtn" class="btn-block btn-red" onclick="toggleMaintenanceMode()">점검 모드 켜기</button>
                         </div>
+
+                        <div class="panel-card">
+                            <h3>📚 매쓰플랫 학습 현황 카드</h3>
+                            <p class="panel-desc">
+                                학생 홈 화면의 "이번 주 학습" 카드(매쓰플랫 푼 문제·정답률)를 켜고 끕니다. 매쓰플랫 쪽 문제로 오류가 계속되면 끄세요. 끄면 학생 기기가 매쓰플랫에 접속하지 않고 카드에는 "잠시 꺼져 있어요" 안내만 나옵니다.
+                            </p>
+                            <div id="mathflatSwitchText" style="font-weight:700; margin-bottom:14px;">현재 상태 확인 중...</div>
+                            <button id="mathflatSwitchBtn" class="btn-block btn-purple" onclick="toggleMathflatSwitch()">켜기</button>
+                        </div>
                     </section>
 
                     <!-- 공지 & 전광판 -->
@@ -935,6 +944,7 @@ body{background:#F2F4F6;color:#191F28}
                 initAdminDataFeed();
                 initComciganOverridePanel();
                 initNoticeSchedulePanel();
+                initMathflatSwitch();
                 loadLocks();
             } else {
                 // 로그인은 되어 있지만(예: 학생 계정) 허용 목록에 없는 경우에도 관리자 화면 대신 로그인 화면을 보여준다.
@@ -1747,6 +1757,23 @@ body{background:#F2F4F6;color:#191F28}
                 });
                 box.replaceChildren(frag);
             } catch (e) { box.replaceChildren(admEl('div', 'no-data', '불러오지 못했습니다: ' + e.message)); }
+        }
+
+        // ---------- 매쓰플랫 학습 카드 켜기/끄기 ----------
+        let mathflatSwitchOn = false;
+        function initMathflatSwitch() {
+            database.ref('siteSettings/mathflatStats/enabled').on('value', snap => {
+                mathflatSwitchOn = snap.val() === true;
+                document.getElementById('mathflatSwitchText').textContent = mathflatSwitchOn ? '🟢 켜짐 — 학생 홈에 학습 카드가 보입니다.' : '⚪ 꺼짐 — 학생 홈에는 "잠시 꺼져 있어요"가 보입니다.';
+                const btn = document.getElementById('mathflatSwitchBtn');
+                btn.textContent = mathflatSwitchOn ? '끄기' : '켜기';
+                btn.className = 'btn-block ' + (mathflatSwitchOn ? 'btn-red' : 'btn-purple');
+            }, err => { document.getElementById('mathflatSwitchText').textContent = '상태를 읽지 못했습니다: ' + err.message; });
+        }
+        function toggleMathflatSwitch() {
+            const next = !mathflatSwitchOn;
+            if (!confirm(next ? '학생 홈의 매쓰플랫 학습 카드를 켤까요?' : '학생 홈의 매쓰플랫 학습 카드를 끌까요?')) return;
+            database.ref('siteSettings/mathflatStats/enabled').set(next).catch(e => admError('변경 실패', e));
         }
 
         // ---------- 공지 예약 (서버 없이: DB에 시간대를 저장, 학생 화면이 시간에 맞춰 표시) ----------

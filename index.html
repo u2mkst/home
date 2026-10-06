@@ -716,6 +716,49 @@
         .lotto-seg button.active { background: var(--accent); color: #fff; }
         .lotto-select { font-size: 0.78rem; font-weight: 700; padding: 7px 10px; border-radius: 999px; border: none; background: var(--lg-surface-soft); color: var(--text-main); max-width: 150px; }
 
+        /* ============ 홈: 아날로그 시계 / D-Day / 매쓰플랫 학습 카드 ============ */
+        .info-card .clock-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .mf-analog { width: 140px; height: 140px; flex: 0 0 auto; }
+        .mf-analog .face { fill: var(--lg-surface-soft); stroke: var(--lg-border); }
+        .mf-analog .tick { stroke: var(--text-muted); stroke-width: 2; stroke-linecap: round; }
+        .mf-analog .tick.big { stroke: var(--text-main); stroke-width: 3.2; }
+        .mf-analog .hh, .mf-analog .mh { stroke: var(--text-main); stroke-linecap: round; }
+        .mf-analog .sh { stroke: var(--accent); stroke-linecap: round; }
+        .mf-analog .cap { fill: var(--accent); }
+        .dday-row { padding: 12px 0 0; border-top: 1px solid var(--lg-border-soft); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .dday-row .dday-badge { font-size: 1.05rem; }
+        .mf-col { display: flex; flex-direction: column; gap: 16px; }
+        .mf-card { padding: 22px 24px 18px; display: block; }
+        .mf-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--lg-border-soft); padding-bottom: 12px; margin-bottom: 6px; }
+        .mf-head h2 { margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--text-muted); letter-spacing: -0.02em; }
+        .mf-upd { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .mf-refresh { border: none; background: transparent; color: var(--text-muted); font-size: 1.05rem; cursor: pointer; padding: 0 2px; line-height: 1; }
+        .mf-refresh:active { transform: rotate(120deg); }
+        .mf-big { display: flex; align-items: flex-end; padding: 10px 0 6px; }
+        .mf-big .cell { flex: 1; min-width: 0; }
+        .mf-big .cell + .cell { border-left: 1px solid var(--lg-border-soft); padding-left: 22px; }
+        .mf-big .l { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); }
+        .mf-big .v { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 3.1rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; line-height: 1.05; margin-top: 2px; }
+        .mf-big .v small { font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); margin-left: 4px; letter-spacing: 0; }
+        .mf-chart { position: relative; margin-top: 6px; }
+        .mf-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+        .mf-legend { display: flex; justify-content: flex-end; gap: 12px; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+        .mf-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 3px; margin-right: 5px; }
+        .mf-foot { display: flex; justify-content: space-between; gap: 8px; font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-top: 4px; flex-wrap: wrap; }
+        .mf-tip { position: absolute; pointer-events: none; background: rgba(60,64,72,0.94); color: #fff; border-radius: 12px; padding: 9px 13px; font-size: 0.74rem; line-height: 1.7; min-width: 146px; transform: translateX(-50%); display: none; z-index: 3; }
+        :root[data-theme="dark"] .mf-tip { background: rgba(240,244,250,0.96); color: #111; }
+        .mf-tip b { display: block; font-size: 0.7rem; opacity: 0.85; }
+        .mf-tip em { font-style: normal; font-weight: 800; }
+        .mf-tip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+        .mf-msg { text-align: center; padding: 26px 8px 22px; color: var(--text-muted); font-weight: 700; line-height: 1.6; font-size: 0.85rem; }
+        .mf-msg b { display: block; color: var(--text-main); font-size: 1rem; margin-bottom: 4px; }
+        .mf-msg button { margin-top: 12px; border: none; background: var(--accent); color: #fff; font-weight: 800; border-radius: 12px; padding: 9px 16px; cursor: pointer; font-size: 0.82rem; }
+        .mf-note { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-top: 8px; text-align: center; }
+        .mf-col .menu-card { min-height: 0; padding: 10px; flex-direction: row; gap: 10px; }
+        .mf-col .menu-card .menu-item { flex: 1; padding: 14px 18px; }
+        .mf-col .menu-card .menu-item-text { font-size: 0.95rem; }
+        @media (max-width: 767px) { .mf-analog { width: 110px; height: 110px; } .mf-big .v { font-size: 2.7rem; } .mf-card { padding: 20px 18px 16px; } }
+
         .rank-btn-base { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; padding: 14px 22px; border-radius: var(--radius-md); transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), background 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .rank-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; box-shadow: 0 10px 24px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
         .rank-btn-primary:hover { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); transform: translateY(-2px); }
@@ -784,7 +827,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         <div class="header-zone" onclick="showView('home')" title="홈">
             <h1 class="welcome-text" id="welcome-message">학생 정보를 불러오는 중...</h1>
             <div style="display:flex; align-items:center; gap:6px;">
-                <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
             </div>
         </div>
 
@@ -801,8 +843,15 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 </div>
 
                 <div class="clock-row">
-                    <div class="clock-date" id="dateText">동기화 중...</div>
-                    <div class="clock-time" id="timeText">00:00:00</div>
+                    <div>
+                        <div class="clock-date" id="dateText">동기화 중...</div>
+                        <div class="clock-time" id="timeText">00:00:00</div>
+                    </div>
+                    <svg class="mf-analog" id="analogClock" viewBox="0 0 200 200" aria-hidden="true"></svg>
+                </div>
+
+                <div class="dday-row">
+                    <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
                 </div>
 
                 <div class="quote-row">
@@ -811,15 +860,24 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 </div>
             </div>
 
-            <div class="glass-card menu-card" id="shortcutMenuCard">
-                <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
-                    <span class="menu-item-text">유투엠 바로가기</span>
-                    <span class="arrow-icon">➔</span>
-                </a>
-                <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
-                    <span class="menu-item-text">매쓰플랫 바로가기</span>
-                    <span class="arrow-icon">➔</span>
-                </a>
+            <div class="mf-col">
+                <div class="glass-card mf-card" id="mfCard">
+                    <div class="mf-head">
+                        <h2>📚 이번 주 학습</h2>
+                        <div class="mf-upd"><span id="mfUpdated"></span><button type="button" class="mf-refresh" id="mfRefresh" title="새로고침" onclick="mathflatRefresh(true)">↻</button></div>
+                    </div>
+                    <div id="mfBody"><div class="mf-msg">불러오는 중...</div></div>
+                </div>
+                <div class="glass-card menu-card" id="shortcutMenuCard">
+                    <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
+                        <span class="menu-item-text">유투엠 바로가기</span>
+                        <span class="arrow-icon">➔</span>
+                    </a>
+                    <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
+                        <span class="menu-item-text">매쓰플랫 바로가기</span>
+                        <span class="arrow-icon">➔</span>
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -1755,6 +1813,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
 
         if (view === 'mypage') { populateMypageFromCache(); renderAchievementBadges(); }
         if (view === 'ranking') enterRankingView();
+        if (view === 'home') mathflatRefresh(false);
     }
 
     window.addEventListener('beforeunload', () => {
@@ -1792,6 +1851,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     const data = snapshot.val();
                     if (data) {
                         currentStudentData = data;
+                        initMathflatCard();
+                        mathflatRefresh(false);
                         applyDarkModePreference(data.darkMode === true);
                         applyMasterShortcut(data.u2mId);
 
@@ -1990,6 +2051,246 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         } catch (err) {
             showToast('전송 실패: ' + err.message);
         }
+    }
+
+    /* =====================================================================
+       🏠 홈: 아날로그 시계 + 📚 매쓰플랫 이번 주 학습 카드
+       - 학습 데이터는 이 기기(브라우저)가 매쓰플랫 API를 직접 호출해서 가져온다. 저장된 매쓰플랫
+         비밀번호는 로그인에만 쓰고, 비밀번호/토큰은 어디에도 저장·출력하지 않는다.
+       - 마스터가 siteSettings/mathflatStats/enabled 를 true로 켜 둔 동안만 동작한다(끄기 스위치).
+       - 로그인 실패는 한 번만 시도하고, 저장된 비밀번호가 바뀌기 전까지는 다시 시도하지 않는다
+         (매쓰플랫 계정이 잠기는 것을 막기 위해).
+    ===================================================================== */
+    (function buildAnalogClock() {
+        const svg = document.getElementById('analogClock');
+        if (!svg) return;
+        let t = '';
+        for (let i = 0; i < 60; i++) {
+            const a = i * 6 * Math.PI / 180, big = i % 5 === 0, r1 = big ? 80 : 85, r2 = 92;
+            t += `<line class="tick${big ? ' big' : ''}" x1="${(100 + Math.sin(a) * r1).toFixed(1)}" y1="${(100 - Math.cos(a) * r1).toFixed(1)}" x2="${(100 + Math.sin(a) * r2).toFixed(1)}" y2="${(100 - Math.cos(a) * r2).toFixed(1)}"/>`;
+        }
+        svg.innerHTML = `<circle class="face" cx="100" cy="100" r="97" stroke-width="2"/>${t}
+            <line class="hh" id="anH" x1="100" y1="100" x2="100" y2="58" stroke-width="7"/>
+            <line class="mh" id="anM" x1="100" y1="100" x2="100" y2="34" stroke-width="5"/>
+            <line class="sh" id="anS" x1="100" y1="112" x2="100" y2="26" stroke-width="2.4"/>
+            <circle class="cap" cx="100" cy="100" r="6"/>`;
+    })();
+    function updateAnalogClock(h, m, s) {
+        const H = document.getElementById('anH'), M = document.getElementById('anM'), S = document.getElementById('anS');
+        if (!H || !M || !S) return;
+        H.setAttribute('transform', `rotate(${((h % 12) + m / 60) * 30} 100 100)`);
+        M.setAttribute('transform', `rotate(${(m + s / 60) * 6} 100 100)`);
+        S.setAttribute('transform', `rotate(${s * 6} 100 100)`);
+    }
+
+    const MF_LOGIN_URL = 'https://api.mathflat.com/v2/login';
+    const MF_WEEKLY_URL = 'https://api.mathflat.com/student-history/analysis/summary/weekly/';
+    const MF_CACHE_TTL = 60 * 60 * 1000;          // 결과 재사용 시간
+    const MF_REFRESH_COOLDOWN = 5 * 60 * 1000;    // 새로고침 버튼 최소 간격
+    const MF_TIMEOUT = 15000;
+    let mfEnabled = null;        // null=확인 중, true/false=마스터 스위치
+    let mfListening = false;
+    let mfBusy = false;
+    let mfData = null;           // { weeks:[{start,end,n,correct,wrong,rate}], at }
+    let mfNote = '';
+    let mfUpdatedTimer = null;
+
+    const mfKey = (name) => `kst_mf_${name}_${currentUserUid || (auth.currentUser && auth.currentUser.uid) || 'anon'}`;
+    function mfRead(name) { try { return JSON.parse(localStorage.getItem(mfKey(name)) || 'null'); } catch (e) { return null; } }
+    function mfWrite(name, v) { try { localStorage.setItem(mfKey(name), JSON.stringify(v)); } catch (e) { /* 저장 불가 */ } }
+
+    const mfPad = (n) => String(n).padStart(2, '0');
+    const mfIso = (d) => `${d.getFullYear()}-${mfPad(d.getMonth() + 1)}-${mfPad(d.getDate())}`;
+    function mfMonday(d) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+    function mfAddDays(d, n) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; }
+    // 매쓰플랫과 같은 표기: 그 주의 목요일이 속한 달의 N째주 (예: 09.28~10.04 → 10월 1째주)
+    function mfWeekLabel(monday) { const th = mfAddDays(monday, 3); return `${th.getMonth() + 1}월 ${Math.ceil(th.getDate() / 7)}째주`; }
+    function mfRange(monday) { const s = monday, e = mfAddDays(monday, 6); return `${s.getFullYear()}.${mfPad(s.getMonth() + 1)}.${mfPad(s.getDate())}~${mfPad(e.getMonth() + 1)}.${mfPad(e.getDate())}`; }
+    const mfNum = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? Math.min(Math.round(n), 100000) : 0; };
+
+    // 응답(주간 요약 목록) → 최근 4주 슬롯(없는 주는 0). 서버가 준 값은 숫자로만 받는다.
+    function mfBuildWeeks(list) {
+        const cur = mfMonday(new Date());
+        const byStart = {};
+        (Array.isArray(list) ? list : []).forEach(x => { if (x && typeof x.weekStartDate === 'string') byStart[x.weekStartDate.slice(0, 10)] = x; });
+        const weeks = [];
+        for (let i = 3; i >= 0; i--) {
+            const monday = mfAddDays(cur, -7 * i);
+            const x = byStart[mfIso(monday)] || {};
+            const correct = mfNum(x.correctCount), wrong = mfNum(x.wrongCount);
+            let n = mfNum(x.totalCount); if (!n) n = correct + wrong;
+            const rate = n ? Math.min(100, mfNum(x.rate) || Math.round(correct / n * 100)) : 0;
+            weeks.push({ start: mfIso(monday), n, correct, wrong, rate });
+        }
+        return weeks;
+    }
+
+    function mfSetBody(node) { const b = document.getElementById('mfBody'); if (b) b.replaceChildren(node); }
+    function mfMessage(title, desc, btnLabel, onClick) {
+        const box = document.createElement('div'); box.className = 'mf-msg';
+        const b = document.createElement('b'); b.textContent = title; box.appendChild(b);
+        box.appendChild(document.createTextNode(desc));
+        if (btnLabel) { const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = btnLabel; btn.onclick = onClick; box.appendChild(btn); }
+        mfSetBody(box);
+    }
+    function mfUpdatedText(at) {
+        if (!at) return '';
+        const min = Math.floor((Date.now() - at) / 60000);
+        return min < 1 ? '방금 업데이트' : min < 60 ? `${min}분 전` : `${Math.floor(min / 60)}시간 전`;
+    }
+    function mfShowUpdated() {
+        const el = document.getElementById('mfUpdated');
+        if (el) el.textContent = mfData ? mfUpdatedText(mfData.at) : '';
+    }
+
+    function mfRenderData() {
+        const weeks = mfData.weeks, cur = weeks[3];
+        const body = document.createElement('div');
+        const big = document.createElement('div'); big.className = 'mf-big';
+        [['푼 문제 수', String(cur.n), '문제'], ['정답률', cur.n ? String(cur.rate) : '-', cur.n ? '%' : '']].forEach(([label, val, unit]) => {
+            const cell = document.createElement('div'); cell.className = 'cell';
+            const l = document.createElement('div'); l.className = 'l'; l.textContent = label;
+            const v = document.createElement('div'); v.className = 'v'; v.textContent = val;
+            if (unit) { const u = document.createElement('small'); u.textContent = unit; v.appendChild(u); }
+            cell.append(l, v); big.appendChild(cell);
+        });
+        body.appendChild(big);
+
+        // 차트(숫자와 우리가 만든 라벨만 들어가므로 innerHTML 사용 가능)
+        const W = 520, H = 150, yT = 14, bot = 112, step = W / 4, max = Math.max(1, ...weeks.map(w => w.n)) * 1.12;
+        const pts = weeks.map((w, i) => ({ x: step * i + step / 2, y: bot - (bot - yT) * w.rate / 100, ok: w.n > 0 }));
+        let h = `<line x1="0" x2="${W}" y1="${bot}" y2="${bot}" stroke="var(--lg-border)"/>`;
+        weeks.forEach((w, i) => {
+            const bh = (bot - yT) * w.n / max;
+            h += `<rect x="${pts[i].x - 22}" y="${bot - bh}" width="44" height="${bh}" rx="8" fill="rgba(91,163,247,0.22)"/>`;
+            h += `<text x="${pts[i].x}" y="${bot + 24}" text-anchor="middle" fill="var(--text-muted)" font-size="14" font-weight="${i === 3 ? 800 : 600}">${i === 3 ? '이번주' : mfWeekLabel(mfMonday(new Date(w.start + 'T00:00:00')))}</text>`;
+        });
+        let path = '';
+        pts.forEach((p, i) => { if (p.ok) path += `${pts[i - 1] && pts[i - 1].ok ? 'L' : 'M'}${p.x},${p.y} `; });
+        if (path) h += `<path d="${path}" fill="none" stroke="#5BA3F7" stroke-width="2.6" stroke-linejoin="round"/>`;
+        pts.forEach(p => { if (p.ok) h += `<circle cx="${p.x}" cy="${p.y}" r="5.5" fill="#5BA3F7" stroke="var(--lg-surface-strong, #fff)" stroke-width="2.5"/>`; });
+        weeks.forEach((w, i) => { h += `<rect class="mf-hit" data-i="${i}" x="${step * i}" y="0" width="${step}" height="${bot + 8}" fill="transparent" style="cursor:pointer"/>`; });
+
+        const chart = document.createElement('div'); chart.className = 'mf-chart';
+        chart.innerHTML = `<div class="mf-legend"><span><i style="background:rgba(91,163,247,0.35)"></i>푼 문제 수</span><span><i style="background:#5BA3F7"></i>정답률</span></div><svg viewBox="0 0 ${W} ${H}">${h}</svg>`;
+        const tip = document.createElement('div'); tip.className = 'mf-tip'; chart.appendChild(tip);
+        const svg = chart.querySelector('svg');
+        svg.addEventListener('click', (e) => {
+            const hit = e.target.closest('.mf-hit'); if (!hit) return;
+            const i = Number(hit.dataset.i), w = weeks[i], b = svg.getBoundingClientRect(), c = chart.getBoundingClientRect();
+            tip.replaceChildren();
+            const head = document.createElement('b'); head.textContent = mfRange(mfMonday(new Date(w.start + 'T00:00:00'))); tip.appendChild(head);
+            [['문제수', `${w.n}문제`, '#7aa7ff'], ['정답률', w.n ? `${w.rate}%` : '-', '#5BA3F7']].forEach(([k, v, color]) => {
+                const row = document.createElement('div'); const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = color;
+                const em = document.createElement('em'); em.textContent = v;
+                row.append(dot, document.createTextNode(`${k} `), em); tip.appendChild(row);
+            });
+            // 큰 숫자를 가리지 않도록 점 아래쪽에 띄우고, 카드 밖으로 나가지 않게 좌우를 맞춘다.
+            const half = 75, x = (pts[i].x / W) * b.width + (b.left - c.left);
+            tip.style.left = `${Math.min(Math.max(x, half), c.width - half)}px`;
+            tip.style.top = `${(pts[i].y / H) * b.height + (b.top - c.top) + 16}px`;
+            tip.style.display = 'block';
+        });
+        body.appendChild(chart);
+
+        const foot = document.createElement('div'); foot.className = 'mf-foot';
+        const f1 = document.createElement('span'); f1.textContent = `정답 ${cur.correct} · 오답 ${cur.wrong}`;
+        const f2 = document.createElement('span'); f2.textContent = mfRange(mfMonday(new Date(cur.start + 'T00:00:00')));
+        foot.append(f1, f2); body.appendChild(foot);
+        if (mfNote) { const n = document.createElement('div'); n.className = 'mf-note'; n.textContent = mfNote; body.appendChild(n); }
+        mfSetBody(body);
+        mfShowUpdated();
+    }
+
+    function mfRenderState(state) {
+        if (state === 'off') mfMessage('학습 현황이 잠시 꺼져 있어요', '학원에서 점검 중이에요. 곧 다시 열릴 예정이에요.');
+        else if (state === 'nocreds') mfMessage('매쓰플랫 정보를 등록해 주세요', '아이디와 비밀번호를 등록하면 이번 주 학습 현황을 볼 수 있어요.', '등록하기', () => openMathflatBottomSheet());
+        else if (state === 'pw') mfMessage('매쓰플랫 로그인에 실패했어요', '비밀번호가 바뀌었다면 다시 등록해 주세요.', '다시 등록하기', () => openMathflatBottomSheet());
+        else if (state === 'down') mfMessage('지금은 매쓰플랫에 연결할 수 없어요', '잠시 후 다시 시도해 주세요.', '다시 시도', () => mathflatRefresh(true));
+        else mfMessage('불러오는 중...', '');
+        const el = document.getElementById('mfUpdated'); if (el) el.textContent = '';
+    }
+
+    async function mfFetchJson(url, options) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), MF_TIMEOUT);
+        try {
+            const res = await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+            let data = null; try { data = await res.json(); } catch (e) { /* JSON이 아닌 응답 */ }
+            return { res, data };
+        } finally { clearTimeout(timer); }
+    }
+
+    async function mathflatRefresh(force) {
+        if (!document.getElementById('mfCard')) return;
+        if (mfEnabled === null) return;                                   // 마스터 스위치 확인 전
+        if (mfEnabled !== true) { mfRenderState('off'); return; }
+        if (!currentStudentData || mfBusy) return;
+
+        // 저장된 매쓰플랫 아이디/비밀번호(암호문)가 바뀌면 이전 결과/실패 기록은 무효다.
+        const credTag = `${currentStudentData.mathflatId || currentStudentData.studentPhone || ''}|${currentStudentData.mathflatPw || ''}`;
+        let cached = mfRead('cache');
+        if (cached && cached.tag !== credTag) cached = null;
+        if (mfData && mfData.tag !== credTag) mfData = null;
+        const fresh = cached && cached.weeks && Date.now() - cached.at < MF_CACHE_TTL;
+        if (!force && fresh) { mfData = cached; mfNote = ''; mfRenderData(); return; }
+        if (force) {
+            const last = mfRead('forced') || 0;
+            if (Date.now() - last < MF_REFRESH_COOLDOWN) { showToast('조금 뒤에 다시 새로고침해 주세요.'); return; }
+            mfWrite('forced', Date.now());
+        }
+
+        mfBusy = true;
+        if (!mfData && cached && cached.weeks) { mfData = cached; mfRenderData(); } // 기다리는 동안 이전 기록을 먼저 보여줌
+        else if (!mfData) mfRenderState('loading');
+        try {
+            const rawId = currentStudentData.mathflatId || currentStudentData.studentPhone || '';
+            const rawPw = currentStudentData.mathflatPw || '';
+            const [mId, mPw] = (rawId && rawPw) ? (await decryptAESBatch([rawId, rawPw])).map(v => (v || '').trim()) : ['', ''];
+            if (!mId || !mPw) { mfData = null; mfRenderState('nocreds'); return; }
+            if (looksLikeCipherText(mId) || looksLikeCipherText(mPw)) { mfRenderState('down'); return; }
+
+            // 같은 (암호화된) 비밀번호로 이미 로그인에 실패했다면 다시 시도하지 않는다.
+            if (mfRead('pwfail') === credTag) { mfData = null; mfRenderState('pw'); return; }
+
+            const headers = { 'Accept': 'application/json, text/plain, */*', 'X-Platform': 'STUDENT', 'X-Freewheelin-Host': 'mathflat.com' };
+            let login;
+            try {
+                login = await mfFetchJson(MF_LOGIN_URL, {
+                    method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+                    body: JSON.stringify({ id: mId, password: mPw, userType: 'STUDENT', serviceType: 'MATHFLAT' })
+                });
+            } catch (e) { throw new Error('network'); }
+            const ld = login.data || {};
+            if (!login.res.ok || !ld.accessToken || !ld.userId) {
+                if ([400, 401, 403].includes(login.res.status)) { mfWrite('pwfail', credTag); mfData = null; mfRenderState('pw'); return; }
+                throw new Error('server');
+            }
+
+            const cur = mfMonday(new Date());
+            const url = `${MF_WEEKLY_URL}${encodeURIComponent(ld.userId)}?startDate=${mfIso(mfAddDays(cur, -21))}&endDate=${mfIso(mfAddDays(cur, 6))}`;
+            const weekly = await mfFetchJson(url, { headers: Object.assign({ Authorization: `${ld.tokenType || 'Bearer'} ${ld.accessToken}` }, headers) });
+            if (!weekly.res.ok || !weekly.data || !Array.isArray(weekly.data.data)) throw new Error('server');
+
+            mfData = { weeks: mfBuildWeeks(weekly.data.data), at: Date.now(), tag: credTag };
+            mfNote = '';
+            mfWrite('cache', mfData);
+            mfRenderData();
+        } catch (e) {
+            // 연결 문제: 이전 기록이 있으면 그대로 보여주고, 없으면 안내 문구
+            const old = mfData || cached;
+            if (old && old.weeks) { mfData = old; mfNote = `연결에 실패해 ${mfUpdatedText(old.at)} 기록을 보여드려요.`; mfRenderData(); }
+            else mfRenderState('down');
+        } finally { mfBusy = false; }
+    }
+
+    function initMathflatCard() {
+        if (mfListening || !document.getElementById('mfCard')) return;
+        mfListening = true;
+        database.ref('siteSettings/mathflatStats/enabled').on('value',
+            (snap) => { mfEnabled = snap.val() === true; mathflatRefresh(false); },
+            () => { mfEnabled = false; mathflatRefresh(false); });   // 읽을 수 없으면 안전하게 끈 상태
+        if (!mfUpdatedTimer) mfUpdatedTimer = setInterval(mfShowUpdated, 60000);
     }
 
     /* =====================================================================
@@ -2656,6 +2957,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         const dateEl = document.getElementById('dateText');
         if (timeEl) timeEl.innerText = `${hour}:${minute}:${second}`;
         if (dateEl) dateEl.innerText = `${parseInt(month)}월 ${parseInt(day)}일 ${weekday}`;
+        updateAnalogClock(parseInt(hour) % 24, parseInt(minute), parseInt(second));
     }
     setInterval(updateClock, 1000);
 
@@ -2853,6 +3155,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (!ddayZone) return;
         if (currentStudentData && currentStudentData.schoolName && currentStudentData.schoolName.includes('초등')) {
             ddayZone.style.display = 'none';
+            const ddayRow = ddayZone.closest('.dday-row'); if (ddayRow) ddayRow.style.display = 'none';
             hasUpcomingExamForGreeting = false;
             updateWelcomeMessage();
             return;

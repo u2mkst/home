@@ -1,0 +1,204 @@
+{
+  "rules": {
+    ".read": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'",
+    "students": {
+      ".read": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+      ".indexOn": [
+        "teacher"
+      ],
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && ((auth.uid === $uid && data.exists() && newData.exists()) || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')"
+      }
+    },
+    "public_students": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length < 400"
+        },
+        "schoolName": {
+          ".validate": "newData.isString() && newData.val().length < 100",
+          ".write": "auth != null && auth.uid === $uid"
+        },
+        "teacher": {
+          ".validate": "newData.isString() && newData.val().length < 40"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "attendance": {
+      ".read": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        "$ym": {
+          ".validate": "$ym.matches(/^[0-9]{4}-[0-9]{2}$/)",
+          "days": {
+            "$d": {
+              ".validate": "$d.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)"
+            }
+          }
+        }
+      }
+    },
+    "public_attendance_counts": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        "$ym": {
+          ".validate": "$ym.matches(/^[0-9]{4}-[0-9]{2}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 31"
+        }
+      }
+    },
+    "messages": {
+      ".read": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2' || (query.orderByChild === 'studentUid' && query.equalTo === auth.uid))",
+      ".indexOn": [
+        "studentUid",
+        "teacher"
+      ],
+      "$msgId": {
+        ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2' || (!data.exists() && newData.child('studentUid').val() === auth.uid))",
+        ".validate": "$msgId.matches(/^[-0-9A-Za-z_]{1,40}$/)",
+        "message": {
+          ".validate": "newData.isString() && newData.val().length < 5000"
+        },
+        "replies": {
+          "$rid": {
+            ".validate": "$rid.matches(/^[-0-9A-Za-z_]{1,40}$/)"
+          }
+        }
+      }
+    },
+    "student_messages": {
+      "$uid": {
+        ".indexOn": [
+          "read"
+        ],
+        ".read": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        ".write": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        "$mid": {
+          ".validate": "$mid.matches(/^[-0-9A-Za-z_]{1,40}$/)"
+        }
+      }
+    },
+    "lotto_predictions": {
+      "$round": {
+        ".validate": "$round.matches(/^[0-9]{1,6}$/)",
+        ".read": "auth != null && root.child('lottoDraws').child($round).exists()",
+        ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      }
+    },
+    "device_status": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        ".write": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')"
+      }
+    },
+    "mathQuizProgress": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        ".write": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        "$date": {
+          ".validate": "$date.matches(/^[0-9]{8}$/)"
+        }
+      }
+    },
+    "studentAchievements": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        "$aid": {
+          ".write": "auth != null && ((auth.uid === $uid && $aid.matches(/^quiz_[0-9]+$/)) || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+          ".validate": "$aid.matches(/^[-0-9A-Za-z_]{1,40}$/) && newData.val() === true"
+        }
+      }
+    },
+    "suggestions": {
+      ".read": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'",
+      ".indexOn": [
+        "timestamp"
+      ],
+      "$key": {
+        ".write": "auth != null && (auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2' || (!data.exists() && newData.child('studentUid').val() === auth.uid))",
+        ".validate": "$key.matches(/^[-0-9A-Za-z_]{1,40}$/)",
+        "content": {
+          ".validate": "newData.isString() && newData.val().length < 5000"
+        }
+      }
+    },
+    "notice": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')"
+    },
+    "noticeSchedule": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+      "$id": {
+        ".validate": "newData.hasChildren(['text','startAt'])",
+        "text": {
+          ".validate": "newData.isString() && newData.val().length < 2000"
+        },
+        "startAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "endAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "siteSettings": {
+      ".read": "auth != null",
+      "mathflatStats": {
+        "enabled": {
+          ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'",
+          ".validate": "newData.isBoolean()"
+        }
+      }
+    },
+    "reminder": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')"
+    },
+    "siteMaintenance": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'"
+    },
+    "dailyQuotes": {
+      ".read": "auth != null",
+      "$date": {
+        ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'"
+      }
+    },
+    "comciganOverrides": {
+      ".read": "auth != null",
+      "$schoolCode": {
+        ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'"
+      }
+    },
+    "comciganOverrideMeta": {
+      ".read": "auth != null",
+      "$schoolCode": {
+        ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'"
+      }
+    },
+    "advices": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'"
+    },
+    "lottoDraws": {
+      ".read": "auth != null"
+    }
+  }
+}
