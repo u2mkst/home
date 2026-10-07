@@ -276,15 +276,18 @@
 
         /* 슬라이드형 바텀시트 (mypage 방식: 아이디 변경 / 회원 탈퇴) */
         .bottom-sheet {
-            position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%);
+            /* 화면 밖으로 숨기는 값은 "자기 높이" 기준(translateY 100%)이어야 한다. 예전엔 bottom:-100%(=화면 높이 기준)라서
+               브라우저를 크게 확대해 화면이 작아지면 시트가 화면 높이보다 커져서 윗부분이 그대로 보였다. */
+            position: fixed; bottom: 0; left: 50%; transform: translate(-50%, 105%); visibility: hidden;
+            max-height: calc(100vh - 16px); overflow-y: auto; overscroll-behavior: contain;
             width: 100%; max-width: 430px; background: var(--lg-surface-sheet);
             border: 1.5px solid var(--lg-border-sheet); border-bottom: none;
             border-top-left-radius: 34px; border-top-right-radius: 34px;
             padding: 24px; box-sizing: border-box;
             box-shadow: 0 -16px 40px rgba(0,0,0,0.16), inset 0 1px 1px var(--lg-highlight);
-            z-index: 9999; transition: bottom 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 9999; transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.5s;
         }
-        .bottom-sheet.active { bottom: 0; }
+        .bottom-sheet.active { transform: translate(-50%, 0); visibility: visible; transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s; }
         .sheet-handle { width: 40px; height: 5px; background: rgba(120,120,128,0.4); border-radius: 10px; margin: 0 auto 16px auto; }
         .sheet-desc { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; text-align: left; }
         .sheet-desc span { color: var(--accent); font-weight: bold; }
@@ -2061,6 +2064,10 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     const MF_CACHE_TTL = 60 * 60 * 1000;          // 결과 재사용 시간
     const MF_REFRESH_COOLDOWN = 5 * 60 * 1000;    // 새로고침 버튼 최소 간격
     const MF_TIMEOUT = 15000;
+    // 연결이 계속 실패해도 매쓰플랫을 끝없이 다시 부르지 않도록: 실패하면 5분 → 15분 → 1시간 동안 자동 재시도를 쉬고,
+    // 어떤 경우든 이 기기에서 1시간에 6번까지만 로그인을 시도한다(새로고침 버튼 포함).
+    const MF_BACKOFF_MIN = [5, 15, 60];
+    const MF_MAX_CALLS_PER_HOUR = 6;
     let mfEnabled = null;        // null=확인 중, true/false=마스터 스위치
     let mfListening = false;
     let mfBusy = false;
@@ -2080,6 +2087,19 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     function mfWeekLabel(monday) { const th = mfAddDays(monday, 3); return `${th.getMonth() + 1}월 ${Math.ceil(th.getDate() / 7)}째주`; }
     function mfRange(monday) { const s = monday, e = mfAddDays(monday, 6); return `${s.getFullYear()}.${mfPad(s.getMonth() + 1)}.${mfPad(s.getDate())}~${mfPad(e.getMonth() + 1)}.${mfPad(e.getDate())}`; }
     const mfNum = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? Math.min(Math.round(n), 100000) : 0; };
+
+    function mfNetState() {
+        const n = mfRead('net') || {};
+        n.calls = (Array.isArray(n.calls) ? n.calls : []).filter(t => Date.now() - t < 3600 * 1000);
+        n.fails = Number(n.fails) || 0; n.nextTry = Number(n.nextTry) || 0;
+        return n;
+    }
+    function mfRecordFailure() {
+        const n = mfNetState(); n.fails += 1;
+        n.nextTry = Date.now() + MF_BACKOFF_MIN[Math.min(n.fails - 1, MF_BACKOFF_MIN.length - 1)] * 60 * 1000;
+        mfWrite('net', n);
+    }
+    function mfRecordSuccess() { const n = mfNetState(); n.fails = 0; n.nextTry = 0; mfWrite('net', n); }
 
     // 응답(주간 요약 목록) → 최근 4주 슬롯(없는 주는 0). 서버가 준 값은 숫자로만 받는다.
     function mfBuildWeeks(list) {
@@ -2228,10 +2248,18 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (mfData && mfData.tag !== credTag) mfData = null;
         const fresh = cached && cached.weeks && Date.now() - cached.at < MF_CACHE_TTL;
         if (!force && fresh) { mfData = cached; mfNote = ''; mfRenderData(); return; }
+        const net = mfNetState();
         if (force) {
             const last = mfRead('forced') || 0;
             if (Date.now() - last < MF_REFRESH_COOLDOWN) { showToast('조금 뒤에 다시 새로고침해 주세요.'); return; }
+            if (net.calls.length >= MF_MAX_CALLS_PER_HOUR) { showToast('잠시 후 다시 시도해 주세요.'); return; }
             mfWrite('forced', Date.now());
+        } else if (net.calls.length >= MF_MAX_CALLS_PER_HOUR || (net.nextTry && Date.now() < net.nextTry)) {
+            // 최근에 실패했거나 호출이 너무 잦으면 이번에는 매쓰플랫을 부르지 않고 가진 기록만 보여준다.
+            const old = mfData || cached;
+            if (old && old.weeks) { mfData = old; mfNote = `연결이 불안정해 ${mfUpdatedText(old.at)} 기록을 보여드려요.`; mfRenderData(); }
+            else mfRenderState('down');
+            return;
         }
 
         mfBusy = true;
@@ -2242,11 +2270,12 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             const rawPw = currentStudentData.mathflatPw || '';
             const [mId, mPw] = (rawId && rawPw) ? (await decryptAESBatch([rawId, rawPw])).map(v => (v || '').trim()) : ['', ''];
             if (!mId || !mPw) { mfData = null; mfApplyLayout(false); return; }
-            if (looksLikeCipherText(mId) || looksLikeCipherText(mPw)) { mfRenderState('down'); return; }
+            if (looksLikeCipherText(mId) || looksLikeCipherText(mPw)) { mfRecordFailure(); mfRenderState('down'); return; }
 
             // 같은 (암호화된) 비밀번호로 이미 로그인에 실패했다면 다시 시도하지 않는다.
             if (mfRead('pwfail') === credTag) { mfData = null; mfRenderState('pw'); return; }
 
+            net.calls.push(Date.now()); mfWrite('net', net);   // 이 시도를 1시간 한도에 기록
             const headers = { 'Accept': 'application/json, text/plain, */*', 'X-Platform': 'STUDENT', 'X-Freewheelin-Host': 'mathflat.com' };
             let login;
             try {
@@ -2267,11 +2296,13 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             if (!weekly.res.ok || !weekly.data || !Array.isArray(weekly.data.data)) throw new Error('server');
 
             mfData = { weeks: mfBuildWeeks(weekly.data.data), at: Date.now(), tag: credTag };
+            mfRecordSuccess();
             mfNote = '';
             mfWrite('cache', mfData);
             mfRenderData();
         } catch (e) {
             // 연결 문제: 이전 기록이 있으면 그대로 보여주고, 없으면 안내 문구
+            mfRecordFailure();
             const old = mfData || cached;
             if (old && old.weeks) { mfData = old; mfNote = `연결에 실패해 ${mfUpdatedText(old.at)} 기록을 보여드려요.`; mfRenderData(); }
             else mfRenderState('down');
