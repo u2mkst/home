@@ -77,7 +77,7 @@
             --accent: #004bbf;
             --accent-dark: #003a94;
             --accent-light: #8FB8FA;
-            --bg-page: #F2F4F6;
+            --bg-page: #FFFFFF;
             --text-main: #191F28;
             --text-muted: #86868b;
             --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -723,6 +723,9 @@
            기본(#view-home)은 예전 모양(시계·날씨 카드 + 바로가기 카드 2개).
            마스터가 켜 두고 학생이 매쓰플랫 정보를 등록했을 때만 .mf-layout-on 으로
            "왼쪽 학습 카드 / 오른쪽 시계·날씨 + 바로가기" 배치로 바뀐다. */
+        /* 로그인 화면처럼 흰 바탕 + 얇은 테두리(회색 채움 없음) */
+        #view-home .menu-item { background: var(--lg-surface); box-shadow: inset 0 0 0 1px var(--lg-border); }
+        #view-home .menu-item:hover { background: var(--lg-surface); box-shadow: inset 0 0 0 1.5px var(--accent); }
         #view-home:not(.mf-layout-on) .mf-card { display: none; }
         #view-home:not(.mf-layout-on) .home-right { display: contents; }
         @media (min-width: 768px) { #view-home.mf-layout-on .main-grid { grid-template-columns: 1.15fr 1fr; } }
@@ -741,7 +744,7 @@
         .mf-refresh:active { transform: rotate(120deg); }
         #mfBody { flex: 1; display: flex; flex-direction: column; }
         .mf-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .mf-stat { background: var(--lg-surface-soft); border-radius: 20px; padding: 24px 10px 20px; text-align: center; }
+        .mf-stat { background: var(--lg-surface); box-shadow: inset 0 0 0 1px var(--lg-border); border-radius: 20px; padding: 24px 10px 20px; text-align: center; }
         .mf-stat .l { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
         .mf-stat .v { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 3.3rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; line-height: 1.1; margin-top: 4px; }
         .mf-stat .v small { font-family: inherit; font-size: 0.95rem; font-weight: 700; color: var(--text-muted); margin-left: 4px; letter-spacing: 0; }
