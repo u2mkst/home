@@ -723,9 +723,6 @@
            기본(#view-home)은 예전 모양(시계·날씨 카드 + 바로가기 카드 2개).
            마스터가 켜 두고 학생이 매쓰플랫 정보를 등록했을 때만 .mf-layout-on 으로
            "왼쪽 학습 카드 / 오른쪽 시계·날씨 + 바로가기" 배치로 바뀐다. */
-        /* 로그인 화면처럼 흰 바탕 + 얇은 테두리(회색 채움 없음) */
-        #view-home .menu-item { background: var(--lg-surface); box-shadow: inset 0 0 0 1px var(--lg-border); }
-        #view-home .menu-item:hover { background: var(--lg-surface); box-shadow: inset 0 0 0 1.5px var(--accent); }
         #view-home:not(.mf-layout-on) .mf-card { display: none; }
         #view-home:not(.mf-layout-on) .home-right { display: contents; }
         @media (min-width: 768px) { #view-home.mf-layout-on .main-grid { grid-template-columns: 1.15fr 1fr; } }
@@ -769,6 +766,35 @@
             .mf-stat .v { font-size: 2.7rem; }
         }
 
+
+        /* ============ 홈 플랫 디자인: 박스 없이 회색 실선으로만 구분 ============ */
+        #view-home .glass-card { background: transparent; border: none; box-shadow: none; border-radius: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
+        #view-home .header-zone { border-bottom: 1px solid var(--lg-border); padding: 0 0 16px; margin-bottom: 26px; }
+        #view-home .main-grid { gap: 0; }
+        #view-home .menu-card { gap: 0; }
+        #view-home .menu-item { background: none; box-shadow: none; border-radius: 0; border-bottom: 1px solid var(--lg-border); padding: 22px 4px; }
+        #view-home .menu-item:last-child { border-bottom: none; }
+        #view-home .menu-item:hover { background: none; padding-left: 4px; }
+        #view-home .menu-item:hover .menu-item-text { color: var(--accent); }
+        #view-home .mf-stats { gap: 0; border-top: 1px solid var(--lg-border); border-bottom: 1px solid var(--lg-border); }
+        #view-home .mf-stat { background: none; box-shadow: none; border-radius: 0; }
+        #view-home .mf-stat + .mf-stat { border-left: 1px solid var(--lg-border); }
+        #view-home .mf-head { margin-bottom: 8px; }
+        /* 학습 카드가 켜진 배치: 왼쪽 | 오른쪽을 세로 실선으로, 오른쪽 안쪽은 가로 실선으로 */
+        #view-home.mf-layout-on .mf-card { padding: 4px 32px 4px 0; border-right: 1px solid var(--lg-border); }
+        #view-home.mf-layout-on .home-right { padding-left: 32px; gap: 0; }
+        #view-home.mf-layout-on .home-right .info-card { padding: 4px 0 24px; border-bottom: 1px solid var(--lg-border); }
+        #view-home.mf-layout-on .home-right .menu-card { padding: 4px 0 0; }
+        /* 예전 모양(2카드) */
+        #view-home:not(.mf-layout-on) .info-card { padding: 4px 32px 4px 0; border-right: 1px solid var(--lg-border); }
+        #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0 4px 32px; min-height: 0; }
+        @media (max-width: 767px) {
+            #view-home .header-zone { flex-direction: column; align-items: flex-start; gap: 6px; }
+            #view-home.mf-layout-on .mf-card { border-right: none; border-top: 1px solid var(--lg-border); padding: 22px 0 4px; margin-top: 24px; }
+            #view-home.mf-layout-on .home-right { padding-left: 0; }
+            #view-home:not(.mf-layout-on) .info-card { border-right: none; border-bottom: 1px solid var(--lg-border); padding: 4px 0 24px; }
+            #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0; }
+        }
 
         .rank-btn-base { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; padding: 14px 22px; border-radius: var(--radius-md); transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), background 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .rank-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; box-shadow: 0 10px 24px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
