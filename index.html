@@ -724,11 +724,6 @@
            마스터가 켜 두고 학생이 매쓰플랫 정보를 등록했을 때만 .mf-layout-on 으로
            "왼쪽 학습 카드 / 오른쪽 시계·날씨 + 바로가기" 배치로 바뀐다. */
         #view-home:not(.mf-layout-on) .mf-card { display: none; }
-        #view-home:not(.mf-layout-on) .home-right { display: contents; }
-        @media (min-width: 768px) { #view-home.mf-layout-on .main-grid { grid-template-columns: 1.15fr 1fr; } }
-        .mf-layout-on .home-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-        .mf-layout-on .home-right .info-card { min-height: 0; }
-        .mf-layout-on .home-right .menu-card { flex: 1; min-height: 0; }
 
         .mf-card { padding: 24px 26px 20px; display: flex; flex-direction: column; min-width: 0; }
         .mf-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -761,7 +756,6 @@
         .mf-msg button { margin-top: 14px; border: none; background: var(--accent); color: #fff; font-weight: 800; border-radius: 12px; padding: 10px 18px; cursor: pointer; font-size: 0.85rem; }
         .mf-note { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-top: 8px; text-align: center; }
         @media (max-width: 767px) {
-            .mf-layout-on .home-right { order: -1; }
             .mf-card { padding: 20px 18px 16px; }
             .mf-stat .v { font-size: 2.7rem; }
         }
@@ -782,18 +776,36 @@
         #view-home .mf-head { margin-bottom: 8px; }
         /* 학습 카드가 켜진 배치: 왼쪽 | 오른쪽을 세로 실선으로, 오른쪽 안쪽은 가로 실선으로 */
         #view-home.mf-layout-on .mf-card { padding: 4px 32px 4px 0; border-right: 1px solid var(--lg-border); }
-        #view-home.mf-layout-on .home-right { padding-left: 32px; gap: 0; }
-        #view-home.mf-layout-on .home-right .info-card { padding: 4px 0 24px; border-bottom: 1px solid var(--lg-border); }
-        #view-home.mf-layout-on .home-right .menu-card { padding: 4px 0 0; }
         /* 예전 모양(2카드) */
-        #view-home:not(.mf-layout-on) .info-card { padding: 4px 32px 4px 0; border-right: 1px solid var(--lg-border); }
         #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0 4px 32px; min-height: 0; }
         @media (max-width: 767px) {
-            #view-home .header-zone { flex-direction: column; align-items: flex-start; gap: 6px; }
             #view-home.mf-layout-on .mf-card { border-right: none; border-top: 1px solid var(--lg-border); padding: 22px 0 4px; margin-top: 24px; }
-            #view-home.mf-layout-on .home-right { padding-left: 0; }
-            #view-home:not(.mf-layout-on) .info-card { border-right: none; border-bottom: 1px solid var(--lg-border); padding: 4px 0 24px; }
             #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0; }
+        }
+
+        /* ============ 홈 상단 바(시간·날씨·D-Day) + 왼쪽 바로가기 / 오른쪽 학습 ============ */
+        #view-home .home-top { align-items: flex-end; gap: 24px; }
+        .top-time .clock-date { margin-bottom: 2px; }
+        .top-time .clock-time { font-size: 2.8rem; }
+        .top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .top-weather { text-align: right; }
+        .top-weather-main { display: flex; align-items: baseline; justify-content: flex-end; gap: 12px; }
+        .top-weather .weather-temp { font-size: 1.4rem; }
+        @media (min-width: 768px) {
+            #view-home:not(.mf-layout-on) .main-grid { grid-template-columns: 1fr; }
+            #view-home.mf-layout-on .main-grid { grid-template-columns: 0.8fr 1.2fr; }
+        }
+        #view-home .menu-card { justify-content: flex-start; min-height: 0; }
+        #view-home.mf-layout-on .menu-card { padding: 4px 32px 4px 0; border-right: 1px solid var(--lg-border); }
+        #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0; }
+        #view-home.mf-layout-on .mf-card { padding: 4px 0 4px 32px; border-right: none; }
+        @media (max-width: 767px) {
+            #view-home .home-top { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
+            #view-home .home-top .top-time { flex: 1 1 auto; }
+            #view-home .home-top .top-right { flex: 0 0 auto; }
+            .top-time .clock-time { font-size: 2.3rem; }
+            #view-home.mf-layout-on .menu-card { border-right: none; border-bottom: 1px solid var(--lg-border); padding: 4px 0 8px; }
+            #view-home.mf-layout-on .mf-card { padding: 22px 0 4px; margin-top: 0; border-top: none; }
         }
 
         .rank-btn-base { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; padding: 14px 22px; border-radius: var(--radius-md); transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), background 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
@@ -861,14 +873,37 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     <!-- 1. 홈 뷰 -->
     <!-- ============================================================ -->
     <div id="view-home">
-        <div class="header-zone" onclick="showView('home')" title="홈">
-            <h1 class="welcome-text" id="welcome-message">학생 정보를 불러오는 중...</h1>
-            <div style="display:flex; align-items:center; gap:6px;">
+        <div class="header-zone home-top" onclick="showView('home')" title="홈">
+            <h1 class="welcome-text" id="welcome-message" style="display:none;"></h1>
+            <div class="top-time">
+                <div class="clock-date" id="dateText">동기화 중...</div>
+                <div class="clock-time" id="timeText">00:00:00</div>
+            </div>
+            <div class="top-right">
                 <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
+                <div class="top-weather">
+                    <div class="top-weather-main">
+                        <span class="weather-status" id="weatherStatus">
+                                <span style="font-size:1rem;" id="weatherIcon" class="emoji-font">⏳</span> 위치 확인 중...
+                            </span>
+                        <span class="weather-temp" id="weatherTemp">--°C</span>
+                    </div>
+                    <div id="weatherDetails" class="weather-details-text"></div>
+                </div>
             </div>
         </div>
 
         <div class="main-grid">
+            <div class="glass-card menu-card" id="shortcutMenuCard">
+                <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
+                    <span class="menu-item-text">유투엠 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </a>
+                <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
+                    <span class="menu-item-text">매쓰플랫 바로가기</span>
+                    <span class="arrow-icon">➔</span>
+                </a>
+            </div>
             <div class="glass-card mf-card" id="mfCard">
                 <div class="mf-head">
                     <h2><span class="mf-logo-wrap"><img class="mf-logo" src="https://www.mathflat.com/wp-content/uploads/2026/07/favicon.webp" alt="매쓰플랫" onerror="this.parentNode.textContent='📚'"></span>이번주 학습정보</h2>
@@ -876,39 +911,14 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 </div>
                 <div id="mfBody"><div class="mf-msg">불러오는 중...</div></div>
             </div>
-            <div class="home-right">
-                <div class="glass-card info-card">
-                    <div class="weather-row" style="align-items: flex-start; flex-direction: column; gap: 4px;">
-                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                            <span class="weather-status" id="weatherStatus">
-                                <span style="font-size:1rem;" id="weatherIcon" class="emoji-font">⏳</span> 위치 확인 중...
-                            </span>
-                            <span class="weather-temp" id="weatherTemp">--°C</span>
-                        </div>
-                        <div id="weatherDetails" class="weather-details-text"></div>
-                    </div>
+        </div>
 
-                    <div class="clock-row">
-                        <div class="clock-date" id="dateText">동기화 중...</div>
-                        <div class="clock-time" id="timeText">00:00:00</div>
-                    </div>
-
-                    <div class="quote-row">
+        <!-- 오늘의 한마디는 화면에서 뺐다(스크립트가 값을 채우는 자리라 숨겨서 둔다) -->
+        <div style="display:none;" aria-hidden="true">
+            <div class="quote-row">
                         <b id="quote-header">오늘의 한마디:</b> <span id="quoteText">문구를 불러오는 중...</span>
                         <span id="quoteAuthor" class="quote-author"></span>
                     </div>
-                </div>
-                <div class="glass-card menu-card" id="shortcutMenuCard">
-                    <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
-                        <span class="menu-item-text">유투엠 바로가기</span>
-                        <span class="arrow-icon">➔</span>
-                    </a>
-                    <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
-                        <span class="menu-item-text">매쓰플랫 바로가기</span>
-                        <span class="arrow-icon">➔</span>
-                    </a>
-                </div>
-            </div>
         </div>
 
         <div class="marquee-container" id="reminderBar">
