@@ -783,28 +783,29 @@
             #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0; }
         }
 
-        /* ============ 홈 상단 바(시간·날씨·D-Day) + 왼쪽 바로가기 / 오른쪽 학습 ============ */
-        #view-home .home-top { align-items: flex-end; gap: 24px; }
-        .top-time .clock-date { margin-bottom: 2px; }
-        .top-time .clock-time { font-size: 2.8rem; }
-        .top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-        .top-weather { text-align: right; }
-        .top-weather-main { display: flex; align-items: baseline; justify-content: flex-end; gap: 12px; }
-        .top-weather .weather-temp { font-size: 1.4rem; }
+        /* ============ 홈 상단 한 줄(시간·날짜·D-Day·날씨) + 왼쪽 바로가기 / 오른쪽 학습 ============ */
+        #view-home .home-top { align-items: center; gap: 24px; }
+        .top-time { display: flex; align-items: baseline; gap: 12px; }
+        .top-time .clock-time { font-size: 2.4rem; order: 1; line-height: 1.1; }
+        .top-time .clock-date { font-size: 0.8rem; margin: 0; order: 2; white-space: nowrap; }
+        .top-right { display: flex; flex-direction: row; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: flex-end; }
+        .top-weather { display: flex; align-items: baseline; gap: 10px; }
+        .top-weather-main { display: flex; align-items: baseline; gap: 10px; }
+        .top-weather .weather-temp { font-size: 1.25rem; }
+        .top-weather .weather-details-text { display: inline-flex; gap: 8px; margin: 0; white-space: nowrap; }
         @media (min-width: 768px) {
             #view-home:not(.mf-layout-on) .main-grid { grid-template-columns: 1fr; }
             #view-home.mf-layout-on .main-grid { grid-template-columns: 0.8fr 1.2fr; }
         }
         #view-home .menu-card { justify-content: flex-start; min-height: 0; }
-        #view-home.mf-layout-on .menu-card { padding: 4px 32px 4px 0; border-right: 1px solid var(--lg-border); }
+        #view-home.mf-layout-on .menu-card { justify-content: center; padding: 4px 32px 4px 0; border-right: 1px solid var(--lg-border); }
         #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0; }
         #view-home.mf-layout-on .mf-card { padding: 4px 0 4px 32px; border-right: none; }
         @media (max-width: 767px) {
-            #view-home .home-top { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
-            #view-home .home-top .top-time { flex: 1 1 auto; }
-            #view-home .home-top .top-right { flex: 0 0 auto; }
-            .top-time .clock-time { font-size: 2.3rem; }
-            #view-home.mf-layout-on .menu-card { border-right: none; border-bottom: 1px solid var(--lg-border); padding: 4px 0 8px; }
+            #view-home .home-top { flex-wrap: wrap; justify-content: flex-start; gap: 8px 16px; }
+            .top-time .clock-time { font-size: 2.1rem; }
+            .top-right { justify-content: flex-start; gap: 6px 14px; }
+            #view-home.mf-layout-on .menu-card { border-right: none; border-bottom: 1px solid var(--lg-border); padding: 4px 0 8px; justify-content: flex-start; }
             #view-home.mf-layout-on .mf-card { padding: 22px 0 4px; margin-top: 0; border-top: none; }
         }
 
