@@ -26,7 +26,6 @@ KST(K&P System for Teaching)는 K&P 수학입시학원에서 사용하는 학생
 |---|---|---|
 | `login.html` | 로그인 및 계정 인증 진입점 | 학생·사용자 |
 | `index.html` | 학생용 메인 앱: 홈, 마이페이지, 랭킹 등 | 로그인 학생 |
-| `lite.html` | 날씨·시계·D-Day·공지 등을 표시하는 라이트 화면 | 공용 디스플레이 |
 | `admin.html` | 학생 관리, 공지 및 메시지 등 운영 기능 | 강사·직원 |
 | `master.html` | 시스템 설정 및 학교명 오버라이드 관리 | 허용된 최상위 관리자 |
 | `kst.html` | KST 시스템 관리 진입점 및 Android 앱 다운로드 | 허용된 관리자 |
@@ -44,9 +43,6 @@ KST(K&P System for Teaching)는 K&P 수학입시학원에서 사용하는 학생
 - 누적 출석·문제 풀이·게임 기록에 따른 업적 배지와 랭킹
 - 선생님 공지 및 실시간 메시지 수신
 - 사용자 계정에 저장되는 다크 모드
-
-### 라이트 화면 — `lite.html`
-로그인 없이 로비나 공용 화면에서 날씨, 시계, D-Day, 공지와 메뉴를 확인할 수 있습니다.
 
 ### 관리자 — `admin.html`
 학생 정보 관리, 공지·메시지 발송 등 학원 운영 기능을 제공합니다.
@@ -71,7 +67,6 @@ KST(K&P System for Teaching)는 K&P 수학입시학원에서 사용하는 학생
 .
 ├── login.html              # 로그인
 ├── index.html              # 학생용 메인 앱
-├── lite.html               # 공용 디스플레이용 라이트 화면
 ├── admin.html              # 강사·직원 관리자
 ├── master.html             # 최상위 관리자
 ├── kst.html                # 시스템 관리 및 APK 다운로드
@@ -108,7 +103,7 @@ KST(K&P System for Teaching)는 K&P 수학입시학원에서 사용하는 학생
 | `css/tokens.css` | KST 파랑, 텍스트·배경·테두리 색상, 모서리, 그림자, 포커스 링 등 디자인 변수 |
 | `css/components.css` | 공통 버튼 계층, 상태별 색상, 상호작용 및 일부 기존 버튼 클래스 보정 |
 
-현재 주요 페이지(`login.html`, `index.html`, `lite.html`, `admin.html`, `master.html`)에서 두 파일을 불러옵니다.
+현재 주요 페이지(`login.html`, `index.html`, `admin.html`, `master.html`)에서 두 파일을 불러옵니다.
 
 ### 버튼 규칙
 

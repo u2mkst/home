@@ -391,7 +391,7 @@
         /* ============ 홈(HOME) 뷰 ============ */
         .header-zone { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; padding: 0 8px; cursor: default; }
         .welcome-text { font-family: 'Paperlogy', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: -0.8px; }
-        /* 박스/배경 없이 lite.html의 수능 D-Day 표시(.suneung-badge)와 동일하게
+        /* 박스/배경 없이
            빨간 텍스트만 사용한다. */
         .dday-badge {
             font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 700; color: #F04452; letter-spacing: -0.3px;
@@ -847,7 +847,10 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             <div style="font-size:48px; margin-bottom:16px;">🔧</div>
             <div style="font-size:20px; font-weight:700; margin-bottom:8px;">잠시 점검 중입니다</div>
             <div style="font-size:14px; color:#8B95A1; margin-bottom:20px;">잠시 후 다시 이용해주세요.</div>
-            <button id="kstMaintenanceLightModeBtn" style="background:#004BBF; color:#fff; border:none; border-radius:10px; padding:12px 20px; font-size:14px; font-weight:700; cursor:pointer;">라이트 버전으로 바로가기</button>
+            <div style="width:min(340px,86vw); margin:0 auto; text-align:left;">
+                <a href="#" onclick="kstGateGo('u2m'); return false;" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:17px; font-weight:700;"><span>유투엠 바로가기</span><span style="color:#8B95A1;">➔</span></a>
+                <a href="#" onclick="kstGateGo('mathflat'); return false;" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; border-bottom:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:17px; font-weight:700;"><span>매쓰플랫 바로가기</span><span style="color:#8B95A1;">➔</span></a>
+            </div>
         </div>
     </div>
 
@@ -1597,9 +1600,10 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             document.documentElement.style.overflow = '';
         }
     });
-    const kstMaintenanceLightModeBtn = document.getElementById('kstMaintenanceLightModeBtn');
-    if (kstMaintenanceLightModeBtn) {
-        kstMaintenanceLightModeBtn.addEventListener('click', () => { window.location.href = 'lite.html'; });
+    // 점검 중에도 유투엠/매쓰플랫은 쓸 수 있게 바로가기를 보여준다(학생 정보가 로드됐으면 자동 로그인 포함).
+    function kstGateGo(kind) {
+        if (currentStudentData) { if (kind === 'u2m') goToU2MWithCredentials(); else handleMathflatClick(); return; }
+        window.location.href = kind === 'u2m' ? 'https://www.u2math.co.kr/Login/Index' : 'https://student.mathflat.com/';
     }
 
     let currentStudentData = null;
