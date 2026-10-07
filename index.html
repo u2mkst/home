@@ -1131,8 +1131,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     </div>
 
                     <div class="pt-4 mt-5 border-t border-gray-200/60">
-                        <button type="button" id="lottoHistoryToggle" class="lotto-mini-btn w-full" style="padding:11px 12px;" onclick="toggleLottoHistory()">📜 내 로또 기록 보기</button>
-                        <div id="lottoHistoryBox" class="mt-3" style="display:none;"></div>
+                        <button type="button" id="lottoHistoryToggle" class="lotto-mini-btn w-full" style="padding:11px 12px;" onclick="openLottoHistory()">📜 내 로또 기록 보기</button>
                     </div>
                 </div>
             </div>
@@ -1229,6 +1228,15 @@ body{background-color:var(--bg-page);color:var(--text-main)}
 
     <!-- 🎯 시험 화이팅/수고했어요 — 캡처해서 SNS에 올리고 싶은 카드. 일반 안내 시트와
          달리 이 카드만의 독자적인 타이포그래피를 쓴다 (버튼 없이 바깥 탭으로 닫기). -->
+    <!-- 📜 내 로또 기록 (바텀 시트) -->
+    <div id="lottoHistoryBottomSheet" class="bottom-sheet-overlay" onclick="handleGenericSheetOverlayClick(event)">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
+            <div class="sheet-drag-handle"></div>
+            <div class="sheet-title">📜 내 로또 기록</div>
+            <div id="lottoHistoryBox" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
     <div id="schoolNoticeBottomSheet" class="bottom-sheet-overlay" onclick="if(event.target.id==='schoolNoticeBottomSheet') closeSchoolNoticeSheet()">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()">
             <div class="sheet-drag-handle"></div>
@@ -4350,12 +4358,9 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         return lottoDrawsCache;
     }
 
-    async function toggleLottoHistory() {
+    async function openLottoHistory() {
         const box = document.getElementById('lottoHistoryBox');
-        const btn = document.getElementById('lottoHistoryToggle');
-        if (box.style.display !== 'none') { box.style.display = 'none'; btn.textContent = '📜 내 로또 기록 보기'; return; }
-        box.style.display = '';
-        btn.textContent = '📜 내 로또 기록 닫기';
+        showModal('lottoHistoryBottomSheet');
         box.innerHTML = `<div class="text-center py-6 text-gray-400 text-sm">불러오는 중...</div>`;
         try {
             const draws = await getLottoDraws();
