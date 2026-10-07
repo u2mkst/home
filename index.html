@@ -734,7 +734,7 @@
         .mf-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
         .mf-head h2 { display: flex; align-items: center; gap: 8px; }
         .mf-logo-wrap { display: inline-flex; align-items: center; }
-        .mf-logo { height: 24px; width: auto; max-width: 120px; display: block; object-fit: contain; }
+        .mf-logo { height: 26px; width: 26px; display: block; object-fit: contain; border-radius: 7px; }
         .mf-head h2 { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.03em; }
         .mf-upd { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
         .mf-refresh { border: none; background: transparent; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; padding: 0 2px; line-height: 1; }
@@ -842,7 +842,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         <div class="main-grid">
             <div class="glass-card mf-card" id="mfCard">
                 <div class="mf-head">
-                    <h2><span class="mf-logo-wrap"><img class="mf-logo" src="assets/mathflat-logo.png" alt="매쓰플랫" onerror="this.parentNode.textContent='📚'"></span>이번주 학습정보</h2>
+                    <h2><span class="mf-logo-wrap"><img class="mf-logo" src="https://www.mathflat.com/wp-content/uploads/2026/07/favicon.webp" alt="매쓰플랫" onerror="this.parentNode.textContent='📚'"></span>이번주 학습정보</h2>
                     <div class="mf-upd"><span id="mfUpdated"></span><button type="button" class="mf-refresh" id="mfRefresh" title="새로고침" onclick="mathflatRefresh(true)">↻</button></div>
                 </div>
                 <div id="mfBody"><div class="mf-msg">불러오는 중...</div></div>
