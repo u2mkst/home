@@ -438,11 +438,6 @@
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
         .footer { margin-top: 40px; text-align: center; }
-        .footer-brand { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.3px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .footer-brand span { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-weight: 700; }
-        .footer-brand img { height: 16px; width: auto; vertical-align: middle; }
-        /* 로고가 검정 단색 이미지라 다크모드 배경(어두운 --bg-page)에서는 그대로면 안 보인다 */
-        :root[data-theme="dark"] .footer-brand img { filter: invert(1); }
         :root[data-theme="dark"] .exam-wish-icon { filter: invert(1); }
         .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.5px; }
 
@@ -761,53 +756,55 @@
         }
 
 
-        /* ============ 홈 플랫 디자인: 박스 없이 회색 실선으로만 구분 ============ */
-        #view-home .glass-card { background: transparent; border: none; box-shadow: none; border-radius: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
-        #view-home .header-zone { border-bottom: 1px solid var(--lg-border); padding: 0 0 16px; margin-bottom: 26px; }
-        #view-home .main-grid { gap: 0; }
-        #view-home .menu-card { gap: 0; }
-        #view-home .menu-item { background: none; box-shadow: none; border-radius: 0; border-bottom: 1px solid var(--lg-border); padding: 22px 4px; }
-        #view-home .menu-item:last-child { border-bottom: none; }
-        #view-home .menu-item:hover { background: none; padding-left: 4px; }
-        #view-home .menu-item:hover .menu-item-text { color: var(--accent); }
-        #view-home .mf-stats { gap: 0; border-top: 1px solid var(--lg-border); border-bottom: 1px solid var(--lg-border); }
-        #view-home .mf-stat { background: none; box-shadow: none; border-radius: 0; }
-        #view-home .mf-stat + .mf-stat { border-left: 1px solid var(--lg-border); }
+        /* ============ 홈: 왼쪽 정보 패널(시간·날씨·D-Day·바로가기) + 오른쪽 학습정보 ============
+           학습 카드가 꺼져 있으면(마스터 off / 매쓰플랫 정보 없음) 패널이 가로로 펼쳐진
+           "시간·날씨 한 줄 + 바로가기 버튼 2개" 모양이 된다. */
+        #view-home { --rail-bg: linear-gradient(180deg, #EAF1FF, #F7FAFF); --rail-line: #D5E2FA; --rail-strong: #0B2A66; --rail-sub: #5E7299; --rail-btn: #FFFFFF; }
+        :root[data-theme="dark"] #view-home { --rail-bg: linear-gradient(180deg, #1B2740, #161E2F); --rail-line: #2C3A57; --rail-strong: #E8EEFF; --rail-sub: #92A3C4; --rail-btn: #232B3D; }
+        #view-home .main-grid { gap: 32px; align-items: start; }
+        @media (min-width: 768px) { #view-home.mf-layout-on .main-grid { grid-template-columns: 280px 1fr; } }
+        .home-rail { background: var(--rail-bg); border-radius: 30px; padding: 34px 28px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+        #view-home.mf-layout-on .home-rail { min-height: 520px; }
+        .home-rail .top-time { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+        .home-rail .clock-time { font-size: 3rem; line-height: 1; color: var(--rail-strong); order: 1; }
+        .home-rail .clock-date { font-size: 0.95rem; margin: 0 0 6px; color: var(--rail-sub); order: 2; white-space: nowrap; }
+        .home-rail .top-weather, .home-rail .dday-badge { border-top: 1px solid var(--rail-line); padding-top: 18px; }
+        .home-rail .top-weather { display: block; }
+        .home-rail .top-weather-main { display: flex; align-items: baseline; gap: 10px; }
+        .home-rail .weather-status { color: var(--rail-sub); }
+        .home-rail .weather-temp { font-size: 2.2rem; color: var(--rail-strong); }
+        .home-rail .weather-details-text { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; color: var(--rail-sub); }
+        .home-rail .dday-badge { font-size: 1.05rem; }
+        .home-rail .menu-card { margin-top: auto; padding: 0; min-height: 0; gap: 10px; background: none; border: none; box-shadow: none; display: flex; flex-direction: column; }
+        .home-rail .menu-item { background: var(--rail-btn); border-radius: 16px; padding: 16px 18px; box-shadow: 0 2px 8px rgba(0, 75, 191, 0.08); }
+        .home-rail .menu-item:hover { background: var(--rail-btn); padding-left: 18px; transform: translateY(-1px); }
+        .home-rail .menu-item-text { font-size: 1rem; font-weight: 800; }
+        #view-home .mf-card { background: none; border: none; box-shadow: none; border-radius: 0; padding: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
         #view-home .mf-head { margin-bottom: 8px; }
-        /* 학습 카드가 켜진 배치: 왼쪽 | 오른쪽을 세로 실선으로, 오른쪽 안쪽은 가로 실선으로 */
-        #view-home.mf-layout-on .mf-card { padding: 4px 32px 4px 0; border-right: 1px solid var(--lg-border); }
-        /* 예전 모양(2카드) */
-        #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0 4px 32px; min-height: 0; }
-        @media (max-width: 767px) {
-            #view-home.mf-layout-on .mf-card { border-right: none; border-top: 1px solid var(--lg-border); padding: 22px 0 4px; margin-top: 24px; }
-            #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0; }
-        }
+        #view-home .mf-head h2 { font-size: 1.25rem; }
+        #view-home .mf-chart svg { max-height: 260px; }
+        #view-home .mf-stats { gap: 14px; }
+        #view-home .mf-stat { background: var(--lg-surface-soft); box-shadow: none; border-radius: 22px; }
 
-        /* ============ 홈 상단 한 줄(시간·날짜·D-Day·날씨) + 왼쪽 바로가기 / 오른쪽 학습 ============ */
-        #view-home .home-top { align-items: center; gap: 24px; }
-        .top-time { display: flex; align-items: baseline; gap: 12px; }
-        .top-time .clock-time { font-size: 2.4rem; order: 1; line-height: 1.1; }
-        .top-time .clock-date { font-size: 0.8rem; margin: 0; order: 2; white-space: nowrap; }
-        .top-right { display: flex; flex-direction: row; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: flex-end; }
-        .top-weather { display: flex; align-items: baseline; gap: 10px; }
-        .top-weather-main { display: flex; align-items: baseline; gap: 10px; }
-        .top-weather .weather-temp { font-size: 1.25rem; }
-        .top-weather .weather-details-text { display: inline-flex; gap: 8px; margin: 0; white-space: nowrap; }
-        @media (min-width: 768px) {
-            #view-home:not(.mf-layout-on) .main-grid { grid-template-columns: 1fr; }
-            #view-home.mf-layout-on .main-grid { grid-template-columns: 1.2fr 0.8fr; }
-            #view-home.mf-layout-on .mf-card { order: -1; }
-        }
-        #view-home .menu-card { justify-content: flex-start; min-height: 0; }
-        #view-home.mf-layout-on .menu-card { justify-content: center; padding: 4px 0 4px 32px; border-left: 1px solid var(--lg-border); }
-        #view-home:not(.mf-layout-on) .menu-card { padding: 4px 0; }
-        #view-home.mf-layout-on .mf-card { padding: 4px 32px 4px 0; border: none; }
+        /* 학습 카드가 꺼진 모양: 시간·날씨·D-Day 한 줄 + 바로가기 버튼 2개 가로 배치 */
+        #view-home:not(.mf-layout-on) .main-grid { grid-template-columns: 1fr; }
+        #view-home:not(.mf-layout-on) .home-rail { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px 32px; padding: 26px 30px; }
+        #view-home:not(.mf-layout-on) .home-rail .top-time { flex-direction: row; align-items: baseline; gap: 12px; }
+        #view-home:not(.mf-layout-on) .home-rail .clock-time { font-size: 2.4rem; }
+        #view-home:not(.mf-layout-on) .home-rail .clock-date { margin: 0; }
+        #view-home:not(.mf-layout-on) .home-rail .top-weather,
+        #view-home:not(.mf-layout-on) .home-rail .dday-badge { border-top: none; padding-top: 0; }
+        #view-home:not(.mf-layout-on) .home-rail .top-weather { display: flex; align-items: baseline; gap: 10px; }
+        #view-home:not(.mf-layout-on) .home-rail .weather-temp { font-size: 1.4rem; }
+        #view-home:not(.mf-layout-on) .home-rail .weather-details-text { margin-top: 0; }
+        #view-home:not(.mf-layout-on) .home-rail .menu-card { flex: 1 1 100%; margin-top: 6px; flex-direction: row; }
+        #view-home:not(.mf-layout-on) .home-rail .menu-item { flex: 1; }
         @media (max-width: 767px) {
-            #view-home .home-top { flex-wrap: wrap; justify-content: flex-start; gap: 8px 16px; }
-            .top-time .clock-time { font-size: 2.1rem; }
-            .top-right { justify-content: flex-start; gap: 6px 14px; }
-            #view-home.mf-layout-on .menu-card { border-left: none; border-bottom: 1px solid var(--lg-border); padding: 4px 0 8px; justify-content: flex-start; }
-            #view-home.mf-layout-on .mf-card { padding: 22px 0 4px; margin-top: 0; border: none; order: 0; }
+            #view-home .main-grid { gap: 22px; }
+            .home-rail, #view-home:not(.mf-layout-on) .home-rail { padding: 24px 22px; border-radius: 26px; }
+            #view-home.mf-layout-on .home-rail { min-height: 0; }
+            .home-rail .clock-time, #view-home:not(.mf-layout-on) .home-rail .clock-time { font-size: 2.6rem; }
+            #view-home:not(.mf-layout-on) .home-rail .menu-card { flex-direction: column; }
         }
 
         .rank-btn-base { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; padding: 14px 22px; border-radius: var(--radius-md); transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), background 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
@@ -878,14 +875,13 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     <!-- 1. 홈 뷰 -->
     <!-- ============================================================ -->
     <div id="view-home">
-        <div class="header-zone home-top" onclick="showView('home')" title="홈">
-            <h1 class="welcome-text" id="welcome-message" style="display:none;"></h1>
-            <div class="top-time">
-                <div class="clock-date" id="dateText">동기화 중...</div>
-                <div class="clock-time" id="timeText">00:00:00</div>
-            </div>
-            <div class="top-right">
-                <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="event.stopPropagation(); openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
+        <h1 class="welcome-text" id="welcome-message" style="display:none;"></h1>
+        <div class="main-grid">
+            <aside class="home-rail">
+                <div class="top-time">
+                    <div class="clock-date" id="dateText">동기화 중...</div>
+                    <div class="clock-time" id="timeText">00:00:00</div>
+                </div>
                 <div class="top-weather">
                     <div class="top-weather-main">
                         <span class="weather-status" id="weatherStatus">
@@ -895,21 +891,19 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     </div>
                     <div id="weatherDetails" class="weather-details-text"></div>
                 </div>
-            </div>
-        </div>
-
-        <div class="main-grid">
-            <div class="glass-card menu-card" id="shortcutMenuCard">
-                <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
-                    <span class="menu-item-text">유투엠 바로가기</span>
-                    <span class="arrow-icon">➔</span>
-                </a>
-                <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
-                    <span class="menu-item-text">매쓰플랫 바로가기</span>
-                    <span class="arrow-icon">➔</span>
-                </a>
-            </div>
-            <div class="glass-card mf-card" id="mfCard">
+                <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
+                <div class="menu-card" id="shortcutMenuCard">
+                    <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
+                        <span class="menu-item-text">🎓 유투엠 바로가기</span>
+                        <span class="arrow-icon">➔</span>
+                    </a>
+                    <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
+                        <span class="menu-item-text">🧮 매쓰플랫 바로가기</span>
+                        <span class="arrow-icon">➔</span>
+                    </a>
+                </div>
+            </aside>
+            <div class="mf-card" id="mfCard">
                 <div class="mf-head">
                     <h2><span class="mf-logo-wrap"><img class="mf-logo" src="https://www.mathflat.com/wp-content/uploads/2026/07/favicon.webp" alt="매쓰플랫" onerror="this.parentNode.textContent='📚'"></span>이번주 학습정보</h2>
                     <div class="mf-upd"><span id="mfUpdated"></span><button type="button" class="mf-refresh" id="mfRefresh" title="새로고침" onclick="mathflatRefresh(true)">↻</button></div>
@@ -933,7 +927,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         </div>
 
         <div class="footer">
-            <div class="footer-brand">K&P 수학입시학원 <span>with</span> <img src="assets/logo-icon.png" alt="KST"></div>
             <div class="footer-copyright">© 2026 KST</div>
         </div>
     </div>
