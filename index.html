@@ -165,7 +165,7 @@
         body {
             background: var(--bg-page);
             margin: 0; min-height: 100vh; color: var(--text-main); box-sizing: border-box;
-            padding: 40px 8vw 100px 8vw;
+            padding: 40px 8vw 110px 8vw;
             overflow-x: hidden;
             display: flex; flex-direction: column; justify-content: center;
             transition: background 0.3s ease, color 0.3s ease;
@@ -294,44 +294,40 @@
         .recaptcha-wrapper { display: flex; justify-content: center; align-items: center; margin: 15px 0; width: 100%; }
         .hidden { display: none !important; }
 
-        /* 📱 하단 고정 네비게이션 바 (전체 공통) */
+        /* 📱 하단 고정 네비게이션 바 (전체 공통): 화면 맨 아래에 붙는 플랫 바 + 위쪽 회색 실선.
+           활성 탭은 파란 글씨 + 위쪽 파란 막대, 아이콘은 단색 선 아이콘(currentColor). */
         .bottom-nav-bar {
-            position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
-            width: calc(100% - 32px); max-width: 720px;
-            background: var(--lg-surface);
-            border: 1px solid var(--lg-border-soft); border-radius: 24px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04), 0 16px 32px rgba(17, 17, 26, 0.12);
-            padding: 8px; display: flex; justify-content: space-around; align-items: stretch;
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--bg-page);
+            border-top: 1px solid var(--lg-border);
+            padding: 6px max(8px, calc((100% - 720px) / 2)) calc(10px + env(safe-area-inset-bottom, 0px));
+            display: flex; justify-content: space-around; align-items: stretch;
             z-index: 1000; box-sizing: border-box; gap: 4px;
             transition: background 0.3s ease, border-color 0.3s ease;
         }
         .tab-item {
             position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 3px; background: none; border: none; cursor: pointer; flex: 1; min-width: 0;
-            padding: 9px 2px; border-radius: 16px; transition: all 0.35s var(--spring);
+            gap: 4px; background: none; border: none; cursor: pointer; flex: 1; min-width: 0;
+            padding: 10px 2px 6px; border-radius: 0; transition: color 0.2s ease, transform 0.2s ease;
             color: var(--text-muted); font-family: 'Paperlogy', sans-serif;
         }
-        .tab-item .tab-icon { font-size: 1.25rem; line-height: 1; transition: transform 0.3s var(--spring); position: relative; }
+        .tab-item .tab-icon { display: flex; line-height: 1; position: relative; }
+        .tab-item .tab-icon svg { width: 22px; height: 22px; display: block; }
         .tab-item .tab-dot {
-            position: absolute; top: -2px; right: -4px; width: 9px; height: 9px;
-            background: #F04452; border-radius: 50%; border: 2px solid #ffffff; display: none;
+            position: absolute; top: -3px; right: -5px; width: 9px; height: 9px;
+            background: #F04452; border-radius: 50%; border: 2px solid var(--bg-page); display: none;
         }
         .tab-item .tab-dot.show { display: block; }
         .tab-item .tab-label { font-family: 'Paperlogy', sans-serif; font-size: 0.64rem; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; }
-        .tab-item:hover, .tab-item:active { color: var(--accent); background: rgba(0, 75, 191, 0.1); }
-        .tab-item:active { transform: scale(0.92); }
-        .tab-item:hover .tab-icon { transform: translateY(-2px); }
-        .tab-item.danger:hover { color: #F04452; background: rgba(255, 69, 58, 0.1); }
-        .tab-item.active {
-            color: #ffffff;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%);
-            box-shadow: 0 6px 16px rgba(0, 75, 191, 0.4), inset 0 1px 1px rgba(255,255,255,0.25);
-        }
-        .tab-item.active .tab-icon { transform: scale(1.08); }
+        .tab-item:hover, .tab-item:active { color: var(--accent); }
+        .tab-item:active { transform: scale(0.94); }
+        .tab-item.danger:hover { color: #F04452; }
+        .tab-item.active { color: var(--accent); }
+        .tab-item.active::before { content: ''; position: absolute; top: -7px; left: 25%; right: 25%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
         @media (max-width: 400px) {
             .tab-item .tab-label { font-size: 0.58rem; }
-            .tab-item .tab-icon { font-size: 1.15rem; }
-            .bottom-nav-bar { padding: 7px 5px; }
+            .tab-item .tab-icon svg { width: 20px; height: 20px; }
+            .bottom-nav-bar { padding-left: 5px; padding-right: 5px; }
         }
 
         /* ℹ️ 탭하면 뜨는 인포 툴팁 (터치 환경에서는 title/:hover가 안 뜨므로 별도 구현).
@@ -1235,27 +1231,27 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     <!-- ============================================================ -->
     <nav class="bottom-nav-bar">
         <button data-view="home" onclick="showView('home')" class="tab-item active">
-            <span class="tab-icon emoji-font">🏠</span>
+            <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></span>
             <span class="tab-label">홈</span>
         </button>
         <button data-view="ranking" onclick="showView('ranking')" class="tab-item">
-            <span class="tab-icon emoji-font">🏆</span>
+            <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M10 17h4"/></svg></span>
             <span class="tab-label">순위</span>
         </button>
         <button onclick="openUnifiedInquiryModal()" class="tab-item">
-            <span class="tab-icon emoji-font">🛠️</span>
+            <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 10h5M9.5 13h3"/></svg></span>
             <span class="tab-label">문의</span>
         </button>
         <button onclick="openMathQuizBottomSheet()" class="tab-item">
-            <span class="tab-icon emoji-font">🧮<span class="tab-dot" id="mathQuizTabDot"></span></span>
+            <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/></svg><span class="tab-dot" id="mathQuizTabDot"></span></span>
             <span class="tab-label">오늘의 문제</span>
         </button>
         <button data-view="mypage" onclick="showView('mypage')" class="tab-item">
-            <span class="tab-icon emoji-font">👤</span>
+            <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.2 4-6 8-6s7 1.8 8 6"/></svg></span>
             <span class="tab-label">마이</span>
         </button>
         <button onclick="logoutUser()" class="tab-item danger">
-            <span class="tab-icon emoji-font">🔓</span>
+            <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H5v16h5"/><path d="M15 8l4 4-4 4M19 12H9"/></svg></span>
             <span class="tab-label">로그아웃</span>
         </button>
     </nav>
