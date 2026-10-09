@@ -437,9 +437,7 @@
         .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
-        .footer { margin-top: 40px; text-align: center; }
         :root[data-theme="dark"] .exam-wish-icon { filter: invert(1); }
-        .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.5px; }
 
         /* 🧮 오늘의 문제 바텀시트 전용 디자인 */
         .mathq-select {
@@ -766,7 +764,7 @@
         .home-rail { background: var(--rail-bg); border-radius: 30px; padding: 34px 28px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
         #view-home.mf-layout-on .home-rail { min-height: 520px; }
         .home-rail .top-time { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-        .home-rail .clock-time { font-size: 3rem; line-height: 1; color: var(--rail-strong); order: 1; }
+        .home-rail .clock-time { font-size: 3rem; line-height: 1; color: var(--rail-strong); order: 1; white-space: nowrap; width: max-content; max-width: 100%; }
         .home-rail .clock-date { font-size: 0.95rem; margin: 0 0 6px; color: var(--rail-sub); order: 2; white-space: nowrap; }
         .home-rail .top-weather, .home-rail .dday-badge { border-top: 1px solid var(--rail-line); padding-top: 18px; }
         .home-rail .top-weather { display: block; }
@@ -778,7 +776,9 @@
         .home-rail .menu-card { margin-top: auto; padding: 0; min-height: 0; gap: 10px; background: none; border: none; box-shadow: none; display: flex; flex-direction: column; }
         .home-rail .menu-item { background: var(--rail-btn); border-radius: 16px; padding: 16px 18px; box-shadow: 0 2px 8px rgba(0, 75, 191, 0.08); }
         .home-rail .menu-item:hover { background: var(--rail-btn); padding-left: 18px; transform: translateY(-1px); }
-        .home-rail .menu-item-text { font-size: 1rem; font-weight: 800; }
+        .home-rail .menu-item-text { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .home-rail .menu-icon { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+        .home-rail .dday-badge .dd-n { display: block; margin-top: 1.4em; font-size: 1.6rem; line-height: 1; letter-spacing: -0.5px; }
         #view-home .mf-card { background: none; border: none; box-shadow: none; border-radius: 0; padding: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
         #view-home .mf-head { margin-bottom: 8px; }
         #view-home .mf-head h2 { font-size: 1.25rem; }
@@ -796,6 +796,7 @@
         #view-home:not(.mf-layout-on) .home-rail .dday-badge { border-top: none; padding-top: 0; }
         #view-home:not(.mf-layout-on) .home-rail .top-weather { display: flex; align-items: baseline; gap: 10px; }
         #view-home:not(.mf-layout-on) .home-rail .weather-temp { font-size: 1.4rem; }
+        #view-home:not(.mf-layout-on) .home-rail .dday-badge .dd-n { display: inline; margin: 0 0 0 6px; font-size: inherit; }
         #view-home:not(.mf-layout-on) .home-rail .weather-details-text { margin-top: 0; }
         #view-home:not(.mf-layout-on) .home-rail .menu-card { flex: 1 1 100%; margin-top: 6px; flex-direction: row; }
         #view-home:not(.mf-layout-on) .home-rail .menu-item { flex: 1; }
@@ -894,11 +895,11 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
                 <div class="menu-card" id="shortcutMenuCard">
                     <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
-                        <span class="menu-item-text">🎓 유투엠 바로가기</span>
+                        <span class="menu-item-text"><img class="menu-icon" src="assets/u2m-icon.png" alt="">유투엠 바로가기</span>
                         <span class="arrow-icon">➔</span>
                     </a>
                     <a href="#" onclick="handleMathflatClick(); return false;" class="menu-item">
-                        <span class="menu-item-text">🧮 매쓰플랫 바로가기</span>
+                        <span class="menu-item-text"><img class="menu-icon" src="https://www.mathflat.com/wp-content/uploads/2026/07/favicon.webp" alt="">매쓰플랫 바로가기</span>
                         <span class="arrow-icon">➔</span>
                     </a>
                 </div>
@@ -926,9 +927,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             </div>
         </div>
 
-        <div class="footer">
-            <div class="footer-copyright">© 2026 KST</div>
-        </div>
     </div>
 
     <!-- ============================================================ -->
@@ -2275,8 +2273,33 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     function mfApplyLayout(on) {
         const home = document.getElementById('view-home');
         if (home) home.classList.toggle('mf-layout-on', !!on);
+        if (typeof fitRailClock === 'function') fitRailClock();
         try { localStorage.setItem('kst_mf_layout', on ? 'on' : 'off'); } catch (e) { /* 저장 불가 */ }
     }
+    // 학습 카드가 켜진 배치에서는 시계 글자를 왼쪽 패널 안쪽 폭에 딱 맞게 키운다.
+    // 숫자 폭이 조금씩 달라 흔들리지 않도록 가장 넓을 만한 "00:00:00"/"88:88:88"로 재서 맞춘다.
+    function fitRailClock() {
+        const el = document.getElementById('timeText'), rail = document.querySelector('.home-rail'), home = document.getElementById('view-home');
+        if (!el || !rail || !home) return;
+        if (!home.classList.contains('mf-layout-on')) { el.style.fontSize = ''; return; }
+        const cs = getComputedStyle(rail);
+        const avail = rail.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        if (!(avail > 40)) return;                                   // 홈이 숨겨져 있을 때(폭 0)는 건너뜀
+        const probe = document.createElement('span');
+        const ccs = getComputedStyle(el);
+        probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0;font-size:100px;letter-spacing:' + ccs.letterSpacing + ';font-family:' + ccs.fontFamily + ';font-weight:' + ccs.fontWeight;
+        document.body.appendChild(probe);
+        let w = 0;
+        for (const t of ['00:00:00', '88:88:88']) { probe.textContent = t; w = Math.max(w, probe.getBoundingClientRect().width); }
+        probe.remove();
+        if (w > 0) el.style.fontSize = Math.min(Math.floor((100 * avail / w) * 10) / 10, 96) + 'px';
+    }
+    try {
+        const r = document.querySelector('.home-rail');
+        if (r && window.ResizeObserver) new ResizeObserver(fitRailClock).observe(r);
+        window.addEventListener('resize', fitRailClock);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitRailClock);
+    } catch (e) { /* 무시 */ }
     // 화면이 깜빡이지 않도록 마지막 상태를 먼저 적용해 둔다(곧 실제 상태로 갱신됨).
     try { if (localStorage.getItem('kst_mf_layout') === 'on') { const h = document.getElementById('view-home'); if (h) h.classList.add('mf-layout-on'); } } catch (e) { /* 무시 */ }
 
@@ -3248,9 +3271,16 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         let schoolTag = currentStudentData.schoolName ? currentStudentData.schoolName.replace("대한민국", "").substring(0,5) : "학교";
 
-        if (diffDays > 0) { ddayZone.innerText = `${schoolTag} [${examName}] D-${diffDays}`; }
-        else if (diffDays === 0) { ddayZone.innerText = `${schoolTag} [${examName}] D-DAY`; }
-        else { ddayZone.innerText = "예정된 시험 없음"; }
+        // 시험 이름 한 줄 + 한 줄 띄고 D-n (패널 안에서 두 줄로 읽히게 두 조각으로 그린다)
+        const setDday = (name, n) => {
+            ddayZone.textContent = '';
+            const a = document.createElement('span'); a.className = 'dd-name'; a.textContent = name;
+            ddayZone.appendChild(a);
+            if (n) { const b = document.createElement('span'); b.className = 'dd-n'; b.textContent = n; ddayZone.appendChild(b); }
+        };
+        if (diffDays > 0) { setDday(`${schoolTag} [${examName}]`, `D-${diffDays}`); }
+        else if (diffDays === 0) { setDday(`${schoolTag} [${examName}]`, 'D-DAY'); }
+        else { setDday("예정된 시험 없음"); }
 
         hasUpcomingExamForGreeting = diffDays >= 0;
         updateWelcomeMessage();
