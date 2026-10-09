@@ -781,6 +781,14 @@
         .home-rail .menu-item:hover { background: var(--rail-btn); padding-left: 18px; transform: translateY(-1px); }
         .home-rail .menu-item-text { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
         .home-rail .menu-icon { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+        .home-rail .dday-badge { min-width: 0; max-width: 100%; }
+        .dd-name { display: block; overflow: hidden; white-space: nowrap; }
+        .dd-track { display: inline-flex; white-space: nowrap; }
+        .dd-track .dd-txt { flex-shrink: 0; }
+        .dd-track.run .dd-txt { padding-right: 2.2em; }
+        .dd-track.run { animation: ddMarquee 10s linear infinite; }
+        @keyframes ddMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @media (prefers-reduced-motion: reduce) { .dd-track.run { animation: none !important; } .dd-clone { display: none; } }
         .home-rail .dday-badge .dd-n { display: block; margin-top: 1.4em; font-size: 1.6rem; line-height: 1; letter-spacing: -0.5px; }
         #view-home .mf-card { background: none; border: none; box-shadow: none; border-radius: 0; padding: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
         #view-home .mf-head { margin-bottom: 8px; }
@@ -799,6 +807,7 @@
         #view-home:not(.mf-layout-on) .home-rail .dday-badge { border-top: none; padding-top: 0; }
         #view-home:not(.mf-layout-on) .home-rail .top-weather { display: flex; align-items: baseline; gap: 10px; }
         #view-home:not(.mf-layout-on) .home-rail .weather-temp { font-size: 1.4rem; }
+        #view-home:not(.mf-layout-on) .home-rail .dday-badge .dd-name { display: inline-block; max-width: 300px; vertical-align: bottom; }
         #view-home:not(.mf-layout-on) .home-rail .dday-badge .dd-n { display: inline; margin: 0 0 0 6px; font-size: inherit; }
         #view-home:not(.mf-layout-on) .home-rail .weather-details-text { margin-top: 0; }
         #view-home:not(.mf-layout-on) .home-rail .menu-card { flex: 1 1 100%; margin-top: 6px; flex-direction: row; }
@@ -2297,11 +2306,27 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         probe.remove();
         if (w > 0) el.style.fontSize = Math.min(Math.floor((100 * avail / w) * 10) / 10, 96) + 'px';
     }
+    // 시험 이름이 칸보다 길면 줄바꿈하지 않고 오른쪽으로 계속 흘러가며(마퀴) 보여준다.
+    function fitDdayMarquee() {
+        const name = document.querySelector('#ddayText .dd-name');
+        if (!name) return;
+        const tr = name.querySelector('.dd-track'), tx = name.querySelector('.dd-txt');
+        if (!tr || !tx) return;
+        tr.classList.remove('run'); tr.style.animationDuration = '';
+        tr.querySelectorAll('.dd-clone').forEach((e) => e.remove());
+        const box = name.clientWidth, w = tx.offsetWidth;
+        if (!(box > 0) || w <= box) return;                          // 한 줄에 들어가거나 숨겨져 있으면 그대로
+        const c = tx.cloneNode(true); c.className = 'dd-txt dd-clone'; c.setAttribute('aria-hidden', 'true');
+        tr.appendChild(c);
+        tr.style.animationDuration = Math.max(6, Math.round(w / 40)) + 's';   // 초당 약 40px
+        tr.classList.add('run');
+    }
+    function fitHomeRail() { fitRailClock(); fitDdayMarquee(); }
     try {
         const r = document.querySelector('.home-rail');
-        if (r && window.ResizeObserver) new ResizeObserver(fitRailClock).observe(r);
-        window.addEventListener('resize', fitRailClock);
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitRailClock);
+        if (r && window.ResizeObserver) new ResizeObserver(fitHomeRail).observe(r);
+        window.addEventListener('resize', fitHomeRail);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitHomeRail);
     } catch (e) { /* 무시 */ }
     // 화면이 깜빡이지 않도록 마지막 상태를 먼저 적용해 둔다(곧 실제 상태로 갱신됨).
     try { if (localStorage.getItem('kst_mf_layout') === 'on') { const h = document.getElementById('view-home'); if (h) h.classList.add('mf-layout-on'); } } catch (e) { /* 무시 */ }
@@ -3277,9 +3302,12 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         // 시험 이름 한 줄 + 한 줄 띄고 D-n (패널 안에서 두 줄로 읽히게 두 조각으로 그린다)
         const setDday = (name, n) => {
             ddayZone.textContent = '';
-            const a = document.createElement('span'); a.className = 'dd-name'; a.textContent = name;
-            ddayZone.appendChild(a);
+            const a = document.createElement('span'); a.className = 'dd-name';
+            const tr = document.createElement('span'); tr.className = 'dd-track';
+            const tx = document.createElement('span'); tx.className = 'dd-txt'; tx.textContent = name;
+            tr.appendChild(tx); a.appendChild(tr); ddayZone.appendChild(a);
             if (n) { const b = document.createElement('span'); b.className = 'dd-n'; b.textContent = n; ddayZone.appendChild(b); }
+            if (typeof fitDdayMarquee === 'function') fitDdayMarquee();
         };
         if (diffDays > 0) { setDday(`${schoolTag} [${examName}]`, `D-${diffDays}`); }
         else if (diffDays === 0) { setDday(`${schoolTag} [${examName}]`, 'D-DAY'); }
