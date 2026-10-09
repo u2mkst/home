@@ -812,6 +812,27 @@
         #view-home:not(.mf-layout-on) .home-rail .weather-details-text { margin-top: 0; }
         #view-home:not(.mf-layout-on) .home-rail .menu-card { flex: 1 1 100%; margin-top: 6px; flex-direction: row; }
         #view-home:not(.mf-layout-on) .home-rail .menu-item { flex: 1; }
+        /* 학습 카드가 꺼진 PC·태블릿 배치: 왼쪽 정보 패널 + 오른쪽 큰 바로가기 타일 2개 (폰은 위의 세로 배치) */
+        @media (min-width: 768px) {
+            #view-home:not(.mf-layout-on) .home-rail { display: grid; grid-template-columns: 280px 1fr; grid-template-rows: auto auto 1fr; gap: 0 32px; background: none; padding: 0; position: relative; align-items: start; }
+            #view-home:not(.mf-layout-on) .home-rail::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 280px; background: var(--rail-bg); border-radius: 30px; z-index: 0; }
+            #view-home:not(.mf-layout-on) .home-rail > * { position: relative; z-index: 1; }
+            #view-home:not(.mf-layout-on) .home-rail .top-time { grid-column: 1; grid-row: 1; padding: 32px 28px 0; flex-direction: column; align-items: flex-start; gap: 4px; }
+            #view-home:not(.mf-layout-on) .home-rail .clock-time { font-size: 3rem; }
+            #view-home:not(.mf-layout-on) .home-rail .clock-date { margin: 0 0 6px; }
+            #view-home:not(.mf-layout-on) .home-rail .top-weather { grid-column: 1; grid-row: 2; display: block; margin: 18px 28px 0; border-top: 1px solid var(--rail-line); padding-top: 18px; }
+            #view-home:not(.mf-layout-on) .home-rail .weather-temp { font-size: 2.2rem; }
+            #view-home:not(.mf-layout-on) .home-rail .weather-details-text { margin-top: 6px; }
+            #view-home:not(.mf-layout-on) .home-rail .dday-badge { grid-column: 1; grid-row: 3; margin: 18px 28px 32px; border-top: 1px solid var(--rail-line); padding-top: 18px; align-self: start; }
+            #view-home:not(.mf-layout-on) .home-rail .dday-badge .dd-name { display: block; max-width: none; }
+            #view-home:not(.mf-layout-on) .home-rail .dday-badge .dd-n { display: block; margin: 1.4em 0 0; font-size: 1.6rem; }
+            #view-home:not(.mf-layout-on) .home-rail .menu-card { grid-column: 2; grid-row: 1 / 4; align-self: stretch; margin: 0; display: grid; grid-template-columns: 1fr; grid-auto-rows: 1fr; gap: 16px; }
+            #view-home:not(.mf-layout-on) .home-rail .menu-item { flex: none; flex-direction: column; justify-content: center; align-items: center; background: var(--lg-surface-soft); box-shadow: none; border-radius: 30px; min-height: 150px; }
+            #view-home:not(.mf-layout-on) .home-rail .menu-item:hover { background: var(--lg-surface-soft); padding-left: 18px; }
+            #view-home:not(.mf-layout-on) .home-rail .menu-item-text { flex-direction: column; font-size: 1.2rem; gap: 14px; }
+            #view-home:not(.mf-layout-on) .home-rail .menu-icon { width: 46px; height: 46px; border-radius: 12px; }
+            #view-home:not(.mf-layout-on) .home-rail .arrow-icon { display: none; }
+        }
         @media (max-width: 767px) {
             #view-home .main-grid { gap: 22px; }
             .home-rail, #view-home:not(.mf-layout-on) .home-rail { padding: 24px 22px; border-radius: 26px; }
