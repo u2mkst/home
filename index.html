@@ -758,7 +758,10 @@
            학습 카드가 꺼져 있으면(마스터 off / 매쓰플랫 정보 없음) 패널이 가로로 펼쳐진
            "시간·날씨 한 줄 + 바로가기 버튼 2개" 모양이 된다. */
         #view-home { --rail-bg: linear-gradient(180deg, #EAF1FF, #F7FAFF); --rail-line: #D5E2FA; --rail-strong: #0B2A66; --rail-sub: #5E7299; --rail-btn: #FFFFFF; }
-        :root[data-theme="dark"] #view-home { --rail-bg: linear-gradient(180deg, #1B2740, #161E2F); --rail-line: #2C3A57; --rail-strong: #E8EEFF; --rail-sub: #92A3C4; --rail-btn: #232B3D; }
+        :root[data-theme="dark"] #view-home { --rail-bg: linear-gradient(180deg, #262A31, #1E2126); --rail-line: #353A42; --rail-strong: #F2F4F7; --rail-sub: #9AA3AF; --rail-btn: #30343B; }
+        /* 어두운 버튼 위에서 아이콘이 묻히지 않게 밝은 받침을 깐다 */
+        :root[data-theme="dark"] .home-rail .menu-icon { background: #fff; border-radius: 6px; padding: 2px; box-sizing: border-box; }
+        :root[data-theme="dark"] .home-rail .menu-item { box-shadow: none; }
         #view-home .main-grid { gap: 32px; align-items: start; }
         @media (min-width: 768px) { #view-home.mf-layout-on .main-grid { grid-template-columns: 280px 1fr; } }
         .home-rail { background: var(--rail-bg); border-radius: 30px; padding: 34px 28px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
