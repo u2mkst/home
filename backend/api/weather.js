@@ -1,9 +1,13 @@
 const { applyCors } = require("../lib/cors");
 const { rejectIfRateLimited } = require("../lib/guard");
+const { getCached, setCached, setEdgeCache, setNoStore } = require("../lib/cache");
 
 // 학원 위치(경기도 수원시 영통구) 기준 기상청 단기예보구역코드.
 // https://apihub.kma.go.kr/api/typ01/url/fct_shrt_reg.php?tmfc=0&authKey=... 조회 결과 "수원" 매칭.
 const REG_ID = "11B20601";
+
+// 날씨는 몇 분 늦어도 상관없다 — 10분 동안은 캐시 응답(속도 제한·기상청 호출 생략).
+const WEATHER_TTL_MS = 10 * 60 * 1000;
 
 // 기상청 단기예보(육상) API. VilageFcstInfoService_2.0(오픈API)는 authKey 발급과
 // 별개로 API Hub에서 "활용신청" 승인을 받아야 하는데, 이 typ01/url 계열 API는
@@ -79,6 +83,13 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: "Method not allowed" });
     }
 
+    const cached = getCached("weather");
+    if (cached) {
+        setEdgeCache(res, 600, 1800);
+        res.setHeader("X-KST-Cache", "hit");
+        return res.status(200).json(cached);
+    }
+
     if (await rejectIfRateLimited(req, res, "weather", 300, 60 * 60 * 1000)) return;
 
     if (!process.env.KMA_API_KEY) {
@@ -88,6 +99,7 @@ module.exports = async (req, res) => {
     try {
         const result = await fetchLandForecast();
         if (!result.ok) {
+            setNoStore(res);
             return res.status(502).json({ error: result.error, bodyPreview: result.bodyPreview });
         }
 
@@ -99,14 +111,17 @@ module.exports = async (req, res) => {
         const temp = parseFloat(row.ta);
         const precipProb = parseInt(row.st, 10);
 
-        return res.status(200).json({
+        const payload = {
             main: {
                 temp: isNaN(temp) ? null : temp,
                 precipProb: isNaN(precipProb) ? null : precipProb,
             },
             weather: [{ id: toWeatherId(row.sky, row.prep), description: row.wf || "" }],
             wind: { dir: row.w2 || row.w1 || "-" },
-        });
+        };
+        setCached("weather", payload, WEATHER_TTL_MS);
+        setEdgeCache(res, 600, 1800);
+        return res.status(200).json(payload);
     } catch (err) {
         return res.status(502).json({ error: "Failed to reach KMA API", detail: err.message });
     }

@@ -17,6 +17,9 @@
     <!-- Mona12는 이모지 아이콘 전용 폰트라 렌더링을 막지 않도록 비동기로 로드 -->
     <link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css"></noscript>
+    <!-- 백엔드·Firebase·매쓰플랫은 첫 호출 전에 미리 연결(DNS+TLS)해 두어 첫 응답을 앞당긴다 -->
+    <link rel="preconnect" href="https://kst-backend-yhwings21-4601s-projects.vercel.app" crossorigin>
+    <link rel="dns-prefetch" href="https://api.mathflat.com">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -3274,7 +3277,23 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             const fromYmd = `${currentYear}0301`;
             const toYmd = `${currentYear + 1}0228`;
             const scheduleUrl = `${BACKEND_URL}/api/neis?endpoint=SchoolSchedule&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=800`;
-            fetch(scheduleUrl).then(res => res.json()).then(applySchedule).catch(() => renderDDayBadge(null));
+
+            // 학사일정은 하루에 몇 번 안 바뀐다: 저장해 둔 것이 있으면 그걸로 D-Day를 바로 그리고,
+            // 3시간이 지났거나 없을 때만 서버에서 다시 받는다(받은 게 달라졌을 때만 다시 그림).
+            const cacheKey = `kst_sched_${schoolCode}_${currentYear}`;
+            let cached = null;
+            try { cached = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch (e) { cached = null; }
+            const hasCache = !!(cached && cached.data && cached.data.SchoolSchedule);
+            if (hasCache) applySchedule(cached.data);
+            if (hasCache && Date.now() - (cached.t || 0) < 3 * 60 * 60 * 1000) return;
+
+            fetch(scheduleUrl).then(res => res.json()).then((data) => {
+                const valid = !!(data && data.SchoolSchedule);
+                if (valid) {
+                    try { localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data })); } catch (e) { /* 저장 불가 */ }
+                }
+                if (!hasCache || (valid && JSON.stringify(data) !== JSON.stringify(cached.data))) applySchedule(data);
+            }).catch(() => { if (!hasCache) renderDDayBadge(null); });
         }
 
         // schoolCode가 있으면 ensureSchoolMeta의 캐시(schoolOfficeCode)를 재사용해 schoolInfo 재조회를 건너뛴다.
@@ -3639,7 +3658,11 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         let hasCache = false;
         try {
             const cached = JSON.parse(localStorage.getItem(WEATHER_CACHE_KEY) || 'null');
-            if (cached && cached.payload) { renderWeatherData(cached.payload); hasCache = true; }
+            if (cached && cached.payload) {
+                renderWeatherData(cached.payload); hasCache = true;
+                // 10분 안에 받은 날씨면 다시 부르지 않는다(서버도 10분 캐시).
+                if (Date.now() - (cached.timestamp || 0) < 10 * 60 * 1000) return;
+            }
         } catch {}
 
         fetchWeather(hasCache);
