@@ -1,0 +1,66 @@
+/* KST 화면 키보드 — tokens.css의 --kst-* 변수를 그대로 써서 기존 화면과 톤을 맞춘다. */
+.kst-vkbd {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: var(--kst-surface, #fff);
+    border-top: 1px solid var(--kst-border, #e5e8eb);
+    box-shadow: 0 -4px 18px rgba(15, 23, 42, .08);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    z-index: 999999;
+    transform: translateY(105%);
+    transition: transform .22s ease;
+    box-sizing: border-box;
+    -webkit-user-select: none; user-select: none;
+    font-family: 'Paperlogy', 'Pretendard', sans-serif;
+}
+.kst-vkbd.open { transform: translateY(0); }
+body.kst-vkbd-open { padding-bottom: 260px; }
+
+:root[data-theme="dark"] .kst-vkbd { background: #1E2126; border-top-color: #2E3238; }
+
+.kst-vkbd-top { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 6px; }
+.kst-vkbd-tabs { display: flex; gap: 6px; }
+.kst-vkbd-tab {
+    border: 1px solid var(--kst-border-strong, #d0d5dd); background: var(--kst-surface, #fff);
+    color: var(--kst-text-muted, #667085); font-weight: 700; font-size: .78rem;
+    padding: 5px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+}
+.kst-vkbd-tab.active { background: var(--kst-blue, #004bbf); border-color: var(--kst-blue, #004bbf); color: #fff; }
+:root[data-theme="dark"] .kst-vkbd-tab { background: #23262C; border-color: #2E3238; color: #9aa3af; }
+
+.kst-vkbd-close {
+    border: none; background: transparent; color: var(--kst-text-muted, #667085);
+    font-size: .78rem; font-weight: 700; cursor: pointer; padding: 6px 8px;
+}
+
+.kst-vkbd-rows { display: flex; flex-direction: column; gap: 6px; }
+.kst-vkbd-row { display: flex; gap: 5px; justify-content: center; }
+
+.kst-vkbd-key {
+    flex: 1; min-width: 0; max-width: 52px; height: 46px;
+    border: 1px solid var(--kst-border, #e5e8eb); background: var(--kst-surface-soft, #f7f8fa);
+    color: var(--kst-text, #191f28); border-radius: 10px;
+    font-size: 1.05rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit; -webkit-tap-highlight-color: transparent;
+    white-space: nowrap; overflow: hidden; padding: 0 2px;
+}
+.kst-vkbd-key:active { background: var(--kst-blue-soft, #eaf2ff); transform: translateY(1px); }
+:root[data-theme="dark"] .kst-vkbd-key { background: #23262C; border-color: #2E3238; color: #f2f4f7; }
+:root[data-theme="dark"] .kst-vkbd-key:active { background: #2A3550; }
+
+.kst-vkbd-shift.active { background: var(--kst-blue, #004bbf); color: #fff; border-color: var(--kst-blue, #004bbf); }
+.kst-vkbd-del { flex: 1.3; max-width: none; color: var(--kst-danger, #d92d20); }
+.kst-vkbd-switch { flex: 1.1; max-width: none; font-size: .8rem; }
+.kst-vkbd-space { flex: 4; max-width: none; font-size: .85rem; }
+.kst-vkbd-enter { flex: 1.6; max-width: none; font-size: .85rem; background: var(--kst-blue, #004bbf); color: #fff; border-color: var(--kst-blue, #004bbf); }
+.kst-vkbd-enter:active { background: var(--kst-blue-hover, #003a94); }
+.kst-vkbd-wide { flex: 2; max-width: none; }
+
+.kst-vkbd-numgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-width: 340px; margin: 0 auto; width: 100%; }
+.kst-vkbd-num { max-width: none; height: 52px; font-size: 1.3rem; }
+.kst-vkbd-bottom { margin-top: 2px; }
+
+@media (max-width: 420px) {
+    .kst-vkbd-key { height: 42px; font-size: .98rem; }
+    body.kst-vkbd-open { padding-bottom: 240px; }
+}

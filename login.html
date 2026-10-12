@@ -366,6 +366,7 @@
     </style>
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/vkeyboard.css">
 </head>
 <body>
 
@@ -404,13 +405,13 @@
             <form onsubmit="handleStudentLogin(event)">
                 <div class="form-group">
                     <label>유투엠 아이디</label>
-                    <input type="text" id="loginId" value="ufes" inputmode="numeric" oninput="handleFixedPrefix(this)" onkeydown="protectPrefix(event, this)" required>
+                    <input type="text" id="loginId" value="ufes" inputmode="none" data-kbd="numeric" oninput="handleFixedPrefix(this)" onkeydown="protectPrefix(event, this)" required>
                 </div>
 
                 <div class="form-group">
                     <label>유투엠 비밀번호</label>
                     <div class="input-pw-wrapper">
-                        <input type="password" id="loginPassword" placeholder="숫자 4자리 입력" maxlength="4" inputmode="numeric" required>
+                        <input type="password" id="loginPassword" placeholder="숫자 4자리 입력" maxlength="4" inputmode="none" data-kbd="numeric" required>
                         <div class="eyes" onclick="togglePasswordVisibility('loginPassword', this)">
                             <i class="fa-regular fa-eye-slash"></i>
                         </div>
@@ -431,7 +432,7 @@
                 <div id="step1" class="step-content">
                     <div class="form-group">
                         <label>학생 이름</label>
-                        <input type="text" id="registerName" placeholder="실명을 입력하세요 (예: 홍길동)">
+                        <input type="text" id="registerName" placeholder="실명을 입력하세요 (예: 홍길동)" inputmode="none" data-kbd="full">
                     </div>
                     <button type="button" onclick="nextStep()">다음</button>
                 </div>
@@ -440,7 +441,7 @@
                 <div id="step2" class="step-content hidden">
                     <div class="form-group">
                         <label>유투엠 아이디</label>
-                        <input type="text" id="registerId" value="ufes" inputmode="numeric" oninput="handleFixedPrefix(this)" onkeydown="protectPrefix(event, this)">
+                        <input type="text" id="registerId" value="ufes" inputmode="none" data-kbd="numeric" oninput="handleFixedPrefix(this)" onkeydown="protectPrefix(event, this)">
                         <div class="info-text">※ ufes 뒤에 숫자만 연속으로 입력하세요.</div>
                     </div>
                     <div class="btn-group">
@@ -454,7 +455,7 @@
                     <div class="form-group">
                         <label>유투엠 비밀번호 (숫자 4자리)</label>
                         <div class="input-pw-wrapper">
-                            <input type="password" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="numeric">
+                            <input type="password" id="registerParentPhone" placeholder="예: 5678" maxlength="4" inputmode="none" data-kbd="numeric">
                             <div class="eyes" onclick="togglePasswordVisibility('registerParentPhone', this)">
                                 <i class="fa-regular fa-eye-slash"></i>
                             </div>
@@ -472,7 +473,7 @@
                     <div class="form-group">
                         <label>소속 학교</label>
                         <div class="autocomplete-wrapper">
-                            <input type="text" id="registerSchool" placeholder="예: 대치중" autocomplete="off">
+                            <input type="text" id="registerSchool" placeholder="예: 대치중" autocomplete="off" inputmode="none" data-kbd="full">
                             <div id="schoolList" class="autocomplete-list hidden"></div>
                         </div>
                         <input type="hidden" id="registerSchoolCode">
@@ -559,13 +560,13 @@
 
                     <div class="form-group">
                         <label>매쓰플랫 아이디 (학생 휴대폰)</label>
-                        <input type="text" id="registerMathflatPhone" placeholder="하이픈(-) 없이 숫자만" inputmode="numeric" oninput="resetMathflatSkip()">
+                        <input type="text" id="registerMathflatPhone" placeholder="하이픈(-) 없이 숫자만" inputmode="none" data-kbd="numeric" oninput="resetMathflatSkip()">
                     </div>
 
                     <div class="form-group">
                         <label>매쓰플랫 비밀번호</label>
                         <div class="input-pw-wrapper">
-                            <input type="password" id="registerMathflatPw" placeholder="접속 비밀번호 입력" oninput="resetMathflatSkip()">
+                            <input type="password" id="registerMathflatPw" placeholder="접속 비밀번호 입력" inputmode="none" data-kbd="alnum" oninput="resetMathflatSkip()">
                             <div class="eyes" onclick="togglePasswordVisibility('registerMathflatPw', this)">
                                 <i class="fa-regular fa-eye-slash"></i>
                             </div>
@@ -1168,5 +1169,6 @@
             }
         }
     </script>
+    <script src="js/vkeyboard.js"></script>
 </body>
 </html>
