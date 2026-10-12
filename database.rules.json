@@ -175,12 +175,6 @@
       ".read": true,
       ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'"
     },
-    "dailyQuotes": {
-      ".read": "auth != null",
-      "$date": {
-        ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'"
-      }
-    },
     "comciganOverrides": {
       ".read": "auth != null",
       "$schoolCode": {
@@ -192,10 +186,6 @@
       "$schoolCode": {
         ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'"
       }
-    },
-    "advices": {
-      ".read": true,
-      ".write": "auth != null && auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2'"
     },
     "lottoDraws": {
       ".read": "auth != null"

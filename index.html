@@ -421,10 +421,6 @@
         .clock-date { font-family: 'Paperlogy', sans-serif; font-size: 1rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
         .clock-time { font-family: 'FlightSans', sans-serif; font-size: 3.4rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; line-height: 1; margin: 0; }
 
-        .quote-row { border-top: 1px solid rgba(0, 0, 0, 0.04); padding-top: 14px; font-size: 0.95rem; line-height: 1.4; color: var(--text-muted); font-weight: 600; }
-        .quote-row span { font-family: 'Paperlogy', sans-serif; }
-        .quote-author { display: block; font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; }
-
         .menu-card { padding: 16px; justify-content: center; min-height: 230px; gap: 10px; }
         .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; text-decoration: none; color: var(--text-main); transition: all 0.25s ease; cursor: pointer; border-radius: var(--radius-md); background: var(--lg-surface-soft); }
         .menu-item:hover { background: rgba(0, 75, 191, 0.08); padding-left: 28px; }
@@ -945,14 +941,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             </div>
         </div>
 
-        <!-- 오늘의 한마디는 화면에서 뺐다(스크립트가 값을 채우는 자리라 숨겨서 둔다) -->
-        <div style="display:none;" aria-hidden="true">
-            <div class="quote-row">
-                        <b id="quote-header">오늘의 한마디:</b> <span id="quoteText">문구를 불러오는 중...</span>
-                        <span id="quoteAuthor" class="quote-author"></span>
-                    </div>
-        </div>
-
         <div class="marquee-container" id="reminderBar">
             <div style="white-space: nowrap; overflow: hidden;">
                 <span class="marquee-text mona12" id="reminderText"></span>
@@ -1253,7 +1241,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M10 17h4"/></svg></span>
             <span class="tab-label">순위</span>
         </button>
-        <button onclick="openUnifiedInquiryModal()" class="tab-item">
+        <button onclick="openAcademyInquiryModal()" class="tab-item">
             <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 10h5M9.5 13h3"/></svg></span>
             <span class="tab-label">문의</span>
         </button>
@@ -1440,32 +1428,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         </div>
     </div>
 
-    <!-- 문의/제안 바텀시트 세트 -->
-    <div id="unifiedInquiryModal" class="bottom-sheet-overlay" onclick="handleGenericSheetOverlayClick(event)">
-        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
-            <div class="sheet-drag-handle"></div>
-            <div class="sheet-title">📝 문의 및 제안 선택</div>
-            <div class="sheet-subtitle" style="margin-bottom: 20px;">원하시는 항목을 선택해 주세요.</div>
-            <button class="btn-base btn-glass" style="margin-bottom: 12px;" onclick="triggerSuggestionFromUnified()">💡 오늘의 한마디 제안하기</button>
-            <button class="btn-base btn-glass" style="margin-bottom: 20px;" onclick="triggerInquiryFromUnified()">🏫 학원에 문의하기</button>
-            <button class="btn-base btn-secondary" onclick="closeModal('unifiedInquiryModal')">닫기</button>
-        </div>
-    </div>
-
-    <div id="suggestionModal" class="bottom-sheet-overlay" onclick="handleGenericSheetOverlayClick(event)">
-        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
-            <div class="sheet-drag-handle"></div>
-            <div class="sheet-title">💡 오늘의 한마디 제안</div>
-            <textarea id="suggestContent" rows="3" placeholder="기억에 남는 명언이나 하고 싶은 말(내용)을 입력해 주세요."></textarea>
-            <input type="text" id="suggestAuthor" placeholder="말한 사람 (닉네임)">
-            <input type="text" id="suggestProfile" placeholder="그 사람 설명 (예: 3학년, 과학자, 소설가 등)">
-            <div class="btn-flex-group">
-                <button class="btn-base btn-secondary" onclick="closeSuggestionModal()">취소</button>
-                <button class="btn-base btn-primary" onclick="submitSuggestion()">제안하기</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- 문의 바텀시트 -->
     <div id="academyInquiryModal" class="bottom-sheet-overlay" onclick="handleGenericSheetOverlayClick(event)">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()">
             <div class="sheet-drag-handle"></div>
@@ -1664,16 +1627,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     const BANNED_KEYWORDS = [
         "시발", "씨발", "개새끼", "새끼", "존나", "좆", "지랄", "병신", "개세끼", "썅", "미친놈", "미친년",
         "새키", "뒤져", "닥쳐", "쓰벌", "씨벌", "엠창", "凸", "fuck", "shibal", "ssibal", "bbyungshin"
-    ];
-
-    const advices = [
-        { author: "익명", authorProfile: "학생들의 현실", message: "내일의 나는 오늘의 나보다 공부를 잘할 거라 믿었다. 그리고 내일도 그렇게 믿었다." },
-        { author: "익명", authorProfile: "시험 전날", message: "공부는 미리 하는 것이다. 나는 늘 그 사실을 시험 전날 깨닫는다." },
-        { author: "익명", authorProfile: "수학 문제집", message: "답지를 보면 이해가 된다. 덮는 순간 다시 모른다." },
-        { author: "공자", authorProfile: "중국 사상가", message: "배우고 때때로 익히면 또한 기쁘지 아니한가." },
-        { author: "아리스토텔레스", authorProfile: "철학자", message: "교육의 뿌리는 쓰지만 그 열매는 달다." },
-        { author: "알베르트 아인슈타인", authorProfile: "물리학자", message: "배움을 멈추는 순간 늙기 시작한다." },
-        { author: "손흥민", authorProfile: "축구선수", message: "노력은 절대 배신하지 않는다." }
     ];
 
     function showToast(message, duration = 2500) {
@@ -2041,64 +1994,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     }
 
     /* =====================================================================
-       3. 문의 / 제안 모달
+       3. 문의 모달
     ===================================================================== */
-    function openUnifiedInquiryModal() { showModal('unifiedInquiryModal'); }
-    function triggerSuggestionFromUnified() { closeModal('unifiedInquiryModal'); openSuggestionModal(); }
-    function triggerInquiryFromUnified() { closeModal('unifiedInquiryModal'); openAcademyInquiryModal(); }
-
-    function openSuggestionModal() {
-        document.getElementById('suggestContent').value = '';
-        document.getElementById('suggestAuthor').value = '';
-        document.getElementById('suggestProfile').value = '';
-        showModal('suggestionModal');
-    }
-    function closeSuggestionModal() { closeModal('suggestionModal'); }
-
-    async function submitSuggestion() {
-        const contentText = document.getElementById('suggestContent').value.trim();
-        const authorText = document.getElementById('suggestAuthor').value.trim();
-        const profileText = document.getElementById('suggestProfile').value.trim();
-
-        if (!contentText) { showToast("💡 명언 내용을 입력해 주세요."); return; }
-        if (!authorText) { showToast("💡 말한 사람(닉네임)을 입력해 주세요."); return; }
-        if (!currentStudentData) { showToast("⌛ 학생 정보 동기화 중입니다."); return; }
-
-        const combinedText = contentText + authorText + profileText;
-        const cleanText = combinedText.replace(/[\s\s\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\[\]\{\}\;\:\'\"\,\<\.\>\/\?\`\|]/g, "");
-        const hasBadWord = BANNED_KEYWORDS.some(word => cleanText.includes(word));
-        if (hasBadWord) { showToast("🚨 비속어 및 욕설이 감지되어 제출할 수 없습니다."); return; }
-
-        const currentUser = auth.currentUser;
-        const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
-
-        try {
-            const [realName, encContent, encAuthor, encProfile] = await Promise.all([
-                decryptAES(rawName),
-                encryptAES(contentText),
-                encryptAES(authorText),
-                encryptAES(profileText)
-            ]);
-
-            const suggestData = {
-                studentName: realName,
-                studentUid: currentUser ? currentUser.uid : "익명",
-                schoolName: currentStudentData.schoolName || "미지정",
-                category: "오늘의 한마디 제안",
-                content: encContent,
-                author: encAuthor,
-                authorProfile: encProfile,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            await database.ref('suggestions').push(suggestData);
-            showToast("🎉 원장님께 한마디 제안이 접수되었습니다.");
-            closeSuggestionModal();
-        } catch (err) {
-            showToast('전송 실패: ' + err.message);
-        }
-    }
-
     function openAcademyInquiryModal() {
         document.getElementById('inquiryContent').value = '';
         showModal('academyInquiryModal');
@@ -3068,7 +2965,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     }
 
     /* =====================================================================
-       6. 기기 상태 / 원격 명령 / 시계 / 학사일정 / 명언 / 채팅 (홈)
+       6. 기기 상태 / 원격 명령 / 시계 / 학사일정 / 채팅 (홈)
     ===================================================================== */
     function startDeviceStatusReporting(studentUid) {
         setInterval(() => {
@@ -3373,17 +3270,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         el.innerText = hasUpcomingExamForGreeting ? `${currentStudentName}님 화이팅!` : `안녕하세요, ${currentStudentName}님`;
     }
 
-    function displayDefaultAdvice() {
-        if (advices.length === 0) return;
-        const now = new Date();
-        const dateValue = now.getFullYear() + (now.getMonth() + 1) + now.getDate();
-        const dailyData = advices[dateValue % advices.length];
-        document.getElementById('quote-header').innerText = "오늘의 한마디:";
-        document.getElementById('quoteText').innerText = `"${dailyData.message}"`;
-        const profileStr = dailyData.authorProfile && dailyData.authorProfile !== "-" ? ` (${dailyData.authorProfile})` : "";
-        document.getElementById('quoteAuthor').innerText = `- ${dailyData.author}${profileStr}`;
-    }
-
     function openChatModal() {
         const modal = document.getElementById('chat-modal');
         if (!modal) return;
@@ -3601,21 +3487,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             applyNotice(false);
         });
         setInterval(() => applyNotice(false), 60 * 1000);
-
-        const now = new Date();
-        const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-        database.ref('dailyQuotes/' + todayKey).on('value', (snapshot) => {
-            if (snapshot.exists()) {
-                const quoteData = snapshot.val();
-                document.getElementById('quote-header').innerText = "오늘의 명언:";
-                document.getElementById('quoteText').innerText = `"${quoteData.message}"`;
-                const profileStr = quoteData.authorProfile && quoteData.authorProfile !== "-" ? ` (${quoteData.authorProfile})` : "";
-                document.getElementById('quoteAuthor').innerText = quoteData.author ? `- ${quoteData.author}${profileStr}` : "";
-            } else {
-                displayDefaultAdvice();
-            }
-        });
 
         database.ref('reminder').on('value', (snapshot) => {
             const text = snapshot.val() || "";
