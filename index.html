@@ -1005,11 +1005,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 <input type="hidden" id="schoolLevelHidden">
             </div>
 
-            <div class="input-wrapper">
-                <label for="schoolClassNum"><span class="emoji-font">🏷️</span> 학교 학급 번호 (시간표 조회용)</label>
-                <input type="text" id="schoolClassNum" placeholder="예: 3 (숫자만 입력)" inputmode="numeric" maxlength="2">
-            </div>
-
             <div class="input-row">
                 <div class="input-wrapper">
                     <label for="studentGrade"><span class="emoji-font">🎓</span> 학년</label>
@@ -1030,8 +1025,25 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     </select>
                 </div>
                 <div class="input-wrapper">
-                    <label for="studentClass"><span class="emoji-font">🔤</span> 반</label>
-                    <input type="text" id="studentClass" placeholder="예: A반, S반">
+                    <label for="schoolClassNum"><span class="emoji-font">🏷️</span> 반 (시간표 조회용)</label>
+                    <select id="schoolClassNum">
+                        <option value="" selected>반 선택</option>
+                        <option value="1">1반</option>
+                        <option value="2">2반</option>
+                        <option value="3">3반</option>
+                        <option value="4">4반</option>
+                        <option value="5">5반</option>
+                        <option value="6">6반</option>
+                        <option value="7">7반</option>
+                        <option value="8">8반</option>
+                        <option value="9">9반</option>
+                        <option value="10">10반</option>
+                        <option value="11">11반</option>
+                        <option value="12">12반</option>
+                        <option value="13">13반</option>
+                        <option value="14">14반</option>
+                        <option value="15">15반</option>
+                    </select>
                 </div>
             </div>
 
@@ -1623,7 +1635,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     // 점검 중에도 유투엠/매쓰플랫은 쓸 수 있게 바로가기를 보여준다(학생 정보가 로드됐으면 자동 로그인 포함).
     function kstGateGo(kind) {
         if (currentStudentData) { if (kind === 'u2m') goToU2MWithCredentials(); else handleMathflatClick(); return; }
-        window.location.href = kind === 'u2m' ? 'https://www.u2math.co.kr/Login/Index' : 'https://student.mathflat.com/';
+        window.location.href = kind === 'u2m' ? 'https://swgwanggyo.u2math.co.kr/Login/Index' : 'https://student.mathflat.com/';
     }
 
     let currentStudentData = null;
@@ -2463,7 +2475,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     async function goToU2MWithCredentials() {
         await transmitBridgeCredentials();
         showToast("🚀 유투엠 페이지로 이동합니다...");
-        setTimeout(() => { window.location.href = "https://www.u2math.co.kr/Login/Index"; }, 800);
+        setTimeout(() => { window.location.href = "https://swgwanggyo.u2math.co.kr/Login/Index"; }, 800);
     }
 
     async function handleMathflatClick() {
@@ -3772,9 +3784,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         document.getElementById('schoolCode').value = d.schoolCode || '';
         document.getElementById('schoolOfficeCode').value = d.schoolOfficeCode || '';
         document.getElementById('schoolLevelHidden').value = d.schoolLevel || '';
-        document.getElementById('schoolClassNum').value = d.schoolClassNum || '';
+        { const legacy = String(d.className || d.class || '').match(/^(\d{1,2})반$/); setClassSelect(d.schoolClassNum || (legacy ? legacy[1] : '')); }
         if (d.grade) document.getElementById('studentGrade').value = d.grade;
-        document.getElementById('studentClass').value = d.className || d.class || '';
         if (d.teacher) document.getElementById('teacherName').value = d.teacher;
 
         originalU2mId = d.u2mId || '';
@@ -3834,8 +3845,19 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         });
     });
 
+    // 마이페이지 반 선택(1~15반). 시간표 시트에서 더 큰 번호를 저장한 학생도 보이도록 없는 값은 선택지를 추가한다.
+    function setClassSelect(val) {
+        const el = document.getElementById('schoolClassNum');
+        if (!el) return;
+        const v = String(val || '').replace(/[^0-9]/g, '');
+        if (v && !Array.from(el.options).some((o) => o.value === v)) {
+            const o = document.createElement('option'); o.value = v; o.textContent = `${v}반`; el.appendChild(o);
+        }
+        el.value = v;
+    }
+
     function bindAutoSaveEvents() {
-        const inputs = ['studentName', 'schoolName', 'studentGrade', 'studentClass', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw', 'schoolClassNum'];
+        const inputs = ['studentName', 'schoolName', 'studentGrade', 'teacherName', 'u2mPhone', 'mathflatId', 'mathflatPw', 'schoolClassNum'];
         inputs.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
@@ -3903,7 +3925,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         const schoolLevel = document.getElementById('schoolLevelHidden').value.trim();
         const schoolClassNum = document.getElementById('schoolClassNum').value.trim().replace(/[^0-9]/g, '');
         const grade = document.getElementById('studentGrade').value;
-        const studentClass = document.getElementById('studentClass').value.trim();
         const selectedTeacher = document.getElementById('teacherName').value;
         let phoneTail = document.getElementById('u2mPhone').value.trim();
         if (looksLikeCipherText(phoneTail) || !/^\d{0,4}$/.test(phoneTail)) phoneTail = '';
@@ -3931,9 +3952,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (schoolCode) updatedObject.schoolCode = schoolCode;
         if (schoolOfficeCode) updatedObject.schoolOfficeCode = schoolOfficeCode;
         if (schoolLevel) updatedObject.schoolLevel = schoolLevel;
-        if (schoolClassNum) updatedObject.schoolClassNum = schoolClassNum;
+        if (schoolClassNum) { updatedObject.schoolClassNum = schoolClassNum; updatedObject.className = `${schoolClassNum}반`; updatedObject.class = `${schoolClassNum}반`; }
         if (grade) updatedObject.grade = grade;
-        if (studentClass !== undefined) { updatedObject.className = studentClass; updatedObject.class = studentClass; }
         if (selectedTeacher) updatedObject.teacher = selectedTeacher;
         if (phoneTail) updatedObject.phone = encPhone;
         if (mathflatPhone) { updatedObject.studentPhone = encMathflatPhone; updatedObject.mathflatId = mathflatPhone; }
@@ -4908,10 +4928,11 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (!val) { showToast("학급 번호를 숫자로 입력해 주세요."); return; }
         const user = auth.currentUser;
         if (!user) return;
-        database.ref(`students/${user.uid}`).update({ schoolClassNum: val }).then(() => {
+        const classLabel = `${val}반`;
+        database.ref(`students/${user.uid}`).update({ schoolClassNum: val, class: classLabel, className: classLabel }).then(() => {
             currentStudentData.schoolClassNum = val;
-            const mypageInput = document.getElementById('schoolClassNum');
-            if (mypageInput) mypageInput.value = val;
+            currentStudentData.class = classLabel; currentStudentData.className = classLabel;
+            setClassSelect(val);
             document.getElementById('ttClassNumMissing').style.display = 'none';
             document.getElementById('ttMainContent').style.display = 'block';
             renderTimetableNav();
