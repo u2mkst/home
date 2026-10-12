@@ -2251,17 +2251,17 @@ body{background-color:var(--bg-page);color:var(--text-main)}
 
         // 차트(숫자와 우리가 만든 라벨만 들어가므로 innerHTML 사용 가능)
         const W = 520, H = 250, yT = 18, bot = 208, step = W / 4, max = Math.max(1, ...weeks.map(w => w.n)) * 1.12;
-        const pts = weeks.map((w, i) => ({ x: step * i + step / 2, y: bot - (bot - yT) * w.rate / 100, ok: w.n > 0 }));
+        // 푼 문제가 0인 주도 정답률 0%로 두고 선이 끊기지 않게 4주를 모두 이어 그린다(매쓰플랫과 같은 방식).
+        const pts = weeks.map((w, i) => ({ x: step * i + step / 2, y: bot - (bot - yT) * w.rate / 100 }));
         let h = `<line x1="0" x2="${W}" y1="${bot}" y2="${bot}" stroke="var(--lg-border)"/>`;
         weeks.forEach((w, i) => {
             const bh = (bot - yT) * w.n / max;
             h += `<rect x="${pts[i].x - 26}" y="${bot - bh}" width="52" height="${bh}" rx="10" fill="rgba(91,163,247,0.22)"/>`;
             h += `<text x="${pts[i].x}" y="${bot + 28}" text-anchor="middle" fill="var(--text-muted)" font-size="15" font-weight="${i === 3 ? 800 : 600}">${i === 3 ? '이번주' : mfWeekLabel(mfMonday(new Date(w.start + 'T00:00:00')))}</text>`;
         });
-        let path = '';
-        pts.forEach((p, i) => { if (p.ok) path += `${pts[i - 1] && pts[i - 1].ok ? 'L' : 'M'}${p.x},${p.y} `; });
-        if (path) h += `<path d="${path}" fill="none" stroke="#5BA3F7" stroke-width="3" stroke-linejoin="round"/>`;
-        pts.forEach(p => { if (p.ok) h += `<circle cx="${p.x}" cy="${p.y}" r="6.5" fill="#5BA3F7" stroke="var(--lg-surface-strong, #fff)" stroke-width="3"/>`; });
+        const path = pts.map((p, i) => `${i ? 'L' : 'M'}${p.x},${p.y}`).join(' ');
+        h += `<path d="${path}" fill="none" stroke="#5BA3F7" stroke-width="3" stroke-linejoin="round"/>`;
+        pts.forEach(p => { h += `<circle cx="${p.x}" cy="${p.y}" r="6.5" fill="#5BA3F7" stroke="var(--lg-surface-strong, #fff)" stroke-width="3"/>`; });
         weeks.forEach((w, i) => { h += `<rect class="mf-hit" data-i="${i}" x="${step * i}" y="0" width="${step}" height="${bot + 10}" fill="transparent" style="cursor:pointer"/>`; });
 
         const chart = document.createElement('div'); chart.className = 'mf-chart';
@@ -2273,7 +2273,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             const i = Number(hit.dataset.i), w = weeks[i], b = svg.getBoundingClientRect(), c = chart.getBoundingClientRect();
             tip.replaceChildren();
             const head = document.createElement('b'); head.textContent = mfRange(mfMonday(new Date(w.start + 'T00:00:00'))); tip.appendChild(head);
-            [['문제수', `${w.n}문제`, '#7aa7ff'], ['정답률', w.n ? `${w.rate}%` : '-', '#5BA3F7']].forEach(([k, v, color]) => {
+            [['문제수', `${w.n}문제`, '#7aa7ff'], ['정답률', `${w.rate}%`, '#5BA3F7']].forEach(([k, v, color]) => {
                 const row = document.createElement('div'); const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = color;
                 const em = document.createElement('em'); em.textContent = v;
                 row.append(dot, document.createTextNode(`${k} `), em); tip.appendChild(row);
