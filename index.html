@@ -920,7 +920,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     </div>
                     <div id="weatherDetails" class="weather-details-text"></div>
                 </div>
-                <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="openTimetableBottomSheet();" title="D-Day는 다가오는 시험까지 남은 날짜예요. 눌러서 학교 시간표 보기">확인 중...</div>
+                <div class="dday-badge" id="ddayText" style="cursor:pointer;" onclick="openSchoolScheduleBottomSheet();" title="눌러서 나이스 학교 학사일정 보기">확인 중...</div>
                 <div class="menu-card" id="shortcutMenuCard">
                     <a href="#" onclick="goToU2MWithCredentials(); return false;" class="menu-item">
                         <span class="menu-item-text"><img class="menu-icon" src="assets/u2m-icon.png" alt="">유투엠 바로가기</span>
@@ -1391,44 +1391,25 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         </div>
     </div>
 
-    <!-- 🗓️ 학교 시간표 바텀 시트 -->
-    <div id="timetableBottomSheet" class="bottom-sheet-overlay" onclick="handleTimetableOverlayClick(event)">
-        <div class="bottom-sheet-container" onclick="event.stopPropagation()" style="max-height: 86vh; overflow-y: auto;">
+    <!-- 🗓️ 학교     <!-- 🗓️ 학교 학사일정 바텀 시트 -->
+    <div id="schoolScheduleBottomSheet" class="bottom-sheet-overlay" onclick="handleSchoolScheduleOverlayClick(event)">
+        <div class="bottom-sheet-container" onclick="event.stopPropagation()" style="max-height:86vh; overflow-y:auto;">
             <div class="sheet-drag-handle"></div>
-            <div class="sheet-title tip-text" data-tip="나이스(NICE)·컴시간 학교 공식 API를 기반으로 표시돼요. 학교 사정에 따라 실제 수업과 다를 수 있어요.">🗓️ 학교 시간표</div>
-            <div class="sheet-subtitle" id="ttSchoolLabel">학교 정보를 확인하는 중...</div>
-
-            <div id="ttClassNumMissing" style="display:none;">
-                <div style="text-align:center; padding: 10px 0 6px; font-size:0.88rem; color:var(--text-muted);">
-                    시간표 조회를 위해 학교 학급 번호가 필요해요.
-                </div>
-                <div class="tt-classnum-form">
-                    <input type="text" id="ttClassNumInput" class="sheet-input" placeholder="예: 3 (숫자만)" inputmode="numeric" maxlength="2" style="margin-bottom:0;">
-                    <button type="button" class="btn-base btn-primary" style="width:auto; padding:12px 18px;" onclick="saveSchoolClassNumFromSheet()">저장</button>
-                </div>
+            <div class="sheet-title">🗓️ 학교 일정</div>
+            <div class="sheet-subtitle" id="schoolScheduleSchoolLabel">나이스에서 학교 학사일정을 불러옵니다.</div>
+            <div class="tt-nav-row" style="margin-top:14px;">
+                <button class="tt-nav-btn" onclick="navigateSchoolScheduleMonth(-1)" aria-label="이전 달">◀</button>
+                <span class="tt-nav-label" id="schoolScheduleMonthLabel">-</span>
+                <button class="tt-nav-btn" onclick="navigateSchoolScheduleMonth(1)" aria-label="다음 달">▶</button>
             </div>
-
-            <div id="ttMainContent" style="display:none;">
-                <div class="tt-nav-row">
-                    <button class="tt-nav-btn" onclick="navigateTimetable(-1)">◀</button>
-                    <span class="tt-nav-label" id="ttNavLabel">-</span>
-                    <button class="tt-nav-btn" onclick="navigateTimetable(1)">▶</button>
-                </div>
-
-                <div id="ttWeekView">
-                    <div class="tt-week-row" id="ttWeekGrid"></div>
-                </div>
-
-                <div id="ttPeriodList" class="tt-period-list">
-                    <div class="no-data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h2M8 17h5"/></svg>날짜를 선택하면 시간표가 표시됩니다.</div>
-                </div>
+            <div id="schoolScheduleList" class="tt-period-list" aria-live="polite">
+                <div class="no-data">학교 일정을 불러오는 중...</div>
             </div>
-
-            <button type="button" class="btn-base btn-secondary" style="margin-top: 16px;" onclick="closeTimetableBottomSheet()">닫기</button>
+            <button type="button" class="btn-base btn-secondary" style="margin-top:16px;" onclick="closeSchoolScheduleBottomSheet()">닫기</button>
         </div>
     </div>
 
-    <!-- 문의 바텀시트 -->
+ -->
     <div id="academyInquiryModal" class="bottom-sheet-overlay" onclick="handleGenericSheetOverlayClick(event)">
         <div class="bottom-sheet-container" onclick="event.stopPropagation()">
             <div class="sheet-drag-handle"></div>
@@ -4787,6 +4768,112 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             }
             callback(meta);
         }).catch(() => callback(null));
+    }
+
+    // 시험 D-Day 배지를 누르면 나이스 학교 학사일정을 표시한다.
+    let schoolScheduleMonth = new Date();
+    let schoolScheduleRows = [];
+    let schoolScheduleLoadedForYear = null;
+
+    function openSchoolScheduleBottomSheet() {
+        const sheet = document.getElementById('schoolScheduleBottomSheet');
+        if (!sheet) return;
+        if (!currentStudentData) { showToast("⌛ 학생 정보 동기화 중입니다."); return; }
+        schoolScheduleMonth = new Date();
+        schoolScheduleMonth.setDate(1);
+        document.getElementById('schoolScheduleSchoolLabel').textContent =
+            `${currentStudentData.schoolName || '학교'} · 나이스 학사일정`;
+        document.getElementById('schoolScheduleList').innerHTML =
+            `<div class="no-data">${EMPTY_ICONS.calendar}학교 일정을 불러오는 중...</div>`;
+        sheet.classList.add('active');
+        loadSchoolScheduleRows();
+    }
+
+    function closeSchoolScheduleBottomSheet() {
+        const sheet = document.getElementById('schoolScheduleBottomSheet');
+        if (sheet) sheet.classList.remove('active');
+    }
+
+    function handleSchoolScheduleOverlayClick(event) {
+        if (event.target.id === 'schoolScheduleBottomSheet') closeSchoolScheduleBottomSheet();
+    }
+
+    function navigateSchoolScheduleMonth(direction) {
+        schoolScheduleMonth.setMonth(schoolScheduleMonth.getMonth() + direction);
+        renderSchoolScheduleList();
+        const neededYear = schoolScheduleMonth.getFullYear();
+        if (schoolScheduleLoadedForYear !== neededYear) loadSchoolScheduleRows();
+    }
+
+    function loadSchoolScheduleRows() {
+        const list = document.getElementById('schoolScheduleList');
+        if (!currentStudentData || !currentStudentData.schoolCode) {
+            list.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}학교 정보가 없어요. 마이페이지에서 학교를 다시 선택해 주세요.</div>`;
+            return;
+        }
+        const year = schoolScheduleMonth.getFullYear();
+        const cacheKey = `kst_sched_${currentStudentData.schoolCode}_${year}`;
+        let cached = null;
+        try { cached = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch (e) {}
+        if (cached && cached.data && cached.data.SchoolSchedule) {
+            schoolScheduleRows = cached.data.SchoolSchedule[1]?.row || [];
+            schoolScheduleLoadedForYear = year;
+            renderSchoolScheduleList();
+            if (Date.now() - (cached.t || 0) < 3 * 60 * 60 * 1000) return;
+        } else {
+            list.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}학교 일정을 불러오는 중...</div>`;
+        }
+
+        ensureSchoolMeta((meta) => {
+            if (!meta || !meta.officeCode) {
+                if (!schoolScheduleRows.length) list.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}학교 교육청 정보를 확인할 수 없어요.</div>`;
+                return;
+            }
+            const fromYmd = `${year}0301`;
+            const toYmd = `${year + 1}0228`;
+            const url = `${BACKEND_URL}/api/neis?endpoint=SchoolSchedule&Type=json&ATPT_OFCDC_SC_CODE=${encodeURIComponent(meta.officeCode)}&SD_SCHUL_CODE=${encodeURIComponent(currentStudentData.schoolCode)}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=800`;
+            fetch(url).then(res => {
+                if (!res.ok) throw new Error('학사일정 조회 실패');
+                return res.json();
+            }).then(data => {
+                if (!data || !data.SchoolSchedule) throw new Error('학사일정 데이터가 없습니다.');
+                schoolScheduleRows = data.SchoolSchedule[1]?.row || [];
+                schoolScheduleLoadedForYear = year;
+                try { localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data })); } catch (e) {}
+                renderSchoolScheduleList();
+            }).catch(() => {
+                if (!schoolScheduleRows.length) list.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}학교 일정을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>`;
+            });
+        });
+    }
+
+    function renderSchoolScheduleList() {
+        const label = document.getElementById('schoolScheduleMonthLabel');
+        const list = document.getElementById('schoolScheduleList');
+        if (!label || !list) return;
+        const year = schoolScheduleMonth.getFullYear();
+        const month = schoolScheduleMonth.getMonth();
+        label.textContent = `${year}년 ${month + 1}월`;
+        const monthPrefix = `${year}${String(month + 1).padStart(2, '0')}`;
+        const rows = schoolScheduleRows.filter(item => String(item.AA_YMD || '').startsWith(monthPrefix))
+            .sort((a, b) => String(a.AA_YMD).localeCompare(String(b.AA_YMD)) || String(a.EVENT_NM).localeCompare(String(b.EVENT_NM)));
+        if (!rows.length) {
+            list.innerHTML = `<div class="no-data">${EMPTY_ICONS.calendar}이 달에 등록된 학교 일정이 없어요.</div>`;
+            return;
+        }
+        list.innerHTML = rows.map(item => {
+            const ymd = String(item.AA_YMD || '');
+            const date = ymd.length === 8 ? `${Number(ymd.slice(4, 6))}월 ${Number(ymd.slice(6, 8))}일` : ymd;
+            const eventName = String(item.EVENT_NM || '학교 일정')
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const day = ymd.length === 8 ? new Date(Number(ymd.slice(0, 4)), Number(ymd.slice(4, 6)) - 1, Number(ymd.slice(6, 8))).getDay() : -1;
+            const color = day === 0 ? 'color:#dc2626;' : day === 6 ? 'color:#2563eb;' : '';
+            return `<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 2px;border-bottom:1px solid var(--border-color, #e5e7eb);">
+                <div style="min-width:66px;font-weight:800;white-space:nowrap;${color}">${date}</div>
+                <div style="font-weight:600;line-height:1.5;">${eventName}</div>
+            </div>`;
+        }).join('');
     }
 
     function openTimetableBottomSheet() {
