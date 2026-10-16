@@ -194,16 +194,29 @@ async function getAttendance(body) {
 async function systemStatus() {
     const has = (name, minLen = 1) => Boolean(process.env[name] && process.env[name].length >= minLen);
     const db = admin.database();
-    const [lockSnap, drawSnap, metaSnap, studentSnap] = await Promise.all([
+    const [lockSnap, drawSnap, metaSnap, studentSnap, secretSnap] = await Promise.all([
         db.ref("loginLockouts").once("value"),
         db.ref("lottoDraws").orderByKey().limitToLast(1).once("value"),
         db.ref("lottoMeta").once("value"),
         db.ref("students").once("value"),
+        db.ref("loginSecrets").once("value"),
     ]);
     const locks = Object.values(lockSnap.val() || {});
     const now = Date.now();
     const draw = drawSnap.val() || {};
     const latestRound = Object.keys(draw).length ? Number(Object.keys(draw)[0]) : null;
+
+    // Firebase 비밀번호가 아직도 "00"+PIN(무작위화 전)인 계정은 우리 서버(IP 한도/계정
+    // 락아웃/reCAPTCHA)를 거치지 않고 Firebase 자체 REST API(signInWithPassword)를 공개
+    // 웹 키로 직접 두드려 무차별 대입할 수 있다 — randomized:true가 될 때까지의 위험 구간.
+    const students = studentSnap.val() || {};
+    const secrets = secretSnap.val() || {};
+    let migrated = 0, unmigrated = 0;
+    Object.keys(students).forEach((uid) => {
+        const s = secrets[uid];
+        if (s && s.randomized) migrated++; else unmigrated++;
+    });
+
     return {
         env: {
             AES_KEY: has("AES_KEY"), AES_KEY_STRONG: has("AES_KEY", 32), AES_KEY_OLD: has("AES_KEY_OLD"),
@@ -218,9 +231,11 @@ async function systemStatus() {
             lastError: (metaSnap.val() || {}).lastError || "",
         },
         logins: {
-            students: Object.keys(studentSnap.val() || {}).length,
+            students: Object.keys(students).length,
             lockedNow: locks.filter((s) => s && (s.lockedUntil || 0) > now).length,
             failedLast24h: locks.filter((s) => s && s.lastFailAt && now - s.lastFailAt < DAY_MS).length,
+            passwordMigrated: migrated,
+            passwordNotMigrated: unmigrated,
         },
         serverNow: now,
     };

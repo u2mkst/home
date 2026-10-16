@@ -1478,7 +1478,8 @@ body{background:#F2F4F6;color:#191F28}
                 info.style.marginTop = '14px'; info.style.fontSize = '0.9rem';
                 info.style.whiteSpace = 'pre-line';
                 info.textContent = `🎰 로또: 저장 ${st.lotto.storedRound || '-'}회 / 현재 기대 ${st.lotto.expectedRound}회` + (lag > 0 ? ` (⚠️ ${lag}회 뒤처짐 — 로또 메뉴에서 다시 받아오기)` : ' (정상)')
-                    + (st.lotto.lastError ? `\n⚠️ 마지막 실패 이유: ${st.lotto.lastError}` : '') + `\n👥 학생 ${st.logins.students}명 · 지금 잠긴 계정 ${st.logins.lockedNow}개 · 최근 24시간 로그인 실패 계정 ${st.logins.failedLast24h}개`;
+                    + (st.lotto.lastError ? `\n⚠️ 마지막 실패 이유: ${st.lotto.lastError}` : '') + `\n👥 학생 ${st.logins.students}명 · 지금 잠긴 계정 ${st.logins.lockedNow}개 · 최근 24시간 로그인 실패 계정 ${st.logins.failedLast24h}개`
+                    + (st.logins.passwordNotMigrated > 0 ? `\n⚠️ 비밀번호 아직 무작위화 안 됨 ${st.logins.passwordNotMigrated}명(Firebase에 직접 "00"+PIN으로 대입 가능 — 한 번도 로그인 안 했거나 무작위화가 실패한 계정)` : '\n✅ 전원 비밀번호 무작위화 완료');
                 frag.appendChild(info);
                 box.replaceChildren(frag);
             } catch (e) { box.replaceChildren(admEl('div', 'no-data', '불러오지 못했습니다: ' + e.message)); }
