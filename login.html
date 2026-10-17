@@ -68,13 +68,15 @@
             --text-main: #191F28;
             --text-muted: #8B95A1;
             --input-bg: #F7F8FA;
+            /* index.html의 --radius-xl(28px)/--radius-md(16px)와 같은 값 — 로그인 카드와
+               홈 화면 카드의 둥근 정도가 똑같이 보이도록 맞춘다. */
             --radius-lg: 28px;
             --radius-md: 16px;
 
             /* 🎨 토스 스타일 플랫 디자인 토큰 */
-            --lg-surface: #FFFFFF;
-            --lg-surface-strong: #FFFFFF;
-            --lg-surface-sheet: #FFFFFF;
+            --lg-surface: #fff;
+            --lg-surface-strong: #fff;
+            --lg-surface-sheet: #fff;
             --lg-border: #E5E8EB;
             --lg-border-sheet: #E5E8EB;
             --lg-highlight: rgba(255, 255, 255, 0.9);
@@ -93,7 +95,7 @@
 
         body {
             font-family: var(--font-body);
-            background: #FFFFFF;
+            background: #fff;
             margin: 0; padding: 24px 16px; color: var(--text-main);
             min-height: 100vh;
             display: flex; justify-content: center; align-items: center;
@@ -127,9 +129,9 @@
         /* 🔗 네이버 로그인 카드처럼 배경은 페이지와 같은 흰색, 테두리 하나로만
            경계를 표시하고 그림자는 거의 없앤다. */
         .auth-shell {
-            background: #FFFFFF;
+            background: #fff;
             padding: 40px 32px 36px;
-            border-radius: 24px;
+            border-radius: var(--radius-lg);
             border: 1.5px solid var(--lg-border);
             box-shadow: none;
             animation: cardFadeIn 0.5s var(--spring);
@@ -184,11 +186,11 @@
 
         .step-progress-bar {
             width: 100%; height: 4px; background: var(--lg-border);
-            border-radius: 99px; overflow: hidden; margin-bottom: 24px;
+            border-radius: 999px; overflow: hidden; margin-bottom: 24px;
         }
 
         .step-progress-fill {
-            height: 100%; background: var(--primary); border-radius: 99px;
+            height: 100%; background: var(--primary); border-radius: 999px;
             transition: width 0.35s var(--ease-smooth);
         }
 
@@ -199,7 +201,7 @@
 
         .btn-sub-action {
             background: rgba(0, 75, 191, 0.1); color: var(--primary); border: none;
-            padding: 4px 10px; border-radius: 8px; font-size: 0.73rem; font-weight: 700;
+            padding: 4px 10px; border-radius: 999px; font-size: 0.73rem; font-weight: 700;
             cursor: pointer; transition: all 0.2s ease; width: auto; box-shadow: none;
             font-family: var(--font-body);
         }
@@ -301,7 +303,7 @@
         .quick-link-card {
             margin-top: 20px;
             display: flex; align-items: stretch;
-            background: #FFFFFF;
+            background: #fff;
             border: 1.5px solid var(--lg-border); border-radius: var(--radius-md);
             overflow: hidden;
         }
@@ -359,7 +361,7 @@
         }
         .kst-loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .kst-loading-overlay img { height: 110px; width: auto; margin-bottom: 24px; }
-        .kst-loading-bar { width: 180px; height: 4px; background: rgba(0, 75, 191, 0.15); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+        .kst-loading-bar { width: 180px; height: 4px; background: rgba(0, 75, 191, 0.15); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
         .kst-loading-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #004bbf, #8FB8FA); animation: kstLoadingProgress 1.4s infinite ease-in-out; transform-origin: left; }
         @keyframes kstLoadingProgress { 0% { transform: scaleX(0); } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); opacity: 0; } }
         .kst-loading-subtext { font-family: 'Paperlogy', -apple-system, sans-serif; font-size: 0.85rem; color: #86868b; font-weight: 600; }

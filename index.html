@@ -65,31 +65,35 @@
 
         /* ============ 🧊 리퀴드 글래스 디자인 토큰 ============ */
         :root {
-            --lg-surface: #FFFFFF;
-            --lg-surface-strong: #FFFFFF;
+            --lg-surface: #fff;
+            --lg-surface-strong: #fff;
             --lg-surface-soft: #F7F8FA;
-            --lg-surface-sheet: #FFFFFF;
+            --lg-surface-sheet: #fff;
             --lg-border-sheet: #E5E8EB;
             --lg-border: #E5E8EB;
             --lg-border-soft: #EEF1F4;
             --lg-highlight: rgba(255, 255, 255, 0.85);
             --lg-blur: none;
             --lg-blur-sm: none;
-            --lg-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
-            --lg-shadow-sm: 0 1px 6px rgba(15, 23, 42, 0.04);
+            --lg-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+            --lg-shadow-sm: 0 1px 5px rgba(15, 23, 42, 0.04);
             --accent: #004bbf;
             --accent-dark: #003a94;
             --accent-light: #8FB8FA;
-            --bg-page: #FFFFFF;
+            --bg-page: #fff;
             --text-main: #191F28;
             --text-muted: #86868b;
+            --danger: #e5484d;
+            --danger-soft: rgba(229, 72, 77, 0.1);
             --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
             --spring-soft: cubic-bezier(0.22, 1.1, 0.36, 1);
             --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
-            --radius-xl: 30px;
-            --radius-lg: 24px;
-            --radius-md: 18px;
-            --radius-sm: 13px;
+            /* 카드/버튼/입력칸 둥근 정도 — login.html의 --radius-lg(28px)/--radius-md(16px)와
+               같은 값으로 맞춰서 두 화면을 오갈 때 모서리 느낌이 똑같게 한다. */
+            --radius-xl: 28px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
         }
 
         /* ============ 🌙 다크 모드 (로그인 사용자 전용) ============ */
@@ -184,7 +188,7 @@
         /* 🏝️ 다이내믹 아일랜드 스타일 토스트 알림 */
         .toast-container {
             position: fixed; top: 14px; left: 50%;
-            background: rgba(22, 22, 24, 0.78); color: #ffffff; padding: 13px 26px; border-radius: 999px; font-family: 'Paperlogy', sans-serif;
+            background: rgba(22, 22, 24, 0.78); color: #fff; padding: 13px 26px; border-radius: 999px; font-family: 'Paperlogy', sans-serif;
             font-size: 0.9rem; font-weight: 600; letter-spacing: -0.2px;
             box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(0, 0, 0, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.14); z-index: 100000; opacity: 0; visibility: hidden;
@@ -209,7 +213,7 @@
         .modal-title { font-size: 1.15rem; font-weight: 700; color: var(--accent); margin-bottom: 12px; }
         .modal-content { font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; white-space: pre-wrap; word-break: break-all; }
         .modal-box textarea, .modal-box input[type="text"], .modal-box input[type="password"],
-        .bottom-sheet-container textarea, .bottom-sheet-container input[type="text"], .bottom-sheet-container input[type="password"] { width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.6); border-radius: var(--radius-sm); box-sizing: border-box; margin-bottom: 12px; font-size: 0.9rem; font-family: inherit; background: rgba(255,255,255,0.55); transition: all 0.25s var(--ease-smooth); }
+        .bottom-sheet-container textarea, .bottom-sheet-container input[type="text"], .bottom-sheet-container input[type="password"] { width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.6); border-radius: var(--radius-md); box-sizing: border-box; margin-bottom: 12px; font-size: 0.9rem; font-family: inherit; background: rgba(255,255,255,0.55); transition: all 0.25s var(--ease-smooth); }
         .modal-box textarea:focus, .modal-box input:focus,
         .bottom-sheet-container textarea:focus, .bottom-sheet-container input:focus { outline: none; border-color: var(--accent); background: rgba(255,255,255,0.85); box-shadow: 0 0 0 3px rgba(0,75,191,0.15); }
         .btn-flex-group { display: flex; gap: 8px; }
@@ -222,8 +226,8 @@
         }
         .btn-base:active { transform: scale(0.95); }
         .btn-glass { color: var(--text-main) !important; background: var(--lg-surface) !important; border: 1px solid var(--lg-border-soft); backdrop-filter: var(--lg-blur-sm); -webkit-backdrop-filter: var(--lg-blur-sm); box-shadow: var(--lg-shadow-sm); }
-        .btn-glass:hover { background: rgba(0,75,191,0.85) !important; color: #ffffff !important; border-color: rgba(255,255,255,0.5); transform: translateY(-3px); box-shadow: 0 14px 26px rgba(0, 75, 191, 0.3); }
-        .btn-primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%); color: #ffffff; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 10px 22px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.35); }
+        .btn-glass:hover { background: rgba(0,75,191,0.85) !important; color: #fff !important; border-color: rgba(255,255,255,0.5); transform: translateY(-3px); box-shadow: 0 14px 26px rgba(0, 75, 191, 0.3); }
+        .btn-primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%); color: #fff; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 10px 22px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.35); }
         .btn-primary:hover { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); transform: translateY(-2px); box-shadow: 0 14px 28px rgba(0, 75, 191, 0.42), inset 0 1px 1px rgba(255,255,255,0.35); }
         .btn-secondary { background: var(--lg-surface); color: var(--text-muted); backdrop-filter: var(--lg-blur-sm); -webkit-backdrop-filter: var(--lg-blur-sm); border: 1px solid var(--lg-border-soft); box-shadow: var(--lg-shadow-sm); }
         .btn-secondary:hover { background: rgba(255,255,255,0.6); transform: translateY(-2px); }
@@ -249,7 +253,7 @@
         }
         .bottom-sheet-overlay.active .bottom-sheet-container { transform: translateY(0); }
         .sheet-drag-handle {
-            width: 40px; height: 5px; background: #B8BCC4; border-radius: 3px;
+            width: 40px; height: 5px; background: #B8BCC4; border-radius: 999px;
             margin: 0 auto 18px; padding: 10px 30px; margin-top: -10px; margin-bottom: 8px;
             background-clip: content-box; cursor: grab; touch-action: none;
         }
@@ -275,7 +279,7 @@
         }
         .exam-wish-icon { height: 20px; width: auto; display: block; margin: 0 auto; opacity: 0.5; }
         .sheet-input { width: 100%; padding: 14px 16px; border: 1px solid var(--lg-border-soft); border-radius: var(--radius-md); font-size: 0.95rem; font-family: inherit; background: var(--lg-surface-soft); margin-bottom: 10px; box-sizing: border-box; transition: all 0.25s var(--ease-smooth); }
-        .sheet-input:focus { outline: none; border-color: var(--accent); background: #FFFFFF; box-shadow: 0 0 0 3px rgba(0,75,191,0.15); }
+        .sheet-input:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(0,75,191,0.15); }
 
         /* 슬라이드형 바텀시트 (mypage 방식: 아이디 변경 / 회원 탈퇴) */
         .bottom-sheet {
@@ -291,7 +295,7 @@
             z-index: 9999; transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.5s;
         }
         .bottom-sheet.active { transform: translate(-50%, 0); visibility: visible; transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s; }
-        .sheet-handle { width: 40px; height: 5px; background: rgba(120,120,128,0.4); border-radius: 10px; margin: 0 auto 16px auto; }
+        .sheet-handle { width: 40px; height: 5px; background: rgba(120,120,128,0.4); border-radius: 999px; margin: 0 auto 16px auto; }
         .sheet-desc { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; text-align: left; }
         .sheet-desc span { color: var(--accent); font-weight: bold; }
         .recaptcha-wrapper { display: flex; justify-content: center; align-items: center; margin: 15px 0; width: 100%; }
@@ -318,13 +322,13 @@
         .tab-item .tab-icon svg { width: 22px; height: 22px; display: block; }
         .tab-item .tab-dot {
             position: absolute; top: -3px; right: -5px; width: 9px; height: 9px;
-            background: #F04452; border-radius: 50%; border: 2px solid var(--bg-page); display: none;
+            background: var(--danger); border-radius: 50%; border: 2px solid var(--bg-page); display: none;
         }
         .tab-item .tab-dot.show { display: block; }
         .tab-item .tab-label { font-family: 'Paperlogy', sans-serif; font-size: 0.64rem; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; }
         .tab-item:hover, .tab-item:active { color: var(--accent); }
         .tab-item:active { transform: scale(0.94); }
-        .tab-item.danger:hover { color: #F04452; }
+        .tab-item.danger:hover { color: var(--danger); }
         .tab-item.active { color: var(--accent); }
         .tab-item.active::before { content: ''; position: absolute; top: -7px; left: 25%; right: 25%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
         @media (max-width: 400px) {
@@ -342,8 +346,8 @@
         .tip-text:active { opacity: 0.6; }
         .info-tip-bubble {
             position: fixed; max-width: 240px; background: rgba(29, 29, 31, 0.94);
-            color: #ffffff; font-family: 'Paperlogy', sans-serif; font-size: 0.76rem; font-weight: 600;
-            line-height: 1.45; padding: 10px 14px; border-radius: 14px;
+            color: #fff; font-family: 'Paperlogy', sans-serif; font-size: 0.76rem; font-weight: 600;
+            line-height: 1.45; padding: 10px 14px; border-radius: var(--radius-sm);
             box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
             z-index: 100001; opacity: 0; visibility: hidden; pointer-events: none;
             transform: translateY(6px) scale(0.92); transform-origin: top left;
@@ -360,7 +364,7 @@
 
         .fab-chat-btn {
             position: fixed; bottom: 92px; right: 20px; width: 56px; height: 56px;
-            border-radius: 28px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%); color: #ffffff;
+            border-radius: 50%; background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%); color: #fff;
             border: 1px solid rgba(255, 255, 255, 0.45);
             box-shadow: 0 12px 28px rgba(0, 75, 191, 0.42), inset 0 1px 1px rgba(255,255,255,0.35);
             display: flex; align-items: center; justify-content: center;
@@ -370,8 +374,8 @@
         .fab-chat-btn:hover { transform: scale(1.1) translateY(-2px); background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); box-shadow: 0 16px 34px rgba(0, 75, 191, 0.5); }
         .fab-chat-btn:active { transform: scale(0.92); }
         .fab-badge {
-            position: absolute; top: -2px; right: -2px; background: #F04452; color: white;
-            font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 2px solid #ffffff;
+            position: absolute; top: -2px; right: -2px; background: var(--danger); color: white;
+            font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 2px solid #fff;
         }
 
         /* 로딩 오버레이 (최초 진입시) */
@@ -379,7 +383,7 @@
         .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .brand-logo { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
         .brand-logo img { height: 110px; width: auto; }
-        .progress-bar { width: 180px; height: 4px; background: rgba(0, 75, 191, 0.15); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+        .progress-bar { width: 180px; height: 4px; background: rgba(0, 75, 191, 0.15); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
         .progress-fill { width: 100%; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light)); animation: progress 1.4s infinite ease-in-out; transform-origin: left; }
         @keyframes progress { 0% { transform: scaleX(0); } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); opacity: 0; } }
         .loading-subtext { font-family: 'Paperlogy', sans-serif; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
@@ -393,7 +397,7 @@
         /* 박스/배경 없이
            빨간 텍스트만 사용한다. */
         .dday-badge {
-            font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 700; color: #F04452; letter-spacing: -0.3px;
+            font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--danger); letter-spacing: -0.3px;
             transition: opacity 0.2s ease;
         }
         .dday-badge:active { opacity: 0.6; }
@@ -428,7 +432,7 @@
         .arrow-icon { font-family: 'FlightSans', sans-serif; font-size: 0.9rem; color: var(--text-muted); transition: transform 0.2s ease, color 0.2s ease; }
         .menu-item:hover .arrow-icon { transform: translateX(4px); color: var(--accent); }
 
-        .marquee-container { margin-top: 20px; background: var(--lg-surface); border: 1px solid var(--lg-border-soft); border-radius: 50px; padding: 8px 24px; overflow: hidden; display: none; }
+        .marquee-container { margin-top: 20px; background: var(--lg-surface); border: 1px solid var(--lg-border-soft); border-radius: 999px; padding: 8px 24px; overflow: hidden; display: none; }
         .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-family: 'Paperlogy', sans-serif; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
@@ -440,7 +444,7 @@
             font-size: 0.95rem; font-family: inherit; background: var(--lg-surface-soft); margin-bottom: 16px;
             box-sizing: border-box; cursor: pointer; transition: all 0.25s var(--ease-smooth);
         }
-        .mathq-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 75, 191, 0.15); background: #FFFFFF; }
+        .mathq-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 75, 191, 0.15); background: #fff; }
         .mathq-card {
             background: var(--lg-surface); backdrop-filter: var(--lg-blur-sm); -webkit-backdrop-filter: var(--lg-blur-sm);
             border: 1px solid var(--lg-border-soft); border-radius: var(--radius-lg); padding: 20px;
@@ -450,7 +454,7 @@
         .mathq-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0, 75, 191, 0.12); }
         .mathq-card-title {
             display: inline-block; font-size: 0.78rem; color: var(--accent);
-            background: rgba(0, 75, 191, 0.08); padding: 4px 10px; border-radius: 20px;
+            background: rgba(0, 75, 191, 0.08); padding: 4px 10px; border-radius: 999px;
             margin-bottom: 10px; font-weight: 700; font-family: 'Paperlogy', sans-serif; letter-spacing: -0.2px;
         }
         .mathq-card-text {
@@ -461,13 +465,13 @@
         .mathq-input-group { display: flex; gap: 10px; }
         .mathq-input-group input {
             flex: 1; padding: 12px 14px; font-size: 0.95rem; border: 1px solid var(--lg-border-soft);
-            border-radius: var(--radius-sm); box-sizing: border-box; min-width: 0; background: var(--lg-surface-soft);
+            border-radius: var(--radius-md); box-sizing: border-box; min-width: 0; background: var(--lg-surface-soft);
             transition: all 0.25s var(--ease-smooth);
         }
         .mathq-input-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 75, 191, 0.15); background: rgba(255,255,255,0.85); }
         .mathq-input-group button {
-            padding: 12px 20px; font-size: 0.9rem; font-weight: 700; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.3);
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%); color: #ffffff;
+            padding: 12px 20px; font-size: 0.9rem; font-weight: 700; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.3);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%); color: #fff;
             cursor: pointer; white-space: nowrap; box-shadow: 0 8px 18px rgba(0, 75, 191, 0.3), inset 0 1px 1px rgba(255,255,255,0.3);
             transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth);
         }
@@ -479,7 +483,7 @@
             animation: lgPopIn 0.4s var(--spring);
         }
         .mathq-feedback.correct { display: flex; background: rgba(16,185,129,0.14); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); }
-        .mathq-feedback.incorrect { display: flex; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); }
+        .mathq-feedback.incorrect { display: flex; background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(229, 72, 77, 0.25); }
         .mathq-scratchpad { margin-top: 4px; margin-bottom: 16px; }
         .mathq-scratchpad-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
         .mathq-scratchpad-title { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
@@ -490,19 +494,19 @@
         }
         .mathq-pen-swatch.active { border-color: var(--accent); transform: scale(1.15); }
         .mathq-tool-btn {
-            padding: 6px 10px; font-size: 0.76rem; font-weight: 700; border-radius: 10px;
+            padding: 6px 10px; font-size: 0.76rem; font-weight: 700; border-radius: var(--radius-sm);
             border: 1px solid var(--lg-border-soft); background: rgba(255,255,255,0.6); color: var(--text-muted); cursor: pointer;
             transition: all 0.2s ease;
         }
-        .mathq-tool-btn.active { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+        .mathq-tool-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
         .mathq-scratch-canvas {
-            width: 100%; height: 220px; display: block; background: #ffffff;
+            width: 100%; height: 220px; display: block; background: #fff;
             border-radius: var(--radius-md); border: 1px solid var(--lg-border-soft); box-shadow: var(--lg-shadow-sm);
             touch-action: none; cursor: crosshair;
         }
         /* 🗓️ 학교 시간표 바텀시트 전용 디자인 */
         .tt-nav-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-        .tt-nav-btn { width:34px; height:34px; border-radius: var(--radius-sm); border:1px solid var(--lg-border-soft); background: #FFFFFF; color:var(--accent); font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition: all 0.3s var(--spring); }
+        .tt-nav-btn { width:34px; height:34px; border-radius: var(--radius-sm); border:1px solid var(--lg-border-soft); background: #fff; color:var(--accent); font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition: all 0.3s var(--spring); }
         .tt-nav-btn:hover { background: rgba(0,75,191,0.9); color:#fff; transform: scale(1.08); }
         .tt-nav-btn:active { transform: scale(0.9); }
         .tt-nav-label { font-family:'Paperlogy',sans-serif; font-weight:700; font-size:0.95rem; color:var(--text-main); }
@@ -518,7 +522,7 @@
         .tt-period-content { flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
         .tt-period-subject { font-weight:700; color:var(--text-main); font-size:0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .tt-period-teacher { font-size: 0.76rem; color: var(--text-muted); font-weight: 600; flex-shrink: 0; white-space: nowrap; }
-        .tt-source-badge { display:inline-block; font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:6px; vertical-align:middle; }
+        .tt-source-badge { display:inline-block; font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:999px; margin-left:6px; vertical-align:middle; }
         .tt-source-badge.nice { background:rgba(0,75,191,0.1); color:var(--accent); }
         .tt-source-badge.comcigan { background:rgba(16,185,129,0.12); color:#10b981; }
         .tt-classnum-form { display:flex; gap:8px; margin-top:10px; }
@@ -537,7 +541,7 @@
         }
         .dark-toggle-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1.5px solid rgba(0, 75, 191, 0.25) !important; }
         .dark-toggle-icon {
-            width: 42px; height: 42px; border-radius: 13px; flex-shrink: 0;
+            width: 42px; height: 42px; border-radius: var(--radius-sm); flex-shrink: 0;
             background: rgba(0, 75, 191, 0.12); display: flex; align-items: center; justify-content: center; font-size: 1.35rem;
         }
         .theme-switch { position: relative; display: inline-block; width: 48px; height: 28px; flex-shrink: 0; }
@@ -548,7 +552,7 @@
         }
         .theme-switch-slider::before {
             content: ""; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px;
-            background-color: #ffffff; border-radius: 50%; transition: transform 0.25s var(--spring);
+            background-color: #fff; border-radius: 50%; transition: transform 0.25s var(--spring);
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
         .theme-switch input:checked + .theme-switch-slider { background-color: var(--accent); }
@@ -569,7 +573,7 @@
         }
         .input-wrapper input:focus, .input-wrapper select:focus { outline: none; border-color: var(--accent); background: rgba(255,255,255,0.85); box-shadow: 0 4px 12px rgba(0, 75, 191, 0.15); }
         .section-divider { border-top: 1px dashed rgba(0, 75, 191, 0.3); margin: 24px 0 20px 0; position: relative; }
-        .section-title { font-size: 0.8rem; color: var(--accent); font-weight: bold; background: rgba(0, 75, 191, 0.1); padding: 4px 10px; border-radius: 20px; position: absolute; top: -12px; left: 10px; }
+        .section-title { font-size: 0.8rem; color: var(--accent); font-weight: bold; background: rgba(0, 75, 191, 0.1); padding: 4px 10px; border-radius: 999px; position: absolute; top: -12px; left: 10px; }
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .badge-tile {
             display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -598,7 +602,7 @@
         .autocomplete-item .school-region { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; }
         .delete-account-zone { margin-top: 35px; text-align: center; }
         .delete-btn { background: none; border: none; color: var(--text-muted); font-size: 0.85rem; font-family: inherit; cursor: pointer; text-decoration: underline; font-weight: 500; transition: color 0.2s; }
-        .delete-btn:hover { color: #e53e3e; }
+        .delete-btn:hover { color: var(--danger); }
 
         .loading-card { background: var(--lg-surface-strong); border: 1.5px solid var(--lg-border); border-radius: var(--radius-xl); padding: 35px 30px; text-align: center; box-shadow: var(--lg-shadow); backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur); max-width: 300px; width: 80%; animation: lgPopIn 0.4s var(--spring); }
         .spinner { width: 48px; height: 48px; border: 4px solid rgba(0, 75, 191, 0.15); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 0.85s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite; margin: 0 auto 18px auto; }
@@ -629,12 +633,12 @@
             transition: all 0.4s var(--spring);
         }
         .top-tab-btn:active { transform: scale(0.94); }
-        .top-tab-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; box-shadow: 0 10px 22px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
+        .top-tab-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #fff; box-shadow: 0 10px 22px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
 
         .ranking-timer-badge {
             display: none; align-items: center; gap: 6px; font-family: 'Paperlogy', sans-serif;
-            font-size: 0.8rem; font-weight: 700; color: #F04452; background: rgba(255, 69, 58, 0.1);
-            border: 1px solid rgba(255, 69, 58, 0.2); padding: 8px 14px; border-radius: 16px; white-space: nowrap;
+            font-size: 0.8rem; font-weight: 700; color: var(--danger); background: var(--danger-soft);
+            border: 1px solid rgba(229, 72, 77, 0.2); padding: 8px 14px; border-radius: var(--radius-md); white-space: nowrap;
         }
 
         .tablet-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: stretch; }
@@ -656,7 +660,7 @@
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
         .calendar-day-head { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); padding: 4px 0; }
         .calendar-day { padding: 10px 0; font-size: 0.95rem; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.4); border: 1px solid var(--lg-border-soft); transition: all 0.35s var(--spring); }
-        .calendar-day.attended { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; font-weight: 800; box-shadow: 0 8px 18px rgba(0, 75, 191, 0.4); border-color: var(--accent); }
+        .calendar-day.attended { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #fff; font-weight: 800; box-shadow: 0 8px 18px rgba(0, 75, 191, 0.4); border-color: var(--accent); }
 
         /* ============ 🎰 로또: 공 / 숫자판 / 결과 / 기록 / 랭킹 (플랫 디자인) ============ */
         .lotto-ball { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 0.92rem; letter-spacing: -0.02em; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.28), 0 2px 6px rgba(15,23,42,0.14); flex-shrink: 0; font-variant-numeric: tabular-nums; transition: opacity 0.2s ease, box-shadow 0.2s ease; }
@@ -673,7 +677,7 @@
         .lotto-ball.bonus-ring.miss { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.28); }
         .lotto-ball.empty { background: transparent; box-shadow: none; border: 2px dashed var(--lg-border); color: var(--text-muted); cursor: default; font-weight: 700; font-size: 0.8rem; }
 
-        .lotto-panel { background: var(--lg-surface-soft); border-radius: 18px; padding: 18px 16px; margin-bottom: 16px; }
+        .lotto-panel { background: var(--lg-surface-soft); border-radius: var(--radius-md); padding: 18px 16px; margin-bottom: 16px; }
         .lotto-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
         .lotto-actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
         #lottoMyResult { margin-top: 14px; }
@@ -681,7 +685,7 @@
         .lotto-tray { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
         .lotto-tray .plus { font-weight: 800; color: var(--text-muted); }
         .lotto-pad { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 18px auto 0; max-width: 360px; }
-        .lotto-pad-btn { height: 42px; min-width: 0; border-radius: 12px; border: none; color: var(--text-main); font-weight: 700; font-size: 0.95rem; cursor: pointer; padding: 0; position: relative; box-shadow: inset 0 0 0 1px var(--lg-border-soft); transition: transform 0.12s ease, background 0.15s ease; -webkit-tap-highlight-color: transparent; font-variant-numeric: tabular-nums; }
+        .lotto-pad-btn { height: 42px; min-width: 0; border-radius: var(--radius-sm); border: none; color: var(--text-main); font-weight: 700; font-size: 0.95rem; cursor: pointer; padding: 0; position: relative; box-shadow: inset 0 0 0 1px var(--lg-border-soft); transition: transform 0.12s ease, background 0.15s ease; -webkit-tap-highlight-color: transparent; font-variant-numeric: tabular-nums; }
         .lotto-pad-btn:not(.sel) { background: var(--lg-surface); }
         .lotto-pad-btn:active { transform: scale(0.92); }
         .lotto-pad-btn.sel { color: #fff; box-shadow: none; font-weight: 800; }
@@ -690,12 +694,12 @@
         .lotto-mini-btn { font-size: 0.8rem; font-weight: 700; padding: 8px 14px; border-radius: 999px; border: none; background: var(--lg-surface); color: var(--text-main); box-shadow: inset 0 0 0 1px var(--lg-border); cursor: pointer; }
         .lotto-mini-btn:active { transform: scale(0.95); }
         .lotto-count-text { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-align: center; margin-top: 12px; }
-        .lotto-countdown { font-size: 0.82rem; font-weight: 800; color: var(--accent); background: var(--accent-light); border-radius: 12px; padding: 9px 12px; text-align: center; margin-bottom: 12px; }
-        .lotto-countdown.urgent { color: #fff; background: #EE5A4B; }
+        .lotto-countdown { font-size: 0.82rem; font-weight: 800; color: var(--accent); background: var(--accent-light); border-radius: var(--radius-sm); padding: 9px 12px; text-align: center; margin-bottom: 12px; }
+        .lotto-countdown.urgent { color: #fff; background: var(--danger); }
         .lotto-result-title { font-weight: 800; font-size: 0.98rem; color: var(--text-main); text-align: center; margin-bottom: 14px; }
         .lotto-result-prob { font-size: 0.78rem; color: var(--text-muted); text-align: center; margin-top: 14px; line-height: 1.55; }
         .lotto-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
-        .lotto-stat { background: var(--lg-surface-soft); border-radius: 12px; padding: 10px 4px; text-align: center; }
+        .lotto-stat { background: var(--lg-surface-soft); border-radius: var(--radius-sm); padding: 10px 4px; text-align: center; }
         .lotto-stat b { display: block; font-size: 1.1rem; color: var(--text-main); }
         .lotto-stat span { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; }
         .lotto-hist-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 0; border-top: 1px solid var(--lg-border-soft); flex-wrap: wrap; }
@@ -724,7 +728,7 @@
         .mf-refresh:active { transform: rotate(120deg); }
         #mfBody { flex: 1; display: flex; flex-direction: column; }
         .mf-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .mf-stat { background: var(--lg-surface); box-shadow: inset 0 0 0 1px var(--lg-border); border-radius: 20px; padding: 24px 10px 20px; text-align: center; }
+        .mf-stat { background: var(--lg-surface); box-shadow: inset 0 0 0 1px var(--lg-border); border-radius: var(--radius-lg); padding: 24px 10px 20px; text-align: center; }
         .mf-stat .l { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
         .mf-stat .v { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-size: 3.3rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; line-height: 1.1; margin-top: 4px; }
         .mf-stat .v small { font-family: inherit; font-size: 0.95rem; font-weight: 700; color: var(--text-muted); margin-left: 4px; letter-spacing: 0; }
@@ -734,14 +738,14 @@
         .mf-chart { position: relative; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
         .mf-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
         .mf-foot { display: flex; justify-content: space-between; gap: 8px; font-size: 0.72rem; color: var(--text-muted); font-weight: 600; margin-top: 8px; flex-wrap: wrap; }
-        .mf-tip { position: absolute; pointer-events: none; background: rgba(60,64,72,0.94); color: #fff; border-radius: 12px; padding: 9px 13px; font-size: 0.74rem; line-height: 1.7; min-width: 146px; transform: translateX(-50%); display: none; z-index: 3; }
+        .mf-tip { position: absolute; pointer-events: none; background: rgba(60,64,72,0.94); color: #fff; border-radius: var(--radius-sm); padding: 9px 13px; font-size: 0.74rem; line-height: 1.7; min-width: 146px; transform: translateX(-50%); display: none; z-index: 3; }
         :root[data-theme="dark"] .mf-tip { background: rgba(240,244,250,0.96); color: #111; }
         .mf-tip b { display: block; font-size: 0.7rem; opacity: 0.85; }
         .mf-tip em { font-style: normal; font-weight: 800; }
         .mf-tip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
         .mf-msg { text-align: center; padding: 60px 8px; color: var(--text-muted); font-weight: 700; line-height: 1.6; font-size: 0.88rem; }
         .mf-msg b { display: block; color: var(--text-main); font-size: 1.05rem; margin-bottom: 4px; }
-        .mf-msg button { margin-top: 14px; border: none; background: var(--accent); color: #fff; font-weight: 800; border-radius: 12px; padding: 10px 18px; cursor: pointer; font-size: 0.85rem; }
+        .mf-msg button { margin-top: 14px; border: none; background: var(--accent); color: #fff; font-weight: 800; border-radius: var(--radius-md); padding: 10px 18px; cursor: pointer; font-size: 0.85rem; }
         .mf-note { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-top: 8px; text-align: center; }
         @media (max-width: 767px) {
             .mf-card { padding: 20px 18px 16px; }
@@ -752,14 +756,14 @@
         /* ============ 홈: 왼쪽 정보 패널(시간·날씨·D-Day·바로가기) + 오른쪽 학습정보 ============
            학습 카드가 꺼져 있으면(마스터 off / 매쓰플랫 정보 없음) 패널이 가로로 펼쳐진
            "시간·날씨 한 줄 + 바로가기 버튼 2개" 모양이 된다. */
-        #view-home { --rail-bg: linear-gradient(180deg, #EAF1FF, #F7FAFF); --rail-line: #D5E2FA; --rail-strong: #0B2A66; --rail-sub: #5E7299; --rail-btn: #FFFFFF; }
+        #view-home { --rail-bg: linear-gradient(180deg, #EAF1FF, #F7FAFF); --rail-line: #D5E2FA; --rail-strong: #0B2A66; --rail-sub: #5E7299; --rail-btn: #fff; }
         :root[data-theme="dark"] #view-home { --rail-bg: linear-gradient(180deg, #262A31, #1E2126); --rail-line: #353A42; --rail-strong: #F2F4F7; --rail-sub: #9AA3AF; --rail-btn: #30343B; }
         /* 어두운 버튼 위에서 아이콘이 묻히지 않게 밝은 받침을 깐다 */
         :root[data-theme="dark"] .home-rail .menu-icon { background: #fff; border-radius: 6px; padding: 2px; box-sizing: border-box; }
         :root[data-theme="dark"] .home-rail .menu-item { box-shadow: none; }
         #view-home .main-grid { gap: 32px; align-items: start; }
         @media (min-width: 768px) { #view-home.mf-layout-on .main-grid { grid-template-columns: 280px 1fr; } }
-        .home-rail { background: var(--rail-bg); border-radius: 30px; padding: 34px 28px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+        .home-rail { background: var(--rail-bg); border-radius: var(--radius-xl); padding: 34px 28px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
         #view-home.mf-layout-on .home-rail { min-height: 520px; }
         .home-rail .top-time { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
         .home-rail .clock-time { font-size: 3rem; line-height: 1; color: var(--rail-strong); order: 1; white-space: nowrap; width: max-content; max-width: 100%; }
@@ -772,7 +776,7 @@
         .home-rail .weather-details-text { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; color: var(--rail-sub); }
         .home-rail .dday-badge { font-size: 1.05rem; }
         .home-rail .menu-card { margin-top: auto; padding: 0; min-height: 0; gap: 10px; background: none; border: none; box-shadow: none; display: flex; flex-direction: column; }
-        .home-rail .menu-item { background: var(--rail-btn); border-radius: 16px; padding: 16px 18px; box-shadow: 0 2px 8px rgba(0, 75, 191, 0.08); }
+        .home-rail .menu-item { background: var(--rail-btn); border-radius: var(--radius-md); padding: 16px 18px; box-shadow: 0 2px 8px rgba(0, 75, 191, 0.08); }
         .home-rail .menu-item:hover { background: var(--rail-btn); padding-left: 18px; transform: translateY(-1px); }
         .home-rail .menu-item-text { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
         .home-rail .menu-icon { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
@@ -790,7 +794,7 @@
         #view-home .mf-head h2 { font-size: 1.25rem; }
         #view-home .mf-chart svg { max-height: 260px; }
         #view-home .mf-stats { gap: 14px; }
-        #view-home .mf-stat { background: var(--lg-surface-soft); box-shadow: none; border-radius: 22px; }
+        #view-home .mf-stat { background: var(--lg-surface-soft); box-shadow: none; }
 
         /* 학습 카드가 꺼진 모양: 시간·날씨·D-Day 한 줄 + 바로가기 버튼 2개 가로 배치 */
         #view-home:not(.mf-layout-on) .main-grid { grid-template-columns: 1fr; }
@@ -810,7 +814,7 @@
         /* 학습 카드가 꺼진 PC·태블릿 배치: 왼쪽 정보 패널 + 오른쪽 큰 바로가기 타일 2개 (폰은 위의 세로 배치) */
         @media (min-width: 768px) {
             #view-home:not(.mf-layout-on) .home-rail { display: grid; grid-template-columns: 280px 1fr; grid-template-rows: auto auto 1fr; gap: 0 32px; background: none; padding: 0; position: relative; align-items: start; }
-            #view-home:not(.mf-layout-on) .home-rail::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 280px; background: var(--rail-bg); border-radius: 30px; z-index: 0; }
+            #view-home:not(.mf-layout-on) .home-rail::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 280px; background: var(--rail-bg); border-radius: var(--radius-xl); z-index: 0; }
             #view-home:not(.mf-layout-on) .home-rail > * { position: relative; z-index: 1; }
             #view-home:not(.mf-layout-on) .home-rail .top-time { grid-column: 1; grid-row: 1; padding: 32px 28px 0; flex-direction: column; align-items: flex-start; gap: 4px; }
             #view-home:not(.mf-layout-on) .home-rail .clock-time { font-size: 3rem; }
@@ -822,30 +826,28 @@
             #view-home:not(.mf-layout-on) .home-rail .dday-badge .dd-name { display: block; max-width: none; }
             #view-home:not(.mf-layout-on) .home-rail .dday-badge .dd-n { display: block; margin: 1.4em 0 0; font-size: 1.6rem; }
             #view-home:not(.mf-layout-on) .home-rail .menu-card { grid-column: 2; grid-row: 1 / 4; align-self: stretch; margin: 0; display: grid; grid-template-columns: 1fr; grid-auto-rows: 1fr; gap: 16px; }
-            #view-home:not(.mf-layout-on) .home-rail .menu-item { flex: none; flex-direction: column; justify-content: center; align-items: center; background: var(--lg-surface-soft); box-shadow: none; border-radius: 30px; min-height: 150px; }
+            #view-home:not(.mf-layout-on) .home-rail .menu-item { flex: none; flex-direction: column; justify-content: center; align-items: center; background: var(--lg-surface-soft); box-shadow: none; border-radius: var(--radius-xl); min-height: 150px; }
             #view-home:not(.mf-layout-on) .home-rail .menu-item:hover { background: var(--lg-surface-soft); padding-left: 18px; }
             #view-home:not(.mf-layout-on) .home-rail .menu-item-text { flex-direction: column; font-size: 1.2rem; gap: 14px; }
-            #view-home:not(.mf-layout-on) .home-rail .menu-icon { width: 46px; height: 46px; border-radius: 12px; }
+            #view-home:not(.mf-layout-on) .home-rail .menu-icon { width: 46px; height: 46px; border-radius: var(--radius-sm); }
             #view-home:not(.mf-layout-on) .home-rail .arrow-icon { display: none; }
         }
         @media (max-width: 767px) {
             #view-home .main-grid { gap: 22px; }
-            .home-rail, #view-home:not(.mf-layout-on) .home-rail { padding: 24px 22px; border-radius: 26px; }
+            .home-rail, #view-home:not(.mf-layout-on) .home-rail { padding: 24px 22px; border-radius: var(--radius-lg); }
             #view-home.mf-layout-on .home-rail { min-height: 0; }
             .home-rail .clock-time, #view-home:not(.mf-layout-on) .home-rail .clock-time { font-size: 2.6rem; }
             #view-home:not(.mf-layout-on) .home-rail .menu-card { flex-direction: column; }
         }
 
         .rank-btn-base { font-family: 'Paperlogy', sans-serif; font-size: 1rem; font-weight: 700; padding: 14px 22px; border-radius: var(--radius-md); transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), background 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-        .rank-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #ffffff; box-shadow: 0 10px 24px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
+        .rank-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #fff; box-shadow: 0 10px 24px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
         .rank-btn-primary:hover { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); transform: translateY(-2px); }
         .rank-btn-primary:active { transform: scale(0.95); }
         .rank-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     
 /* === KST FLAT DESIGN OVERRIDES === */
-
-/* KST Flat UI alignment — login-page shared tokens */
-:root{--radius-xl:28px;--radius-lg:22px;--radius-md:16px;--radius-sm:12px;--lg-shadow:0 2px 10px rgba(15,23,42,.05);--lg-shadow-sm:0 1px 5px rgba(15,23,42,.04)}
+/* 토큰 값 자체는 이제 위쪽 메인 :root에서 한 번만 정의한다(여기서 또 덮어쓰지 않음). */
 body{background-color:var(--bg-page);color:var(--text-main)}
 .modal-overlay,.bottom-sheet-overlay{backdrop-filter:none;-webkit-backdrop-filter:none}
 .modal-box,.bottom-sheet-container,.bottom-sheet{border:1px solid #E5E8EB;box-shadow:0 4px 18px rgba(15,23,42,.08);backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -870,12 +872,12 @@ body{background-color:var(--bg-page);color:var(--text-main)}
          항상 라이트모드로 고정 표시 (다크모드 CSS 변수 영향 안 받음). -->
     <div id="kstMaintenanceGate" style="display:none; position:fixed; inset:0; z-index:2147483647; background:#F2F4F6; color:#191F28; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; align-items:center; justify-content:center; text-align:center; padding:24px; box-sizing:border-box;">
         <div>
-            <div style="font-size:48px; margin-bottom:16px;">🔧</div>
-            <div style="font-size:20px; font-weight:700; margin-bottom:8px;">잠시 점검 중입니다</div>
-            <div style="font-size:14px; color:#8B95A1; margin-bottom:20px;">잠시 후 다시 이용해주세요.</div>
+            <div style="font-size:3.5rem; margin-bottom:16px;">🔧</div>
+            <div style="font-size:1.5rem; font-weight:700; margin-bottom:8px;">잠시 점검 중입니다</div>
+            <div style="font-size:1rem; color:#8B95A1; margin-bottom:20px;">잠시 후 다시 이용해주세요.</div>
             <div style="width:min(340px,86vw); margin:0 auto; text-align:left;">
-                <a href="#" onclick="kstGateGo('u2m'); return false;" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:17px; font-weight:700;"><span>유투엠 바로가기</span><span style="color:#8B95A1;">➔</span></a>
-                <a href="#" onclick="kstGateGo('mathflat'); return false;" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; border-bottom:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:17px; font-weight:700;"><span>매쓰플랫 바로가기</span><span style="color:#8B95A1;">➔</span></a>
+                <a href="#" onclick="kstGateGo('u2m'); return false;" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:1.25rem; font-weight:700;"><span>유투엠 바로가기</span><span style="color:#8B95A1;">➔</span></a>
+                <a href="#" onclick="kstGateGo('mathflat'); return false;" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; border-bottom:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:1.25rem; font-weight:700;"><span>매쓰플랫 바로가기</span><span style="color:#8B95A1;">➔</span></a>
             </div>
         </div>
     </div>
@@ -1481,11 +1483,11 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     </div>
 
     <div id="idleWarningModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); z-index: 9999; justify-content: center; align-items: center;">
-        <div style="background: #ffffff; width: 90%; max-width: 360px; padding: 28px 24px; border-radius: 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;">
+        <div style="background: #fff; width: 90%; max-width: 360px; padding: 28px 24px; border-radius: var(--radius-xl); text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); box-sizing: border-box;">
             <div style="font-size: 1.15rem; font-weight: 700; color: var(--accent); margin-bottom: 12px;">⏳ 장시간 미사용 알림</div>
             <div style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; word-break: keep-all;">
                 약 30분 동안 활동이 감지되지 않았습니다.<br>
-                보안을 위해 잠시 후 <span id="idleCountdown" style="color: #e53e3e; font-weight: bold;">60</span>초 뒤 자동으로 로그아웃됩니다.
+                보안을 위해 잠시 후 <span id="idleCountdown" style="color: var(--danger); font-weight: bold;">60</span>초 뒤 자동으로 로그아웃됩니다.
             </div>
             <div class="btn-flex-group">
                 <button onclick="extendSession()" class="btn-base btn-primary">로그인 유지</button>
@@ -1525,7 +1527,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     <div id="reauthBottomSheetOverlay" class="bottom-sheet-overlay" style="z-index: 9998;" onclick="closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet')"></div>
     <div id="reauthBottomSheet" class="bottom-sheet">
         <div class="sheet-handle"></div>
-        <div class="sheet-title tip-text" data-tip="탈퇴하면 출석·성적·랭킹 등 저장된 모든 정보가 삭제되며 복구할 수 없어요." style="color: #e53e3e;">⚠️ 학원 앱 회원 탈퇴</div>
+        <div class="sheet-title tip-text" data-tip="탈퇴하면 출석·성적·랭킹 등 저장된 모든 정보가 삭제되며 복구할 수 없어요." style="color: var(--danger);">⚠️ 학원 앱 회원 탈퇴</div>
         <div class="sheet-desc">
             본인 확인을 위해 <span>유투엠 아이디</span>와 <span>전화번호 뒷자리 4자리</span>를 입력해 주세요.
         </div>
@@ -1546,7 +1548,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
 
         <div class="btn-flex-group">
             <button class="btn-base btn-secondary" onclick="closeBottomSheet('reauthBottomSheetOverlay', 'reauthBottomSheet')">취소</button>
-            <button class="btn-base" style="background-color:#e53e3e; color:#fff;" onclick="processReauthAndDelete()">본인 인증 후 탈퇴</button>
+            <button class="btn-base" style="background-color:var(--danger); color:#fff;" onclick="processReauthAndDelete()">본인 인증 후 탈퇴</button>
         </div>
     </div>
 
@@ -2924,7 +2926,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         };
         canvas.onpointermove = (e) => {
             if (!mathqDrawing || !mathqLastPoint) return;
-            ctx.strokeStyle = mathqIsEraser ? '#ffffff' : mathqPenColor;
+            ctx.strokeStyle = mathqIsEraser ? '#fff' : mathqPenColor;
             ctx.lineWidth = mathqIsEraser ? 20 : 3;
             ctx.beginPath();
             ctx.moveTo(mathqLastPoint.x, mathqLastPoint.y);
