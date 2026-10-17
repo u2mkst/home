@@ -73,6 +73,16 @@
             --radius-lg: 28px;
             --radius-md: 16px;
 
+            /* 글자 크기 기준 — index.html의 --fs-* 와 완전히 같은 값(10단계만 씀) */
+            --fs-2xs: 0.68rem;
+            --fs-xs: 0.76rem;
+            --fs-sm: 0.85rem;
+            --fs-base: 0.9rem;
+            --fs-md: 0.95rem;
+            --fs-lg: 1.05rem;
+            --fs-xl: 1.25rem;
+            --fs-2xl: 1.6rem;
+
             /* 🎨 토스 스타일 플랫 디자인 토큰 */
             --lg-surface: #fff;
             --lg-surface-strong: #fff;
@@ -122,8 +132,8 @@
             .container { max-width: 460px; }
             .auth-shell { padding: 40px 44px 48px; }
             .header-zone .logo-wrapper { max-width: 210px; height: 42px; }
-            h2 { font-size: 1.6rem; margin-bottom: 28px; }
-            input, select, button { font-size: 1rem; padding: 16px 18px; }
+            h2 { margin-bottom: 28px; }
+            input, select, button { font-size: var(--fs-lg); padding: 16px 18px; }
         }
 
         /* 🔗 네이버 로그인 카드처럼 배경은 페이지와 같은 흰색, 테두리 하나로만
@@ -161,10 +171,10 @@
 
         /* index.html 하단 브랜드 표기와 동일하게 맞춘다 */
         .page-footer { margin-top: 28px; text-align: center; }
-        .footer-brand { font-family: 'Paperlogy', sans-serif; font-size: 0.78rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.3px; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .footer-brand { font-family: 'Paperlogy', sans-serif; font-size: var(--fs-sm); font-weight: 700; color: var(--text-main); letter-spacing: -0.3px; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .footer-brand span { font-family: 'FlightSans', 'Paperlogy', sans-serif; font-weight: 700; }
         .footer-brand img { height: 12px; width: auto; vertical-align: middle; }
-        .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: 0.62rem; color: var(--text-muted); letter-spacing: 0.5px; }
+        .footer-copyright { font-family: 'FlightSans', sans-serif; font-size: var(--fs-2xs); color: var(--text-muted); letter-spacing: 0.5px; }
 
         @keyframes cardFadeIn {
             from { opacity: 0; transform: translateY(20px) scale(0.97); }
@@ -174,13 +184,13 @@
         h2 { 
             font-family: var(--font-title);
             margin-top: 0; color: var(--text-main); 
-            font-size: 1.45rem; font-weight: 700; 
+            font-size: var(--fs-2xl); font-weight: 700;
             margin-bottom: 24px; text-align: center; letter-spacing: -0.3px;
         }
 
         /* 네이버 회원가입처럼 한 화면에 한 항목씩 — 진행 상황은 얇은 바 하나로 표시 */
         .step-progress-label {
-            text-align: right; font-size: 0.76rem; font-weight: 700;
+            text-align: right; font-size: var(--fs-xs); font-weight: 700;
             color: var(--text-muted); margin-bottom: 8px;
         }
 
@@ -197,11 +207,11 @@
         .form-group { display: flex; flex-direction: column; margin-bottom: 22px; }
         .form-row { display: flex; gap: 10px; }
 
-        label { display: block; font-weight: 700; font-size: 0.83rem; color: #334155; margin-bottom: 6px; padding-left: 2px; }
+        label { display: block; font-weight: 700; font-size: var(--fs-sm); color: #334155; margin-bottom: 6px; padding-left: 2px; }
 
         .btn-sub-action {
             background: rgba(0, 75, 191, 0.1); color: var(--primary); border: none;
-            padding: 4px 10px; border-radius: 999px; font-size: 0.73rem; font-weight: 700;
+            padding: 4px 10px; border-radius: 999px; font-size: var(--fs-xs); font-weight: 700;
             cursor: pointer; transition: all 0.2s ease; width: auto; box-shadow: none;
             font-family: var(--font-body);
         }
@@ -214,7 +224,7 @@
         input, select {
             width: 100%; padding: 14px 2px;
             border: none; border-bottom: 1.5px solid var(--lg-border); border-radius: 0;
-            font-size: 0.95rem; font-family: var(--font-body);
+            font-size: var(--fs-md); font-family: var(--font-body);
             background-color: transparent; color: var(--text-main);
             transition: all 0.3s var(--ease-smooth);
         }
@@ -239,7 +249,7 @@
             transform: translateY(-50%);
             color: #94a3b8;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: var(--fs-lg);
             padding: 5px;
             transition: color 0.2s ease;
             user-select: none;
@@ -257,24 +267,24 @@
             animation: lgPopIn 0.3s var(--spring);
         }
         .autocomplete-item {
-            padding: 12px 16px; cursor: pointer; font-size: 0.88rem;
+            padding: 12px 16px; cursor: pointer; font-size: var(--fs-base);
             color: var(--text-main); border-bottom: 1px solid #f1f5f9;
             display: flex; justify-content: space-between; align-items: center;
         }
         .autocomplete-item:last-child { border-bottom: none; }
         .autocomplete-item:hover { background: rgba(0, 75, 191, 0.06); color: var(--primary); font-weight: 600; }
-        .autocomplete-item .school-region { font-size: 0.76rem; color: var(--text-muted); }
+        .autocomplete-item .school-region { font-size: var(--fs-xs); color: var(--text-muted); }
 
-        .info-text { font-size: 0.76rem; color: var(--text-muted); margin-top: 5px; padding-left: 2px; line-height: 1.35; }
+        .info-text { font-size: var(--fs-xs); color: var(--text-muted); margin-top: 5px; padding-left: 2px; line-height: 1.35; }
 
         .agree-container { display: flex; align-items: center; margin: 6px 0 12px 0; padding-left: 2px; cursor: pointer; user-select: none; }
         .agree-container input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; accent-color: var(--primary); }
-        .agree-text { font-size: 0.85rem; color: #334155; font-weight: 600; }
+        .agree-text { font-size: var(--fs-sm); color: #334155; font-weight: 600; }
         
         .policy-text-box {
             width: 100%; height: 140px; padding: 12px;
             border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md);
-            background-color: rgba(255, 255, 255, 0.85); font-size: 0.76rem; line-height: 1.45;
+            background-color: rgba(255, 255, 255, 0.85); font-size: var(--fs-xs); line-height: 1.45;
             color: #475569; resize: none; margin-bottom: 12px; font-family: var(--font-body); outline: none;
         }
 
@@ -284,7 +294,7 @@
             font-family: var(--font-title); display: block;
             background: var(--primary); color: #ffffff; border: none;
             padding: 14px 20px; border-radius: var(--radius-md);
-            cursor: pointer; font-weight: 700; font-size: 0.98rem; width: 100%;
+            cursor: pointer; font-weight: 700; font-size: var(--fs-md); width: 100%;
             box-shadow: 0 4px 12px rgba(0, 75, 191, 0.25);
             transition: transform 0.35s var(--spring), box-shadow 0.3s var(--ease-smooth), background 0.3s ease;
         }
@@ -294,7 +304,7 @@
         button.btn-prev { background: var(--lg-surface); color: #475569; box-shadow: var(--lg-shadow); border: 1px solid var(--lg-border); width: 35%; backdrop-filter: var(--lg-blur); }
         button.btn-prev:hover { background: rgba(255,255,255,0.7); box-shadow: var(--lg-shadow); }
 
-        .switch-mode { text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--text-muted); }
+        .switch-mode { text-align: center; margin-top: 18px; font-size: var(--fs-sm); color: var(--text-muted); }
         .switch-link { color: var(--primary); text-decoration: none; font-weight: 700; margin-left: 4px; cursor: pointer; }
         .switch-link:hover { text-decoration: underline; }
 
@@ -324,7 +334,7 @@
         }
         .quick-link-icon img { width: 100%; height: 100%; object-fit: contain; }
 
-        .quick-link-label { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); font-family: var(--font-title); }
+        .quick-link-label { font-size: var(--fs-sm); font-weight: 700; color: var(--text-muted); font-family: var(--font-title); }
 
         .quick-link-divider { width: 1.5px; background: var(--lg-border); margin: 11px 0; }
 
@@ -347,8 +357,8 @@
             transform: translateX(-50%) translateY(0) scale(1);
         }
 
-        .toast-icon { font-size: 1.25rem; line-height: 1; }
-        .toast-text { font-size: 0.88rem; font-weight: 600; white-space: pre-line; text-align: left; line-height: 1.4; }
+        .toast-icon { font-size: var(--fs-xl); line-height: 1; }
+        .toast-text { font-size: var(--fs-base); font-weight: 600; white-space: pre-line; text-align: left; line-height: 1.4; }
 
         .hidden { display: none !important; }
 
@@ -364,7 +374,7 @@
         .kst-loading-bar { width: 180px; height: 4px; background: rgba(0, 75, 191, 0.15); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
         .kst-loading-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #004bbf, #8FB8FA); animation: kstLoadingProgress 1.4s infinite ease-in-out; transform-origin: left; }
         @keyframes kstLoadingProgress { 0% { transform: scaleX(0); } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); opacity: 0; } }
-        .kst-loading-subtext { font-family: 'Paperlogy', -apple-system, sans-serif; font-size: 0.85rem; color: #86868b; font-weight: 600; }
+        .kst-loading-subtext { font-family: 'Paperlogy', -apple-system, sans-serif; font-size: var(--fs-sm); color: #86868b; font-weight: 600; }
     </style>
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/components.css">
@@ -381,12 +391,12 @@
          항상 라이트모드로 고정 표시 (다크모드 CSS 변수 영향 안 받음). -->
     <div id="kstMaintenanceGate" style="display:none; position:fixed; inset:0; z-index:2147483647; background:#F2F4F6; color:#191F28; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; align-items:center; justify-content:center; text-align:center; padding:24px; box-sizing:border-box;">
         <div>
-            <div style="font-size:48px; margin-bottom:16px;">🔧</div>
-            <div style="font-size:20px; font-weight:700; margin-bottom:8px;">잠시 점검 중입니다</div>
-            <div style="font-size:14px; color:#8B95A1; margin-bottom:20px;">잠시 후 다시 이용해주세요.</div>
+            <div style="font-size:3.5rem; margin-bottom:16px;">🔧</div>
+            <div style="font-size:1.5rem; font-weight:700; margin-bottom:8px;">잠시 점검 중입니다</div>
+            <div style="font-size:1rem; color:#8B95A1; margin-bottom:20px;">잠시 후 다시 이용해주세요.</div>
             <div style="width:min(340px,86vw); margin:0 auto; text-align:left;">
-                <a href="https://swgwanggyo.u2math.co.kr/Login/Index" target="_blank" rel="noopener" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:17px; font-weight:700;"><span>유투엠 바로가기</span><span style="color:#8B95A1;">➔</span></a>
-                <a href="https://student.mathflat.com/" target="_blank" rel="noopener" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; border-bottom:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:17px; font-weight:700;"><span>매쓰플랫 바로가기</span><span style="color:#8B95A1;">➔</span></a>
+                <a href="https://swgwanggyo.u2math.co.kr/Login/Index" target="_blank" rel="noopener" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:1.25rem; font-weight:700;"><span>유투엠 바로가기</span><span style="color:#8B95A1;">➔</span></a>
+                <a href="https://student.mathflat.com/" target="_blank" rel="noopener" style="display:flex; justify-content:space-between; align-items:center; padding:20px 4px; border-top:1px solid #E5E8EB; border-bottom:1px solid #E5E8EB; color:#191F28; text-decoration:none; font-size:1.25rem; font-weight:700;"><span>매쓰플랫 바로가기</span><span style="color:#8B95A1;">➔</span></a>
             </div>
         </div>
     </div>
