@@ -4116,7 +4116,9 @@ body{background-color:var(--bg-page);color:var(--text-main)}
 
             const decrypted = await decryptAESBatch(rows.map(r => r.rawName || ''), rows.map(r => r.uid));
             const rankArray = rows.map((r, i) => ({
-                uid: r.uid, name: r.rawName ? decrypted[i] : "학생",
+                // decrypted[i]가 빈 문자열이면(서버가 복호화를 거부한 경우 포함) 이름 자리가
+                // 그냥 비어 보이지 않도록 "학생"으로 대체한다 — rawName이 있어도 마찬가지.
+                uid: r.uid, name: (r.rawName && decrypted[i]) ? decrypted[i] : "학생",
                 school: r.school, teacher: r.teacher, count: r.count
             }));
 
@@ -4578,7 +4580,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                         <div class="flex items-center gap-3">
                             <div class="rank-badge ${badgeClass}">${rank}</div>
                             <div>
-                                <div class="font-bold">${escapeHTML(ciphers[i] ? names[i] : '학생')} ${isMe ? '(나)' : ''}</div>
+                                <div class="font-bold">${escapeHTML((ciphers[i] && names[i]) ? names[i] : '학생')} ${isMe ? '(나)' : ''}</div>
                                 <div class="text-xs text-gray-500">🏫 ${escapeHTML(std.schoolName || '학교 미기재')} | 👨‍🏫 ${escapeHTML(std.teacher ? std.teacher + ' 선생님' : '선생님 미기재')}</div>
                             </div>
                         </div>

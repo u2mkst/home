@@ -157,6 +157,50 @@ async function deleteStudent(body) {
     return { ok: true };
 }
 
+// ---------- 랭킹 이름 동기화 점검 ----------
+// 랭킹 화면은 students/{uid}/name 과 public_students/{uid}/name의 암호문이 "완전히 똑같은
+// 문자열"일 때만 그 학생 이름을 복호화해서 보여준다(남의 전화번호 등은 안 풀어주려고 서버가
+// 직접 대조하는 로직 — api/decrypt.js 참고). 둘이 어긋나 있으면 그 학생 이름만 조용히
+// "학생"으로 보인다(공백은 아님, 화면에서 그렇게 대체하도록 바꿔뒀다). 가입(api/register.js)은
+// 항상 같은 암호문을 양쪽에 같이 쓰므로 정상적으로는 어긋날 일이 없는데, 혹시 어긋난 계정이
+// 있는지 확인하고(check) 있으면 공개용 쪽을 원본(students)에 맞춰 고친다(fix).
+async function nameSyncCheck() {
+    const [studentsSnap, pubSnap] = await Promise.all([
+        admin.database().ref("students").once("value"),
+        admin.database().ref("public_students").once("value"),
+    ]);
+    const students = studentsSnap.val() || {};
+    const pub = pubSnap.val() || {};
+    const mismatched = [];
+    Object.keys(students).forEach((uid) => {
+        const privName = students[uid] && students[uid].name;
+        const pubEntry = pub[uid];
+        if (!privName) return; // 이름 자체가 없는 계정(가입 중단 등)은 대상 아님
+        if (!pubEntry) { mismatched.push({ uid, name: safePlain(privName), issue: "public_students_missing" }); return; }
+        if (pubEntry.name !== privName) mismatched.push({ uid, name: safePlain(privName), issue: "cipher_mismatch" });
+    });
+    return { total: Object.keys(students).length, mismatched };
+}
+
+async function nameSyncFix() {
+    const [studentsSnap, pubSnap] = await Promise.all([
+        admin.database().ref("students").once("value"),
+        admin.database().ref("public_students").once("value"),
+    ]);
+    const students = studentsSnap.val() || {};
+    const pub = pubSnap.val() || {};
+    const updates = {};
+    Object.keys(students).forEach((uid) => {
+        const privName = students[uid] && students[uid].name;
+        if (!privName) return;
+        const pubEntry = pub[uid];
+        if (!pubEntry || pubEntry.name !== privName) updates[`public_students/${uid}/name`] = privName;
+    });
+    const fixed = Object.keys(updates).length;
+    if (fixed) await admin.database().ref().update(updates);
+    return { ok: true, fixed };
+}
+
 // ---------- 출석 보정 ----------
 async function setAttendance(body) {
     const uid = needUid(body);
@@ -306,6 +350,8 @@ const ACTIONS = {
     "lotto-set-draw": lottoSetDraw,
     "lotto-clear-predictions": lottoClearPredictions,
     "lotto-summary": lottoSummary,
+    "name-sync-check": nameSyncCheck,
+    "name-sync-fix": nameSyncFix,
 };
 
 module.exports = async (req, res) => {

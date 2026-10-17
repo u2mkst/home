@@ -685,6 +685,13 @@ body{background:#F2F4F6;color:#191F28}
                             <div style="height: 12px;"></div>
                             <div id="adm-status-box"><div class="no-data">불러오는 중...</div></div>
                         </div>
+                        <div class="panel-card">
+                            <h3>🏷️ 순위 화면 이름 동기화 점검</h3>
+                            <p style="font-size:0.85rem; color:var(--text-muted); margin:4px 0 12px;">순위(랭킹) 화면은 학생 이름을 보여줄 때 students와 public_students에 저장된 암호문이 완전히 같은지 서버가 대조한다. 어긋난 계정이 있으면 그 학생 이름만 "학생"으로 표시된다 — 아래로 어떤 계정이 어긋나 있는지 확인하고 고칠 수 있다.</p>
+                            <button class="btn-block btn-purple adm-small" onclick="checkNameSync()">🔍 점검하기</button>
+                            <div style="height: 12px;"></div>
+                            <div id="adm-namesync-box"><div class="no-data">아직 점검하지 않았습니다.</div></div>
+                        </div>
                     </section>
 
                     <!-- 로또 · 랭킹 -->
@@ -1483,6 +1490,39 @@ body{background:#F2F4F6;color:#191F28}
                 frag.appendChild(info);
                 box.replaceChildren(frag);
             } catch (e) { box.replaceChildren(admEl('div', 'no-data', '불러오지 못했습니다: ' + e.message)); }
+        }
+
+        // ---------- 순위 화면 이름 동기화 ----------
+        async function checkNameSync() {
+            const box = document.getElementById('adm-namesync-box');
+            box.replaceChildren(admEl('div', 'no-data', '점검 중...'));
+            try {
+                const r = await adminApi('name-sync-check');
+                const frag = document.createDocumentFragment();
+                if (!r.mismatched.length) {
+                    frag.appendChild(admEl('div', 'adm-status-cell', `✅ 학생 ${r.total}명 전원 정상 — 순위 화면에 이름이 안 뜨는 계정 없음`));
+                } else {
+                    frag.appendChild(admEl('div', 'adm-status-cell bad', `❌ 학생 ${r.total}명 중 ${r.mismatched.length}명 어긋남 — 순위 화면에 이름 대신 "학생"으로 뜸`));
+                    const list = admEl('div', 'feed-container');
+                    list.style.marginTop = '10px';
+                    r.mismatched.forEach(m => {
+                        list.appendChild(admEl('div', 'no-data', `${m.name || '(이름 복호화 실패)'} — ${m.issue === 'public_students_missing' ? '공개용 기록 자체가 없음' : '암호문이 서로 다름'} (uid: ${m.uid})`));
+                    });
+                    frag.appendChild(list);
+                    const fixBtn = admBtn('🔧 전부 자동으로 맞추기', fixNameSync, true);
+                    fixBtn.style.marginTop = '10px';
+                    frag.appendChild(fixBtn);
+                }
+                box.replaceChildren(frag);
+            } catch (e) { box.replaceChildren(admEl('div', 'no-data', '점검 실패: ' + e.message)); }
+        }
+        async function fixNameSync() {
+            if (!confirm('어긋난 계정의 공개용(public_students) 이름을 본인 기록(students) 기준으로 덮어씁니다. 계속할까요?')) return;
+            try {
+                const r = await adminApi('name-sync-fix');
+                alert(`${r.fixed}명을 고쳤습니다.`);
+                checkNameSync();
+            } catch (e) { alert('고치지 못했습니다: ' + e.message); }
         }
 
         // ---------- 로또 ----------
