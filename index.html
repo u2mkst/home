@@ -436,6 +436,8 @@
 
         .history-zone { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px; margin-bottom: 20px; background: var(--lg-surface-soft); border-radius: var(--radius-md); border: 1px solid var(--lg-border-soft); box-sizing: border-box; text-align: left; }
         .no-data { text-align: center; color: var(--text-muted); padding: 40px 0; font-size: var(--fs-sm); width: 100%; }
+        .no-data.compact { padding: 24px 0; }
+        .no-data.danger { color: var(--danger); font-weight: 700; }
 
         /* ============ 홈(HOME) 뷰 ============ */
         .header-zone { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; padding: 0 8px; cursor: default; }
@@ -680,11 +682,12 @@
             box-shadow: var(--lg-shadow-sm); max-width: 480px; flex: 1;
         }
         .top-tab-btn {
-            flex: 1; padding: 12px 20px; border-radius: var(--radius-md); font-family: 'Paperlogy', sans-serif;
-            font-size: var(--fs-md); font-weight: 700; color: var(--text-muted); border: none; background: transparent; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+            flex: 1; padding: 12px 14px; border-radius: var(--radius-md); font-family: 'Paperlogy', sans-serif;
+            font-size: var(--fs-sm); font-weight: 700; color: var(--text-muted); border: none; background: transparent; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;
             transition: all 0.4s var(--spring);
         }
+        @media (min-width: 420px) { .top-tab-btn { font-size: var(--fs-md); padding: 12px 20px; gap: 8px; } }
         .top-tab-btn:active { transform: scale(0.94); }
         .top-tab-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #fff; box-shadow: 0 10px 22px rgba(0, 75, 191, 0.35), inset 0 1px 1px rgba(255,255,255,0.3); }
 
@@ -705,12 +708,37 @@
         .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--lg-surface); border-radius: var(--radius-lg); font-size: var(--fs-lg); border: 1px solid var(--lg-border-soft); transition: transform 0.35s var(--spring), background 0.3s ease; }
         .rank-item:hover { transform: translateY(-3px); background: var(--lg-surface-strong); }
         .rank-item.my-rank { background: rgba(0, 75, 191, 0.14); border: 2px solid var(--accent); font-weight: 700; }
+        .rank-item-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .rank-item-name { font-weight: 700; color: var(--text-main); }
+        .rank-item-meta { font-size: var(--fs-xs); color: var(--text-muted); }
+        .rank-item-count { font-weight: 800; color: var(--accent); white-space: nowrap; }
         .rank-badge { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--fs-base); font-weight: 800; color: #fff; background: #a1a1a6; flex-shrink: 0; }
         .rank-1 { background: #ffd700; color: #3d2e00; box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4); }
         .rank-2 { background: #c0c0c0; color: #2b2b2b; }
         .rank-3 { background: #cd7f32; color: #fff; }
 
+        /* 순위 카드 안쪽 공통 조각 — 전엔 Tailwind 유틸리티 클래스(text-lg, text-indigo-600 등)를
+           그대로 써서 크기 기준(--fs-*)·색상 기준(--accent 등)에서 벗어나 있었다. */
+        .rank-section-title { display: flex; align-items: center; gap: 8px; font-size: var(--fs-lg); font-weight: 700; color: var(--text-main); margin-bottom: 16px; }
+        .rank-row-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; }
+        .rank-pill-badge { font-size: var(--fs-xs); font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 4px 12px; border-radius: 999px; white-space: nowrap; }
+        .rank-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+        .rank-stat-box { background: var(--lg-surface); border: 1px solid var(--lg-border); border-radius: var(--radius-lg); padding: 18px 10px; text-align: center; box-shadow: var(--lg-shadow-sm); }
+        .rank-stat-label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+        .rank-stat-value { font-size: var(--fs-3xl); font-weight: 800; color: var(--accent); line-height: 1.1; }
+        .rank-section-divider { border-top: 1px solid var(--lg-border-soft); margin-top: 18px; padding-top: 18px; }
+        .rank-subtext { font-size: var(--fs-xs); color: var(--text-muted); font-weight: 600; margin-bottom: 10px; }
+        .rank-winning-box { min-height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: var(--lg-surface-soft); padding: 16px; border-radius: var(--radius-lg); border: 1px solid var(--lg-border-soft); }
+        .rank-winning-box .no-data { padding: 0; }
+        .rank-result-box { padding: 20px; border-radius: var(--radius-lg); text-align: center; background: var(--accent-light); border: 1px solid rgba(0,75,191,0.18); box-shadow: var(--lg-shadow-sm); }
+        .rank-result-box.muted { background: var(--lg-surface-soft); border-color: var(--lg-border-soft); }
+        .rank-result-title { font-size: var(--fs-md); font-weight: 800; color: var(--accent); margin-bottom: 12px; }
+        .rank-result-box.muted .rank-result-title { color: var(--text-main); }
+        .rank-result-note { font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); margin-top: 12px; }
+
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        .calendar-day-head.sun { color: var(--danger); }
+        .calendar-day-head.sat { color: var(--accent); }
         .calendar-day-head { font-size: var(--fs-sm); font-weight: 700; color: var(--text-muted); padding: 4px 0; }
         .calendar-day { padding: 10px 0; font-size: var(--fs-md); border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.4); border: 1px solid var(--lg-border-soft); transition: all 0.35s var(--spring); }
         .calendar-day.attended { background: linear-gradient(135deg, var(--accent), var(--accent)); color: #fff; font-weight: 800; box-shadow: 0 8px 18px rgba(0, 75, 191, 0.4); border-color: var(--accent); }
@@ -736,7 +764,7 @@
         #lottoMyResult { margin-top: 14px; }
         #lottoMyResult .lotto-panel { margin-bottom: 0; }
         .lotto-tray { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        .lotto-tray .plus { font-weight: 800; color: var(--text-muted); }
+        .lotto-tray .plus, .lotto-plus { font-weight: 800; color: var(--text-muted); margin: 0 6px; }
         .lotto-pad { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 18px auto 0; max-width: 360px; }
         .lotto-pad-btn { height: 42px; min-width: 0; border-radius: var(--radius-sm); border: none; color: var(--text-main); font-family: 'Isamanru', 'FlightSans', sans-serif; font-weight: 700; font-size: var(--fs-md); cursor: pointer; padding: 0; position: relative; box-shadow: inset 0 0 0 1px var(--lg-border-soft); transition: transform 0.12s ease, background 0.15s ease; -webkit-tap-highlight-color: transparent; font-variant-numeric: tabular-nums; }
         .lotto-pad-btn:not(.sel) { background: var(--lg-surface); }
@@ -1172,101 +1200,97 @@ body{background-color:var(--bg-page);color:var(--text-main)}
 
         <!-- 3-1. 이달의 출석 -->
         <div id="rankview-attendance" class="tablet-grid animate-tab-switch">
-            <div class="rank-card flex flex-col justify-center space-y-6">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold flex items-center gap-2 tip-text" data-tip="학원에 출석 체크가 될 때마다 이번 달 출석일과 달성률이 자동으로 올라가요.">
-                            <span class="emoji-font">📊</span> 나의 이번 달 출석현황
-                        </h2>
-                        <span id="currentMonthTitle" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">2026년 8월</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="bg-white/80 p-5 rounded-2xl border border-white text-center shadow-sm">
-                            <div class="text-xs text-gray-400 font-bold mb-1">총 출석일</div>
-                            <div id="myAttDays" class="text-3xl font-black text-indigo-600">0일</div>
-                        </div>
-                        <div class="bg-white/80 p-5 rounded-2xl border border-white text-center shadow-sm">
-                            <div class="text-xs text-gray-400 font-bold mb-1">출석 달성률</div>
-                            <div id="myAttRate" class="text-3xl font-black text-indigo-600">0%</div>
-                        </div>
-                    </div>
-
-                    <div class="calendar-grid">
-                        <div class="calendar-day-head text-red-500">일</div>
-                        <div class="calendar-day-head">월</div>
-                        <div class="calendar-day-head">화</div>
-                        <div class="calendar-day-head">수</div>
-                        <div class="calendar-day-head">목</div>
-                        <div class="calendar-day-head">금</div>
-                        <div class="calendar-day-head text-blue-500">토</div>
-                    </div>
-                    <div id="calendarDays" class="calendar-grid mt-2"></div>
+            <div class="rank-card">
+                <div class="rank-row-between">
+                    <h2 class="rank-section-title tip-text" data-tip="학원에 출석 체크가 될 때마다 이번 달 출석일과 달성률이 자동으로 올라가요." style="margin-bottom:0;">
+                        <span class="emoji-font">📊</span> 나의 이번 달 출석현황
+                    </h2>
+                    <span id="currentMonthTitle" class="rank-pill-badge">2026년 8월</span>
                 </div>
+
+                <div class="rank-stat-grid">
+                    <div class="rank-stat-box">
+                        <div class="rank-stat-label">총 출석일</div>
+                        <div id="myAttDays" class="rank-stat-value">0일</div>
+                    </div>
+                    <div class="rank-stat-box">
+                        <div class="rank-stat-label">출석 달성률</div>
+                        <div id="myAttRate" class="rank-stat-value">0%</div>
+                    </div>
+                </div>
+
+                <div class="calendar-grid">
+                    <div class="calendar-day-head sun">일</div>
+                    <div class="calendar-day-head">월</div>
+                    <div class="calendar-day-head">화</div>
+                    <div class="calendar-day-head">수</div>
+                    <div class="calendar-day-head">목</div>
+                    <div class="calendar-day-head">금</div>
+                    <div class="calendar-day-head sat">토</div>
+                </div>
+                <div id="calendarDays" class="calendar-grid" style="margin-top:8px;"></div>
             </div>
 
             <div class="rank-card fixed-rank-card">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <h2 class="rank-section-title">
                     <span class="emoji-font">🥇</span> 이달의 출석 횟수 Top 10
                 </h2>
                 <div class="rank-scroll-area">
-                    <div id="attendanceRankList" class="space-y-2.5">
-                        <div class="text-center py-10 text-gray-400"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5a2 2 0 0 0 0 4h1M16 5h3a2 2 0 0 1 0 4h-1"/><path d="M12 13v3M9 20h6M10 17h4v3h-4z"/></svg>랭킹 불러오는 중...</div>
+                    <div id="attendanceRankList" style="display:flex; flex-direction:column; gap:10px;">
+                        <div class="no-data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="no-data-illustration"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5a2 2 0 0 0 0 4h1M16 5h3a2 2 0 0 1 0 4h-1"/><path d="M12 13v3M9 20h6M10 17h4v3h-4z"/></svg>랭킹 불러오는 중...</div>
                     </div>
                 </div>
-                <div id="myAttendanceRankCard" class="mt-3 pt-3 border-t border-gray-200/60"></div>
+                <div id="myAttendanceRankCard" class="rank-section-divider"></div>
             </div>
         </div>
 
         <!-- 3-2. 이주의 로또 -->
         <div id="rankview-lotto" class="tablet-grid animate-tab-switch" style="display: none;">
-            <div class="rank-card flex flex-col space-y-6">
-                <div>
-                    <div class="mb-5">
-                        <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
-                            <span class="emoji-font">🎉</span> <span id="lottoResultRoundText">지난 회차 당첨 결과</span>
+            <div class="rank-card">
+                <div style="margin-bottom:20px;">
+                    <h2 class="rank-section-title">
+                        <span class="emoji-font">🎉</span> <span id="lottoResultRoundText">지난 회차 당첨 결과</span>
+                    </h2>
+                    <div id="lottoWinningBox" class="rank-winning-box">
+                        <span class="no-data">당첨 번호를 불러오는 중...</span>
+                    </div>
+                    <div id="lottoMyResult" style="margin-top:12px;"></div>
+                </div>
+
+                <div class="rank-section-divider">
+                    <div class="rank-row-between" style="margin-bottom:8px;">
+                        <h2 class="rank-section-title tip-text" data-tip="번호 6개와 보너스 번호 1개를 예측해서 제출하면, 실제 추첨 결과와 비교해 적중 개수로 랭킹이 매겨져요." style="margin-bottom:0;">
+                            <span class="emoji-font">🔮</span> <span id="lottoChallengeRoundText">나의 예측</span>
                         </h2>
-                        <div id="lottoWinningBox" class="min-h-[72px] flex flex-col items-center justify-center gap-2 bg-white/70 p-4 rounded-2xl border border-white shadow-sm">
-                            <span class="text-sm text-gray-400">당첨 번호를 불러오는 중...</span>
-                        </div>
-                        <div id="lottoMyResult" class="mt-3"></div>
                     </div>
+                    <p id="lottoChallengeSubtext" class="rank-subtext">* 회차 정보를 불러오는 중입니다...</p>
+                    <div id="lottoCountdown" class="lotto-countdown" style="display:none;"></div>
 
-                    <div class="pt-4 border-t border-gray-200/60">
-                        <div class="flex justify-between items-center mb-2">
-                            <h2 class="text-lg font-bold flex items-center gap-2 tip-text" data-tip="번호 6개와 보너스 번호 1개를 예측해서 제출하면, 실제 추첨 결과와 비교해 적중 개수로 랭킹이 매겨져요.">
-                                <span class="emoji-font">🔮</span> <span id="lottoChallengeRoundText">나의 예측</span>
-                            </h2>
-                        </div>
-                        <p id="lottoChallengeSubtext" class="text-xs text-gray-500 mb-3">* 회차 정보를 불러오는 중입니다...</p>
-                        <div id="lottoCountdown" class="lotto-countdown" style="display:none;"></div>
-
-                        <div id="myLottoStatus">
-                            <div id="lottoInputForm">
-                                <div class="lotto-panel">
-                                    <div id="lottoTray" class="lotto-tray"></div>
-                                    <div id="lottoPickCount" class="lotto-count-text"></div>
-                                    <div id="lottoPad" class="lotto-pad"></div>
-                                    <div class="lotto-actions">
-                                        <button type="button" class="lotto-mini-btn" onclick="generateAutoLotto()">🎲 자동 선택 (남은 번호 채우기)</button>
-                                        <button type="button" class="lotto-mini-btn" onclick="resetLottoPick()">↺ 초기화</button>
-                                    </div>
+                    <div id="myLottoStatus">
+                        <div id="lottoInputForm">
+                            <div class="lotto-panel">
+                                <div id="lottoTray" class="lotto-tray"></div>
+                                <div id="lottoPickCount" class="lotto-count-text"></div>
+                                <div id="lottoPad" class="lotto-pad"></div>
+                                <div class="lotto-actions">
+                                    <button type="button" class="lotto-mini-btn" onclick="generateAutoLotto()">🎲 자동 선택 (남은 번호 채우기)</button>
+                                    <button type="button" class="lotto-mini-btn" onclick="resetLottoPick()">↺ 초기화</button>
                                 </div>
-
-                                <button id="lottoSubmitBtn" onclick="submitLottoPrediction()" class="rank-btn-base rank-btn-primary w-full py-4 text-base">예측 번호 제출하기</button>
                             </div>
-                            <div id="lottoSubmittedView" style="display:none;"></div>
-                        </div>
-                    </div>
 
-                    <div class="pt-4 mt-5 border-t border-gray-200/60">
-                        <button type="button" id="lottoHistoryToggle" class="lotto-mini-btn w-full" style="padding:11px 12px;" onclick="openLottoHistory()">📜 내 로또 기록 보기</button>
+                            <button id="lottoSubmitBtn" onclick="submitLottoPrediction()" class="rank-btn-base rank-btn-primary" style="width:100%; padding:16px;">예측 번호 제출하기</button>
+                        </div>
+                        <div id="lottoSubmittedView" style="display:none;"></div>
                     </div>
+                </div>
+
+                <div class="rank-section-divider">
+                    <button type="button" id="lottoHistoryToggle" class="lotto-mini-btn" style="width:100%; padding:11px 12px;" onclick="openLottoHistory()">📜 내 로또 기록 보기</button>
                 </div>
             </div>
 
             <div class="rank-card fixed-rank-card">
-                <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
+                <h2 class="rank-section-title">
                     <span class="emoji-font">🎯</span> <span id="lottoRankTitleText">적중 랭킹 Top 10</span>
                 </h2>
                 <div class="lotto-rank-controls">
@@ -1280,8 +1304,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     </select>
                 </div>
                 <div class="rank-scroll-area">
-                    <div id="lottoRankList" class="space-y-2.5">
-                        <div class="text-center py-10 text-gray-400">랭킹을 불러오는 중...</div>
+                    <div id="lottoRankList" style="display:flex; flex-direction:column; gap:10px;">
+                        <div class="no-data">랭킹을 불러오는 중...</div>
                     </div>
                 </div>
             </div>
@@ -4144,7 +4168,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         container.innerHTML = '';
 
         if (rankArray.length === 0) {
-            container.innerHTML = '<div class="text-center py-10 text-gray-400">이번 달 출석 기록이 없습니다.</div>';
+            container.innerHTML = '<div class="no-data">이번 달 출석 기록이 없습니다.</div>';
             return;
         }
 
@@ -4158,14 +4182,14 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 const badgeClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
                 container.innerHTML += `
                     <div class="rank-item ${isMe ? 'my-rank' : ''}">
-                        <div class="flex items-center gap-3">
+                        <div class="rank-item-info">
                             <div class="rank-badge ${badgeClass}">${idx + 1}</div>
                             <div>
-                                <div class="font-bold">${escapeHTML(item.name)} ${isMe ? '(나)' : ''}</div>
-                                <div class="text-xs text-gray-500">🏫 ${escapeHTML(item.school)} | 👨‍🏫 ${escapeHTML(item.teacher)}</div>
+                                <div class="rank-item-name">${escapeHTML(item.name)} ${isMe ? '(나)' : ''}</div>
+                                <div class="rank-item-meta">🏫 ${escapeHTML(item.school)} | 👨‍🏫 ${escapeHTML(item.teacher)}</div>
                             </div>
                         </div>
-                        <span class="font-black text-indigo-600">${item.count}일</span>
+                        <span class="rank-item-count">${item.count}일</span>
                     </div>`;
             }
         });
@@ -4173,14 +4197,14 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (myRankInfo) {
             myRankContainer.innerHTML = `
                 <div class="rank-item my-rank">
-                    <div class="flex items-center gap-3">
-                        <span class="text-xs bg-indigo-600 text-white font-bold px-2.5 py-1 rounded-md">내 순위</span>
+                    <div class="rank-item-info">
+                        <span class="rank-pill-badge" style="background:var(--accent); color:#fff;">내 순위</span>
                         <div>
-                            <div class="font-bold">${myRankIndex}위 (${escapeHTML(myRankInfo.name)})</div>
-                            <div class="text-xs text-gray-500">🏫 ${escapeHTML(myRankInfo.school)} | 👨‍🏫 ${escapeHTML(myRankInfo.teacher)}</div>
+                            <div class="rank-item-name">${myRankIndex}위 (${escapeHTML(myRankInfo.name)})</div>
+                            <div class="rank-item-meta">🏫 ${escapeHTML(myRankInfo.school)} | 👨‍🏫 ${escapeHTML(myRankInfo.teacher)}</div>
                         </div>
                     </div>
-                    <span class="font-black text-indigo-600">${myRankInfo.count}일</span>
+                    <span class="rank-item-count">${myRankInfo.count}일</span>
                 </div>`;
         }
     }
@@ -4280,7 +4304,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
 
     function loadLottoData() {
         const box = document.getElementById('lottoWinningBox');
-        if (box) box.innerHTML = `<span class="text-sm text-gray-400">당첨 번호를 불러오는 중...</span>`;
+        if (box) box.innerHTML = `<span class="no-data" style="padding:0;">당첨 번호를 불러오는 중...</span>`;
         lottoPredictionCache = {};
         lottoDrawsCache = null;
 
@@ -4303,7 +4327,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 cachedTargetRound = null;
                 cachedLottoCanSubmit = false;
                 cachedClosesAt = null;
-                if (box) box.innerHTML = `<span class="text-xs text-red-500 font-bold">당첨 번호를 불러올 수 없어요. 잠시 후 다시 시도해 주세요.</span>`;
+                if (box) box.innerHTML = `<span class="no-data danger" style="padding:0;">당첨 번호를 불러올 수 없어요. 잠시 후 다시 시도해 주세요.</span>`;
             })
             .finally(() => {
                 updateLottoChallengeTitle();
@@ -4359,7 +4383,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     function renderLottoWinningBalls(numbers, bonus) {
         const box = document.getElementById('lottoWinningBox');
         if (!box) return;
-        box.innerHTML = `<div class="flex items-center justify-center gap-2 flex-wrap">${numbers.map(n => lottoBallHtml(n)).join('')}<span class="font-bold text-gray-400 mx-1.5">+</span>${lottoBallHtml(bonus)}</div>`;
+        box.innerHTML = `<div class="lotto-row">${numbers.map(n => lottoBallHtml(n)).join('')}<span class="lotto-plus">+</span>${lottoBallHtml(bonus)}</div>`;
     }
 
     function computeMatchedCount(predictionNumbers, winning) {
@@ -4415,7 +4439,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         const winSet = new Set(winning || []);
         const cls = small ? 'sm ' : '';
         const balls = pred.numbers.map(n => lottoBallHtml(n, cls + (winSet.has(n) ? 'hit' : 'miss'))).join('');
-        const bonus = pred.bonus ? `<span class="font-bold text-gray-400 mx-0.5">+</span>${lottoBallHtml(pred.bonus, cls + 'bonus-ring ' + (pred.bonus === winBonus ? 'hit' : 'miss'))}` : '';
+        const bonus = pred.bonus ? `<span class="lotto-plus">+</span>${lottoBallHtml(pred.bonus, cls + 'bonus-ring ' + (pred.bonus === winBonus ? 'hit' : 'miss'))}` : '';
         return balls + bonus;
     }
 
@@ -4455,7 +4479,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     async function openLottoHistory() {
         const box = document.getElementById('lottoHistoryBox');
         showModal('lottoHistoryBottomSheet');
-        box.innerHTML = `<div class="text-center py-6 text-gray-400 text-sm">불러오는 중...</div>`;
+        box.innerHTML = `<div class="no-data compact">불러오는 중...</div>`;
         try {
             const draws = await getLottoDraws();
             const rounds = Object.keys(draws).map(Number).sort((a, b) => b - a).slice(0, 30);
@@ -4467,7 +4491,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 const draw = draws[r] || {};
                 rows.push({ round: r, pred, draw, matched: computeMatchedCount(pred.numbers, draw.numbers) || 0, bonusHit: pred.bonus === draw.bonus });
             });
-            if (!rows.length) { box.innerHTML = `<div class="text-center py-6 text-gray-400 text-sm">아직 참여한 회차가 없어요. 첫 예측에 도전해 보세요!</div>`; return; }
+            if (!rows.length) { box.innerHTML = `<div class="no-data compact">아직 참여한 회차가 없어요. 첫 예측에 도전해 보세요!</div>`; return; }
             const total = rows.length;
             const best = Math.max(...rows.map(r => r.matched));
             const avg = (rows.reduce((s, r) => s + r.matched, 0) / total).toFixed(1);
@@ -4482,13 +4506,13 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 ${rows.map(r => `
                     <div class="lotto-hist-row">
                         <div>
-                            <div class="text-xs font-bold text-gray-500 mb-1">제 ${r.round}회</div>
+                            <div class="rank-item-meta" style="font-weight:700; margin-bottom:4px;">제 ${r.round}회</div>
                             <div class="balls">${lottoResultBallsHtml(r.pred, r.draw.numbers, r.draw.bonus, true)}</div>
                         </div>
                         <div class="lotto-hist-meta">${r.matched}개 적중${r.bonusHit ? ' + 보너스' : ''}<br>확률 ${(lottoMatchProbability(r.matched) * 100).toFixed(lottoMatchProbability(r.matched) >= 0.01 ? 1 : 3)}%</div>
                     </div>`).join('')}`;
         } catch (e) {
-            box.innerHTML = `<div class="text-center py-6 text-red-500 text-sm font-bold">기록을 불러오지 못했어요.</div>`;
+            box.innerHTML = `<div class="no-data danger compact">기록을 불러오지 못했어요.</div>`;
         }
     }
 
@@ -4521,8 +4545,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         const container = document.getElementById('lottoRankList');
         if (!container) return;
         const reqId = ++lottoRankRequestId;
-        if (!cachedDrawnRound) { container.innerHTML = `<div class="text-center py-10 text-gray-400">아직 발표된 회차가 없습니다.</div>`; return; }
-        container.innerHTML = `<div class="text-center py-10 text-gray-400">랭킹을 불러오는 중...</div>`;
+        if (!cachedDrawnRound) { container.innerHTML = `<div class="no-data">아직 발표된 회차가 없습니다.</div>`; return; }
+        container.innerHTML = `<div class="no-data">랭킹을 불러오는 중...</div>`;
 
         try {
             const draws = await getLottoDraws();
@@ -4566,7 +4590,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             else list.sort((a, b) => b.sum - a.sum || b.c3 - a.c3 || b.bonus - a.bonus || a.n - b.n);
 
             if (!list.length) {
-                container.innerHTML = `<div class="text-center py-10 text-gray-400">${lottoRankMode === 'week' ? `제 ${cachedDrawnRound}회` : lottoRankMode === 'month' ? '이번 달' : '지금까지'} 예측 결과가 아직 없습니다.</div>`;
+                container.innerHTML = `<div class="no-data">${lottoRankMode === 'week' ? `제 ${cachedDrawnRound}회` : lottoRankMode === 'month' ? '이번 달' : '지금까지'} 예측 결과가 아직 없습니다.</div>`;
                 return;
             }
 
@@ -4584,21 +4608,21 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 const badgeClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
                 const label = lottoRankMode === 'week'
                     ? `${a.sum}개 적중${a.bonus ? ' +보너스' : ''}`
-                    : `합계 ${a.sum}개<div class="text-[11px] font-bold text-gray-500">${a.n}회 참여 · 최고 ${a.max}개</div>`;
+                    : `합계 ${a.sum}개<div class="rank-item-meta" style="text-align:right; font-weight:700;">${a.n}회 참여 · 최고 ${a.max}개</div>`;
                 return `
                     <div class="rank-item ${isMe ? 'my-rank' : ''}">
-                        <div class="flex items-center gap-3">
+                        <div class="rank-item-info">
                             <div class="rank-badge ${badgeClass}">${rank}</div>
                             <div>
-                                <div class="font-bold">${escapeHTML((ciphers[i] && names[i]) ? names[i] : '학생')} ${isMe ? '(나)' : ''}</div>
-                                <div class="text-xs text-gray-500">🏫 ${escapeHTML(std.schoolName || '학교 미기재')} | 👨‍🏫 ${escapeHTML(std.teacher ? std.teacher + ' 선생님' : '선생님 미기재')}</div>
+                                <div class="rank-item-name">${escapeHTML((ciphers[i] && names[i]) ? names[i] : '학생')} ${isMe ? '(나)' : ''}</div>
+                                <div class="rank-item-meta">🏫 ${escapeHTML(std.schoolName || '학교 미기재')} | 👨‍🏫 ${escapeHTML(std.teacher ? std.teacher + ' 선생님' : '선생님 미기재')}</div>
                             </div>
                         </div>
-                        <span class="font-black text-indigo-600 text-right">${label}</span>
+                        <span class="rank-item-count" style="text-align:right;">${label}</span>
                     </div>`;
             }).join('');
         } catch (e) {
-            if (reqId === lottoRankRequestId) container.innerHTML = `<div class="text-center py-10 text-red-500 text-sm font-bold">랭킹을 불러오지 못했어요.</div>`;
+            if (reqId === lottoRankRequestId) container.innerHTML = `<div class="no-data danger">랭킹을 불러오지 못했어요.</div>`;
         }
     }
 
@@ -4703,21 +4727,21 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             const roundLabel = cachedTargetRound ? `제 ${cachedTargetRound}회` : '이번 회차';
 
             submittedView.innerHTML = `
-                <div class="bg-indigo-50/80 p-5 rounded-2xl border border-indigo-100 text-center shadow-sm">
-                    <div class="text-sm text-indigo-600 font-extrabold mb-3">✅ ${roundLabel} 예측 제출 완료</div>
-                    <div class="flex justify-center items-center gap-2 mt-2 flex-wrap">
+                <div class="rank-result-box">
+                    <div class="rank-result-title">✅ ${roundLabel} 예측 제출 완료</div>
+                    <div class="lotto-row">
                         ${balls}
-                        ${bonusBall ? `<span class="font-bold text-gray-400 mx-1">+</span> ${bonusBall}` : ''}
+                        ${bonusBall ? `<span class="lotto-plus">+</span> ${bonusBall}` : ''}
                     </div>
-                    <div class="text-xs text-gray-500 font-bold mt-3">⏳ ${roundLabel} 발표를 기다리는 중이에요.</div>
+                    <div class="rank-result-note">⏳ ${roundLabel} 발표를 기다리는 중이에요.</div>
                 </div>`;
             inputForm.style.display = 'none';
             submittedView.style.display = '';
         } else if (!cachedLottoCanSubmit) {
             submittedView.innerHTML = `
-                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200 text-center">
-                    <div class="text-sm text-gray-600 font-extrabold mb-1">⏳ 지금은 예측을 받지 않아요</div>
-                    <div class="text-xs text-gray-500 font-bold">추첨 직전이거나 결과를 집계하는 중이에요. 새 회차가 열리면 다시 도전해 주세요.</div>
+                <div class="rank-result-box muted">
+                    <div class="rank-result-title">⏳ 지금은 예측을 받지 않아요</div>
+                    <div class="rank-result-note" style="margin-top:4px;">추첨 직전이거나 결과를 집계하는 중이에요. 새 회차가 열리면 다시 도전해 주세요.</div>
                 </div>`;
             inputForm.style.display = 'none';
             submittedView.style.display = '';
