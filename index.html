@@ -574,7 +574,14 @@
         .tt-classnum-form { display:flex; gap:8px; margin-top:10px; }
 
         /* ============ 마이페이지(MYPAGE) 뷰 ============ */
-        .mypage-header-zone { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; width: 100%; }
+        /* ============ 📄 서브 페이지 공통 가이드라인 ============
+           홈/순위/마이페이지처럼 "뷰(view)"로 전환되는 모든 화면은 이 구조를 따른다:
+             1) 맨 위 .page-header-zone: 아이콘+제목(.page-title) 왼쪽, ✕ 닫기(.close-btn) 오른쪽에 고정
+             2) 본문은 .glass-card/.form-container 같은 기존 카드 컴포넌트를 그대로 재사용
+             3) showView()가 전환마다 .animate-tab-switch를 다시 걸어줘서 들어갈 때마다 같은 모양으로 살짝 떠오르며 나타난다
+           바텀시트(슬라이드 업)는 "페이지 안에서 잠깐 뜨는 보조 입력"에만 쓰고(시간표 조회 등),
+           바텀 탭과 1:1로 연결된 주요 화면은 전부 이 뷰 패턴을 쓴다. */
+        .page-header-zone { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; width: 100%; }
         .page-title { font-size: var(--fs-2xl); font-weight: bold; color: var(--text-main); font-family: 'Paperlogy', sans-serif; }
         .close-btn { font-size: var(--fs-2xl); color: var(--text-muted); text-decoration: none; cursor: pointer; transition: color 0.2s ease; font-weight: bold; background: none; border: none; padding: 5px; line-height: 1; }
         .close-btn:hover { color: var(--accent); }
@@ -1001,7 +1008,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     <!-- 2. 마이페이지 뷰 -->
     <!-- ============================================================ -->
     <div id="view-mypage" style="display:none;">
-        <div class="mypage-header-zone">
+        <div class="page-header-zone">
             <div class="page-title">⚙️ 학생 정보 수정</div>
             <button onclick="showView('home')" class="close-btn" title="홈으로 돌아가기">✕</button>
         </div>
@@ -1145,6 +1152,10 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     <!-- 3. 순위 뷰 -->
     <!-- ============================================================ -->
     <div id="view-ranking" style="display:none;">
+        <div class="page-header-zone">
+            <div class="page-title">🏆 순위</div>
+            <button onclick="showView('home')" class="close-btn" title="홈으로 돌아가기">✕</button>
+        </div>
         <div class="ranking-top-bar">
             <div class="top-tab-switch">
                 <button id="nav-btn-attendance" class="top-tab-btn active" onclick="switchRankingTab('attendance')">
@@ -1289,11 +1300,11 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M10 17h4"/></svg></span>
             <span class="tab-label">순위</span>
         </button>
-        <button onclick="openAcademyInquiryModal()" class="tab-item">
+        <button data-view="inquiry" onclick="showView('inquiry')" class="tab-item">
             <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 10h5M9.5 13h3"/></svg></span>
             <span class="tab-label">문의</span>
         </button>
-        <button onclick="openMathQuizBottomSheet()" class="tab-item">
+        <button data-view="mathq" onclick="showView('mathq')" class="tab-item">
             <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/></svg><span class="tab-dot" id="mathQuizTabDot"></span></span>
             <span class="tab-label">오늘의 문제</span>
         </button>
@@ -1392,49 +1403,48 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         </div>
     </div>
 
-    <!-- 🧮 오늘의 문제 바텀 시트 -->
-    <div id="mathQuizBottomSheet" class="bottom-sheet-overlay" onclick="handleMathQuizOverlayClick(event)">
-        <div class="bottom-sheet-container" onclick="event.stopPropagation()" style="max-height: 82vh; overflow-y: auto;">
-            <div class="sheet-drag-handle"></div>
+    <!-- ============================================================ -->
+    <!-- 4. 오늘의 문제 뷰 -->
+    <!-- ============================================================ -->
+    <div id="view-mathq" style="display:none;">
+        <div class="page-header-zone">
+            <div class="page-title">🧮 오늘의 문제</div>
+            <button onclick="showView('home')" class="close-btn" title="홈으로 돌아가기">✕</button>
+        </div>
 
-            <div id="mathqGradeInputSection" style="display:none;">
-                <div class="sheet-title">🧮 오늘의 문제</div>
-                <div class="sheet-subtitle">학년을 알려주시면 맞춤형 문제를 준비해 드릴게요!</div>
-                <select id="mathqGradeSelect" class="mathq-select">
-                    <option value="p3">초등학교 3학년</option>
-                    <option value="p4">초등학교 4학년</option>
-                    <option value="p5">초등학교 5학년</option>
-                    <option value="p6">초등학교 6학년</option>
-                    <option value="m1">중학교 1학년</option>
-                    <option value="m2">중학교 2학년</option>
-                    <option value="m3">중학교 3학년</option>
-                </select>
-                <div class="btn-flex-group" style="margin-top: 4px;">
-                    <button type="button" class="btn-base btn-secondary" onclick="closeMathQuizBottomSheet()">취소</button>
-                    <button type="button" class="btn-base btn-primary" onclick="confirmMathGradeAndShowQuiz()">확인하고 문제 풀기</button>
-                </div>
+        <div id="mathqGradeInputSection" class="glass-card" style="display:none;">
+            <div class="sheet-subtitle">학년을 알려주시면 맞춤형 문제를 준비해 드릴게요!</div>
+            <select id="mathqGradeSelect" class="mathq-select">
+                <option value="p3">초등학교 3학년</option>
+                <option value="p4">초등학교 4학년</option>
+                <option value="p5">초등학교 5학년</option>
+                <option value="p6">초등학교 6학년</option>
+                <option value="m1">중학교 1학년</option>
+                <option value="m2">중학교 2학년</option>
+                <option value="m3">중학교 3학년</option>
+            </select>
+            <div class="btn-flex-group" style="margin-top: 4px;">
+                <button type="button" class="btn-base btn-secondary" onclick="showView('home')">취소</button>
+                <button type="button" class="btn-base btn-primary" onclick="confirmMathGradeAndShowQuiz()">확인하고 문제 풀기</button>
             </div>
+        </div>
 
-            <div id="mathqQuizSection" style="display:none;">
-                <div class="sheet-title">🧮 오늘의 문제</div>
-                <div class="sheet-subtitle" id="mathqQuizSubtitle"></div>
-                <div id="mathqQuizContainer"></div>
+        <div id="mathqQuizSection" class="glass-card" style="display:none;">
+            <div class="sheet-subtitle" id="mathqQuizSubtitle"></div>
+            <div id="mathqQuizContainer"></div>
 
-                <div class="mathq-scratchpad">
-                    <div class="mathq-scratchpad-header">
-                        <span class="mathq-scratchpad-title">✏️ 풀이 공간</span>
-                        <div class="mathq-scratchpad-tools">
-                            <button type="button" class="mathq-pen-swatch active" data-color="var(--text-main)" style="background:var(--text-main);" onclick="setMathqTool('var(--text-main)', this)" aria-label="검정 펜"></button>
-                            <button type="button" class="mathq-pen-swatch" data-color="#ef4444" style="background:#ef4444;" onclick="setMathqTool('#ef4444', this)" aria-label="빨강 펜"></button>
-                            <button type="button" class="mathq-pen-swatch" data-color="var(--accent)" style="background:var(--accent);" onclick="setMathqTool('var(--accent)', this)" aria-label="파랑 펜"></button>
-                            <button type="button" class="mathq-tool-btn" id="mathqEraserBtn" onclick="setMathqTool('eraser', this)">🧽 지우개</button>
-                            <button type="button" class="mathq-tool-btn" onclick="clearMathqScratchpad()">전체 지우기</button>
-                        </div>
+            <div class="mathq-scratchpad">
+                <div class="mathq-scratchpad-header">
+                    <span class="mathq-scratchpad-title">✏️ 풀이 공간</span>
+                    <div class="mathq-scratchpad-tools">
+                        <button type="button" class="mathq-pen-swatch active" data-color="var(--text-main)" style="background:var(--text-main);" onclick="setMathqTool('var(--text-main)', this)" aria-label="검정 펜"></button>
+                        <button type="button" class="mathq-pen-swatch" data-color="#ef4444" style="background:#ef4444;" onclick="setMathqTool('#ef4444', this)" aria-label="빨강 펜"></button>
+                        <button type="button" class="mathq-pen-swatch" data-color="var(--accent)" style="background:var(--accent);" onclick="setMathqTool('var(--accent)', this)" aria-label="파랑 펜"></button>
+                        <button type="button" class="mathq-tool-btn" id="mathqEraserBtn" onclick="setMathqTool('eraser', this)">🧽 지우개</button>
+                        <button type="button" class="mathq-tool-btn" onclick="clearMathqScratchpad()">전체 지우기</button>
                     </div>
-                    <canvas id="mathqScratchCanvas" class="mathq-scratch-canvas"></canvas>
                 </div>
-
-                <button type="button" class="btn-base btn-secondary" style="margin-top: 12px;" onclick="closeMathQuizBottomSheet()">닫기</button>
+                <canvas id="mathqScratchCanvas" class="mathq-scratch-canvas"></canvas>
             </div>
         </div>
     </div>
@@ -1476,16 +1486,18 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         </div>
     </div>
 
-    <!-- 문의 바텀시트 -->
-    <div id="academyInquiryModal" class="bottom-sheet-overlay" onclick="handleGenericSheetOverlayClick(event)">
-        <div class="bottom-sheet-container" onclick="event.stopPropagation()">
-            <div class="sheet-drag-handle"></div>
-            <div class="sheet-title">🏫 학원에 문의하기</div>
-            <textarea id="inquiryContent" rows="5" placeholder="학원에 궁금한 점이나 건의사항을 자유롭게 적어주세요. 원장님께 직접 전달됩니다."></textarea>
-            <div class="btn-flex-group">
-                <button class="btn-base btn-secondary" onclick="closeAcademyInquiryModal()">취소</button>
-                <button class="btn-base btn-primary" onclick="submitAcademyInquiry()">문의하기</button>
-            </div>
+    <!-- ============================================================ -->
+    <!-- 5. 문의 뷰 -->
+    <!-- ============================================================ -->
+    <div id="view-inquiry" style="display:none;">
+        <div class="page-header-zone">
+            <div class="page-title">🏫 학원에 문의하기</div>
+            <button onclick="showView('home')" class="close-btn" title="홈으로 돌아가기">✕</button>
+        </div>
+        <div class="glass-card">
+            <div class="sheet-subtitle">학원에 궁금한 점이나 건의사항을 자유롭게 적어주세요. 원장님께 직접 전달됩니다.</div>
+            <textarea id="inquiryContent" class="sheet-input" rows="6" placeholder="여기에 내용을 입력해 주세요"></textarea>
+            <button class="btn-base btn-primary" onclick="submitAcademyInquiry()">문의하기</button>
         </div>
     </div>
 
@@ -1889,7 +1901,10 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             leaveRankingIfActive();
         }
 
-        ['home', 'mypage', 'ranking'].forEach(v => {
+        // 📄 서브 페이지 가이드라인: 여기 등록된 뷰는 전부 같은 방식(보이기/숨기기 + 살짝 떠오르는
+        // 입장 애니메이션)으로 전환된다. 새 뷰를 추가할 땐 이 배열에 'view-' 뒤에 붙는 이름만 넣으면 된다.
+        const ALL_VIEWS = ['home', 'mypage', 'ranking', 'mathq', 'inquiry'];
+        ALL_VIEWS.forEach(v => {
             const el = document.getElementById('view-' + v);
             if (el) el.style.display = (v === view) ? '' : 'none';
         });
@@ -1898,12 +1913,22 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             btn.classList.toggle('active', btn.dataset.view === view);
         });
 
+        // 들어갈 때마다 같은 모양으로 다시 뜨도록 애니메이션 클래스를 지웠다가 다시 건다.
+        const enteredEl = document.getElementById('view-' + view);
+        if (enteredEl) {
+            enteredEl.classList.remove('animate-tab-switch');
+            void enteredEl.offsetWidth;
+            enteredEl.classList.add('animate-tab-switch');
+        }
+
         currentView = view;
         window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 
         if (view === 'mypage') { populateMypageFromCache(); renderAchievementBadges(); }
         if (view === 'ranking') enterRankingView();
         if (view === 'home') mathflatRefresh(false);
+        if (view === 'mathq') enterMathQuizView();
+        if (view === 'inquiry') document.getElementById('inquiryContent').value = '';
     }
 
     window.addEventListener('beforeunload', () => {
@@ -2042,14 +2067,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
     }
 
     /* =====================================================================
-       3. 문의 모달
+       3. 문의 (뷰 — showView('inquiry')로 들어가며, 들어갈 때 textarea를 비우는 건 showView 안에서 처리)
     ===================================================================== */
-    function openAcademyInquiryModal() {
-        document.getElementById('inquiryContent').value = '';
-        showModal('academyInquiryModal');
-    }
-    function closeAcademyInquiryModal() { closeModal('academyInquiryModal'); }
-
     async function submitAcademyInquiry() {
         const contentText = document.getElementById('inquiryContent').value.trim();
         if (!contentText) { showToast("🏫 문의사항 내용을 입력해 주세요."); return; }
@@ -2081,7 +2100,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
 
             await database.ref('suggestions').push(inquiryData);
             showToast("🏫 원장님께 문의가 접수되었습니다.");
-            closeAcademyInquiryModal();
+            showView('home');
         } catch (err) {
             showToast('전송 실패: ' + err.message);
         }
@@ -2811,10 +2830,9 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         return null;
     }
 
-    function openMathQuizBottomSheet() {
-        const sheet = document.getElementById('mathQuizBottomSheet');
-        if (!sheet) return;
-
+    // showView('mathq')로 이 뷰에 들어갈 때마다 호출 — 학년 정보 유무에 따라
+    // 학년 입력 섹션/퀴즈 섹션 중 보여줄 걸 정한다.
+    function enterMathQuizView() {
         const gradeCode = getMathQuizGradeCode();
         const gradeInputSection = document.getElementById('mathqGradeInputSection');
         const quizSection = document.getElementById('mathqQuizSection');
@@ -2830,14 +2848,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             gradeInputSection.style.display = 'block';
             quizSection.style.display = 'none';
         }
-        sheet.classList.add('active');
-    }
-    function closeMathQuizBottomSheet() {
-        const sheet = document.getElementById('mathQuizBottomSheet');
-        if (sheet) sheet.classList.remove('active');
-    }
-    function handleMathQuizOverlayClick(event) {
-        if (event.target.id === 'mathQuizBottomSheet') closeMathQuizBottomSheet();
     }
     function confirmMathGradeAndShowQuiz() {
         const gradeCode = document.getElementById('mathqGradeSelect').value;
