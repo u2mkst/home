@@ -763,25 +763,34 @@
 
         let currentStep = 1;
 
+        // 학년 <select>의 value는 서버(/api/register)의 GRADES 집합과 반드시 같은 형식
+        // (초1~초6 / 중1~중3 / 고1~고3)이어야 한다. 다른 형식을 넣으면 서버가 무조건
+        // "학년을 선택해 주세요." 로 가입을 막는다.
         function updateGradeOptions(schoolName) {
             const currentSelectedGrade = gradeSelect.value;
             gradeSelect.innerHTML = '<option value="" disabled selected>학년 선택</option>';
-            
+
+            let prefix = "초";
             let maxGrade = 6;
-            if (schoolName.includes("중학교") || schoolName.includes("중")) {
+            if (schoolName.includes("고등학교") || schoolName.endsWith("고")) {
+                prefix = "고";
+                maxGrade = 3;
+            } else if (schoolName.includes("중학교") || schoolName.includes("중")) {
+                prefix = "중";
                 maxGrade = 3;
             } else if (schoolName.includes("초등학교") || schoolName.includes("초")) {
+                prefix = "초";
                 maxGrade = 6;
             }
 
             for (let i = 1; i <= maxGrade; i++) {
                 const opt = document.createElement('option');
-                opt.value = `${i}학년`;
-                opt.textContent = `${i}학년`;
+                opt.value = `${prefix}${i}`;
+                opt.textContent = `${prefix}${i}`;
                 gradeSelect.appendChild(opt);
             }
 
-            if (currentSelectedGrade && parseInt(currentSelectedGrade) <= maxGrade) {
+            if (currentSelectedGrade && gradeSelect.querySelector(`option[value="${currentSelectedGrade}"]`)) {
                 gradeSelect.value = currentSelectedGrade;
             }
         }
