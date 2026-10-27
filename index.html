@@ -2325,6 +2325,9 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         }
     }
 
+    // 홈 최초 렌더링 때도 Android 앱에 저장된 보고서가 있으면 표시한다.
+    setTimeout(loadU2MReportFromApp, 500);
+
     async function mathflatRefresh(force) {
         if (!document.getElementById('mfCard')) return;
         if (mfEnabled === null) return;                                   // 마스터 스위치 확인 전
