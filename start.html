@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시작 페이지</title>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <style>
+        :root {
+            --bg: #F2F4F6;
+            --surface: #FFFFFF;
+            --border: #E5E8EB;
+            --text-main: #191F28;
+            --text-muted: #6B7684;
+            --accent: #004BBF;
+            --accent-soft: #E8F0FE;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #101114;
+                --surface: #1B1D22;
+                --border: #2B2E35;
+                --text-main: #F2F4F6;
+                --text-muted: #9AA3AF;
+                --accent: #4C9AFF;
+                --accent-soft: #1B2A44;
+            }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html, body { min-height: 100%; background: var(--bg); color: var(--text-main);
+            font-family: Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif; }
+        .page { max-width: 760px; margin: 0 auto; padding: 56px 20px 40px; }
+
+        .brand { text-align: center; margin-bottom: 28px; }
+        .brand h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+        .brand p { margin-top: 6px; font-size: 0.9rem; color: var(--text-muted); }
+
+        .login-banner { display: none; align-items: center; justify-content: space-between; gap: 14px;
+            background: var(--accent-soft); border: 1px solid var(--border); border-radius: var(--radius-md);
+            padding: 14px 16px; margin-bottom: 22px; }
+        .login-banner.show { display: flex; }
+        .login-banner strong { display: block; font-size: 0.95rem; margin-bottom: 2px; }
+        .login-banner span { font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; }
+        .login-btn { flex-shrink: 0; text-decoration: none; background: var(--accent); color: #fff;
+            font-weight: 700; font-size: 0.9rem; padding: 11px 20px; border-radius: 12px; }
+        .login-btn:active { opacity: 0.85; }
+
+        .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+        .tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+            min-height: 124px; padding: 18px 10px; text-decoration: none; color: var(--text-main);
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+        .tile:active { transform: scale(0.97); }
+        .tile .icon { font-size: 2rem; line-height: 1; }
+        .tile .label { font-size: 0.9rem; font-weight: 700; text-align: center; }
+        .tile .sub { font-size: 0.72rem; color: var(--text-muted); text-align: center; }
+
+        .hint { margin-top: 26px; text-align: center; font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="brand">
+            <h1>K&amp;P 수학입시학원</h1>
+            <p>필요한 사이트를 골라 시작해 보세요</p>
+        </div>
+
+        <div class="login-banner" id="loginBanner">
+            <div>
+                <strong>로그인하고 시작해요</strong>
+                <span>로그인하면 학습 사이트와 매쓰플랫·유투엠이 편하게 연결돼요.</span>
+            </div>
+            <a class="login-btn" href="login.html">로그인하기</a>
+        </div>
+
+        <div class="tiles" id="tiles">
+            <a class="tile" href="index.html">
+                <div class="icon">🏫</div>
+                <div class="label">학습 사이트</div>
+                <div class="sub">K&amp;P 홈</div>
+            </a>
+            <a class="tile" href="https://student.mathflat.com/">
+                <div class="icon">📐</div>
+                <div class="label">매쓰플랫</div>
+                <div class="sub">문제 풀이</div>
+            </a>
+            <a class="tile" href="https://swgwanggyo.u2math.co.kr/Login/Index">
+                <div class="icon">🎓</div>
+                <div class="label">유투엠</div>
+                <div class="sub">학습 관리</div>
+            </a>
+            <a class="tile" href="https://www.neis.go.kr/">
+                <div class="icon">🏛️</div>
+                <div class="label">나이스</div>
+                <div class="sub">학교 정보</div>
+            </a>
+        </div>
+
+        <p class="hint">선생님이 허용한 사이트만 열 수 있어요.</p>
+    </div>
+
+    <script>
+        firebase.initializeApp({
+            apiKey: "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg",
+            authDomain: "ksthome-76889.firebaseapp.com",
+            projectId: "ksthome-76889",
+            appId: "1:411945142173:web:c6fdb499040b2a5a4f9174"
+        });
+
+        // 로그인 상태가 확인되기 전에는 배너를 보여주지 않는다 (로그인한 학생에게 잠깐 깜빡이는 것 방지).
+        firebase.auth().onAuthStateChanged(function (user) {
+            document.getElementById('loginBanner').classList.toggle('show', !user);
+        });
+    </script>
+</body>
+</html>
