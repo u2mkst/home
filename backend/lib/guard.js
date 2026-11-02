@@ -30,6 +30,17 @@ function hashIp(ip) {
     return crypto.createHash("sha256").update(`ip:${ip}`).digest("hex").slice(0, 24);
 }
 
+// CRON_SECRET처럼 "고정된 비밀 문자열과 똑같은가"를 검사하는 곳에서 그냥 !== / ===로 비교하면
+// 문자가 몇 개나 일치하는지가 비교 시간 차이로 흘러나가(타이밍 공격) 비밀을 한 글자씩 맞혀볼 수
+// 있다. 길이가 다르면 바로 false를 주더라도, 그 판단 자체는 길이 비교 한 번뿐이라 비밀의 내용과는
+// 무관하다 — 실제 내용 비교는 항상 crypto.timingSafeEqual로만 한다.
+function safeEqual(a, b) {
+    const bufA = Buffer.from(String(a == null ? "" : a), "utf8");
+    const bufB = Buffer.from(String(b == null ? "" : b), "utf8");
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+}
+
 // ---- reCAPTCHA v3 -------------------------------------------------------
 // 판단 보류(토큰 없음/구글 장애)는 null. 오직 "점수가 실제로 낮게 나온 경우"만 차단 대상.
 async function checkRecaptchaScore(token, expectedAction) {
@@ -143,6 +154,7 @@ module.exports = {
     toLoginEmail,
     dbKey,
     getClientIp,
+    safeEqual,
     checkRecaptchaScore,
     isBotSuspected,
     getLockout,

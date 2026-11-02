@@ -1,5 +1,6 @@
 const { applyCors } = require("../lib/cors");
 const { admin, requireAuth } = require("../lib/firebaseAdmin");
+const { safeEqual } = require("../lib/guard");
 const { lottoBadgeUpdates, lottoBonusBadgeUpdates, grantLottoParticipationBadges } = require("../lib/achievements");
 
 // 🔒 로또 예측 이벤트를 서버가 관리한다. 예전엔 클라이언트가 외부 API에서 당첨번호를 직접
@@ -177,7 +178,7 @@ const handler = async (req, res) => {
         // Vercel 크론(GET): 추첨 직후 결과를 미리 저장해 둔다. CRON_SECRET이 있어야만 동작.
         if (req.method === "GET") {
             const secret = process.env.CRON_SECRET;
-            if (!secret || req.headers.authorization !== `Bearer ${secret}`) {
+            if (!secret || !safeEqual(req.headers.authorization, `Bearer ${secret}`)) {
                 return res.status(401).json({ error: "unauthorized" });
             }
             const state = await ensureSynced();
