@@ -158,6 +158,20 @@
         .login-dashboard.is-empty .dash-empty { display: flex; }
         .login-dashboard.is-empty .dash-tabs, .login-dashboard.is-empty .dash-exam-name, .login-dashboard.is-empty .dash-exam-meta,
         .login-dashboard.is-empty .dash-rank, .login-dashboard.is-empty .dash-foot { display: none; }
+        /* 불러오는 동안: 패널 모양(제목·탭·시험명·순위 줄)을 그대로 둔 채 안을 스켈레톤으로 채워서, 데이터가 와도 화면이 밀리지 않게 한다 */
+        .dash-skeleton { display: none; flex-direction: column; gap: 14px; margin-top: 16px; }
+        .sk { background: linear-gradient(90deg, #EEF1F4 25%, #F7F8FA 50%, #EEF1F4 75%); background-size: 200% 100%; animation: dashShimmer 1.3s ease-in-out infinite; }
+        @keyframes dashShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .sk-tabs { display: flex; gap: 8px; }
+        .sk-tab { width: 64px; height: 34px; border-radius: 999px; }
+        .sk-name { width: 78%; height: 18px; border-radius: 8px; }
+        .sk-meta { width: 52%; height: 12px; margin-top: -8px; border-radius: 6px; }
+        .sk-rows { display: flex; flex-direction: column; gap: 8px; }
+        .sk-row { height: 43px; border-radius: var(--radius-md); }
+        .login-dashboard.is-loading .dash-skeleton { display: flex; }
+        .login-dashboard.is-loading .dash-tabs, .login-dashboard.is-loading .dash-exam-name, .login-dashboard.is-loading .dash-exam-meta,
+        .login-dashboard.is-loading .dash-rank, .login-dashboard.is-loading .dash-foot, .login-dashboard.is-loading .dash-empty { display: none; }
+        @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
         @media (min-width: 1000px) {
             .tablet-shell { align-items: center; gap: 32px; }
             .container { flex: 0 1 460px; }
@@ -457,6 +471,16 @@
             </svg>
             <div class="dash-empty-title">최근 시험이 없어요</div>
             <div class="dash-empty-sub">새 시험 점수가 입력되면<br>이곳에 순위가 나타나요</div>
+        </div>
+        <div class="dash-skeleton" aria-hidden="true">
+            <div class="sk-tabs"><div class="sk sk-tab"></div><div class="sk sk-tab"></div><div class="sk sk-tab"></div></div>
+            <div class="sk sk-name"></div>
+            <div class="sk sk-meta"></div>
+            <div class="sk-rows">
+                <div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div>
+                <div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div>
+                <div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div>
+            </div>
         </div>
     </aside>
     <div class="container">
@@ -850,24 +874,37 @@
             async function load() {
                 if (data || loading || !wide.matches) return;
                 loading = true;
+                // 불러오는 동안에도 패널을 먼저 띄워 두고(스켈레톤) 모양을 유지한다
+                box.classList.add('show', 'is-loading');
+                box.setAttribute('aria-busy', 'true');
+                let loaded = false;
                 try {
                     const res = await fetch(`${BACKEND_URL}/api/weather?data=exam-ranking`);
-                    if (!res.ok) return;
-                    const json = await res.json();
-                    if (!json || !Array.isArray(json.grades)) return;
-                    data = json;
-                    box.classList.add('show');
-                    if (!json.grades.length) {
-                        // 서버는 정상인데 최근 시험이 없는 경우: 패널을 숨기지 않고 안내를 보여준다
-                        box.classList.add('is-empty');
-                        return;
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json && Array.isArray(json.grades)) {
+                            data = json;
+                            loaded = true;
+                            box.classList.remove('is-loading');
+                            box.removeAttribute('aria-busy');
+                            if (!json.grades.length) {
+                                // 서버는 정상인데 최근 시험이 없는 경우: 패널을 숨기지 않고 안내를 보여준다
+                                box.classList.add('is-empty');
+                            } else {
+                                renderTabs();
+                                renderRanking();
+                            }
+                        }
                     }
-                    renderTabs();
-                    renderRanking();
                 } catch (e) {
                     // 순위는 부가 정보라서 실패해도 로그인에는 영향이 없다
                 } finally {
                     loading = false;
+                    if (!loaded) {
+                        // 서버 오류·네트워크 실패: 스켈레톤을 걷고 패널을 숨겨 로그인 카드만 남긴다
+                        box.classList.remove('show', 'is-loading', 'is-empty');
+                        box.removeAttribute('aria-busy');
+                    }
                 }
             }
 
