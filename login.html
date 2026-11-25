@@ -177,7 +177,8 @@
         .sk-tab { width: 64px; height: 34px; border-radius: 999px; }
         .sk-name { width: 78%; height: 18px; border-radius: 8px; }
         .sk-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
-        .sk-row { height: 57px; border-radius: var(--radius-md); }
+        .sk-row { height: 44px; border-radius: var(--radius-md); }
+        .dash-exam-meta { margin-top: 4px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
         .login-dashboard.is-loading .dash-body, .login-dashboard.is-empty .dash-body, .login-dashboard.is-error .dash-body { display: none; }
         .login-dashboard.is-loading .dash-skeleton { display: flex; }
         .login-dashboard.is-empty .dash-empty, .login-dashboard.is-error .dash-error { display: flex; }
@@ -467,6 +468,7 @@
         <div class="dash-body">
             <div class="dash-tabs" id="dashTabs" role="tablist"></div>
             <div class="dash-exam-name" id="dashExamName"></div>
+            <div class="dash-exam-meta" id="dashExamMeta"></div>
             <ol class="dash-rank" id="dashRankList"></ol>
         </div>
         <div class="dash-empty">
@@ -860,6 +862,11 @@
             function renderRanking() {
                 const g = data.grades[active];
                 document.getElementById('dashExamName').textContent = g.exam.name;
+                // 문제 수는 같은 시험이면 모두 같으므로 시험 이름 아래에 한 번만 보여 주고, 학생마다 다를 때만 줄마다 보여 준다.
+                // (맞은 문제 수는 보여 주지 않는다.)
+                const totals = [...new Set(g.ranking.map(r => r.total))];
+                const uniform = totals.length === 1;
+                document.getElementById('dashExamMeta').textContent = uniform ? `총 ${totals[0]}문제` : '';
                 const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
                 const list = document.getElementById('dashRankList');
                 list.innerHTML = g.ranking.map(r => `
@@ -868,7 +875,7 @@
                         <span class="nick">${escapeHTML(r.nickname)}</span>
                         <span class="stat">
                             <span class="rt">${Number.isInteger(r.rate) ? r.rate : r.rate.toFixed(1)}%</span>
-                            <span class="cnt">${r.score}/${r.total}문제</span>
+                            ${uniform ? '' : `<span class="cnt">${r.total}문제</span>`}
                         </span>
                     </li>`).join('');
                 list.scrollTop = 0;
