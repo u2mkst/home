@@ -1,8 +1,9 @@
 "use strict";
 /* 노션 시험 순위 조회 (로그인 화면 대시보드용 공개 데이터).
    - 시험DB에서 "학년별 가장 최근 시험"을 고르고, 학생별성적DB에서 그 시험의 점수를 읽어 순위를 만든다.
-   - 학생 실명은 읽지도 돌려주지도 않는다. 학생별성적DB의 '닉네임'과 점수만 쓰고, 요청할 때도
-     닉네임/점수/성적 속성만 가져온다(filter_properties). 학생이름·수강반·담당 같은 속성은 이 서버를 거치지 않는다.
+   - 화면에는 닉네임과 점수만 나간다. 닉네임이 비어 있는 학생만 예외로 원생명부에서 이름(제목)을 읽어 서버에서
+     "홍*동"처럼 가운데 글자를 가린 값으로 바꾼다 — 실명 전체는 이 모듈 밖으로 나가지 않고 캐시에도 가린 값만 남긴다.
+   - 학생별성적DB는 닉네임/점수/성적/학생이름(연결 id만) 속성만 요청한다(filter_properties). 수강반·담당 등은 가져오지 않는다.
    - fetch를 주입할 수 있어서 노션 토큰 없이 단위 테스트가 가능하다(notionScores.test.js). */
 
 const NOTION_BASE = "https://api.notion.com/v1/";
@@ -10,7 +11,7 @@ const NOTION_VERSION = "2022-06-28";
 
 const DB_TITLES = { scores: "학생별성적DB", exams: "시험DB" };
 const REQUIRED_PROPS = {
-    scores: ["시험지", "닉네임", "점수", "성적"],
+    scores: ["시험지", "닉네임", "점수", "성적", "학생이름"],
     exams: ["이름", "날짜", "학년", "평균", "최고점", "최저점"],
 };
 
@@ -115,10 +116,20 @@ function normalizeName(s) {
     return String(s == null ? "" : s).normalize("NFC").toLowerCase().replace(/\s+/g, "");
 }
 
-// 닉네임은 공개 화면에 그대로 나가므로 제어문자를 지우고 길이를 제한한다. 비어 있으면 '익명'.
+// 닉네임은 공개 화면에 그대로 나가므로 제어문자를 지우고 길이를 제한한다. 비어 있으면 null(→ 이름을 가려서 대신 쓴다).
 function cleanNickname(raw) {
     const s = String(raw == null ? "" : raw).replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, MAX_NICKNAME_LENGTH).trim();
-    return s || ANONYMOUS_NICKNAME;
+    return s || null;
+}
+
+// 실명을 "홍*동"처럼 가린다: 앞뒤 한 글자만 남기고 가운데를 *로(2글자는 "이*"). 이름 뒤 괄호(영문 표기 등)는 먼저 지운다.
+function maskName(raw) {
+    const s = String(raw == null ? "" : raw).normalize("NFC").replace(/[(\[（].*?[)\]）]/g, "").replace(/\s+/g, "");
+    const chars = Array.from(s);
+    if (chars.length === 0) return ANONYMOUS_NICKNAME;
+    if (chars.length === 1) return "*";
+    if (chars.length === 2) return chars[0] + "*";
+    return chars[0] + "*".repeat(chars.length - 2) + chars[chars.length - 1];
 }
 
 // ---------- 데이터베이스 찾기 (제목으로 검색, 한 번 찾으면 재사용) ----------
@@ -190,7 +201,7 @@ function buildRanking(entries, topN = TOP_N) {
 }
 
 async function fetchExamScoreEntries(client, scoresDb, examId) {
-    const filterProps = ["닉네임", "점수", "성적"].map((n) => scoresDb.props[n].id);
+    const filterProps = ["닉네임", "점수", "성적", "학생이름"].map((n) => scoresDb.props[n].id);
     const entries = [];
     let cursor;
     for (let i = 0; i < SCORE_PAGE_LIMIT; i++) {
@@ -200,7 +211,7 @@ async function fetchExamScoreEntries(client, scoresDb, examId) {
                 page_size: 100,
                 ...(cursor ? { start_cursor: cursor } : {}),
             },
-            query: { filter_properties: filterProps }, // 학생이름·수강반·담당 등은 가져오지 않는다
+            query: { filter_properties: filterProps }, // 수강반·담당 등은 가져오지 않는다(학생이름은 연결 id만 온다)
         });
         for (const pg of res.results || []) {
             if (pg.archived) continue;
@@ -208,7 +219,8 @@ async function fetchExamScoreEntries(client, scoresDb, examId) {
             const formula = toNumber(propValue(p["점수"]));
             const score = formula != null ? formula : toNumber(propValue(p["성적"]));
             if (score == null) continue;
-            entries.push({ nickname: cleanNickname(propValue(p["닉네임"])), score });
+            const studentIds = propValue(p["학생이름"]) || [];
+            entries.push({ nickname: cleanNickname(propValue(p["닉네임"])), studentPageId: studentIds[0] || null, score });
         }
         if (!res.has_more) break;
         cursor = res.next_cursor;
@@ -216,9 +228,52 @@ async function fetchExamScoreEntries(client, scoresDb, examId) {
     return entries;
 }
 
+const maskedNameCache = new Map(); // 원생명부 페이지 id → { value(가린 이름), expires }
+const MASKED_NAME_CACHE_MS = 60 * 60 * 1000;
+const NAME_LOOKUP_CONCURRENCY = 3;
+
+function clearMaskedNameCache() { maskedNameCache.clear(); }
+
+async function mapWithConcurrency(items, limit, fn) {
+    const out = new Array(items.length);
+    let next = 0;
+    async function worker() {
+        while (next < items.length) {
+            const i = next++;
+            out[i] = await fn(items[i], i);
+        }
+    }
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+    return out;
+}
+
+// 닉네임이 없는 학생의 가린 이름. 원생명부 페이지의 "제목"만 읽고(filter_properties=title) 바로 가려서 돌려준다.
+// 읽지 못하면(연동에 공유되지 않음 등) '익명'. 가린 값만 캐시하고 실명은 어디에도 남기지 않는다.
+async function getMaskedStudentName(client, pageId) {
+    if (!pageId) return ANONYMOUS_NICKNAME;
+    const hit = maskedNameCache.get(pageId);
+    if (hit && hit.expires > Date.now()) return hit.value;
+    try {
+        const page = await client.request("GET", `pages/${pageId}`, { query: { filter_properties: ["title"] } });
+        const titleProp = Object.values(page.properties || {}).find((p) => p && p.type === "title");
+        const value = maskName(plain(titleProp && titleProp.title));
+        maskedNameCache.set(pageId, { value, expires: Date.now() + MASKED_NAME_CACHE_MS });
+        return value;
+    } catch (e) {
+        return ANONYMOUS_NICKNAME; // 일시 오류일 수 있어 캐시하지 않는다
+    }
+}
+
 function gradeSortKey(g) {
     const i = GRADE_ORDER.indexOf(g);
     return i === -1 ? GRADE_ORDER.length : i;
+}
+
+// 순위에 오른 학생 중 닉네임이 없는 사람만 가린 이름을 채운다(순위 밖 학생의 이름은 읽지 않는다).
+async function namedRanking(client, ranked) {
+    const names = await mapWithConcurrency(ranked, NAME_LOOKUP_CONCURRENCY, (e) =>
+        e.nickname ? e.nickname : getMaskedStudentName(client, e.studentPageId));
+    return ranked.map((e, i) => ({ rank: e.rank, nickname: names[i], score: e.score }));
 }
 
 // 학년별로 "가장 최근에 치른 시험 중 점수가 충분히 입력된 것"의 순위를 만든다.
@@ -252,7 +307,7 @@ async function getExamRankings(client, overrides, { now = new Date(), topN = TOP
             grades.push({
                 grade,
                 exam: { name: exam.name, date: exam.date, avg: exam.avg, max: exam.max, min: exam.min, participants: entries.length },
-                ranking: buildRanking(entries, topN).map((e) => ({ rank: e.rank, nickname: e.nickname, score: e.score })),
+                ranking: await namedRanking(client, buildRanking(entries, topN)),
             });
             break;
         }
@@ -267,6 +322,7 @@ module.exports = {
     toNumber,
     normalizeName,
     cleanNickname,
+    maskName,
     resolveDatabase,
     dbOverridesFromEnv,
     mapExam,
@@ -274,4 +330,5 @@ module.exports = {
     buildRanking,
     getExamRankings,
     clearDbCache,
+    clearMaskedNameCache,
 };

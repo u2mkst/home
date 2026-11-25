@@ -13,7 +13,7 @@ const t = (s) => [{ plain_text: s }];
 const NOW = new Date("2026-11-25T03:00:00Z"); // KST 2026-11-25 12:00
 
 // ---- 가짜 노션 서버 ------------------------------------------------------
-function makeFake({ exams = [], scores = {} } = {}) {
+function makeFake({ exams = [], scores = {}, inaccessible = [] } = {}) {
     const calls = [];
     const examProps = Object.fromEntries(["이름", "날짜", "학년", "평균", "최고점", "최저점", "분류"].map((n, i) => [n, { id: "e" + i, type: n === "이름" ? "title" : "x" }]));
     const scoreProps = Object.fromEntries(["시험명", "학생이름", "시험지", "닉네임", "점수", "성적", "수강반", "담당"].map((n, i) => [n, { id: "s" + i, type: "x" }]));
@@ -42,6 +42,11 @@ function makeFake({ exams = [], scores = {} } = {}) {
         if (u.pathname === "/v1/databases/db-scores/query") {
             const rows = scores[body.filter.relation.contains] || [];
             return json(200, { results: rows.map(scorePage), has_more: false });
+        }
+        if (opts.method === "GET" && u.pathname.startsWith("/v1/pages/student-page-")) {
+            const real = decodeURIComponent(u.pathname.split("/student-page-")[1]);
+            if (inaccessible.includes(real)) return json(404, { code: "object_not_found" });
+            return json(200, { id: "student-page-" + real, properties: { "학생이름(알파벳)": { type: "title", title: t(real) } } });
         }
         return json(404, { code: "object_not_found" });
     };
@@ -72,13 +77,20 @@ const scorePage = (r) => ({
 });
 
 (async () => {
-    console.log("[닉네임 정리]");
+    console.log("[닉네임 정리 / 이름 가리기]");
     {
         ok(N.cleanNickname("  별빛  ") === "별빛", "공백 제거");
-        ok(N.cleanNickname("") === "익명" && N.cleanNickname(null) === "익명", "비어 있으면 익명");
+        ok(N.cleanNickname("") === null && N.cleanNickname(null) === null && N.cleanNickname("   ") === null, "비어 있으면 null(→ 가린 이름 사용)");
         ok(N.cleanNickname("가나다라마바사아자차카타파하") === "가나다라마바사아자차카타", "12자 제한");
         ok(N.cleanNickname("a\u0000b\nc") === "abc", "제어문자 제거");
         ok(N.cleanNickname("<b>x</b>") === "<b>x</b>", "태그는 그대로 두고(화면에서 이스케이프)");
+        ok(N.maskName("홍길동") === "홍*동", "3글자: 홍*동");
+        ok(N.maskName("남궁민수") === "남**수", "4글자: 남**수");
+        ok(N.maskName("이수") === "이*", "2글자: 이*");
+        ok(N.maskName("홍길동(Gildong)") === "홍*동", "괄호 영문 표기 제거 후 가림");
+        ok(N.maskName(" 홍 길 동 ") === "홍*동", "공백 제거");
+        ok(N.maskName("") === "익명" && N.maskName(null) === "익명" && N.maskName("(Only)") === "익명", "빈 이름 → 익명");
+        ok(N.maskName("김") === "*", "1글자는 전부 가림");
     }
 
     console.log("[순위 계산]");
@@ -95,7 +107,7 @@ const scorePage = (r) => ({
 
     console.log("[학년별 최근 시험 순위]");
     {
-        N.clearDbCache();
+        N.clearDbCache(); N.clearMaskedNameCache();
         const fake = makeFake({
             exams: [
                 { id: "x-mid2-new", name: "중2-2 기말 (점수 입력 중)", date: "2026-11-24", grade: "중2", avg: 10, max: 20, min: 1 },
@@ -122,10 +134,10 @@ const scorePage = (r) => ({
         ok(out.grades.map((g) => g.grade).join() === "중1,중2", "점수가 충분한 학년만(중1, 중2; 중3은 2명뿐이라 제외): " + out.grades.map((g) => g.grade).join());
         const g2 = out.grades.find((g) => g.grade === "중2");
         ok(g2.exam.name === "중2-2 중간 가상A", "입력 중인 최신 시험은 건너뛰고 그 전 시험 사용: " + g2.exam.name);
-        ok(g2.ranking.map((r) => r.nickname).join() === "하늘,구름,익명,바다", "닉네임 순위(빈 닉네임=익명, 삭제된 행·점수 없는 행 제외): " + g2.ranking.map((r) => r.nickname).join());
+        ok(g2.ranking.map((r) => r.nickname).join() === "하늘,구름,최*명,바다", "닉네임 순위(빈 닉네임은 가린 실명, 삭제된 행·점수 없는 행 제외): " + g2.ranking.map((r) => r.nickname).join());
         ok(g2.ranking.map((r) => r.rank).join() === "1,2,2,4", "동점 등수: " + g2.ranking.map((r) => r.rank).join());
         ok(g2.ranking.find((r) => r.nickname === "바다").score === 70, "점수 수식이 비면 성적 값 사용");
-        ok(g2.ranking.find((r) => r.nickname === "익명").score === 90, "'90점' 문자열 → 90");
+        ok(g2.ranking.find((r) => r.nickname === "최*명").score === 90, "'90점' 문자열 → 90");
         ok(g2.exam.avg === 70.5 && g2.exam.max === 100 && g2.exam.min === 40 && g2.exam.participants === 4, "시험 평균/최고/최저/참여 수");
 
         const examQuery = fake.calls.find((c) => c.path === "/v1/databases/db-exams/query");
@@ -133,11 +145,45 @@ const scorePage = (r) => ({
 
         const scoreQueries = fake.calls.filter((c) => c.path === "/v1/databases/db-scores/query");
         ok(scoreQueries.length >= 2, "점수 조회 호출");
-        ok(scoreQueries.every((c) => c.query.getAll("filter_properties").join() === "s3,s4,s5"), "닉네임·점수·성적 속성만 요청(실명/반/담당 제외): " + scoreQueries[0].query.getAll("filter_properties").join());
+        ok(scoreQueries.every((c) => c.query.getAll("filter_properties").join() === "s3,s4,s5,s1"), "닉네임·점수·성적·학생이름(연결 id)만 요청(반/담당 제외): " + scoreQueries[0].query.getAll("filter_properties").join());
+        const pageCalls = fake.calls.filter((c) => c.method === "GET" && c.path.startsWith("/v1/pages/"));
+        ok(pageCalls.length === 1, "닉네임이 없는 1명만 이름 조회: " + pageCalls.length);
+        ok(pageCalls.every((c) => c.query.getAll("filter_properties").join() === "title"), "원생명부 페이지는 제목 속성만 요청");
         ok(!fake.calls.some((c) => c.path === "/v1/databases/db-scores-old/query" || c.path === "/v1/databases/db-roster/query"), "옛 복사본·원생명부는 조회하지 않는다");
 
         const text = JSON.stringify(out);
-        ok(!/실명|student-page|김|이실명/.test(text), "응답 어디에도 학생 실명/학생 페이지 id가 없다");
+        ok(!/student-page|최실명|이실명|박실명|정실명|김실명/.test(text), "응답 어디에도 실명 전체/학생 페이지 id가 없다");
+    }
+
+    console.log("[이름 가리기 세부: 순위 밖 제외 · 캐시 · 읽기 실패]");
+    {
+        N.clearDbCache(); N.clearMaskedNameCache();
+        const many = Array.from({ length: 12 }, (_, i) => ({ nick: i < 9 ? "닉" + i : "", formula: 100 - i, real: i < 9 ? "x" : ["가나다", "라마바", "사아자"][i - 9] }));
+        const fake = makeFake({
+            exams: [{ id: "x1", name: "중2 시험", date: "2026-10-05", grade: "중2" }],
+            scores: { x1: many },
+            inaccessible: ["사아자"],
+        });
+        const client = N.createNotionClient({ token: "t", fetchImpl: fake.fetchImpl });
+        const out = await N.getExamRankings(client, {}, { now: NOW });
+        const rk = out.grades[0].ranking;
+        ok(rk.length === 10, "상위 10명: " + rk.length);
+        ok(rk[9].nickname === "가*다", "10위(닉네임 없음)는 가린 이름: " + rk[9].nickname);
+        const lookups = fake.calls.filter((c) => c.method === "GET" && c.path.startsWith("/v1/pages/"));
+        ok(lookups.length === 1, "순위 밖(11·12위) 학생의 이름은 읽지 않는다: " + lookups.length);
+
+        const again = await N.getExamRankings(client, {}, { now: NOW });
+        ok(again.grades[0].ranking[9].nickname === "가*다", "두 번째 호출 결과 동일");
+        ok(fake.calls.filter((c) => c.method === "GET" && c.path.startsWith("/v1/pages/")).length === 1, "가린 이름은 캐시되어 다시 읽지 않는다");
+
+        // 읽을 수 없는 학생(연동에 공유 안 됨) → 익명, 순위는 정상
+        N.clearMaskedNameCache();
+        const blocked = Array.from({ length: 3 }, (_, i) => ({ nick: "", formula: 90 - i, real: ["사아자", "가나다", "라마바"][i] }));
+        const fake2 = makeFake({ exams: [{ id: "x2", name: "중1 시험", date: "2026-10-05", grade: "중1" }], scores: { x2: blocked }, inaccessible: ["사아자"] });
+        N.clearDbCache();
+        const out2 = await N.getExamRankings(N.createNotionClient({ token: "t", fetchImpl: fake2.fetchImpl }), {}, { now: NOW });
+        ok(out2.grades[0].ranking.map((r) => r.nickname).join() === "익명,가*다,라*바", "읽을 수 없으면 익명, 나머지는 가림: " + out2.grades[0].ranking.map((r) => r.nickname).join());
+        ok(!/사아자|가나다|라마바/.test(JSON.stringify(out2)), "응답에 실명 전체 없음");
     }
 
     console.log("[오류·설정]");
