@@ -142,11 +142,13 @@
         .dash-exam-name { font-size: var(--fs-md); font-weight: 800; color: var(--text-main); word-break: keep-all; }
         .dash-exam-meta { margin-top: 4px; font-size: var(--fs-xs); color: var(--text-muted); }
         .dash-rank { list-style: none; margin: 14px 0 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .dash-rank li { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; padding: 11px 14px; border-radius: var(--radius-md); background: var(--input-bg); }
+        .dash-rank li { display: grid; grid-template-columns: 40px 1fr auto 62px; align-items: center; gap: 10px; padding: 11px 14px; border-radius: var(--radius-md); background: var(--input-bg); }
         .dash-rank li.top { background: rgba(0, 75, 191, 0.07); }
         .dash-rank .rk { text-align: center; font-weight: 800; font-size: var(--fs-md); color: var(--text-muted); }
         .dash-rank .nick { min-width: 0; font-weight: 700; font-size: var(--fs-md); color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .dash-rank .sc { font-weight: 900; font-size: var(--fs-lg); color: var(--primary); }
+        .dash-rank .sc small { margin-left: 1px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
+        .dash-rank .rt { text-align: right; font-weight: 700; font-size: var(--fs-sm); color: var(--text-muted); }
         .dash-foot { margin-top: 14px; text-align: center; font-size: var(--fs-2xs); color: var(--text-muted); }
         @media (min-width: 1000px) {
             .tablet-shell { align-items: center; gap: 32px; }
@@ -807,14 +809,15 @@
                 const date = exam.date ? String(exam.date).slice(0, 10).replace(/-/g, '.') : '';
                 document.getElementById('dashExamName').textContent = exam.name;
                 const meta = [date, `${exam.participants}명 응시`];
-                if (typeof exam.avg === 'number') meta.push(`평균 ${Number.isInteger(exam.avg) ? exam.avg : exam.avg.toFixed(1)}`);
+                if (typeof exam.avgRate === 'number') meta.push(`평균 정답률 ${Number.isInteger(exam.avgRate) ? exam.avgRate : exam.avgRate.toFixed(1)}%`);
                 document.getElementById('dashExamMeta').textContent = meta.filter(Boolean).join(' · ');
                 const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
                 document.getElementById('dashRankList').innerHTML = g.ranking.map(r => `
                     <li class="${r.rank <= 3 ? 'top' : ''}">
                         <span class="rk">${medals[r.rank] || r.rank}</span>
                         <span class="nick">${escapeHTML(r.nickname)}</span>
-                        <span class="sc">${Number.isInteger(r.score) ? r.score : r.score.toFixed(1)}</span>
+                        <span class="sc">${r.score}<small>/${r.total}</small></span>
+                        <span class="rt">${Number.isInteger(r.rate) ? r.rate : r.rate.toFixed(1)}%</span>
                     </li>`).join('');
             }
 
