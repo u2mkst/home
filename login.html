@@ -150,6 +150,14 @@
         .dash-rank .sc small { margin-left: 1px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
         .dash-rank .rt { text-align: right; font-weight: 700; font-size: var(--fs-sm); color: var(--text-muted); }
         .dash-foot { margin-top: 14px; text-align: center; font-size: var(--fs-2xs); color: var(--text-muted); }
+        /* 최근 시험이 없을 때(서버는 정상 응답, 순위만 비어 있음): 순위 영역 대신 아이콘과 안내를 보여준다 */
+        .dash-empty { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 56px 0 44px; text-align: center; }
+        .dash-empty svg { width: 64px; height: 64px; margin-bottom: 8px; color: var(--text-muted); opacity: 0.55; }
+        .dash-empty-title { font-size: var(--fs-lg); font-weight: 800; color: var(--text-main); }
+        .dash-empty-sub { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.5; }
+        .login-dashboard.is-empty .dash-empty { display: flex; }
+        .login-dashboard.is-empty .dash-tabs, .login-dashboard.is-empty .dash-exam-name, .login-dashboard.is-empty .dash-exam-meta,
+        .login-dashboard.is-empty .dash-rank, .login-dashboard.is-empty .dash-foot { display: none; }
         @media (min-width: 1000px) {
             .tablet-shell { align-items: center; gap: 32px; }
             .container { flex: 0 1 460px; }
@@ -443,6 +451,13 @@
         <div class="dash-exam-meta" id="dashExamMeta"></div>
         <ol class="dash-rank" id="dashRankList"></ol>
         <div class="dash-foot">닉네임(없으면 이름 일부를 가려서)과 점수만 표시돼요</div>
+        <div class="dash-empty" id="dashEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M10 17h4"/>
+            </svg>
+            <div class="dash-empty-title">최근 시험이 없어요</div>
+            <div class="dash-empty-sub">새 시험 점수가 입력되면<br>이곳에 순위가 나타나요</div>
+        </div>
     </aside>
     <div class="container">
         <!-- 🟢 네이버 로그인처럼 로고를 카드 밖 맨 위에 독립적으로 배치 -->
@@ -839,9 +854,14 @@
                     const res = await fetch(`${BACKEND_URL}/api/weather?data=exam-ranking`);
                     if (!res.ok) return;
                     const json = await res.json();
-                    if (!json || !Array.isArray(json.grades) || !json.grades.length) return;
+                    if (!json || !Array.isArray(json.grades)) return;
                     data = json;
                     box.classList.add('show');
+                    if (!json.grades.length) {
+                        // 서버는 정상인데 최근 시험이 없는 경우: 패널을 숨기지 않고 안내를 보여준다
+                        box.classList.add('is-empty');
+                        return;
+                    }
                     renderTabs();
                     renderRanking();
                 } catch (e) {
