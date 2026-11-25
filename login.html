@@ -128,10 +128,38 @@
             justify-content: center;
         }
 
-        /* 📊 로그인 화면 왼쪽 대시보드(학년별 최근 시험 순위) — 넓은 화면(태블릿 가로·PC)에서만 보인다.
-           순위를 못 불러오거나 좁은 화면이면 아예 나타나지 않아서 로그인 카드 모양은 예전 그대로다. */
-        .login-dashboard { display: none; }
+        /* 📊 시험 순위 서랍(드로어): 왼쪽 가장자리의 "시험 순위" 버튼을 누르면 왼쪽에서 튀어나온다.
+           로그인 카드는 언제나 가운데에 혼자 있고, 서랍은 그 위로 덮였다가 닫힌다. */
+        .dash-handle, .dash-handle:hover, .dash-handle:active {
+            position: fixed; left: 0; top: 16px; z-index: 4800; display: flex; align-items: center; gap: 6px;
+            width: auto; padding: 10px 14px 10px 10px; border: none; border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            background: var(--primary); color: #fff; font-size: var(--fs-sm); font-weight: 800; letter-spacing: -0.2px;
+            box-shadow: 0 4px 14px rgba(0, 75, 191, 0.28);
+            transition: transform 0.35s var(--spring), opacity 0.2s ease;
+        }
+        .dash-handle:hover { background: var(--primary-hover); transform: none; }
+        .dash-handle:active { transform: scale(0.96); }
+        .dash-handle svg { width: 20px; height: 20px; flex: 0 0 auto; }
+        .dash-handle.away { transform: translateX(-110%); opacity: 0; pointer-events: none; }
+        .dash-backdrop { position: fixed; inset: 0; z-index: 4900; background: rgba(15, 23, 42, 0.38); opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0s linear 0.25s; }
+        .dash-backdrop.open { opacity: 1; visibility: visible; transition: opacity 0.25s ease; }
+        /* 왼쪽 가장자리에 붙은 서랍. 스프링 효과로 살짝 넘쳐도 빈틈이 안 보이게 40px 바깥으로 더 뻗어 있다. */
+        .login-dashboard {
+            position: fixed; top: 0; bottom: 0; left: -40px; z-index: 5000; display: flex; flex-direction: column;
+            width: calc(min(92vw, 440px) + 40px); padding: 22px 22px 18px 62px;
+            background: #fff; border-radius: 0 var(--radius-lg) var(--radius-lg) 0; box-shadow: 8px 0 32px rgba(15, 23, 42, 0.18);
+            transform: translateX(-110%); visibility: hidden;
+            transition: transform 0.45s var(--spring), visibility 0s linear 0.45s;
+        }
+        .login-dashboard.open { transform: translateX(0); visibility: visible; transition: transform 0.45s var(--spring), visibility 0s; }
+        .dash-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .dash-title { font-family: var(--font-title); font-size: var(--fs-xl); font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; }
+        .dash-close, .dash-close:hover, .dash-close:active {
+            width: 36px; height: 36px; padding: 0; border-radius: 50%; border: none; transform: none; box-shadow: none;
+            background: var(--input-bg); color: var(--text-muted); font-size: 16px; line-height: 1;
+        }
+        .dash-close:hover { background: #E5E8EB; }
+        .dash-body { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
         .dash-tabs { display: flex; gap: 8px; margin: 16px 0 14px; }
         .dash-tab, .dash-tab:hover, .dash-tab:active {
             display: inline-block; width: auto; flex: 0 0 auto; transform: none; box-shadow: none;
@@ -140,47 +168,35 @@
         }
         .dash-tab.active, .dash-tab.active:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
         .dash-exam-name { font-size: var(--fs-md); font-weight: 800; color: var(--text-main); word-break: keep-all; }
-        .dash-exam-meta { margin-top: 4px; font-size: var(--fs-xs); color: var(--text-muted); }
-        .dash-rank { list-style: none; margin: 14px 0 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .dash-rank li { display: grid; grid-template-columns: 40px 1fr auto 62px; align-items: center; gap: 10px; padding: 11px 14px; border-radius: var(--radius-md); background: var(--input-bg); }
+        .dash-rank { flex: 1 1 auto; min-height: 0; list-style: none; margin: 14px 0 0; padding: 0 0 6px; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 8px; }
+        .dash-rank li { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--input-bg); }
         .dash-rank li.top { background: rgba(0, 75, 191, 0.07); }
         .dash-rank .rk { text-align: center; font-weight: 800; font-size: var(--fs-md); color: var(--text-muted); }
         .dash-rank .nick { min-width: 0; font-weight: 700; font-size: var(--fs-md); color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .dash-rank .sc { font-weight: 900; font-size: var(--fs-lg); color: var(--primary); }
-        .dash-rank .sc small { margin-left: 1px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
-        .dash-rank .rt { text-align: right; font-weight: 700; font-size: var(--fs-sm); color: var(--text-muted); }
-        .dash-foot { margin-top: 14px; text-align: center; font-size: var(--fs-2xs); color: var(--text-muted); }
-        /* 최근 시험이 없을 때(서버는 정상 응답, 순위만 비어 있음): 순위 영역 대신 아이콘과 안내를 보여준다 */
-        .dash-empty { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 56px 0 44px; text-align: center; }
-        .dash-empty svg { width: 64px; height: 64px; margin-bottom: 8px; color: var(--text-muted); opacity: 0.55; }
+        .dash-rank .stat { text-align: right; line-height: 1.25; }
+        .dash-rank .rt { display: block; font-weight: 900; font-size: var(--fs-lg); color: var(--primary); }
+        .dash-rank .cnt { display: block; margin-top: 2px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
+        /* 상태 화면: 불러오는 중(스켈레톤) / 최근 시험 없음 / 불러오지 못함 */
+        .dash-empty, .dash-error, .dash-skeleton { display: none; }
+        .dash-empty, .dash-error { flex: 1 1 auto; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px 0 64px; text-align: center; }
+        .dash-empty svg, .dash-error svg { width: 64px; height: 64px; margin-bottom: 8px; color: var(--text-muted); opacity: 0.55; }
         .dash-empty-title { font-size: var(--fs-lg); font-weight: 800; color: var(--text-main); }
         .dash-empty-sub { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.5; }
-        .login-dashboard.is-empty .dash-empty { display: flex; }
-        .login-dashboard.is-empty .dash-tabs, .login-dashboard.is-empty .dash-exam-name, .login-dashboard.is-empty .dash-exam-meta,
-        .login-dashboard.is-empty .dash-rank, .login-dashboard.is-empty .dash-foot { display: none; }
-        /* 불러오는 동안: 패널 모양(제목·탭·시험명·순위 줄)을 그대로 둔 채 안을 스켈레톤으로 채워서, 데이터가 와도 화면이 밀리지 않게 한다 */
-        .dash-skeleton { display: none; flex-direction: column; gap: 14px; margin-top: 16px; }
+        .dash-retry, .dash-retry:hover, .dash-retry:active { width: auto; margin-top: 12px; padding: 10px 22px; font-size: var(--fs-sm); transform: none; }
+        .dash-skeleton { flex-direction: column; gap: 14px; margin-top: 16px; }
         .sk { background: linear-gradient(90deg, #EEF1F4 25%, #F7F8FA 50%, #EEF1F4 75%); background-size: 200% 100%; animation: dashShimmer 1.3s ease-in-out infinite; }
         @keyframes dashShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .sk-tabs { display: flex; gap: 8px; }
         .sk-tab { width: 64px; height: 34px; border-radius: 999px; }
         .sk-name { width: 78%; height: 18px; border-radius: 8px; }
-        .sk-meta { width: 52%; height: 12px; margin-top: -8px; border-radius: 6px; }
-        .sk-rows { display: flex; flex-direction: column; gap: 8px; }
-        .sk-row { height: 43px; border-radius: var(--radius-md); }
+        .sk-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+        .sk-row { height: 57px; border-radius: var(--radius-md); }
+        .login-dashboard.is-loading .dash-body, .login-dashboard.is-empty .dash-body, .login-dashboard.is-error .dash-body { display: none; }
         .login-dashboard.is-loading .dash-skeleton { display: flex; }
-        .login-dashboard.is-loading .dash-tabs, .login-dashboard.is-loading .dash-exam-name, .login-dashboard.is-loading .dash-exam-meta,
-        .login-dashboard.is-loading .dash-rank, .login-dashboard.is-loading .dash-foot, .login-dashboard.is-loading .dash-empty { display: none; }
-        @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
-        @media (min-width: 1000px) {
-            .tablet-shell { align-items: center; gap: 32px; }
-            .container { flex: 0 1 460px; }
-            .login-dashboard.show {
-                display: flex; flex-direction: column; flex: 0 1 440px; min-width: 0;
-                max-height: min(82vh, 680px); padding: 28px 28px 22px;
-                background: #fff; border: 1.5px solid var(--lg-border); border-radius: var(--radius-lg);
-                animation: cardFadeIn 0.5s var(--spring);
-            }
+        .login-dashboard.is-empty .dash-empty, .login-dashboard.is-error .dash-error { display: flex; }
+        @media (prefers-reduced-motion: reduce) {
+            .sk { animation: none; }
+            .login-dashboard, .login-dashboard.open, .dash-backdrop, .dash-backdrop.open, .dash-handle { transition: none; }
         }
 
         @media (min-width: 700px) {
@@ -456,33 +472,44 @@
         </div>
     </div>
 
-    <div class="tablet-shell">
-    <!-- 📊 왼쪽 대시보드: 학년별 최근 시험 순위(닉네임·점수만). 불러오면 자바스크립트가 보이게 한다. -->
-    <aside class="login-dashboard" id="examDashboard" aria-label="시험 순위">
-        <div class="dash-title">🏆 시험 순위</div>
-        <div class="dash-tabs" id="dashTabs" role="tablist"></div>
-        <div class="dash-exam-name" id="dashExamName"></div>
-        <div class="dash-exam-meta" id="dashExamMeta"></div>
-        <ol class="dash-rank" id="dashRankList"></ol>
-        <div class="dash-foot">닉네임(없으면 이름 일부를 가려서)과 점수만 표시돼요</div>
-        <div class="dash-empty" id="dashEmpty">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M10 17h4"/>
-            </svg>
+    <!-- 📊 시험 순위 서랍: 왼쪽 가장자리 버튼을 누르면 왼쪽에서 튀어나온다(학년별 최근 시험, 정답률·문제 수만). -->
+    <button type="button" class="dash-handle" id="dashHandle" aria-controls="examDashboard" aria-expanded="false" aria-label="시험 순위 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M10 17h4"/></svg>
+        <span>시험 순위</span>
+    </button>
+    <div class="dash-backdrop" id="dashBackdrop"></div>
+    <aside class="login-dashboard is-loading" id="examDashboard" aria-label="시험 순위" aria-hidden="true">
+        <div class="dash-head">
+            <div class="dash-title">🏆 시험 순위</div>
+            <button type="button" class="dash-close" id="dashClose" aria-label="닫기">✕</button>
+        </div>
+        <div class="dash-body">
+            <div class="dash-tabs" id="dashTabs" role="tablist"></div>
+            <div class="dash-exam-name" id="dashExamName"></div>
+            <ol class="dash-rank" id="dashRankList"></ol>
+        </div>
+        <div class="dash-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M10 17h4"/></svg>
             <div class="dash-empty-title">최근 시험이 없어요</div>
             <div class="dash-empty-sub">새 시험 점수가 입력되면<br>이곳에 순위가 나타나요</div>
+        </div>
+        <div class="dash-error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/></svg>
+            <div class="dash-empty-title">순위를 불러오지 못했어요</div>
+            <div class="dash-empty-sub">잠시 후 다시 시도해 주세요</div>
+            <button type="button" class="dash-retry" id="dashRetry">다시 시도</button>
         </div>
         <div class="dash-skeleton" aria-hidden="true">
             <div class="sk-tabs"><div class="sk sk-tab"></div><div class="sk sk-tab"></div><div class="sk sk-tab"></div></div>
             <div class="sk sk-name"></div>
-            <div class="sk sk-meta"></div>
             <div class="sk-rows">
-                <div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div>
-                <div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div>
-                <div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div>
+                <div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div>
+                <div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div>
             </div>
         </div>
     </aside>
+
+    <div class="tablet-shell">
     <div class="container">
         <!-- 🟢 네이버 로그인처럼 로고를 카드 밖 맨 위에 독립적으로 배치 -->
         <div class="header-zone" id="logoZone">
@@ -834,30 +861,57 @@
             );
         }
 
-        // 📊 왼쪽 대시보드: 학년별 최근 시험 순위. 로그인 없이 부르는 공개 데이터(닉네임·점수만)다.
-        // 좁은 화면에서는 CSS로 보이지 않으니 요청도 하지 않고, 불러오지 못하면 조용히 숨겨 둔 채로 둔다.
+        // 📊 시험 순위 서랍: 왼쪽 가장자리 버튼을 누르면 왼쪽에서 튀어나온다. 학년별 최근 시험의 순위를
+        // 닉네임·정답률·문제 수로만 보여 주고, 로그인 없이 부르는 공개 데이터다. 페이지가 열릴 때 미리 받아 둔다.
         (function initExamDashboard() {
-            const box = document.getElementById('examDashboard');
-            if (!box) return;
-            const wide = window.matchMedia('(min-width: 1000px)');
+            const drawer = document.getElementById('examDashboard');
+            const handle = document.getElementById('dashHandle');
+            const backdrop = document.getElementById('dashBackdrop');
+            const closeBtn = document.getElementById('dashClose');
+            const retryBtn = document.getElementById('dashRetry');
+            if (!drawer || !handle || !backdrop) return;
             let data = null, active = 0, loading = false;
+
+            function setState(state) { // loading | ready | empty | error
+                drawer.classList.toggle('is-loading', state === 'loading');
+                drawer.classList.toggle('is-empty', state === 'empty');
+                drawer.classList.toggle('is-error', state === 'error');
+                drawer.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+            }
+
+            function openDrawer() {
+                drawer.classList.add('open');
+                backdrop.classList.add('open');
+                handle.classList.add('away');
+                handle.setAttribute('aria-expanded', 'true');
+                drawer.setAttribute('aria-hidden', 'false');
+                closeBtn.focus({ preventScroll: true });
+            }
+
+            function closeDrawer() {
+                drawer.classList.remove('open');
+                backdrop.classList.remove('open');
+                handle.classList.remove('away');
+                handle.setAttribute('aria-expanded', 'false');
+                drawer.setAttribute('aria-hidden', 'true');
+                handle.focus({ preventScroll: true });
+            }
 
             function renderRanking() {
                 const g = data.grades[active];
-                const exam = g.exam;
-                const date = exam.date ? String(exam.date).slice(0, 10).replace(/-/g, '.') : '';
-                document.getElementById('dashExamName').textContent = exam.name;
-                const meta = [date, `${exam.participants}명 응시`];
-                if (typeof exam.avgRate === 'number') meta.push(`평균 정답률 ${Number.isInteger(exam.avgRate) ? exam.avgRate : exam.avgRate.toFixed(1)}%`);
-                document.getElementById('dashExamMeta').textContent = meta.filter(Boolean).join(' · ');
+                document.getElementById('dashExamName').textContent = g.exam.name;
                 const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
-                document.getElementById('dashRankList').innerHTML = g.ranking.map(r => `
+                const list = document.getElementById('dashRankList');
+                list.innerHTML = g.ranking.map(r => `
                     <li class="${r.rank <= 3 ? 'top' : ''}">
                         <span class="rk">${medals[r.rank] || r.rank}</span>
                         <span class="nick">${escapeHTML(r.nickname)}</span>
-                        <span class="sc">${r.score}<small>/${r.total}</small></span>
-                        <span class="rt">${Number.isInteger(r.rate) ? r.rate : r.rate.toFixed(1)}%</span>
+                        <span class="stat">
+                            <span class="rt">${Number.isInteger(r.rate) ? r.rate : r.rate.toFixed(1)}%</span>
+                            <span class="cnt">${r.score}/${r.total}문제</span>
+                        </span>
                     </li>`).join('');
+                list.scrollTop = 0;
             }
 
             function renderTabs() {
@@ -872,43 +926,33 @@
             }
 
             async function load() {
-                if (data || loading || !wide.matches) return;
+                if (loading) return;
                 loading = true;
-                // 불러오는 동안에도 패널을 먼저 띄워 두고(스켈레톤) 모양을 유지한다
-                box.classList.add('show', 'is-loading');
-                box.setAttribute('aria-busy', 'true');
-                let loaded = false;
+                setState('loading');
                 try {
                     const res = await fetch(`${BACKEND_URL}/api/weather?data=exam-ranking`);
-                    if (res.ok) {
-                        const json = await res.json();
-                        if (json && Array.isArray(json.grades)) {
-                            data = json;
-                            loaded = true;
-                            box.classList.remove('is-loading');
-                            box.removeAttribute('aria-busy');
-                            if (!json.grades.length) {
-                                // 서버는 정상인데 최근 시험이 없는 경우: 패널을 숨기지 않고 안내를 보여준다
-                                box.classList.add('is-empty');
-                            } else {
-                                renderTabs();
-                                renderRanking();
-                            }
-                        }
-                    }
+                    const json = res.ok ? await res.json() : null;
+                    if (!json || !Array.isArray(json.grades)) { setState('error'); return; }
+                    data = json;
+                    active = 0;
+                    if (!json.grades.length) { setState('empty'); return; } // 서버는 정상인데 최근 시험이 없는 경우
+                    renderTabs();
+                    renderRanking();
+                    setState('ready');
                 } catch (e) {
-                    // 순위는 부가 정보라서 실패해도 로그인에는 영향이 없다
+                    setState('error'); // 순위는 부가 정보라서 실패해도 로그인에는 영향이 없다
                 } finally {
                     loading = false;
-                    if (!loaded) {
-                        // 서버 오류·네트워크 실패: 스켈레톤을 걷고 패널을 숨겨 로그인 카드만 남긴다
-                        box.classList.remove('show', 'is-loading', 'is-empty');
-                        box.removeAttribute('aria-busy');
-                    }
                 }
             }
 
-            if (wide.addEventListener) wide.addEventListener('change', load); else if (wide.addListener) wide.addListener(load);
+            handle.addEventListener('click', openDrawer);
+            closeBtn.addEventListener('click', closeDrawer);
+            backdrop.addEventListener('click', closeDrawer);
+            if (retryBtn) retryBtn.addEventListener('click', load);
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer();
+            });
             load();
         })();
 
