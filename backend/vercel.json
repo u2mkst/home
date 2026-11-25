@@ -1,6 +1,7 @@
 {
   "functions": {
-    "api/lotto.js": { "maxDuration": 45 }
+    "api/lotto.js": { "maxDuration": 45 },
+    "api/weather.js": { "maxDuration": 30 }
   },
   "crons": [
     { "path": "/api/lotto", "schedule": "0 12 * * 6" }

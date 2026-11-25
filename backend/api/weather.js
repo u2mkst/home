@@ -1,6 +1,7 @@
 const { applyCors } = require("../lib/cors");
 const { rejectIfRateLimited } = require("../lib/guard");
 const { getCached, setCached, setEdgeCache, setNoStore } = require("../lib/cache");
+const { handleExamRanking } = require("../lib/examRanking");
 
 // 학원 위치(경기도 수원시 영통구) 기준 기상청 단기예보구역코드.
 // https://apihub.kma.go.kr/api/typ01/url/fct_shrt_reg.php?tmfc=0&authKey=... 조회 결과 "수원" 매칭.
@@ -82,6 +83,9 @@ module.exports = async (req, res) => {
     if (req.method !== "GET") {
         return res.status(405).json({ error: "Method not allowed" });
     }
+
+    // 로그인 화면 대시보드의 시험 순위(공개, 닉네임·점수만). Hobby 플랜 함수 12개 제한 때문에 이 파일에 같이 둔다.
+    if (req.query && req.query.data === "exam-ranking") return handleExamRanking(req, res);
 
     const cached = getCached("weather");
     if (cached) {
