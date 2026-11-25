@@ -8,6 +8,7 @@ const { dbKey, normalizeLoginId } = require("../lib/guard");
 const { kstDateParts } = require("../lib/kst");
 const { grantAttendanceBadges } = require("../lib/achievements");
 const { purgeStudentData } = require("../lib/purge");
+const { linkCheck: scoresLinkCheck } = require("../lib/studentScores");
 const lotto = require("./lotto");
 
 // 🛠️ 마스터 전용 운영 도구. 학생 계정/잠금/PIN/출석/로또처럼 클라이언트 규칙으로는 열어줄 수 없는
@@ -352,6 +353,17 @@ const ACTIONS = {
     "lotto-summary": lottoSummary,
     "name-sync-check": nameSyncCheck,
     "name-sync-fix": nameSyncFix,
+    "scores-link-check": async () => {
+        try {
+            return await scoresLinkCheck();
+        } catch (e) {
+            if (e && e.name === "NotionError") {
+                console.error("scores link check notion error:", e.notionCode);
+                throw e.notionCode === "not_configured" ? fail(503, "not_configured") : fail(502, "notion_unavailable");
+            }
+            throw e;
+        }
+    },
 };
 
 module.exports = async (req, res) => {

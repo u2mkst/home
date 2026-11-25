@@ -8,8 +8,8 @@ Vercel 서버리스 함수. AES 키·NEIS 키·Firebase 관리자 권한처럼 �
 |---|---|---|
 | `POST /api/student-login` | 없음(reCAPTCHA·락아웃·IP 한도) | 아이디+PIN을 서버가 검증하고 Firebase 커스텀 토큰 발급 |
 | `POST /api/register` | 없음(reCAPTCHA·IP 한도) | 학생 가입(계정 생성·암호화·DB 기록을 서버가 수행) |
-| `POST /api/account` | ID 토큰 | `set-pin`(로그인 PIN 변경) / `delete`(PIN 확인 후 회원 탈퇴, 관련 기록 전부 삭제) |
-| `POST /api/admin` | ID 토큰(마스터 UID만) | 마스터 운영 도구: `locks`/`unlock`, `reset-pin`, `students`, `set-disabled`, `delete-student`, `attendance-get`/`attendance-set`, `status`, `lotto-resync`/`lotto-set-draw`/`lotto-clear-predictions` |
+| `POST /api/account` | ID 토큰 | `set-pin`(로그인 PIN 변경) / `delete`(PIN 확인 후 회원 탈퇴, 관련 기록 전부 삭제) / `scores`(본인 시험 성적 조회 — 노션 연동, 아래 참고) |
+| `POST /api/admin` | ID 토큰(마스터 UID만) | 마스터 운영 도구: `locks`/`unlock`, `reset-pin`, `students`, `set-disabled`, `delete-student`, `attendance-get`/`attendance-set`, `status`, `lotto-resync`/`lotto-set-draw`/`lotto-clear-predictions`, `scores-link-check`(노션 원생명부와 가입 학생 이름 연결 점검) |
 | `POST /api/attendance` | ID 토큰 | 서버 시각 기준 오늘 출석 기록 + 랭킹용 횟수 + 출석 업적 |
 | `POST /api/lotto` | ID 토큰 | `status`(당첨번호·회차·접수 가능 여부) / `submit`(예측 제출) |
 | `GET /api/lotto` | `CRON_SECRET` | Vercel 크론: 추첨 직후 당첨번호 저장 + 예측 판정 + 로또 업적 지급 |
@@ -22,6 +22,23 @@ Vercel 서버리스 함수. AES 키·NEIS 키·Firebase 관리자 권한처럼 �
 학생의 Firebase 비밀번호는 **무작위 값**이다. PIN(4자리)은 `loginSecrets/{uid}`에 `scrypt(salt + PIN_PEPPER)` 해시로만 저장하고
 (클라이언트 접근 불가), 검증은 `/api/student-login`만 한다. 그래서 Firebase REST API를 직접 두드려도 PIN을 대입할 수 없다.
 기존 계정은 첫 로그인 때 자동 이전되고, `scripts/migrate-student-auth.js`로 한꺼번에 이전할 수도 있다.
+
+## 시험 성적(노션 연동)
+
+학생 마이페이지의 "나의 시험 성적"은 노션 DB를 서버가 읽어서 **본인 점수 + 그 시험의 평균/최고/최저**만 돌려준다(`POST /api/account`, `action: "scores"`).
+
+- 흐름: Firebase `students/{uid}/name`(복호화) → 노션 **원생명부**에서 같은 이름의 페이지를 찾기 → **학생별성적DB**에서 그 학생의 행 조회 → **시험DB**에서 시험 평균/최고/최저.
+- 연결 규칙: 이름이 원생명부에 **정확히 한 명**일 때만 연결한다. 없거나(`none`) 둘 이상(`ambiguous`)이면 아무 데이터도 내리지 않고 안내만 한다. 동명이인이 생기면 마스터 화면의 "시험 성적 연결 점검"으로 확인.
+- 원생명부에는 전화번호가 있어서 **제목(이름) 속성만** 요청한다(`filter_properties`). 응답에는 다른 학생 이름·점수가 들어가지 않는다.
+- 노션 DB는 제목으로 찾는다(`원생명부`, `학생별성적DB`, `시험DB`). 속성 이름이 바뀌면 `lib/notionScores.js`의 `REQUIRED_PROPS`와 `mapScoreRow`를 같이 고친다.
+- 결과는 학생별로 5분(서버 메모리) 캐시한다.
+
+| 환경변수 | 설명 |
+|---|---|
+| `NOTION_TOKEN` | 노션 **내부 연동** 시크릿(읽기 전용 권한). 이 연동을 원생명부·학생별성적DB·시험DB가 들어 있는 페이지에 "연결 추가"해야 읽힌다. 없으면 `/api/account`의 `scores`는 503 `not_configured`. |
+| `NOTION_DB_ROSTER_ID` / `NOTION_DB_SCORES_ID` / `NOTION_DB_EXAMS_ID` | (선택) 제목 검색 대신 DB id를 직접 지정 |
+
+테스트: `node lib/notionScores.test.js` (가짜 fetch, 노션 토큰 불필요)
 
 ## 로또
 
