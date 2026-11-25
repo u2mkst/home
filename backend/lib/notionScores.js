@@ -1,23 +1,26 @@
 "use strict";
-/* 노션 시험 성적 조회.
-   - 원생명부(학생 이름) → 학생별성적DB(그 학생의 시험별 점수) → 시험DB(시험 평균/최고/최저) 순서로 읽는다.
-   - 학생에게 돌려주는 값은 "본인 점수 + 그 시험의 평균/최고/최저"뿐이다. 다른 학생의 이름·점수는 이 모듈 밖으로 나가지 않는다.
-   - 원생명부에는 전화번호 등이 들어 있으므로 제목(이름) 속성만 가져온다(filter_properties).
+/* 노션 시험 순위 조회 (로그인 화면 대시보드용 공개 데이터).
+   - 시험DB에서 "학년별 가장 최근 시험"을 고르고, 학생별성적DB에서 그 시험의 점수를 읽어 순위를 만든다.
+   - 학생 실명은 읽지도 돌려주지도 않는다. 학생별성적DB의 '닉네임'과 점수만 쓰고, 요청할 때도
+     닉네임/점수/성적 속성만 가져온다(filter_properties). 학생이름·수강반·담당 같은 속성은 이 서버를 거치지 않는다.
    - fetch를 주입할 수 있어서 노션 토큰 없이 단위 테스트가 가능하다(notionScores.test.js). */
 
 const NOTION_BASE = "https://api.notion.com/v1/";
 const NOTION_VERSION = "2022-06-28";
 
-const DB_TITLES = { roster: "원생명부", scores: "학생별성적DB", exams: "시험DB" };
+const DB_TITLES = { scores: "학생별성적DB", exams: "시험DB" };
 const REQUIRED_PROPS = {
-    roster: [],
-    scores: ["시험명", "학생이름", "시험지", "시험 날짜", "성적", "총문항", "오답", "점수"],
-    exams: ["이름", "평균", "최고점", "최저점"],
+    scores: ["시험지", "닉네임", "점수", "성적"],
+    exams: ["이름", "날짜", "학년", "평균", "최고점", "최저점"],
 };
 
-const MAX_EXAMS_RETURNED = 20;
-const MAX_EXAM_STATS_LOOKUPS = 12;
-const EXAM_STATS_CONCURRENCY = 3;
+const GRADE_ORDER = ["중1", "중2", "중3", "고1", "고2", "고3"];
+const ANONYMOUS_NICKNAME = "익명";
+const MAX_NICKNAME_LENGTH = 12;
+const TOP_N = 10;
+const MIN_PARTICIPANTS = 3; // 점수가 이보다 적게 입력된 시험은 아직 입력 중인 것으로 보고 건너뛴다
+const MAX_EXAMS_TRIED_PER_GRADE = 4;
+const SCORE_PAGE_LIMIT = 3; // 한 시험당 100명씩 최대 3쪽
 
 class NotionError extends Error {
     constructor(message, { status = 502, code = "notion_error" } = {}) {
@@ -108,33 +111,18 @@ function toNumber(v) {
     return null;
 }
 
-// ---------- 이름 매칭 ----------
 function normalizeName(s) {
     return String(s == null ? "" : s).normalize("NFC").toLowerCase().replace(/\s+/g, "");
 }
 
-// "홍길동(Gildong)" 처럼 괄호가 붙은 제목도 "홍길동"으로 비교할 수 있게 두 가지 형태를 만든다.
-function titleVariants(title) {
-    const full = normalizeName(title);
-    const stripped = normalizeName(String(title == null ? "" : title).replace(/[(\[（].*?[)\]）]/g, ""));
-    return stripped && stripped !== full ? [full, stripped] : [full];
-}
-
-// 이름이 "정확히 하나"의 원생명부 페이지와 맞을 때만 연결한다. 동명이인/중복은 어느 쪽에도 연결하지 않는다.
-function pickStudentPage(pages, name) {
-    const target = normalizeName(name);
-    if (!target) return { status: "none" };
-    const matches = (pages || []).filter((pg) => {
-        if (!pg || pg.archived) return false;
-        const title = plain(Object.values(pg.properties || {}).find((p) => p && p.type === "title")?.title);
-        return titleVariants(title).includes(target);
-    });
-    if (matches.length === 1) return { status: "ok", pageId: matches[0].id };
-    return { status: matches.length === 0 ? "none" : "ambiguous" };
+// 닉네임은 공개 화면에 그대로 나가므로 제어문자를 지우고 길이를 제한한다. 비어 있으면 '익명'.
+function cleanNickname(raw) {
+    const s = String(raw == null ? "" : raw).replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, MAX_NICKNAME_LENGTH).trim();
+    return s || ANONYMOUS_NICKNAME;
 }
 
 // ---------- 데이터베이스 찾기 (제목으로 검색, 한 번 찾으면 재사용) ----------
-const dbCache = new Map(); // key -> { id, titlePropName, titlePropId, props, at }
+const dbCache = new Map();
 const DB_CACHE_MS = 60 * 60 * 1000;
 
 function clearDbCache() { dbCache.clear(); }
@@ -159,10 +147,8 @@ async function resolveDatabase(client, kind, overrides = {}) {
     for (const id of candidateIds) {
         const db = await client.request("GET", `databases/${id}`);
         const props = db.properties || {};
-        const names = Object.keys(props);
-        if (required.every((n) => names.includes(n))) {
-            const titleName = names.find((n) => props[n].type === "title");
-            const info = { id: db.id, titlePropName: titleName, titlePropId: props[titleName].id, props, at: Date.now() };
+        if (required.every((n) => Object.prototype.hasOwnProperty.call(props, n))) {
+            const info = { id: db.id, props, at: Date.now() };
             dbCache.set(kind, info);
             return info;
         }
@@ -171,132 +157,107 @@ async function resolveDatabase(client, kind, overrides = {}) {
 }
 
 function dbOverridesFromEnv(env = process.env) {
-    return { roster: env.NOTION_DB_ROSTER_ID, scores: env.NOTION_DB_SCORES_ID, exams: env.NOTION_DB_EXAMS_ID };
+    return { scores: env.NOTION_DB_SCORES_ID, exams: env.NOTION_DB_EXAMS_ID };
 }
 
-// ---------- 학생 찾기 ----------
-async function findStudentPage(client, name, overrides) {
-    const roster = await resolveDatabase(client, "roster", overrides);
-    const res = await client.request("POST", `databases/${roster.id}/query`, {
-        body: { filter: { property: roster.titlePropName, title: { contains: String(name).trim() } }, page_size: 25 },
-        query: { filter_properties: [roster.titlePropId] }, // 전화번호 등 다른 속성은 가져오지 않는다
-    });
-    return pickStudentPage(res.results, name);
-}
-
-// 관리자 점검용: 원생명부 전체 이름(제목만) 목록
-async function listRosterTitles(client, overrides, maxPages = 30) {
-    const roster = await resolveDatabase(client, "roster", overrides);
-    const titles = [];
-    let cursor;
-    for (let i = 0; i < maxPages; i++) {
-        const res = await client.request("POST", `databases/${roster.id}/query`, {
-            body: { page_size: 100, ...(cursor ? { start_cursor: cursor } : {}) },
-            query: { filter_properties: [roster.titlePropId] },
-        });
-        for (const pg of res.results || []) {
-            if (pg.archived) continue;
-            const t = plain(Object.values(pg.properties || {}).find((p) => p && p.type === "title")?.title);
-            titles.push(t);
-        }
-        if (!res.has_more) break;
-        cursor = res.next_cursor;
-    }
-    return titles;
-}
-
-// ---------- 점수 ----------
-function mapScoreRow(page) {
-    const p = page.properties || {};
-    const examIds = propValue(p["시험지"]) || [];
-    const formulaScore = toNumber(propValue(p["점수"]));
-    const rawScore = toNumber(propValue(p["성적"]));
-    return {
-        examId: examIds[0] || null,
-        name: propValue(p["시험명"]) || "",
-        date: propValue(p["시험 날짜"]) || null,
-        score: formulaScore != null ? formulaScore : rawScore,
-        rawScore,
-        total: toNumber(propValue(p["총문항"])),
-        wrong: toNumber(propValue(p["오답"])),
-    };
-}
-
-function mapExamStats(page) {
+// ---------- 시험 / 순위 ----------
+function mapExam(page) {
     const p = page.properties || {};
     return {
+        id: page.id,
+        name: propValue(p["이름"]) || "",
+        date: propValue(p["날짜"]) || null,
+        grade: propValue(p["학년"]) || null,
         avg: toNumber(propValue(p["평균"])),
         max: toNumber(propValue(p["최고점"])),
         min: toNumber(propValue(p["최저점"])),
         category: propValue(p["분류"]) || null,
-        term: propValue(p["학기"]) || null,
-        kind: propValue(p["중간 or 기말"]) || null,
-        grade: propValue(p["학년"]) || null,
     };
 }
 
-const examStatsCache = new Map();
-const EXAM_STATS_CACHE_MS = 10 * 60 * 1000;
+// 지금(KST) 기준 오늘 날짜 yyyy-mm-dd. 아직 치르지 않은(미래 날짜) 시험은 순위에서 뺀다.
+function kstToday(now = new Date()) {
+    return new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
 
-async function mapWithConcurrency(items, limit, fn) {
-    const out = new Array(items.length);
-    let next = 0;
-    async function worker() {
-        while (next < items.length) {
-            const i = next++;
-            out[i] = await fn(items[i], i);
+// 점수 내림차순, 동점은 같은 등수(1,2,2,4). 컷오프 등수에 걸린 동점자는 모두 포함한다.
+function buildRanking(entries, topN = TOP_N) {
+    const sorted = [...entries].sort((a, b) => b.score - a.score);
+    const ranked = sorted.map((e) => ({ ...e, rank: 1 + sorted.filter((o) => o.score > e.score).length }));
+    if (ranked.length <= topN) return ranked;
+    const cutoffRank = ranked[topN - 1].rank;
+    return ranked.filter((e) => e.rank <= cutoffRank);
+}
+
+async function fetchExamScoreEntries(client, scoresDb, examId) {
+    const filterProps = ["닉네임", "점수", "성적"].map((n) => scoresDb.props[n].id);
+    const entries = [];
+    let cursor;
+    for (let i = 0; i < SCORE_PAGE_LIMIT; i++) {
+        const res = await client.request("POST", `databases/${scoresDb.id}/query`, {
+            body: {
+                filter: { property: "시험지", relation: { contains: examId } },
+                page_size: 100,
+                ...(cursor ? { start_cursor: cursor } : {}),
+            },
+            query: { filter_properties: filterProps }, // 학생이름·수강반·담당 등은 가져오지 않는다
+        });
+        for (const pg of res.results || []) {
+            if (pg.archived) continue;
+            const p = pg.properties || {};
+            const formula = toNumber(propValue(p["점수"]));
+            const score = formula != null ? formula : toNumber(propValue(p["성적"]));
+            if (score == null) continue;
+            entries.push({ nickname: cleanNickname(propValue(p["닉네임"])), score });
         }
+        if (!res.has_more) break;
+        cursor = res.next_cursor;
     }
-    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-    return out;
+    return entries;
 }
 
-async function getExamStats(client, examId) {
-    const hit = examStatsCache.get(examId);
-    if (hit && hit.expires > Date.now()) return hit.value;
-    let value = null;
-    try {
-        value = mapExamStats(await client.request("GET", `pages/${examId}`));
-    } catch (e) {
-        // 시험 정보가 없거나 공유되지 않았어도 본인 점수는 보여준다
-        if (!(e instanceof NotionError) || ![403, 404].includes(e.notionStatus)) throw e;
-    }
-    examStatsCache.set(examId, { value, expires: Date.now() + EXAM_STATS_CACHE_MS });
-    return value;
+function gradeSortKey(g) {
+    const i = GRADE_ORDER.indexOf(g);
+    return i === -1 ? GRADE_ORDER.length : i;
 }
 
-async function fetchStudentScores(client, studentPageId, overrides) {
-    const scores = await resolveDatabase(client, "scores", overrides);
-    const res = await client.request("POST", `databases/${scores.id}/query`, {
+// 학년별로 "가장 최근에 치른 시험 중 점수가 충분히 입력된 것"의 순위를 만든다.
+async function getExamRankings(client, overrides, { now = new Date(), topN = TOP_N } = {}) {
+    const [examsDb, scoresDb] = await Promise.all([
+        resolveDatabase(client, "exams", overrides),
+        resolveDatabase(client, "scores", overrides),
+    ]);
+
+    const res = await client.request("POST", `databases/${examsDb.id}/query`, {
         body: {
-            filter: { property: "학생이름", relation: { contains: studentPageId } },
-            sorts: [{ property: "시험 날짜", direction: "descending" }],
-            page_size: MAX_EXAMS_RETURNED,
+            filter: { property: "날짜", date: { on_or_before: kstToday(now) } },
+            sorts: [{ property: "날짜", direction: "descending" }],
+            page_size: 50,
         },
     });
-    const rows = (res.results || []).filter((pg) => !pg.archived).map(mapScoreRow);
+    const byGrade = new Map();
+    for (const pg of res.results || []) {
+        if (pg.archived) continue;
+        const exam = mapExam(pg);
+        if (!exam.grade || !exam.name) continue;
+        if (!byGrade.has(exam.grade)) byGrade.set(exam.grade, []);
+        byGrade.get(exam.grade).push(exam);
+    }
 
-    const uniqueExamIds = [...new Set(rows.map((r) => r.examId).filter(Boolean))].slice(0, MAX_EXAM_STATS_LOOKUPS);
-    const statsList = await mapWithConcurrency(uniqueExamIds, EXAM_STATS_CONCURRENCY, (id) => getExamStats(client, id));
-    const statsById = new Map(uniqueExamIds.map((id, i) => [id, statsList[i]]));
-
-    return rows.map((r) => {
-        const s = (r.examId && statsById.get(r.examId)) || {};
-        return {
-            name: r.name,
-            date: r.date,
-            score: r.score,
-            total: r.total,
-            wrong: r.wrong,
-            avg: s.avg ?? null,
-            max: s.max ?? null,
-            min: s.min ?? null,
-            category: s.category ?? null,
-            term: s.term ?? null,
-            kind: s.kind ?? null,
-            grade: s.grade ?? null,
-        };
-    });
+    const grades = [];
+    for (const grade of [...byGrade.keys()].sort((a, b) => gradeSortKey(a) - gradeSortKey(b) || a.localeCompare(b, "ko"))) {
+        for (const exam of byGrade.get(grade).slice(0, MAX_EXAMS_TRIED_PER_GRADE)) {
+            const entries = await fetchExamScoreEntries(client, scoresDb, exam.id);
+            if (entries.length < MIN_PARTICIPANTS) continue;
+            grades.push({
+                grade,
+                exam: { name: exam.name, date: exam.date, avg: exam.avg, max: exam.max, min: exam.min, participants: entries.length },
+                ranking: buildRanking(entries, topN).map((e) => ({ rank: e.rank, nickname: e.nickname, score: e.score })),
+            });
+            break;
+        }
+    }
+    return { updatedAt: now.getTime(), grades };
 }
 
 module.exports = {
@@ -305,14 +266,12 @@ module.exports = {
     propValue,
     toNumber,
     normalizeName,
-    titleVariants,
-    pickStudentPage,
+    cleanNickname,
     resolveDatabase,
     dbOverridesFromEnv,
-    findStudentPage,
-    listRosterTitles,
-    fetchStudentScores,
-    mapScoreRow,
-    mapExamStats,
+    mapExam,
+    kstToday,
+    buildRanking,
+    getExamRankings,
     clearDbCache,
 };

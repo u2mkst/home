@@ -128,6 +128,37 @@
             justify-content: center;
         }
 
+        /* 📊 로그인 화면 왼쪽 대시보드(학년별 최근 시험 순위) — 넓은 화면(태블릿 가로·PC)에서만 보인다.
+           순위를 못 불러오거나 좁은 화면이면 아예 나타나지 않아서 로그인 카드 모양은 예전 그대로다. */
+        .login-dashboard { display: none; }
+        .dash-title { font-family: var(--font-title); font-size: var(--fs-xl); font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; }
+        .dash-tabs { display: flex; gap: 8px; margin: 16px 0 14px; }
+        .dash-tab, .dash-tab:hover, .dash-tab:active {
+            display: inline-block; width: auto; flex: 0 0 auto; transform: none; box-shadow: none;
+            padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--lg-border);
+            background: #fff; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 700;
+        }
+        .dash-tab.active, .dash-tab.active:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .dash-exam-name { font-size: var(--fs-md); font-weight: 800; color: var(--text-main); word-break: keep-all; }
+        .dash-exam-meta { margin-top: 4px; font-size: var(--fs-xs); color: var(--text-muted); }
+        .dash-rank { list-style: none; margin: 14px 0 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .dash-rank li { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; padding: 11px 14px; border-radius: var(--radius-md); background: var(--input-bg); }
+        .dash-rank li.top { background: rgba(0, 75, 191, 0.07); }
+        .dash-rank .rk { text-align: center; font-weight: 800; font-size: var(--fs-md); color: var(--text-muted); }
+        .dash-rank .nick { min-width: 0; font-weight: 700; font-size: var(--fs-md); color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dash-rank .sc { font-weight: 900; font-size: var(--fs-lg); color: var(--primary); }
+        .dash-foot { margin-top: 14px; text-align: center; font-size: var(--fs-2xs); color: var(--text-muted); }
+        @media (min-width: 1000px) {
+            .tablet-shell { align-items: center; gap: 32px; }
+            .container { flex: 0 1 460px; }
+            .login-dashboard.show {
+                display: flex; flex-direction: column; flex: 0 1 440px; min-width: 0;
+                max-height: min(82vh, 680px); padding: 28px 28px 22px;
+                background: #fff; border: 1.5px solid var(--lg-border); border-radius: var(--radius-lg);
+                animation: cardFadeIn 0.5s var(--spring);
+            }
+        }
+
         @media (min-width: 700px) {
             .container { max-width: 460px; }
             .auth-shell { padding: 40px 44px 48px; }
@@ -402,6 +433,15 @@
     </div>
 
     <div class="tablet-shell">
+    <!-- 📊 왼쪽 대시보드: 학년별 최근 시험 순위(닉네임·점수만). 불러오면 자바스크립트가 보이게 한다. -->
+    <aside class="login-dashboard" id="examDashboard" aria-label="시험 순위">
+        <div class="dash-title">🏆 시험 순위</div>
+        <div class="dash-tabs" id="dashTabs" role="tablist"></div>
+        <div class="dash-exam-name" id="dashExamName"></div>
+        <div class="dash-exam-meta" id="dashExamMeta"></div>
+        <ol class="dash-rank" id="dashRankList"></ol>
+        <div class="dash-foot">닉네임과 점수만 표시돼요</div>
+    </aside>
     <div class="container">
         <!-- 🟢 네이버 로그인처럼 로고를 카드 밖 맨 위에 독립적으로 배치 -->
         <div class="header-zone" id="logoZone">
@@ -753,8 +793,67 @@
             );
         }
 
+        // 📊 왼쪽 대시보드: 학년별 최근 시험 순위. 로그인 없이 부르는 공개 데이터(닉네임·점수만)다.
+        // 좁은 화면에서는 CSS로 보이지 않으니 요청도 하지 않고, 불러오지 못하면 조용히 숨겨 둔 채로 둔다.
+        (function initExamDashboard() {
+            const box = document.getElementById('examDashboard');
+            if (!box) return;
+            const wide = window.matchMedia('(min-width: 1000px)');
+            let data = null, active = 0, loading = false;
+
+            function renderRanking() {
+                const g = data.grades[active];
+                const exam = g.exam;
+                const date = exam.date ? String(exam.date).slice(0, 10).replace(/-/g, '.') : '';
+                document.getElementById('dashExamName').textContent = exam.name;
+                const meta = [date, `${exam.participants}명 응시`];
+                if (typeof exam.avg === 'number') meta.push(`평균 ${Number.isInteger(exam.avg) ? exam.avg : exam.avg.toFixed(1)}`);
+                document.getElementById('dashExamMeta').textContent = meta.filter(Boolean).join(' · ');
+                const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+                document.getElementById('dashRankList').innerHTML = g.ranking.map(r => `
+                    <li class="${r.rank <= 3 ? 'top' : ''}">
+                        <span class="rk">${medals[r.rank] || r.rank}</span>
+                        <span class="nick">${escapeHTML(r.nickname)}</span>
+                        <span class="sc">${Number.isInteger(r.score) ? r.score : r.score.toFixed(1)}</span>
+                    </li>`).join('');
+            }
+
+            function renderTabs() {
+                const tabs = document.getElementById('dashTabs');
+                tabs.innerHTML = data.grades.map((g, i) =>
+                    `<button type="button" class="dash-tab${i === active ? ' active' : ''}" role="tab" data-i="${i}">${escapeHTML(g.grade)}</button>`).join('');
+                tabs.querySelectorAll('.dash-tab').forEach(btn => btn.addEventListener('click', () => {
+                    active = Number(btn.dataset.i);
+                    renderTabs();
+                    renderRanking();
+                }));
+            }
+
+            async function load() {
+                if (data || loading || !wide.matches) return;
+                loading = true;
+                try {
+                    const res = await fetch(`${BACKEND_URL}/api/weather?data=exam-ranking`);
+                    if (!res.ok) return;
+                    const json = await res.json();
+                    if (!json || !Array.isArray(json.grades) || !json.grades.length) return;
+                    data = json;
+                    box.classList.add('show');
+                    renderTabs();
+                    renderRanking();
+                } catch (e) {
+                    // 순위는 부가 정보라서 실패해도 로그인에는 영향이 없다
+                } finally {
+                    loading = false;
+                }
+            }
+
+            if (wide.addEventListener) wide.addEventListener('change', load); else if (wide.addListener) wide.addListener(load);
+            load();
+        })();
+
         let toastTimeout = null;
-        let isMathflatSkipped = false; 
+        let isMathflatSkipped = false;
 
         const schoolInput = document.getElementById('registerSchool');
         const schoolList = document.getElementById('schoolList');

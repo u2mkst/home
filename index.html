@@ -629,18 +629,6 @@
         .input-wrapper input:focus, .input-wrapper select:focus { outline: none; border-color: var(--accent); background: rgba(255,255,255,0.85); box-shadow: 0 4px 12px rgba(0, 75, 191, 0.15); }
         .section-divider { border-top: 1px dashed rgba(0, 75, 191, 0.3); margin: 24px 0 20px 0; position: relative; }
         .section-title { font-size: var(--fs-sm); color: var(--accent); font-weight: bold; background: rgba(0, 75, 191, 0.1); padding: 4px 10px; border-radius: 999px; position: absolute; top: -12px; left: 10px; }
-        .score-list { display: flex; flex-direction: column; gap: 10px; }
-        .score-item { padding: 14px 16px; border-radius: var(--radius-md); background: var(--lg-surface-soft); border: 1px solid var(--lg-border-soft); }
-        .score-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-        .score-name { font-size: var(--fs-md); font-weight: 800; color: var(--text-main); word-break: keep-all; }
-        .score-date { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
-        .score-item-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
-        .score-big { font-size: var(--fs-2xl); font-weight: 900; color: var(--accent); line-height: 1; }
-        .score-big small { font-size: var(--fs-sm); font-weight: 700; margin-left: 2px; color: var(--text-muted); }
-        .score-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
-        .score-chip { font-size: var(--fs-xs); font-weight: 700; padding: 4px 9px; border-radius: 999px; background: var(--lg-surface); border: 1px solid var(--lg-border-soft); color: var(--text-muted); }
-        .score-chip.up { color: var(--accent); border-color: var(--accent); }
-        .score-chip.down { color: var(--danger); background: var(--danger-soft); border-color: transparent; }
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .badge-tile {
             display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -1073,15 +1061,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             </div>
             <div class="badge-grid" id="achievementBadgeGrid">
                 <div class="no-data">배지 정보를 불러오는 중...</div>
-            </div>
-        </div>
-
-        <div class="form-container" id="examScoreCard">
-            <div style="display:flex; align-items:center; gap:6px; margin-bottom:16px;">
-                <span class="tip-text" data-tip="학원에서 본 시험 점수를 보여줘요. 본인 점수와 그 시험의 평균·최고·최저점만 나와요." style="font-weight:800; font-size:var(--fs-lg); font-family:'Paperlogy',sans-serif; color:var(--text-main);">📝 나의 시험 성적</span>
-            </div>
-            <div id="examScoreBody">
-                <div class="no-data compact">성적을 불러오는 중...</div>
             </div>
         </div>
 
@@ -1950,7 +1929,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         currentView = view;
         window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 
-        if (view === 'mypage') { populateMypageFromCache(); renderAchievementBadges(); loadExamScores(false); }
+        if (view === 'mypage') { populateMypageFromCache(); renderAchievementBadges(); }
         if (view === 'ranking') enterRankingView();
         if (view === 'home') mathflatRefresh(false);
         if (view === 'mathq') enterMathQuizView();
@@ -3528,90 +3507,6 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
         } catch (err) {
             showToast('전송 오류: ' + err.message);
-        }
-    }
-
-    /* =====================================================================
-       📝 나의 시험 성적 — 노션 성적 DB를 서버(/api/account, action: scores)가 읽어서
-       "본인 점수 + 그 시험의 평균/최고/최저"만 내려준다. 화면은 받은 것만 그린다.
-    ===================================================================== */
-    const EXAM_SCORE_REFRESH_MS = 5 * 60 * 1000;
-    let examScoreLoadedAt = 0;
-    let examScoreLoading = false;
-
-    function formatScoreNumber(n) {
-        if (typeof n !== 'number' || !isFinite(n)) return '';
-        return Number.isInteger(n) ? String(n) : n.toFixed(1);
-    }
-
-    function renderExamScores(data) {
-        const body = document.getElementById('examScoreBody');
-        if (!body) return;
-        if (!data || !data.linked) {
-            const reason = data && data.reason;
-            const msg = reason === 'ambiguous'
-                ? '같은 이름의 학생이 있어 성적을 연결하지 못했어요. 선생님께 문의해 주세요.'
-                : reason === 'no_name'
-                    ? '이름 정보가 없어 성적을 찾지 못했어요.'
-                    : '원생명부에서 내 이름을 찾지 못했어요. 선생님께 문의해 주세요.';
-            body.innerHTML = `<div class="no-data compact">${msg}</div>`;
-            return;
-        }
-        if (!data.items || !data.items.length) {
-            body.innerHTML = '<div class="no-data compact">아직 등록된 시험 성적이 없어요.</div>';
-            return;
-        }
-        body.innerHTML = '<div class="score-list">' + data.items.map(it => {
-            const chips = [];
-            if (typeof it.wrong === 'number') chips.push(`<span class="score-chip">오답 ${formatScoreNumber(it.wrong)}${typeof it.total === 'number' ? ' / ' + formatScoreNumber(it.total) + '문항' : ''}</span>`);
-            if (typeof it.score === 'number' && typeof it.avg === 'number') {
-                const diff = it.score - it.avg;
-                chips.push(`<span class="score-chip ${diff >= 0 ? 'up' : 'down'}">평균 대비 ${diff >= 0 ? '+' : ''}${formatScoreNumber(Math.round(diff * 10) / 10)}</span>`);
-            }
-            if (typeof it.avg === 'number') chips.push(`<span class="score-chip">평균 ${formatScoreNumber(it.avg)}</span>`);
-            if (typeof it.max === 'number') chips.push(`<span class="score-chip">최고 ${formatScoreNumber(it.max)}</span>`);
-            if (typeof it.min === 'number') chips.push(`<span class="score-chip">최저 ${formatScoreNumber(it.min)}</span>`);
-            const date = it.date ? String(it.date).slice(0, 10).replace(/-/g, '.') : '';
-            return `
-                <div class="score-item">
-                    <div class="score-item-top">
-                        <div class="score-name">${escapeHTML(String(it.name || '시험'))}</div>
-                        <div class="score-date">${escapeHTML(date)}</div>
-                    </div>
-                    <div class="score-item-main">
-                        <div class="score-big">${typeof it.score === 'number' ? formatScoreNumber(it.score) : '-'}<small>점</small></div>
-                        <div class="score-chips">${chips.join('')}</div>
-                    </div>
-                </div>`;
-        }).join('') + '</div>';
-    }
-
-    async function loadExamScores(force) {
-        const body = document.getElementById('examScoreBody');
-        if (!body || examScoreLoading) return;
-        if (!force && examScoreLoadedAt && Date.now() - examScoreLoadedAt < EXAM_SCORE_REFRESH_MS) return;
-        examScoreLoading = true;
-        try {
-            const token = await getIdToken();
-            if (!token) throw new Error('no-token');
-            const res = await fetch(`${BACKEND_URL}/api/account`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ action: 'scores' })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (res.status === 503 && data.error === 'not_configured') {
-                body.innerHTML = '<div class="no-data compact">성적 연동을 준비하고 있어요.</div>';
-                return;
-            }
-            if (!res.ok) throw new Error(data.error || 'scores failed');
-            renderExamScores(data);
-            examScoreLoadedAt = Date.now();
-        } catch (err) {
-            console.error('시험 성적 불러오기 실패:', err);
-            body.innerHTML = '<div class="no-data compact danger">성적을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
-        } finally {
-            examScoreLoading = false;
         }
     }
 

@@ -1,168 +1,157 @@
-/* notionScores.js 단위 테스트. 네트워크·노션 토큰 없이 가짜 fetch로 돈다.
+/* notionScores.js / examRanking.js 단위 테스트. 네트워크·노션 토큰 없이 가짜 fetch로 돈다.
    실행: node backend/lib/notionScores.test.js
-   fixture는 전부 가상의 이름·점수다. 응답 모양은 노션 공식 API(2022-06-28) 문서 형식을 따른다. */
+   fixture는 전부 가상의 이름·닉네임·점수다. 응답 모양은 노션 공식 API(2022-06-28) 문서 형식을 따른다. */
 "use strict";
-const assert = require("assert");
 const N = require("./notionScores");
+const { handleExamRanking, resetForTest } = require("./examRanking");
+const { setCached } = require("./cache");
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) pass++; else { fail++; console.log("  ✗ FAIL:", msg); } }
 
 const t = (s) => [{ plain_text: s }];
-const titlePage = (id, name, extra = {}) => ({ id, archived: false, properties: { "학생이름(알파벳)": { id: "title", type: "title", title: t(name) }, ...extra } });
+const NOW = new Date("2026-11-25T03:00:00Z"); // KST 2026-11-25 12:00
 
 // ---- 가짜 노션 서버 ------------------------------------------------------
-function makeFake({ roster = [], scoreRows = [], exams = {}, failExam = null } = {}) {
+function makeFake({ exams = [], scores = {} } = {}) {
     const calls = [];
-    const rosterProps = { "학생이름(알파벳)": { id: "title", type: "title" }, "학생 전화번호": { id: "pH", type: "phone_number" } };
-    const scoreProps = Object.fromEntries(["시험명", "학생이름", "시험지", "시험 날짜", "성적", "총문항", "오답", "점수"].map((n, i) => [n, { id: "s" + i, type: n === "시험명" ? "title" : "x" }]));
-    const examProps = Object.fromEntries(["이름", "평균", "최고점", "최저점"].map((n, i) => [n, { id: "e" + i, type: n === "이름" ? "title" : "x" }]));
+    const examProps = Object.fromEntries(["이름", "날짜", "학년", "평균", "최고점", "최저점", "분류"].map((n, i) => [n, { id: "e" + i, type: n === "이름" ? "title" : "x" }]));
+    const scoreProps = Object.fromEntries(["시험명", "학생이름", "시험지", "닉네임", "점수", "성적", "수강반", "담당"].map((n, i) => [n, { id: "s" + i, type: "x" }]));
     const json = (status, body) => ({ status, ok: status < 400, headers: { get: () => null }, json: async () => body });
     const fetchImpl = async (url, opts) => {
         const u = new URL(url);
         const body = opts.body ? JSON.parse(opts.body) : null;
-        calls.push({ method: opts.method, path: u.pathname, query: u.searchParams, body, auth: opts.headers.Authorization, version: opts.headers["Notion-Version"] });
+        calls.push({ method: opts.method, path: u.pathname, query: u.searchParams, body });
         if (u.pathname === "/v1/search") {
-            const q = body.query;
             const all = [
-                { object: "database", id: "db-roster", title: t("원생명부") },
-                { object: "database", id: "db-scores-old", title: t("학생별성적DB") }, // 속성이 다른 옛 복사본
-                { object: "database", id: "db-scores", title: t("학생별성적DB") },
                 { object: "database", id: "db-exams", title: t("시험DB") },
-                { object: "database", id: "db-plan", title: t("계획표") },
+                { object: "database", id: "db-scores-old", title: t("학생별성적DB") },
+                { object: "database", id: "db-scores", title: t("학생별성적DB") },
+                { object: "database", id: "db-roster", title: t("원생명부") },
             ];
-            return json(200, { results: all.filter((d) => d.title[0].plain_text.includes(q)) });
+            return json(200, { results: all.filter((d) => d.title[0].plain_text.includes(body.query)) });
         }
-        if (opts.method === "GET" && u.pathname === "/v1/databases/db-roster") return json(200, { id: "db-roster", properties: rosterProps });
-        if (opts.method === "GET" && u.pathname === "/v1/databases/db-scores-old") return json(200, { id: "db-scores-old", properties: { 시험명: { id: "a", type: "title" } } });
-        if (opts.method === "GET" && u.pathname === "/v1/databases/db-scores") return json(200, { id: "db-scores", properties: scoreProps });
-        if (opts.method === "GET" && u.pathname === "/v1/databases/db-exams") return json(200, { id: "db-exams", properties: examProps });
-        if (u.pathname === "/v1/databases/db-roster/query") {
-            const needle = body.filter && body.filter.title ? body.filter.title.contains.toLowerCase() : "";
-            const found = roster.filter((pg) => pg.properties["학생이름(알파벳)"].title[0].plain_text.toLowerCase().includes(needle));
-            return json(200, { results: found, has_more: false });
+        if (u.pathname === "/v1/databases/db-exams") return json(200, { id: "db-exams", properties: examProps });
+        if (u.pathname === "/v1/databases/db-scores-old") return json(200, { id: "db-scores-old", properties: { 시험명: { id: "a", type: "title" } } });
+        if (u.pathname === "/v1/databases/db-scores") return json(200, { id: "db-scores", properties: scoreProps });
+        if (u.pathname === "/v1/databases/db-exams/query") {
+            const lim = body.filter.date.on_or_before;
+            const list = exams.filter((e) => e.date && e.date <= lim).sort((a, b) => b.date.localeCompare(a.date));
+            return json(200, { results: list.map(examPage), has_more: false });
         }
         if (u.pathname === "/v1/databases/db-scores/query") {
-            const wanted = body.filter.relation.contains;
-            return json(200, { results: scoreRows.filter((r) => r._student === wanted), has_more: false });
-        }
-        if (opts.method === "GET" && u.pathname.startsWith("/v1/pages/")) {
-            const id = u.pathname.split("/").pop();
-            if (failExam === id) return json(404, { code: "object_not_found" });
-            return exams[id] ? json(200, exams[id]) : json(404, { code: "object_not_found" });
+            const rows = scores[body.filter.relation.contains] || [];
+            return json(200, { results: rows.map(scorePage), has_more: false });
         }
         return json(404, { code: "object_not_found" });
     };
     return { fetchImpl, calls };
 }
 
-const scoreRow = (student, { name, date, raw, formula, total, wrong, exam }) => ({
-    _student: student, id: "row-" + name, archived: false,
-    properties: {
-        시험명: { type: "title", title: t(name) },
-        학생이름: { type: "relation", relation: [{ id: student }] },
-        시험지: { type: "relation", relation: exam ? [{ id: exam }] : [] },
-        "시험 날짜": { type: "date", date: date ? { start: date } : null },
-        성적: { type: "number", number: raw },
-        총문항: { type: "number", number: total },
-        오답: { type: "number", number: wrong },
-        점수: { type: "formula", formula: typeof formula === "string" ? { type: "string", string: formula } : { type: "number", number: formula } },
+const examPage = (e) => ({
+    id: e.id, archived: false, properties: {
+        이름: { type: "title", title: t(e.name) },
+        날짜: { type: "date", date: e.date ? { start: e.date } : null },
+        학년: { type: "select", select: e.grade ? { name: e.grade } : null },
+        평균: { type: "formula", formula: { type: "number", number: e.avg ?? null } },
+        최고점: { type: "formula", formula: { type: "number", number: e.max ?? null } },
+        최저점: { type: "formula", formula: { type: "number", number: e.min ?? null } },
+        분류: { type: "select", select: { name: "내신" } },
     },
 });
-const examPage = (avg, max, min, extra = {}) => ({
-    id: "x", properties: {
-        평균: { type: "formula", formula: { type: "number", number: avg } },
-        최고점: { type: "formula", formula: { type: "number", number: max } },
-        최저점: { type: "formula", formula: { type: "number", number: min } },
-        분류: { type: "select", select: { name: extra.category || "내신" } },
-        학기: { type: "select", select: { name: "2학기" } },
-        "중간 or 기말": { type: "select", select: { name: "기말" } },
-        학년: { type: "select", select: { name: "중2" } },
+
+// 실제 응답에는 filter_properties 때문에 없겠지만, 혹시 포함돼도 새지 않는지 보려고 실명 속성을 일부러 넣어 둔다.
+const scorePage = (r) => ({
+    id: "row-" + Math.random(), archived: !!r.archived, properties: {
+        닉네임: { type: "rich_text", rich_text: t(r.nick ?? "") },
+        점수: { type: "formula", formula: typeof r.formula === "string" ? { type: "string", string: r.formula } : { type: "number", number: r.formula ?? null } },
+        성적: { type: "number", number: r.raw ?? null },
+        학생이름: { type: "relation", relation: [{ id: "student-page-" + (r.real || "x") }] },
+        수강반: { type: "rollup", rollup: { type: "array", array: [{ type: "title", title: t("실명반_" + (r.real || "x")) }] } },
     },
 });
 
 (async () => {
-    console.log("[이름 매칭 규칙]");
+    console.log("[닉네임 정리]");
     {
-        const pages = [titlePage("p1", "김가상"), titlePage("p2", "이가상(Lee)"), titlePage("p3", "박가상"), titlePage("p4", "박가상")];
-        ok(N.pickStudentPage(pages, "김가상").pageId === "p1", "정확히 일치");
-        ok(N.pickStudentPage(pages, " 김 가상 ").pageId === "p1", "공백 무시");
-        ok(N.pickStudentPage(pages, "이가상").pageId === "p2", "괄호 꼬리표 제거 후 일치");
-        ok(N.pickStudentPage(pages, "박가상").status === "ambiguous", "동명이인은 ambiguous");
-        ok(N.pickStudentPage(pages, "최가상").status === "none", "없으면 none");
-        ok(N.pickStudentPage(pages, "").status === "none", "빈 이름은 none");
-        ok(N.pickStudentPage([{ ...titlePage("p9", "정가상"), archived: true }], "정가상").status === "none", "보관된 페이지는 제외");
-        ok(N.pickStudentPage(pages, "김가").status === "none", "부분 일치로는 연결하지 않는다");
-        ok(N.pickStudentPage([titlePage("a", "김가상(정)")], "김가상").pageId === "a", "괄호 안 글자는 무시");
+        ok(N.cleanNickname("  별빛  ") === "별빛", "공백 제거");
+        ok(N.cleanNickname("") === "익명" && N.cleanNickname(null) === "익명", "비어 있으면 익명");
+        ok(N.cleanNickname("가나다라마바사아자차카타파하") === "가나다라마바사아자차카타", "12자 제한");
+        ok(N.cleanNickname("a\u0000b\nc") === "abc", "제어문자 제거");
+        ok(N.cleanNickname("<b>x</b>") === "<b>x</b>", "태그는 그대로 두고(화면에서 이스케이프)");
     }
 
-    console.log("[점수 값 변환]");
+    console.log("[순위 계산]");
     {
-        ok(N.toNumber("85점") === 85, "'85점' → 85");
-        ok(N.toNumber(" 72.5") === 72.5, "소수");
-        ok(N.toNumber("없음") === null, "숫자 아님 → null");
-        ok(N.toNumber(NaN) === null, "NaN → null");
-        ok(N.propValue({ type: "formula", formula: { type: "boolean", boolean: true } }) === true, "formula boolean");
-        ok(N.propValue(null) === null, "null 속성");
+        const e = (nick, score) => ({ nickname: nick, score });
+        const r = N.buildRanking([e("a", 90), e("b", 100), e("c", 90), e("d", 70)]);
+        ok(r.map((x) => x.nickname).join() === "b,a,c,d", "점수 내림차순: " + r.map((x) => x.nickname).join());
+        ok(r.map((x) => x.rank).join() === "1,2,2,4", "동점은 같은 등수(1,2,2,4): " + r.map((x) => x.rank).join());
+        const many = Array.from({ length: 15 }, (_, i) => e("n" + i, 100 - i));
+        ok(N.buildRanking(many, 10).length === 10, "상위 10명만");
+        const tie = [...Array.from({ length: 9 }, (_, i) => e("n" + i, 100 - i)), e("t1", 50), e("t2", 50), e("t3", 50), e("low", 10)];
+        ok(N.buildRanking(tie, 10).length === 12, "10위에 걸린 동점자는 모두 포함: " + N.buildRanking(tie, 10).length);
     }
 
-    console.log("[전체 흐름: 학생 → 점수 → 시험 통계]");
+    console.log("[학년별 최근 시험 순위]");
     {
         N.clearDbCache();
         const fake = makeFake({
-            roster: [titlePage("stu-1", "김가상", { "학생 전화번호": { id: "pH", type: "phone_number", phone_number: "010-0000-0000" } }), titlePage("stu-2", "이가상")],
-            scoreRows: [
-                scoreRow("stu-1", { name: "2학기 기말 가상A", date: "2026-11-20", raw: 18, formula: 90, total: 20, wrong: 2, exam: "ex-1" }),
-                scoreRow("stu-1", { name: "2학기 중간 가상B", date: "2026-10-05", raw: 15, formula: "75점", total: 20, wrong: 5, exam: "ex-2" }),
-                scoreRow("stu-2", { name: "남의 시험", date: "2026-11-21", raw: 20, formula: 100, total: 20, wrong: 0, exam: "ex-1" }),
+            exams: [
+                { id: "x-mid2-new", name: "중2-2 기말 (점수 입력 중)", date: "2026-11-24", grade: "중2", avg: 10, max: 20, min: 1 },
+                { id: "x-mid2", name: "중2-2 중간 가상A", date: "2026-10-05", grade: "중2", avg: 70.5, max: 100, min: 40 },
+                { id: "x-mid1", name: "중1-2 중간 가상B", date: "2026-10-01", grade: "중1", avg: 60, max: 95, min: 30 },
+                { id: "x-future", name: "미래 시험", date: "2026-12-30", grade: "중3" },
+                { id: "x-nodate", name: "날짜 없음", date: null, grade: "중3" },
+                { id: "x-mid3", name: "중3-2 중간 가상C", date: "2026-09-20", grade: "중3", avg: 80, max: 99, min: 55 },
             ],
-            exams: { "ex-1": examPage(80.5, 100, 50), "ex-2": examPage(70, 95, 40, { category: "모의" }) },
+            scores: {
+                "x-mid2-new": [{ nick: "별", formula: 15, real: "김실명" }], // 1명뿐 → 입력 중으로 보고 건너뜀
+                "x-mid2": [
+                    { nick: "하늘", formula: 100, real: "이실명" }, { nick: "구름", formula: 90, real: "박실명" },
+                    { nick: "", formula: "90점", real: "최실명" }, { nick: "바다", formula: null, raw: 70, real: "정실명" },
+                    { nick: "삭제됨", formula: 99, archived: true }, { nick: "점수없음", formula: null, raw: null },
+                ],
+                "x-mid1": [{ nick: "a", formula: 95 }, { nick: "b", formula: 80 }, { nick: "c", formula: 60 }],
+                "x-mid3": [{ nick: "z1", formula: 99 }, { nick: "z2", formula: 88 }],
+            },
         });
         const client = N.createNotionClient({ token: "secret_test", fetchImpl: fake.fetchImpl });
+        const out = await N.getExamRankings(client, {}, { now: NOW });
 
-        const found = await N.findStudentPage(client, "김가상");
-        ok(found.status === "ok" && found.pageId === "stu-1", "김가상 → stu-1");
+        ok(out.grades.map((g) => g.grade).join() === "중1,중2", "점수가 충분한 학년만(중1, 중2; 중3은 2명뿐이라 제외): " + out.grades.map((g) => g.grade).join());
+        const g2 = out.grades.find((g) => g.grade === "중2");
+        ok(g2.exam.name === "중2-2 중간 가상A", "입력 중인 최신 시험은 건너뛰고 그 전 시험 사용: " + g2.exam.name);
+        ok(g2.ranking.map((r) => r.nickname).join() === "하늘,구름,익명,바다", "닉네임 순위(빈 닉네임=익명, 삭제된 행·점수 없는 행 제외): " + g2.ranking.map((r) => r.nickname).join());
+        ok(g2.ranking.map((r) => r.rank).join() === "1,2,2,4", "동점 등수: " + g2.ranking.map((r) => r.rank).join());
+        ok(g2.ranking.find((r) => r.nickname === "바다").score === 70, "점수 수식이 비면 성적 값 사용");
+        ok(g2.ranking.find((r) => r.nickname === "익명").score === 90, "'90점' 문자열 → 90");
+        ok(g2.exam.avg === 70.5 && g2.exam.max === 100 && g2.exam.min === 40 && g2.exam.participants === 4, "시험 평균/최고/최저/참여 수");
 
-        const rosterQuery = fake.calls.find((c) => c.path === "/v1/databases/db-roster/query");
-        ok(rosterQuery.query.getAll("filter_properties").join() === "title", "원생명부는 제목 속성만 요청한다(전화번호 제외)");
-        ok(rosterQuery.auth === "Bearer secret_test" && rosterQuery.version === "2022-06-28", "인증/버전 헤더");
-        ok(fake.calls.filter((c) => c.path === "/v1/search").length >= 1, "제목으로 DB 검색");
+        const examQuery = fake.calls.find((c) => c.path === "/v1/databases/db-exams/query");
+        ok(examQuery.body.filter.date.on_or_before === "2026-11-25", "미래 날짜 시험 제외 조건(KST 오늘)");
 
-        const items = await N.fetchStudentScores(client, "stu-1");
-        ok(items.length === 2, "본인 행 2개만: " + items.length);
-        ok(!JSON.stringify(items).includes("남의 시험"), "다른 학생 행은 포함되지 않는다");
-        ok(items[0].name === "2학기 기말 가상A" && items[0].score === 90 && items[0].wrong === 2 && items[0].total === 20, "첫 행 값");
-        ok(items[0].avg === 80.5 && items[0].max === 100 && items[0].min === 50, "시험 평균/최고/최저");
-        ok(items[1].score === 75, "문자열 점수 '75점' → 75");
-        ok(items[1].category === "모의", "분류");
+        const scoreQueries = fake.calls.filter((c) => c.path === "/v1/databases/db-scores/query");
+        ok(scoreQueries.length >= 2, "점수 조회 호출");
+        ok(scoreQueries.every((c) => c.query.getAll("filter_properties").join() === "s3,s4,s5"), "닉네임·점수·성적 속성만 요청(실명/반/담당 제외): " + scoreQueries[0].query.getAll("filter_properties").join());
+        ok(!fake.calls.some((c) => c.path === "/v1/databases/db-scores-old/query" || c.path === "/v1/databases/db-roster/query"), "옛 복사본·원생명부는 조회하지 않는다");
 
-        const scoreDbPicked = fake.calls.some((c) => c.path === "/v1/databases/db-scores/query");
-        ok(scoreDbPicked, "필수 속성이 있는 DB(옛 복사본 제외)에서 조회");
-        ok(!fake.calls.some((c) => c.path === "/v1/databases/db-scores-old/query"), "속성이 다른 옛 DB는 쓰지 않는다");
+        const text = JSON.stringify(out);
+        ok(!/실명|student-page|김|이실명/.test(text), "응답 어디에도 학생 실명/학생 페이지 id가 없다");
     }
 
-    console.log("[시험 정보를 못 읽어도 본인 점수는 나온다]");
-    {
-        N.clearDbCache();
-        const fake = makeFake({ scoreRows: [scoreRow("stu-9", { name: "시험X", date: "2026-09-01", raw: 10, formula: 50, total: 20, wrong: 10, exam: "ex-missing" })], exams: {} });
-        const client = N.createNotionClient({ token: "t", fetchImpl: fake.fetchImpl });
-        const items = await N.fetchStudentScores(client, "stu-9");
-        ok(items.length === 1 && items[0].score === 50 && items[0].avg === null, "통계는 null, 점수는 유지");
-    }
-
-    console.log("[오류 처리]");
+    console.log("[오류·설정]");
     {
         let threw = null;
         try { N.createNotionClient({ token: "" }); } catch (e) { threw = e; }
         ok(threw && threw.notionCode === "not_configured", "토큰 없으면 not_configured");
 
         N.clearDbCache();
-        const client = N.createNotionClient({ token: "t", fetchImpl: async () => ({ status: 401, ok: false, headers: { get: () => null }, json: async () => ({ code: "unauthorized" }) }) });
-        let e2 = null;
-        try { await N.findStudentPage(client, "김가상"); } catch (e) { e2 = e; }
-        ok(e2 && e2.notionStatus === 401 && e2.notionCode === "unauthorized", "401 전달");
+        const none = N.createNotionClient({ token: "t", fetchImpl: async () => ({ status: 200, ok: true, headers: { get: () => null }, json: async () => ({ results: [] }) }) });
+        let e3 = null;
+        try { await N.getExamRankings(none, {}, { now: NOW }); } catch (e) { e3 = e; }
+        ok(e3 && e3.notionCode === "database_not_found", "DB 미공유 → database_not_found");
 
-        // 429 후 재시도
         N.clearDbCache();
         let n = 0;
         const flaky = N.createNotionClient({
@@ -175,13 +164,61 @@ const examPage = (avg, max, min, extra = {}) => ({
         });
         const r = await flaky.request("POST", "search", { body: {} });
         ok(Array.isArray(r.results) && n === 2, "429 → 재시도 후 성공");
+    }
 
-        // 필요한 DB가 공유되지 않은 경우
-        N.clearDbCache();
-        const none = N.createNotionClient({ token: "t", fetchImpl: async () => ({ status: 200, ok: true, headers: { get: () => null }, json: async () => ({ results: [] }) }) });
-        let e3 = null;
-        try { await N.resolveDatabase(none, "scores"); } catch (e) { e3 = e; }
-        ok(e3 && e3.notionCode === "database_not_found", "DB 미공유 → database_not_found");
+    console.log("[공개 API 처리: 캐시·한도·오류]");
+    {
+        const mkRes = () => {
+            const res = { headers: {}, statusCode: null, body: null };
+            res.setHeader = (k, v) => { res.headers[k] = v; };
+            res.status = (c) => { res.statusCode = c; return res; };
+            res.json = (b) => { res.body = b; return res; };
+            return res;
+        };
+        const savedToken = process.env.NOTION_TOKEN;
+
+        // 토큰 없음 → 503
+        delete process.env.NOTION_TOKEN; resetForTest(); setCached("examRanking", null, 1);
+        let res = mkRes();
+        await handleExamRanking({}, res, { rejectIfRateLimited: async () => false });
+        ok(res.statusCode === 503 && res.body.error === "not_configured" && res.headers["Cache-Control"] === "no-store", "토큰 없음 → 503, 캐시 안 함");
+
+        // IP 한도 초과 → 거기서 멈춘다
+        process.env.NOTION_TOKEN = "secret_test"; resetForTest();
+        res = mkRes();
+        let usedClient = false;
+        await handleExamRanking({}, res, { rejectIfRateLimited: async (_q, r) => { r.status(429).json({ error: "ip_limited" }); return true; }, createClient: () => { usedClient = true; } });
+        ok(res.statusCode === 429 && !usedClient, "한도 초과 → 노션 호출 없이 429");
+
+        // 성공 → 200 + 엣지 캐시 헤더, 이어서 메모리 캐시 hit
+        const fake = makeFake({
+            exams: [{ id: "x1", name: "중2 시험", date: "2026-10-05", grade: "중2", avg: 70, max: 100, min: 40 }],
+            scores: { x1: [{ nick: "a", formula: 90 }, { nick: "b", formula: 80 }, { nick: "c", formula: 70 }] },
+        });
+        N.clearDbCache(); resetForTest(); setCached("examRanking", null, 1);
+        res = mkRes();
+        let calls = 0;
+        const deps = { rejectIfRateLimited: async () => false, createClient: (tok) => { calls++; return N.createNotionClient({ token: tok, fetchImpl: fake.fetchImpl }); } };
+        await handleExamRanking({}, res, deps);
+        ok(res.statusCode === 200 && res.body.ok === true && res.body.grades.length === 1, "성공 200");
+        ok(/s-maxage=300/.test(res.headers["Cache-Control"] || ""), "엣지 캐시 헤더: " + res.headers["Cache-Control"]);
+        const res2 = mkRes();
+        await handleExamRanking({}, res2, deps);
+        ok(res2.statusCode === 200 && res2.headers["X-KST-Cache"] === "hit" && calls === 1, "두 번째는 메모리 캐시(노션 호출 없음)");
+
+        // 노션 오류 + 직전 성공 있음 → stale 로 계속 보여 준다
+        setCached("examRanking", null, 1); // 캐시 만료 시뮬레이션
+        const res3 = mkRes();
+        await handleExamRanking({}, res3, { rejectIfRateLimited: async () => false, createClient: () => N.createNotionClient({ token: "t", fetchImpl: async () => ({ status: 500, ok: false, headers: { get: () => null }, json: async () => ({ code: "internal" }) }) }) });
+        ok(res3.statusCode === 200 && res3.body.stale === true && res3.body.grades.length === 1, "노션 장애 → 직전 결과(stale) 유지");
+
+        // 직전 성공도 없음 → 502
+        resetForTest(); setCached("examRanking", null, 1);
+        const res4 = mkRes();
+        await handleExamRanking({}, res4, { rejectIfRateLimited: async () => false, createClient: () => N.createNotionClient({ token: "t", fetchImpl: async () => ({ status: 401, ok: false, headers: { get: () => null }, json: async () => ({ code: "unauthorized" }) }) }) });
+        ok(res4.statusCode === 502 && res4.body.error === "notion_unavailable", "처음부터 실패 → 502 notion_unavailable");
+
+        if (savedToken === undefined) delete process.env.NOTION_TOKEN; else process.env.NOTION_TOKEN = savedToken;
     }
 
     console.log(`\n${pass} passed, ${fail} failed`);
