@@ -6,8 +6,10 @@
      직전 성공 결과를 계속 보여 주며, ③결과를 서버·엣지에 오래 캐시한다.
    - 점수는 노션의 수식 열이라 공개 데이터에 값이 없다. 그래서 점수 = 총문항 − 오답(맞은 문항 수),
      정답률 = 맞은 수 ÷ 총문항 으로 우리가 계산한다. 순위는 정답률 기준.
-   - 화면에는 닉네임과 점수만 나간다. 닉네임이 비어 있는 학생이 순위(상위 10명)에 든 경우에만 학생 페이지 제목(이름)을 읽어
-     서버에서 "홍*동"처럼 가린 값으로 바꾼다 — 실명 전체는 응답·캐시·로그에 남지 않는다.
+   - 화면에는 닉네임과 정답률만 나간다. **닉네임이 비어 있거나 실명과 같은/실명을 담은 닉네임이면** 학생 페이지 제목(이름)을
+     읽어 서버에서 "홍*동"처럼 가운데 글자를 가린 값으로 바꾼다. 이름을 확인하지 못하면 닉네임이 있어도 "익명"으로 내보내고,
+     이름 조회가 통째로 실패하면 순위를 내보내지 않는다(안전 쪽으로 실패). 실명은 요청 처리 중 지역 변수로만 존재하고
+     응답·캐시·로그 어디에도 남지 않는다.
    - fetch를 주입할 수 있어서 네트워크 없이 단위 테스트가 가능하다(notionPublic.test.js). */
 
 const DEFAULTS = {
@@ -27,7 +29,7 @@ const MIN_PARTICIPANTS = 5; // 이보다 적게 입력된 시험은 아직 입�
 const MAX_EXAM_AGE_DAYS = 90; // 이보다 오래전에 치른 시험은 순위에 쓰지 않는다(지난 시험이 계속 떠 있지 않게). 그 학년은 새 시험이 입력될 때까지 빠진다
 const MAX_ROWS = 20000;
 const REQUEST_TIMEOUT_MS = 25000;
-const NAME_LOOKUP_MAX = 50;
+const NAME_LOOKUP_BATCH = 100;
 
 class PublicNotionError extends Error {
     constructor(message, code = "notion_unavailable") {
@@ -192,41 +194,54 @@ function gradeSortKey(g) {
     return i === -1 ? GRADE_ORDER.length : i;
 }
 
-// ---------- 가린 이름 (학생 페이지 제목) ----------
-const maskedNameCache = new Map(); // 학생 페이지 id → { value(가린 이름), expires }
-const MASKED_NAME_CACHE_MS = 60 * 60 * 1000;
+// ---------- 닉네임이 실명을 담고 있는지 / 학생 이름 조회 ----------
+function normalizeForCompare(s) {
+    return String(s == null ? "" : s).normalize("NFC").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+}
 
-function clearMaskedNameCache() { maskedNameCache.clear(); }
+// 닉네임이 실명을 드러내는가: 실명과 같거나, 실명을 포함하거나, 이름(성을 뺀 두 글자)을 포함하거나, 실명의 일부(2글자 이상)이면 true.
+// 오탐(우연히 겹치는 글자)은 안전 쪽이라 허용한다 — 걸리면 닉네임 대신 가린 이름이 나간다.
+function leaksRealName(nickname, realName) {
+    const n = normalizeForCompare(nickname);
+    const r = normalizeForCompare(String(realName == null ? "" : realName).replace(/[(\[（].*?[)\]）]/g, ""));
+    if (r.length < 2 || !n) return false;
+    if (n.includes(r)) return true;
+    if (r.length >= 3 && n.includes(r.slice(-2))) return true;
+    if (n.length >= 2 && r.includes(n)) return true;
+    return false;
+}
 
-// 닉네임이 없는 학생들의 가린 이름. 학생 페이지의 "제목"만 읽고 바로 가린다. 가린 값만 캐시하고 실명은 어디에도 남기지 않는다.
-// 읽지 못하면 '익명'(일시 오류일 수 있어 캐시하지 않는다).
-async function maskedNamesFor(client, spaceId, pageIds) {
-    const out = new Map();
-    const need = [];
-    for (const id of new Set(pageIds.filter(Boolean))) {
-        const hit = maskedNameCache.get(id);
-        if (hit && hit.expires > Date.now()) out.set(id, hit.value); else need.push(id);
-    }
-    if (need.length) {
+// 학생 페이지들의 제목(이름)을 한 번에 읽는다(100개씩). 이 Map은 요청 처리 중에만 쓰고 버린다(캐시·저장 금지).
+// 요청 자체가 실패하면 닉네임이 실명인지 확인할 수 없으므로 순위를 내보내지 않고 오류로 처리한다.
+async function studentTitles(client, spaceId, pageIds) {
+    const ids = [...new Set(pageIds.filter(Boolean))];
+    const titles = new Map();
+    for (let i = 0; i < ids.length; i += NAME_LOOKUP_BATCH) {
+        const batch = ids.slice(i, i + NAME_LOOKUP_BATCH);
+        let res;
         try {
-            const res = await client.post("syncRecordValuesMain", {
-                requests: need.slice(0, NAME_LOOKUP_MAX).map((id) => ({ pointer: { table: "block", id, spaceId }, version: -1 })),
+            res = await client.post("syncRecordValuesMain", {
+                requests: batch.map((id) => ({ pointer: { table: "block", id, spaceId }, version: -1 })),
             });
-            const blocks = (res && res.recordMap && res.recordMap.block) || {};
-            for (const id of need) {
-                const v = blockValue(blocks[id]);
-                const title = v && v.properties ? textOf(v.properties.title) : "";
-                if (title.trim()) {
-                    const value = maskName(title);
-                    maskedNameCache.set(id, { value, expires: Date.now() + MASKED_NAME_CACHE_MS });
-                    out.set(id, value);
-                }
-            }
         } catch (e) {
-            // 이름을 못 읽어도 순위는 보여 준다(해당 학생만 익명)
+            throw new PublicNotionError("student name lookup failed", "name_lookup_failed");
+        }
+        const blocks = (res && res.recordMap && res.recordMap.block) || {};
+        for (const id of batch) {
+            const v = blockValue(blocks[id]);
+            const title = v && v.properties ? textOf(v.properties.title) : "";
+            if (title.trim()) titles.set(id, title);
         }
     }
-    return out;
+    return titles;
+}
+
+// 화면에 내보낼 이름: 이름을 확인 못 하면 익명 / 닉네임이 없거나 실명을 담았으면 가린 이름 / 아니면 닉네임.
+function displayName(entry, titles) {
+    const real = titles.get(entry.studentPageId);
+    if (!real) return ANONYMOUS_NICKNAME;
+    if (!entry.nickname || leaksRealName(entry.nickname, real)) return maskName(real);
+    return entry.nickname;
 }
 
 // ---------- 학년별 최근 시험 순위 ----------
@@ -275,10 +290,9 @@ async function getExamRankings(client, config = DEFAULTS, { now = new Date(), to
         if (exam) picked.push({ grade, exam, entries: byExam.get(exam.id) });
     }
 
-    // 순위에 오른 학생 중 닉네임이 없는 사람만 가린 이름을 채운다(순위 밖 학생의 이름은 읽지 않는다).
+    // 순위에 오른 모든 학생의 이름을 한 번에 읽어, 닉네임이 없거나 실명을 담은 경우 가린 이름으로 바꾼다.
     const rankings = picked.map((p) => ({ ...p, ranked: buildRanking(p.entries, topN) }));
-    const needNames = rankings.flatMap((p) => p.ranked.filter((e) => !e.nickname).map((e) => e.studentPageId));
-    const masked = await maskedNamesFor(client, scoresDb.spaceId, needNames);
+    const titles = await studentTitles(client, scoresDb.spaceId, rankings.flatMap((p) => p.ranked.map((e) => e.studentPageId)));
 
     const grades = rankings.map(({ grade, exam, entries, ranked }) => {
         const rates = entries.map((e) => e.rate);
@@ -294,7 +308,7 @@ async function getExamRankings(client, config = DEFAULTS, { now = new Date(), to
             },
             ranking: ranked.map((e) => ({
                 rank: e.rank,
-                nickname: e.nickname || masked.get(e.studentPageId) || ANONYMOUS_NICKNAME,
+                nickname: displayName(e, titles),
                 score: e.score,
                 total: e.total,
                 rate: e.rate,
@@ -320,5 +334,6 @@ module.exports = {
     buildRanking,
     kstToday,
     getExamRankings,
-    clearMaskedNameCache,
+    leaksRealName,
+    displayName,
 };

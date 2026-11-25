@@ -106,7 +106,6 @@ function makeClient({ exams = [], scores = {}, hideNames = [], dropExamColumn = 
 
     console.log("[학년별 최근 시험 순위: 실제 흐름]");
     {
-        N.clearMaskedNameCache();
         const mid2Rows = [
             { nick: "하늘", total: 24, wrong: 0, real: "이실명" },
             { nick: "구름", total: 24, wrong: 3, real: "박실명" },
@@ -148,41 +147,64 @@ function makeClient({ exams = [], scores = {}, hideNames = [], dropExamColumn = 
         ok(g2.exam.maxRate === 100 && g2.exam.minRate === 50 && g2.exam.avgRate === 78.3, "시험 최고/최저/평균 정답률: " + JSON.stringify(g2.exam));
 
         const nameCalls = client.calls.filter((c) => c.endpoint === "syncRecordValuesMain");
-        ok(nameCalls.length === 1 && nameCalls[0].body.requests.length === 1, "이름은 닉네임 없는 순위권 1명만 조회");
+        ok(nameCalls.length === 1 && nameCalls[0].body.requests.length === 10, "순위에 오른 학생 10명의 이름을 한 번에 조회: " + nameCalls.map((c) => c.body.requests.length).join());
         ok(!/실명|stu-/.test(JSON.stringify(out).replace(/최\*명/g, "")), "응답 어디에도 실명 전체/학생 페이지 id가 없다");
     }
 
-    console.log("[이름 가리기 세부: 순위 밖 제외 · 캐시 · 읽기 실패]");
+    console.log("[닉네임에 실명이 들어간 경우 가리기]");
     {
-        N.clearMaskedNameCache();
-        const rows = Array.from({ length: 12 }, (_, i) => ({ nick: i < 9 ? "닉" + i : "", total: 24, wrong: i, real: i < 9 ? "x" + i : ["가나다", "라마바", "사아자"][i - 9] }));
+        ok(N.leaksRealName("김가상", "김가상"), "닉네임 == 실명");
+        ok(N.leaksRealName("김가상짱", "김가상") && N.leaksRealName("★김가상★", "김가상"), "실명을 포함한 닉네임");
+        ok(N.leaksRealName("가상이", "김가상"), "이름(성 뺀 두 글자)을 담은 닉네임");
+        ok(N.leaksRealName("가상", "김가상") && N.leaksRealName("김가", "김가상"), "실명의 일부(2글자 이상)인 닉네임");
+        ok(N.leaksRealName(" 김 가 상 ", "김가상") && N.leaksRealName("GILDONG", "Gildong") && N.leaksRealName("김가상", "김가상(Gasang)"), "공백·대소문자·괄호 표기 무시");
+        ok(!N.leaksRealName("하늘", "김가상") && !N.leaksRealName("수학왕", "김가상"), "무관한 닉네임은 그대로");
+        ok(!N.leaksRealName("김", "김가상") && !N.leaksRealName("", "김가상") && !N.leaksRealName("하늘", ""), "한 글자·빈 값은 판정하지 않는다");
+    }
+
+    console.log("[이름 확인: 실명 닉네임 가림 · 확인 실패 시 안전하게]");
+    {
+        const rows = [
+            { nick: "김실명", total: 20, wrong: 0, real: "김실명" },     // 닉네임 == 실명 → 가림
+            { nick: "실명이", total: 20, wrong: 1, real: "박실명" },     // 이름을 담은 닉네임 → 가림
+            { nick: "하늘", total: 20, wrong: 2, real: "이실명" },       // 무관 → 닉네임 그대로
+            { nick: "", total: 20, wrong: 3, real: "최실명" },           // 닉네임 없음 → 가림
+            { nick: "바다", total: 20, wrong: 4, real: "정실명" },       // 무관 → 그대로
+            { nick: "별", total: 20, wrong: 5, real: "숨김실명" },        // 이름을 읽을 수 없음 → 닉네임이 있어도 익명
+            { nick: "", total: 20, wrong: 6, real: "숨김실명2" },        // 읽을 수 없음 + 닉네임 없음 → 익명
+        ];
+        const client = makeClient({ exams: [{ id: "x1", name: "중2 시험", grade: "중2", date: "2026-10-05" }], scores: { x1: rows }, hideNames: ["숨김실명", "숨김실명2"] });
+        const out = await N.getExamRankings(client, N.DEFAULTS, { now: NOW });
+        const rk = out.grades[0].ranking;
+        ok(rk.map((r) => r.nickname).join() === "김*명,박*명,하늘,최*명,바다,익명,익명", "실명 닉네임은 가리고 무관한 닉네임은 유지: " + rk.map((r) => r.nickname).join());
+        ok(!/김실명|박실명|최실명|이실명|정실명|숨김실명|실명이/.test(JSON.stringify(out)), "응답에 실명 전체나 실명을 담은 닉네임이 없다");
+        const lookups = client.calls.filter((c) => c.endpoint === "syncRecordValuesMain");
+        ok(lookups.length === 1, "이름 조회는 순위 계산당 한 번(묶음)");
+        await N.getExamRankings(client, N.DEFAULTS, { now: NOW });
+        ok(client.calls.filter((c) => c.endpoint === "syncRecordValuesMain").length === 2, "실명은 캐시하지 않는다(매번 새로 읽고 버린다)");
+
+        // 이름 조회 요청 자체가 실패하면 순위를 내보내지 않는다(닉네임이 실명인지 확인할 수 없으므로)
+        const failing = makeClient({ exams: [{ id: "x3", name: "중1 시험", grade: "중1", date: "2026-10-05" }], scores: { x3: [1, 2, 3, 4, 5].map((i) => ({ nick: "닉" + i, total: 20, wrong: i, real: "학생" + i })) } });
+        const realPost = failing.post;
+        failing.post = async (ep, body) => { if (ep === "syncRecordValuesMain") throw new Error("boom"); return realPost(ep, body); };
+        let err = null;
+        try { await N.getExamRankings(failing, N.DEFAULTS, { now: NOW }); } catch (e) { err = e; }
+        ok(err && err.code === "name_lookup_failed", "이름 조회 실패 → 순위를 내보내지 않고 오류: " + (err && err.code));
+    }
+
+    console.log("[순위 10명: 이름 조회 · 순위 밖 학생은 조회하지 않음]");
+    {
+        const rows = Array.from({ length: 12 }, (_, i) => ({ nick: i < 9 ? "닉" + i : "", total: 24, wrong: i, real: i < 9 ? "다른" + i : ["가나다", "라마바", "사아자"][i - 9] }));
         const client = makeClient({ exams: [{ id: "x1", name: "중2 시험", grade: "중2", date: "2026-10-05" }], scores: { x1: rows } });
         const out = await N.getExamRankings(client, N.DEFAULTS, { now: NOW });
         const rk = out.grades[0].ranking;
-        ok(rk.length === 10, "상위 10명: " + rk.length);
-        ok(rk[9].nickname === "가*다", "10위(닉네임 없음)는 가린 이름: " + rk[9].nickname);
-        ok(client.calls.filter((c) => c.endpoint === "syncRecordValuesMain").length === 1, "순위 밖(11·12위)의 이름은 읽지 않는다");
-        await N.getExamRankings(client, N.DEFAULTS, { now: NOW });
-        ok(client.calls.filter((c) => c.endpoint === "syncRecordValuesMain").length === 1, "가린 이름은 캐시되어 다시 읽지 않는다");
-
-        N.clearMaskedNameCache();
-        const blockedRows = ["사아자", "가나다", "라마바", "차카타", "파하갸"].map((real, i) => ({ nick: "", total: 20, wrong: i, real }));
-        const c2 = makeClient({ exams: [{ id: "x2", name: "중1 시험", grade: "중1", date: "2026-10-05" }], scores: { x2: blockedRows }, hideNames: ["사아자"] });
-        const out2 = await N.getExamRankings(c2, N.DEFAULTS, { now: NOW });
-        ok(out2.grades[0].ranking.map((r) => r.nickname).join() === "익명,가*다,라*바,차*타,파*갸", "읽을 수 없으면 익명, 나머지는 가림: " + out2.grades[0].ranking.map((r) => r.nickname).join());
-        ok(!/사아자|가나다|라마바|차카타|파하갸/.test(JSON.stringify(out2)), "응답에 실명 전체 없음");
-
-        N.clearMaskedNameCache();
-        const failing = makeClient({ exams: [{ id: "x3", name: "중1 시험", grade: "중1", date: "2026-10-05" }], scores: { x3: blockedRows } });
-        const realPost = failing.post;
-        failing.post = async (ep, body) => { if (ep === "syncRecordValuesMain") throw new Error("boom"); return realPost(ep, body); };
-        const out3 = await N.getExamRankings(failing, N.DEFAULTS, { now: NOW });
-        ok(out3.grades[0].ranking.length === 5 && out3.grades[0].ranking.every((r) => r.nickname === "익명"), "이름 조회가 실패해도 순위는 나오고 전부 익명");
+        ok(rk.length === 10 && rk[9].nickname === "가*다", "상위 10명, 10위(닉네임 없음)는 가린 이름: " + rk[9].nickname);
+        const req = client.calls.find((c) => c.endpoint === "syncRecordValuesMain").body.requests;
+        ok(req.length === 10, "순위에 오른 10명만 이름을 조회(11·12위는 조회하지 않음): " + req.length);
     }
 
     console.log("[오래된 시험은 순위에서 제외(90일)]");
     {
-        N.clearMaskedNameCache();
         const six = (pre) => [1, 2, 3, 4, 5, 6].map((i) => ({ nick: pre + i, total: 20, wrong: i }));
         const client = makeClient({
             exams: [
