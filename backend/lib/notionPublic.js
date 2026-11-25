@@ -24,6 +24,7 @@ const ANONYMOUS_NICKNAME = "익명";
 const MAX_NICKNAME_LENGTH = 12;
 const TOP_N = 10;
 const MIN_PARTICIPANTS = 5; // 이보다 적게 입력된 시험은 아직 입력 중이거나 일부만 본 시험으로 보고 건너뛴다
+const MAX_EXAM_AGE_DAYS = 90; // 이보다 오래전에 치른 시험은 순위에 쓰지 않는다(지난 시험이 계속 떠 있지 않게). 그 학년은 새 시험이 입력될 때까지 빠진다
 const MAX_ROWS = 20000;
 const REQUEST_TIMEOUT_MS = 25000;
 const NAME_LOOKUP_MAX = 50;
@@ -229,7 +230,7 @@ async function maskedNamesFor(client, spaceId, pageIds) {
 }
 
 // ---------- 학년별 최근 시험 순위 ----------
-async function getExamRankings(client, config = DEFAULTS, { now = new Date(), topN = TOP_N, minParticipants = MIN_PARTICIPANTS } = {}) {
+async function getExamRankings(client, config = DEFAULTS, { now = new Date(), topN = TOP_N, minParticipants = MIN_PARTICIPANTS, maxAgeDays = MAX_EXAM_AGE_DAYS } = {}) {
     const [examsDb, scoresDb] = await Promise.all([
         loadDatabase(client, config.examsPageId, REQUIRED_EXAM_PROPS, "시험DB"),
         loadDatabase(client, config.scoresPageId, REQUIRED_SCORE_PROPS, "학생별성적"),
@@ -237,12 +238,13 @@ async function getExamRankings(client, config = DEFAULTS, { now = new Date(), to
     if (scoresDb.truncated) console.error("exam ranking: score rows truncated at", MAX_ROWS);
 
     const today = kstToday(now);
+    const oldestDate = new Date(Date.parse(`${today}T00:00:00Z`) - maxAgeDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const exams = new Map();
     for (const r of examsDb.rows) {
         const grade = textOf(r.props[examsDb.keys["학년"]]).trim();
         const name = textOf(r.props[examsDb.keys["이름"]]).trim();
         const date = dateOf(r.props[examsDb.keys["날짜"]]);
-        if (!grade || !name || !date || date > today) continue; // 학년/날짜가 없거나 아직 치르지 않은 시험은 제외
+        if (!grade || !name || !date || date > today || date < oldestDate) continue; // 학년/날짜가 없거나, 아직 치르지 않았거나, 너무 오래된 시험은 제외
         exams.set(r.id, { id: r.id, grade, name, date });
     }
 
@@ -303,6 +305,7 @@ async function getExamRankings(client, config = DEFAULTS, { now = new Date(), to
 }
 
 module.exports = {
+    MAX_EXAM_AGE_DAYS,
     PublicNotionError,
     DEFAULTS,
     configFromEnv,

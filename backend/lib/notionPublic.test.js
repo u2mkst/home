@@ -180,6 +180,25 @@ function makeClient({ exams = [], scores = {}, hideNames = [], dropExamColumn = 
         ok(out3.grades[0].ranking.length === 5 && out3.grades[0].ranking.every((r) => r.nickname === "익명"), "이름 조회가 실패해도 순위는 나오고 전부 익명");
     }
 
+    console.log("[오래된 시험은 순위에서 제외(90일)]");
+    {
+        N.clearMaskedNameCache();
+        const six = (pre) => [1, 2, 3, 4, 5, 6].map((i) => ({ nick: pre + i, total: 20, wrong: i }));
+        const client = makeClient({
+            exams: [
+                { id: "x-old", name: "중3-1 지난 시험(6월)", grade: "중3", date: "2026-06-25" },
+                { id: "x-edge", name: "중2 90일 전", grade: "중2", date: "2026-08-27" },
+                { id: "x-over", name: "중1 91일 전", grade: "중1", date: "2026-08-26" },
+            ],
+            scores: { "x-old": six("o"), "x-edge": six("e"), "x-over": six("v") },
+        });
+        const out = await N.getExamRankings(client, N.DEFAULTS, { now: NOW });
+        ok(N.MAX_EXAM_AGE_DAYS === 90, "기본 기준은 90일");
+        ok(out.grades.map((g) => g.grade).join() === "중2", "6월 시험(중3)과 91일 전 시험(중1)은 빠지고 정확히 90일 전(중2)은 포함: " + out.grades.map((g) => g.grade).join());
+        const wide = await N.getExamRankings(client, N.DEFAULTS, { now: NOW, maxAgeDays: 365 });
+        ok(wide.grades.map((g) => g.grade).join() === "중1,중2,중3", "기준을 늘리면 다시 나온다: " + wide.grades.map((g) => g.grade).join());
+    }
+
     console.log("[노션 화면 구조가 바뀐 경우]");
     {
         const client = makeClient({ exams: [{ id: "x", name: "시험", grade: "중1", date: "2026-10-05" }], dropExamColumn: "학년" });
