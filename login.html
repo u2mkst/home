@@ -128,37 +128,24 @@
             justify-content: center;
         }
 
-        /* 📊 시험 순위 서랍(드로어): 왼쪽 가장자리의 "시험 순위" 버튼을 누르면 왼쪽에서 튀어나온다.
-           로그인 카드는 언제나 가운데에 혼자 있고, 서랍은 그 위로 덮였다가 닫힌다. */
-        .dash-handle, .dash-handle:hover, .dash-handle:active {
-            position: fixed; left: 0; top: 16px; z-index: 4800; display: flex; align-items: center; gap: 6px;
-            width: auto; padding: 10px 14px 10px 10px; border: none; border-radius: 0 var(--radius-md) var(--radius-md) 0;
-            background: var(--primary); color: #fff; font-size: var(--fs-sm); font-weight: 800; letter-spacing: -0.2px;
-            box-shadow: 0 4px 14px rgba(0, 75, 191, 0.28);
-            transition: transform 0.35s var(--spring), opacity 0.2s ease;
+        /* 📊 시험 순위 패널: 화면 왼쪽 가장자리에 붙어 항상 열려 있다(페이지가 열릴 때 왼쪽에서 한 번 튀어나온다).
+           로그인 카드는 이 패널을 피해 남은 공간의 가운데에 놓이고, 둘 다 동시에 쓸 수 있다.
+           폭이 좁아 나란히 둘 수 없는 화면(폰·세로 태블릿)에서는 로그인이 우선이라 패널을 숨긴다. */
+        :root { --dash-w: clamp(320px, 30vw, 420px); }
+        .login-dashboard { display: none; }
+        @keyframes dashPop { 0% { transform: translateX(-105%); } 100% { transform: translateX(0); } }
+        @media (min-width: 900px) {
+            body { padding-left: calc(var(--dash-w) + 16px); }
+            /* 스프링 효과로 살짝 넘쳐도 빈틈이 안 보이게 40px 바깥으로 더 뻗어 있다. */
+            .login-dashboard {
+                position: fixed; top: 0; bottom: 0; left: -40px; z-index: 50; display: flex; flex-direction: column;
+                width: calc(var(--dash-w) + 40px); padding: 28px 24px 20px 64px;
+                background: #fff; border-right: 1.5px solid var(--lg-border); box-shadow: 6px 0 24px rgba(15, 23, 42, 0.06);
+                animation: dashPop 0.65s var(--spring) 0.2s both;
+            }
         }
-        .dash-handle:hover { background: var(--primary-hover); transform: none; }
-        .dash-handle:active { transform: scale(0.96); }
-        .dash-handle svg { width: 20px; height: 20px; flex: 0 0 auto; }
-        .dash-handle.away { transform: translateX(-110%); opacity: 0; pointer-events: none; }
-        .dash-backdrop { position: fixed; inset: 0; z-index: 4900; background: rgba(15, 23, 42, 0.38); opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0s linear 0.25s; }
-        .dash-backdrop.open { opacity: 1; visibility: visible; transition: opacity 0.25s ease; }
-        /* 왼쪽 가장자리에 붙은 서랍. 스프링 효과로 살짝 넘쳐도 빈틈이 안 보이게 40px 바깥으로 더 뻗어 있다. */
-        .login-dashboard {
-            position: fixed; top: 0; bottom: 0; left: -40px; z-index: 5000; display: flex; flex-direction: column;
-            width: calc(min(92vw, 440px) + 40px); padding: 22px 22px 18px 62px;
-            background: #fff; border-radius: 0 var(--radius-lg) var(--radius-lg) 0; box-shadow: 8px 0 32px rgba(15, 23, 42, 0.18);
-            transform: translateX(-110%); visibility: hidden;
-            transition: transform 0.45s var(--spring), visibility 0s linear 0.45s;
-        }
-        .login-dashboard.open { transform: translateX(0); visibility: visible; transition: transform 0.45s var(--spring), visibility 0s; }
         .dash-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .dash-title { font-family: var(--font-title); font-size: var(--fs-xl); font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; }
-        .dash-close, .dash-close:hover, .dash-close:active {
-            width: 36px; height: 36px; padding: 0; border-radius: 50%; border: none; transform: none; box-shadow: none;
-            background: var(--input-bg); color: var(--text-muted); font-size: 16px; line-height: 1;
-        }
-        .dash-close:hover { background: #E5E8EB; }
         .dash-body { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
         .dash-tabs { display: flex; gap: 8px; margin: 16px 0 14px; }
         .dash-tab, .dash-tab:hover, .dash-tab:active {
@@ -196,7 +183,7 @@
         .login-dashboard.is-empty .dash-empty, .login-dashboard.is-error .dash-error { display: flex; }
         @media (prefers-reduced-motion: reduce) {
             .sk { animation: none; }
-            .login-dashboard, .login-dashboard.open, .dash-backdrop, .dash-backdrop.open, .dash-handle { transition: none; }
+            .login-dashboard { animation: none; }
         }
 
         @media (min-width: 700px) {
@@ -472,16 +459,10 @@
         </div>
     </div>
 
-    <!-- 📊 시험 순위 서랍: 왼쪽 가장자리 버튼을 누르면 왼쪽에서 튀어나온다(학년별 최근 시험, 정답률·문제 수만). -->
-    <button type="button" class="dash-handle" id="dashHandle" aria-controls="examDashboard" aria-expanded="false" aria-label="시험 순위 열기">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M10 17h4"/></svg>
-        <span>시험 순위</span>
-    </button>
-    <div class="dash-backdrop" id="dashBackdrop"></div>
-    <aside class="login-dashboard is-loading" id="examDashboard" aria-label="시험 순위" aria-hidden="true">
+    <!-- 📊 시험 순위 패널: 왼쪽 가장자리에 붙어 항상 열려 있다(학년별 최근 시험, 정답률·문제 수만). 폭이 좁으면 CSS로 숨긴다. -->
+    <aside class="login-dashboard is-loading" id="examDashboard" aria-label="시험 순위">
         <div class="dash-head">
             <div class="dash-title">🏆 시험 순위</div>
-            <button type="button" class="dash-close" id="dashClose" aria-label="닫기">✕</button>
         </div>
         <div class="dash-body">
             <div class="dash-tabs" id="dashTabs" role="tablist"></div>
@@ -861,40 +842,19 @@
             );
         }
 
-        // 📊 시험 순위 서랍: 왼쪽 가장자리 버튼을 누르면 왼쪽에서 튀어나온다. 학년별 최근 시험의 순위를
-        // 닉네임·정답률·문제 수로만 보여 주고, 로그인 없이 부르는 공개 데이터다. 페이지가 열릴 때 미리 받아 둔다.
+        // 📊 시험 순위 패널(왼쪽에 항상 열려 있음): 학년별 최근 시험의 순위를 닉네임·정답률·문제 수로만 보여 준다.
+        // 로그인 없이 부르는 공개 데이터이고, 페이지가 열릴 때 바로 받아 온다.
         (function initExamDashboard() {
-            const drawer = document.getElementById('examDashboard');
-            const handle = document.getElementById('dashHandle');
-            const backdrop = document.getElementById('dashBackdrop');
-            const closeBtn = document.getElementById('dashClose');
+            const panel = document.getElementById('examDashboard');
             const retryBtn = document.getElementById('dashRetry');
-            if (!drawer || !handle || !backdrop) return;
+            if (!panel) return;
             let data = null, active = 0, loading = false;
 
             function setState(state) { // loading | ready | empty | error
-                drawer.classList.toggle('is-loading', state === 'loading');
-                drawer.classList.toggle('is-empty', state === 'empty');
-                drawer.classList.toggle('is-error', state === 'error');
-                drawer.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
-            }
-
-            function openDrawer() {
-                drawer.classList.add('open');
-                backdrop.classList.add('open');
-                handle.classList.add('away');
-                handle.setAttribute('aria-expanded', 'true');
-                drawer.setAttribute('aria-hidden', 'false');
-                closeBtn.focus({ preventScroll: true });
-            }
-
-            function closeDrawer() {
-                drawer.classList.remove('open');
-                backdrop.classList.remove('open');
-                handle.classList.remove('away');
-                handle.setAttribute('aria-expanded', 'false');
-                drawer.setAttribute('aria-hidden', 'true');
-                handle.focus({ preventScroll: true });
+                panel.classList.toggle('is-loading', state === 'loading');
+                panel.classList.toggle('is-empty', state === 'empty');
+                panel.classList.toggle('is-error', state === 'error');
+                panel.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
             }
 
             function renderRanking() {
@@ -946,13 +906,7 @@
                 }
             }
 
-            handle.addEventListener('click', openDrawer);
-            closeBtn.addEventListener('click', closeDrawer);
-            backdrop.addEventListener('click', closeDrawer);
             if (retryBtn) retryBtn.addEventListener('click', load);
-            document.addEventListener('keydown', e => {
-                if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer();
-            });
             load();
         })();
 
