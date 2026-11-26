@@ -145,23 +145,37 @@
             }
         }
         .dash-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .dash-title { font-family: var(--font-title); font-size: var(--fs-xl); font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; }
+        .dash-head { padding-bottom: 14px; }
+        .dash-title { display: flex; align-items: center; gap: 10px; font-family: var(--font-title); font-size: var(--fs-xl); font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; }
+        .dash-badge { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 12px; background: rgba(0, 75, 191, 0.09); color: var(--primary); }
+        .dash-badge svg { width: 20px; height: 20px; }
         .dash-body { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-        .dash-tabs { display: flex; gap: 8px; margin: 16px 0 14px; }
+        .dash-tabs { display: flex; gap: 8px; margin: 0 0 16px; }
         .dash-tab, .dash-tab:hover, .dash-tab:active {
             display: inline-block; width: auto; flex: 0 0 auto; transform: none; box-shadow: none;
             padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--lg-border);
             background: #fff; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 700;
         }
         .dash-tab.active, .dash-tab.active:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .dash-exam { padding-top: 14px; border-top: 1.5px solid var(--lg-border); }
         .dash-exam-name { font-size: var(--fs-md); font-weight: 800; color: var(--text-main); word-break: keep-all; }
-        .dash-rank { flex: 1 1 auto; min-height: 0; list-style: none; margin: 14px 0 0; padding: 0 0 6px; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 8px; }
-        .dash-rank li { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--input-bg); }
-        .dash-rank li.top { background: rgba(0, 75, 191, 0.07); }
-        .dash-rank .rk { text-align: center; font-weight: 800; font-size: var(--fs-md); color: var(--text-muted); }
+        .dash-rank { position: relative; flex: 1 1 auto; min-height: 0; list-style: none; margin: 16px 0 0; padding: 0 0 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 8px; }
+        /* 목록이 패널보다 길어 아래에 더 있을 때만 아래쪽이 서서히 사라져, 스크롤할 수 있다는 걸 알려 준다. */
+        .dash-rank.more-below { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); }
+        .dash-rank li { flex: 0 0 auto; display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--input-bg); font-variant-numeric: tabular-nums; }
+        /* 1등은 크고 진하게, 2·3등은 은·동 느낌의 옅은 색으로 구분한다. */
+        .dash-rank li.r1 { padding: 14px 14px; background: linear-gradient(135deg, rgba(255, 196, 0, 0.20), rgba(255, 196, 0, 0.07)); box-shadow: inset 0 0 0 1.5px rgba(230, 168, 0, 0.35); }
+        .dash-rank li.r2 { background: linear-gradient(135deg, rgba(148, 163, 184, 0.24), rgba(148, 163, 184, 0.08)); }
+        .dash-rank li.r3 { background: linear-gradient(135deg, rgba(205, 127, 50, 0.20), rgba(205, 127, 50, 0.07)); }
+        .dash-rank .rk { text-align: center; font-weight: 800; font-size: var(--fs-md); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+        .dash-rank li.r1 .rk { font-size: 1.5em; }
+        .dash-rank .rk.tie { opacity: 0.45; font-weight: 700; } /* 바로 위 줄과 같은 순위(공동) */
         .dash-rank .nick { min-width: 0; font-weight: 700; font-size: var(--fs-md); color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dash-rank li.r1 .nick { font-weight: 800; font-size: var(--fs-lg); }
         .dash-rank .stat { text-align: right; line-height: 1.25; }
         .dash-rank .rt { display: block; font-weight: 900; font-size: var(--fs-lg); color: var(--primary); }
+        .dash-rank li.r1 .rt { font-size: calc(var(--fs-lg) * 1.15); }
+        .dash-rank .rt small { margin-left: 1px; font-size: 0.68em; font-weight: 800; opacity: 0.8; }
         .dash-rank .cnt { display: block; margin-top: 2px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
         /* 상태 화면: 불러오는 중(스켈레톤) / 최근 시험 없음 / 불러오지 못함 */
         .dash-empty, .dash-error, .dash-skeleton { display: none; }
@@ -178,7 +192,7 @@
         .sk-name { width: 78%; height: 18px; border-radius: 8px; }
         .sk-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
         .sk-row { height: 44px; border-radius: var(--radius-md); }
-        .dash-exam-meta { margin-top: 4px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
+        .dash-exam-meta { margin-top: 4px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); font-variant-numeric: tabular-nums; }
         .login-dashboard.is-loading .dash-body, .login-dashboard.is-empty .dash-body, .login-dashboard.is-error .dash-body { display: none; }
         .login-dashboard.is-loading .dash-skeleton { display: flex; }
         .login-dashboard.is-empty .dash-empty, .login-dashboard.is-error .dash-error { display: flex; }
@@ -463,12 +477,17 @@
     <!-- 📊 시험 순위 패널: 왼쪽 가장자리에 붙어 항상 열려 있다(학년별 최근 시험, 정답률·문제 수만). 폭이 좁으면 CSS로 숨긴다. -->
     <aside class="login-dashboard is-loading" id="examDashboard" aria-label="시험 순위">
         <div class="dash-head">
-            <div class="dash-title">🏆 시험 순위</div>
+            <div class="dash-title">
+                <span class="dash-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4"/><path d="M12 13v4M8 21h8M10 17h4"/></svg></span>
+                시험 순위
+            </div>
         </div>
         <div class="dash-body">
             <div class="dash-tabs" id="dashTabs" role="tablist"></div>
-            <div class="dash-exam-name" id="dashExamName"></div>
-            <div class="dash-exam-meta" id="dashExamMeta"></div>
+            <div class="dash-exam">
+                <div class="dash-exam-name" id="dashExamName"></div>
+                <div class="dash-exam-meta" id="dashExamMeta"></div>
+            </div>
             <ol class="dash-rank" id="dashRankList"></ol>
         </div>
         <div class="dash-empty">
@@ -866,20 +885,36 @@
                 // (맞은 문제 수는 보여 주지 않는다.)
                 const totals = [...new Set(g.ranking.map(r => r.total))];
                 const uniform = totals.length === 1;
-                document.getElementById('dashExamMeta').textContent = uniform ? `총 ${totals[0]}문제` : '';
+                const dm = /^\d{4}-(\d{2})-(\d{2})/.exec(g.exam.date || '');
+                const metaParts = [];
+                if (dm) metaParts.push(`${Number(dm[1])}/${Number(dm[2])} 시험`);
+                if (uniform) metaParts.push(`총 ${totals[0]}문제`);
+                document.getElementById('dashExamMeta').textContent = metaParts.join(' · ');
                 const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
                 const list = document.getElementById('dashRankList');
-                list.innerHTML = g.ranking.map(r => `
-                    <li class="${r.rank <= 3 ? 'top' : ''}">
-                        <span class="rk">${medals[r.rank] || r.rank}</span>
+                list.innerHTML = g.ranking.map((r, i) => {
+                    // 메달권이 아닌데 바로 위 줄과 순위가 같으면(공동) 숫자를 흐리게 보여 준다.
+                    const tie = i > 0 && !medals[r.rank] && g.ranking[i - 1].rank === r.rank;
+                    return `
+                    <li class="${r.rank <= 3 ? 'r' + r.rank : ''}">
+                        <span class="rk${tie ? ' tie' : ''}" ${tie ? `aria-label="공동 ${r.rank}위"` : ''}>${medals[r.rank] || r.rank}</span>
                         <span class="nick">${escapeHTML(r.nickname)}</span>
                         <span class="stat">
-                            <span class="rt">${Number.isInteger(r.rate) ? r.rate : r.rate.toFixed(1)}%</span>
+                            <span class="rt">${Number.isInteger(r.rate) ? r.rate : r.rate.toFixed(1)}<small>%</small></span>
                             ${uniform ? '' : `<span class="cnt">${r.total}문제</span>`}
                         </span>
-                    </li>`).join('');
+                    </li>`;
+                }).join('');
                 list.scrollTop = 0;
+                updateFade();
             }
+
+            function updateFade() {
+                const list = document.getElementById('dashRankList');
+                list.classList.toggle('more-below', list.scrollHeight - list.scrollTop - list.clientHeight > 4);
+            }
+            document.getElementById('dashRankList').addEventListener('scroll', updateFade, { passive: true });
+            window.addEventListener('resize', updateFade);
 
             function renderTabs() {
                 const tabs = document.getElementById('dashTabs');
