@@ -147,7 +147,7 @@ function makeClient({ exams = [], scores = {}, hideNames = [], dropExamColumn = 
         ok(g2.exam.maxRate === 100 && g2.exam.minRate === 50 && g2.exam.avgRate === 78.3, "시험 최고/최저/평균 정답률: " + JSON.stringify(g2.exam));
 
         const nameCalls = client.calls.filter((c) => c.endpoint === "syncRecordValuesMain");
-        ok(nameCalls.length === 1 && nameCalls[0].body.requests.length === 10, "순위에 오른 학생 10명의 이름을 한 번에 조회: " + nameCalls.map((c) => c.body.requests.length).join());
+        ok(nameCalls.length === 1 && nameCalls[0].body.requests.length === 14, "성적표의 모든 학생 이름을 한 번에 조회(다른 학생 실명 대조용): " + nameCalls.map((c) => c.body.requests.length).join());
         ok(!/실명|stu-/.test(JSON.stringify(out).replace(/최\*명/g, "")), "응답 어디에도 실명 전체/학생 페이지 id가 없다");
     }
 
@@ -159,7 +159,11 @@ function makeClient({ exams = [], scores = {}, hideNames = [], dropExamColumn = 
         ok(N.leaksRealName("가상", "김가상") && N.leaksRealName("김가", "김가상"), "실명의 일부(2글자 이상)인 닉네임");
         ok(N.leaksRealName(" 김 가 상 ", "김가상") && N.leaksRealName("GILDONG", "Gildong") && N.leaksRealName("김가상", "김가상(Gasang)"), "공백·대소문자·괄호 표기 무시");
         ok(!N.leaksRealName("하늘", "김가상") && !N.leaksRealName("수학왕", "김가상"), "무관한 닉네임은 그대로");
-        ok(!N.leaksRealName("김", "김가상") && !N.leaksRealName("", "김가상") && !N.leaksRealName("하늘", ""), "한 글자·빈 값은 판정하지 않는다");
+        ok(!N.leaksRealName("", "김가상") && !N.leaksRealName("하늘", ""), "빈 값은 판정하지 않는다");
+        ok(N.leaksRealName("김", "김가상") && N.leaksRealName("김", "김가"), "성만 적은 한 글자 닉네임은 가린다");
+        ok(!N.leaksRealName("별", "김가상") && !N.leaksRealName("가", "김가상"), "성이 아닌 한 글자 닉네임은 그대로");
+        ok(N.leaksOtherRealName("엄태윤", ["김가상", "엄태윤"]) && N.leaksOtherRealName("★엄태윤★", ["엄태윤"]), "다른 학생의 실명을 담은 닉네임");
+        ok(!N.leaksOtherRealName("하늘", ["김하늘"]) && !N.leaksOtherRealName("지우개", ["이지우"]) && !N.leaksOtherRealName("", ["엄태윤"]), "다른 학생과는 전체 이름 비교만(흔한 낱말은 유지)");
     }
 
     console.log("[이름 확인: 실명 닉네임 가림 · 확인 실패 시 안전하게]");
@@ -200,7 +204,59 @@ function makeClient({ exams = [], scores = {}, hideNames = [], dropExamColumn = 
         const rk = out.grades[0].ranking;
         ok(rk.length === 10 && rk[9].nickname === "가*다", "상위 10명, 10위(닉네임 없음)는 가린 이름: " + rk[9].nickname);
         const req = client.calls.find((c) => c.endpoint === "syncRecordValuesMain").body.requests;
-        ok(req.length === 10, "순위에 오른 10명만 이름을 조회(11·12위는 조회하지 않음): " + req.length);
+        ok(req.length === 12, "성적표의 모든 학생(12명)의 이름을 조회: " + req.length);
+    }
+
+    console.log("[새 시험에 닉네임이 비어 있으면 이전 시험의 닉네임을 이어 쓴다]");
+    {
+        const six = (nicks) => nicks.map((n, i) => ({ nick: n, total: 20, wrong: i, real: "학생" + i + "실" }));
+        const client = makeClient({
+            exams: [
+                { id: "x-new", name: "중1 새 시험", grade: "중1", date: "2026-11-25" },
+                { id: "x-prev", name: "중1 지난 시험", grade: "중1", date: "2026-11-18" },
+                { id: "x-old", name: "중1 더 지난 시험", grade: "중1", date: "2026-11-10" },
+            ],
+            scores: {
+                "x-new": six(["", "", "직접적은닉", "", "", ""]), // 0,1,3,4,5번은 비어 있음 / 2번은 이번에 직접 적음
+                "x-prev": six(["하늘", "구름", "예전닉", "", "", ""]), // 3~5번은 지난 시험에도 없음
+                "x-old": six(["옛하늘", "", "", "", "", ""]),
+            },
+        });
+        const out = await N.getExamRankings(client, N.DEFAULTS, { now: NOW });
+        const rk = out.grades[0].ranking.map((r) => r.nickname);
+        ok(rk.slice(0, 2).join() === "하늘,구름", "이번 닉네임이 비면 가장 최근 시험의 닉네임: " + rk.slice(0, 2).join());
+        ok(rk[2] === "직접적은닉", "이번 시험에 직접 적은 닉네임이 우선: " + rk[2]);
+        ok(rk.slice(3).every((x) => /\*/.test(x)), "어느 시험에도 닉네임이 없으면 가린 이름: " + rk.slice(3).join());
+        ok(!/학생\d실/.test(JSON.stringify(out)), "이어 쓴 경우에도 실명 전체는 나가지 않는다");
+        // 이어 쓸 닉네임이 실명이면 가린다(새 시험에도 5명을 채워야 새 시험이 선택된다)
+        const c3 = makeClient({
+            exams: [{ id: "n", name: "새", grade: "중2", date: "2026-11-25" }, { id: "p", name: "지난", grade: "중2", date: "2026-11-18" }],
+            scores: {
+                n: [{ nick: "", total: 20, wrong: 0, real: "김가상" }, ...[1, 2, 3, 4].map((i) => ({ nick: "", total: 20, wrong: i, real: "타인" + i }))],
+                p: [{ nick: "김가상", total: 20, wrong: 0, real: "김가상" }, ...[1, 2, 3, 4].map((i) => ({ nick: "닉" + i, total: 20, wrong: i, real: "타인" + i }))],
+            },
+        });
+        const o3 = await N.getExamRankings(c3, N.DEFAULTS, { now: NOW });
+        const r3 = o3.grades[0].ranking.map((r) => r.nickname);
+        ok(r3[0] === "김*상" && !JSON.stringify(o3).includes("김가상"), "이어 쓸 닉네임이 실명이면 가린다: " + r3[0]);
+        ok(r3.slice(1).join() === "닉1,닉2,닉3,닉4", "나머지는 이어 쓴 닉네임: " + r3.slice(1).join());
+    }
+
+    console.log("[닉네임이 다른 학생의 실명 · 성만 적은 닉네임]");
+    {
+        const rows = [
+            { nick: "엄태윤", total: 20, wrong: 0, real: "김실명" },   // 다른 학생(엄태윤)의 실명 → 가림
+            { nick: "박", total: 20, wrong: 1, real: "박가상" },        // 본인 성만 → 가림
+            { nick: "지우개", total: 20, wrong: 2, real: "최아무" },    // 다른 학생(이지우) 이름의 일부일 뿐 → 유지
+            { nick: "달", total: 20, wrong: 5, real: "이지우" },
+            { nick: "하늘", total: 20, wrong: 3, real: "정실명" },
+            { nick: "구름", total: 20, wrong: 4, real: "엄태윤" },
+        ];
+        const client = makeClient({ exams: [{ id: "x", name: "중2 시험", grade: "중2", date: "2026-10-05" }], scores: { x: rows } });
+        const out = await N.getExamRankings(client, N.DEFAULTS, { now: NOW });
+        const rk = out.grades[0].ranking.map((r) => r.nickname);
+        ok(rk.join() === "김*명,박*상,지우개,하늘,구름,달", "다른 학생 실명·성만 적은 닉네임은 가리고 나머지는 유지: " + rk.join());
+        ok(!/엄태윤|김실명|박가상/.test(JSON.stringify(out)), "응답에 실명이 없다");
     }
 
     console.log("[오래된 시험은 순위에서 제외(90일)]");

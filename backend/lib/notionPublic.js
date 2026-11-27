@@ -205,9 +205,19 @@ function leaksRealName(nickname, realName) {
     const n = normalizeForCompare(nickname);
     const r = normalizeForCompare(String(realName == null ? "" : realName).replace(/[(\[（].*?[)\]）]/g, ""));
     if (r.length < 2 || !n) return false;
+    if (n.length === 1 && r.startsWith(n)) return true; // 성만 적은 한 글자 닉네임
     if (n.includes(r)) return true;
     if (r.length >= 3 && n.includes(r.slice(-2))) return true;
     if (n.length >= 2 && r.includes(n)) return true;
+    return false;
+}
+
+// 닉네임이 (본인이 아닌) 다른 학생의 실명을 그대로 담았는가: 3글자 이상 실명과 같거나 포함하면 true.
+// 흔한 낱말과 우연히 겹치는 일을 줄이려고 다른 학생과는 전체 이름 비교만 한다.
+function leaksOtherRealName(nickname, otherNames) {
+    const n = normalizeForCompare(nickname);
+    if (!n) return false;
+    for (const name of otherNames) if (name.length >= 3 && n.includes(name)) return true;
     return false;
 }
 
@@ -237,10 +247,10 @@ async function studentTitles(client, spaceId, pageIds) {
 }
 
 // 화면에 내보낼 이름: 이름을 확인 못 하면 익명 / 닉네임이 없거나 실명을 담았으면 가린 이름 / 아니면 닉네임.
-function displayName(entry, titles) {
+function displayName(entry, titles, otherNames = []) {
     const real = titles.get(entry.studentPageId);
     if (!real) return ANONYMOUS_NICKNAME;
-    if (!entry.nickname || leaksRealName(entry.nickname, real)) return maskName(real);
+    if (!entry.nickname || leaksRealName(entry.nickname, real) || leaksOtherRealName(entry.nickname, otherNames)) return maskName(real);
     return entry.nickname;
 }
 
@@ -263,6 +273,20 @@ async function getExamRankings(client, config = DEFAULTS, { now = new Date(), to
         exams.set(r.id, { id: r.id, grade, name, date });
     }
 
+    // 닉네임은 학생의 고유 속성인데 시험마다 손으로 적혀서, 새 시험은 아직 비어 있는 경우가 많다.
+    // 그런 때는 같은 학생이 이전 시험에 적은 가장 최근 닉네임을 이어서 쓴다(실명 겹침 검사는 그대로 적용된다).
+    const examDateById = new Map();
+    for (const r of examsDb.rows) examDateById.set(r.id, dateOf(r.props[examsDb.keys["날짜"]]) || "");
+    const latestNick = new Map(); // 학생 페이지 id -> { date, nick }
+    for (const r of scoresDb.rows) {
+        const sid = relationIds(r.props[scoresDb.keys["학생이름"]])[0];
+        const nick = cleanNickname(textOf(r.props[scoresDb.keys["닉네임"]]));
+        if (!sid || !nick) continue;
+        const d = examDateById.get(relationIds(r.props[scoresDb.keys["시험지"]])[0]) || "";
+        const prev = latestNick.get(sid);
+        if (!prev || d > prev.date) latestNick.set(sid, { date: d, nick });
+    }
+
     const byExam = new Map();
     for (const r of scoresDb.rows) {
         const examId = relationIds(r.props[scoresDb.keys["시험지"]])[0];
@@ -270,9 +294,11 @@ async function getExamRankings(client, config = DEFAULTS, { now = new Date(), to
         const result = computeResult(numberOf(r.props[scoresDb.keys["총문항"]]), numberOf(r.props[scoresDb.keys["오답"]]));
         if (!result) continue;
         if (!byExam.has(examId)) byExam.set(examId, []);
+        const studentPageId = relationIds(r.props[scoresDb.keys["학생이름"]])[0] || null;
+        const own = cleanNickname(textOf(r.props[scoresDb.keys["닉네임"]]));
         byExam.get(examId).push({
-            nickname: cleanNickname(textOf(r.props[scoresDb.keys["닉네임"]])),
-            studentPageId: relationIds(r.props[scoresDb.keys["학생이름"]])[0] || null,
+            nickname: own || (studentPageId && latestNick.has(studentPageId) ? latestNick.get(studentPageId).nick : ""),
+            studentPageId,
             ...result,
         });
     }
@@ -290,9 +316,12 @@ async function getExamRankings(client, config = DEFAULTS, { now = new Date(), to
         if (exam) picked.push({ grade, exam, entries: byExam.get(exam.id) });
     }
 
-    // 순위에 오른 모든 학생의 이름을 한 번에 읽어, 닉네임이 없거나 실명을 담은 경우 가린 이름으로 바꾼다.
+    // 닉네임이 없거나 실명(본인·다른 학생)을 담은 경우 가린 이름으로 바꾼다.
     const rankings = picked.map((p) => ({ ...p, ranked: buildRanking(p.entries, topN) }));
-    const titles = await studentTitles(client, scoresDb.spaceId, rankings.flatMap((p) => p.ranked.map((e) => e.studentPageId)));
+    // 닉네임이 다른 학생의 실명일 수도 있어서, 성적표에 나오는 모든 학생의 이름을 읽어 대조한다(요청 처리 중에만 쓰고 버린다).
+    const rosterIds = scoresDb.rows.map((r) => relationIds(r.props[scoresDb.keys["학생이름"]])[0]);
+    const titles = await studentTitles(client, scoresDb.spaceId, [...rosterIds, ...rankings.flatMap((p) => p.ranked.map((e) => e.studentPageId))]);
+    const otherNames = [...titles.values()].map((t) => normalizeForCompare(String(t).replace(/[(\[（].*?[)\]）]/g, ""))).filter((n) => n.length >= 3);
 
     const grades = rankings.map(({ grade, exam, entries, ranked }) => {
         const rates = entries.map((e) => e.rate);
@@ -308,7 +337,7 @@ async function getExamRankings(client, config = DEFAULTS, { now = new Date(), to
             },
             ranking: ranked.map((e) => ({
                 rank: e.rank,
-                nickname: displayName(e, titles),
+                nickname: displayName(e, titles, otherNames),
                 score: e.score,
                 total: e.total,
                 rate: e.rate,
@@ -335,5 +364,6 @@ module.exports = {
     kstToday,
     getExamRankings,
     leaksRealName,
+    leaksOtherRealName,
     displayName,
 };
