@@ -159,9 +159,7 @@ function makeClient({ exams = [], scores = {}, hideNames = [], dropExamColumn = 
         ok(N.leaksRealName("가상", "김가상") && N.leaksRealName("김가", "김가상"), "실명의 일부(2글자 이상)인 닉네임");
         ok(N.leaksRealName(" 김 가 상 ", "김가상") && N.leaksRealName("GILDONG", "Gildong") && N.leaksRealName("김가상", "김가상(Gasang)"), "공백·대소문자·괄호 표기 무시");
         ok(!N.leaksRealName("하늘", "김가상") && !N.leaksRealName("수학왕", "김가상"), "무관한 닉네임은 그대로");
-        ok(!N.leaksRealName("", "김가상") && !N.leaksRealName("하늘", ""), "빈 값은 판정하지 않는다");
-        ok(N.leaksRealName("김", "김가상") && N.leaksRealName("김", "김가"), "성만 적은 한 글자 닉네임은 가린다");
-        ok(!N.leaksRealName("별", "김가상") && !N.leaksRealName("가", "김가상"), "성이 아닌 한 글자 닉네임은 그대로");
+        ok(!N.leaksRealName("김", "김가상") && !N.leaksRealName("", "김가상") && !N.leaksRealName("하늘", ""), "한 글자·빈 값은 판정하지 않는다(성만 적은 한 글자 닉네임도 그대로 보여 준다)");
         ok(N.leaksOtherRealName("엄태윤", ["김가상", "엄태윤"]) && N.leaksOtherRealName("★엄태윤★", ["엄태윤"]), "다른 학생의 실명을 담은 닉네임");
         ok(!N.leaksOtherRealName("하늘", ["김하늘"]) && !N.leaksOtherRealName("지우개", ["이지우"]) && !N.leaksOtherRealName("", ["엄태윤"]), "다른 학생과는 전체 이름 비교만(흔한 낱말은 유지)");
     }
@@ -242,11 +240,11 @@ function makeClient({ exams = [], scores = {}, hideNames = [], dropExamColumn = 
         ok(r3.slice(1).join() === "닉1,닉2,닉3,닉4", "나머지는 이어 쓴 닉네임: " + r3.slice(1).join());
     }
 
-    console.log("[닉네임이 다른 학생의 실명 · 성만 적은 닉네임]");
+    console.log("[닉네임이 다른 학생의 실명]");
     {
         const rows = [
             { nick: "엄태윤", total: 20, wrong: 0, real: "김실명" },   // 다른 학생(엄태윤)의 실명 → 가림
-            { nick: "박", total: 20, wrong: 1, real: "박가상" },        // 본인 성만 → 가림
+            { nick: "박", total: 20, wrong: 1, real: "박가상" },        // 본인 성만 적은 한 글자 → 그대로 보여 줌
             { nick: "지우개", total: 20, wrong: 2, real: "최아무" },    // 다른 학생(이지우) 이름의 일부일 뿐 → 유지
             { nick: "달", total: 20, wrong: 5, real: "이지우" },
             { nick: "하늘", total: 20, wrong: 3, real: "정실명" },
@@ -255,7 +253,7 @@ function makeClient({ exams = [], scores = {}, hideNames = [], dropExamColumn = 
         const client = makeClient({ exams: [{ id: "x", name: "중2 시험", grade: "중2", date: "2026-10-05" }], scores: { x: rows } });
         const out = await N.getExamRankings(client, N.DEFAULTS, { now: NOW });
         const rk = out.grades[0].ranking.map((r) => r.nickname);
-        ok(rk.join() === "김*명,박*상,지우개,하늘,구름,달", "다른 학생 실명·성만 적은 닉네임은 가리고 나머지는 유지: " + rk.join());
+        ok(rk.join() === "김*명,박,지우개,하늘,구름,달", "다른 학생 실명은 가리고 나머지(한 글자 성 포함)는 유지: " + rk.join());
         ok(!/엄태윤|김실명|박가상/.test(JSON.stringify(out)), "응답에 실명이 없다");
     }
 

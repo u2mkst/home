@@ -205,7 +205,6 @@ function leaksRealName(nickname, realName) {
     const n = normalizeForCompare(nickname);
     const r = normalizeForCompare(String(realName == null ? "" : realName).replace(/[(\[（].*?[)\]）]/g, ""));
     if (r.length < 2 || !n) return false;
-    if (n.length === 1 && r.startsWith(n)) return true; // 성만 적은 한 글자 닉네임
     if (n.includes(r)) return true;
     if (r.length >= 3 && n.includes(r.slice(-2))) return true;
     if (n.length >= 2 && r.includes(n)) return true;
