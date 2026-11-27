@@ -9,6 +9,7 @@ const { kstDateParts } = require("../lib/kst");
 const { grantAttendanceBadges } = require("../lib/achievements");
 const { purgeStudentData } = require("../lib/purge");
 const lotto = require("./lotto");
+const tabletSites = require("../lib/tabletSites");
 
 // 🛠️ 마스터 전용 운영 도구. 학생 계정/잠금/PIN/출석/로또처럼 클라이언트 규칙으로는 열어줄 수 없는
 // (서버만 쓸 수 있는) 데이터를 마스터 화면에서 다루기 위한 단일 엔드포인트다.
@@ -336,7 +337,25 @@ async function lottoSummary() {
     return { rounds: rows };
 }
 
+// ---------- 태블릿 허용 사이트 ----------
+async function tabletSitesGet() {
+    const cur = await tabletSites.readSites(admin.database());
+    return { ...cur, defaults: tabletSites.DEFAULT_HOSTS, core: tabletSites.CORE_HOST, max: tabletSites.MAX_HOSTS };
+}
+
+async function tabletSitesSet(body) {
+    if (!Array.isArray(body.hosts)) throw fail(400, "bad_hosts");
+    try {
+        return await tabletSites.writeSites(admin.database(), body.hosts, body.__uid);
+    } catch (e) {
+        if (e.rejected) { const err = fail(400, "bad_hosts"); err.rejected = e.rejected; throw err; }
+        throw e;
+    }
+}
+
 const ACTIONS = {
+    "tablet-sites-get": tabletSitesGet,
+    "tablet-sites-set": tabletSitesSet,
     locks: listLocks,
     unlock,
     "reset-pin": resetPin,
@@ -363,10 +382,13 @@ module.exports = async (req, res) => {
         const body = req.body || {};
         const fn = Object.prototype.hasOwnProperty.call(ACTIONS, body.action) ? ACTIONS[body.action] : null;
         if (!fn) return res.status(400).json({ error: "bad_action" });
+        body.__uid = decoded.uid;
         return res.status(200).json(await fn(body));
     } catch (err) {
         const status = err.statusCode || 500;
         if (status === 500) console.error("admin api error:", err);
-        return res.status(status).json({ error: status === 500 ? "server_error" : err.message });
+        const out = { error: status === 500 ? "server_error" : err.message };
+        if (err.rejected) out.rejected = err.rejected; // 허용 사이트 저장 시 쓸 수 없는 항목 목록
+        return res.status(status).json(out);
     }
 };
