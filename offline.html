@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>인터넷 연결 없음 - K&P 수학입시학원</title>
+    <!-- 인터넷이 끊겼을 때 sw.js가 페이지 대신 보여 주는 화면. 외부 파일 없이 이 파일 하나로 완결된다(오프라인에서도 떠야 하므로). -->
+    <style>
+        :root { --primary: #004bbf; --primary-hover: #003a94; --text-main: #191F28; --text-muted: #8B95A1; --border: #E5E8EB; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            display: flex; align-items: center; justify-content: center; padding: 24px;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            color: var(--text-main); text-align: center;
+            background:
+                radial-gradient(circle at 15% 10%, rgba(0, 75, 191, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 90%, rgba(0, 75, 191, 0.06) 0%, transparent 45%),
+                #F2F4F6;
+        }
+        .card { width: 100%; max-width: 420px; padding: 44px 28px 32px; background: #fff; border: 1.5px solid var(--border); border-radius: 28px; box-shadow: 0 10px 40px rgba(15, 23, 42, 0.07); }
+        .icon { width: 84px; height: 84px; margin: 0 auto 20px; border-radius: 28px; display: flex; align-items: center; justify-content: center; background: rgba(0, 75, 191, 0.09); color: var(--primary); }
+        .icon svg { width: 44px; height: 44px; }
+        h1 { margin: 0 0 10px; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.4px; word-break: keep-all; }
+        p { margin: 0; font-size: 1rem; line-height: 1.6; color: var(--text-muted); word-break: keep-all; }
+        .tips { margin: 22px 0 0; padding: 14px 16px; border-radius: 16px; background: #F7F8FA; text-align: left; font-size: 0.9rem; line-height: 1.7; color: #4E5968; }
+        .tips b { color: var(--text-main); }
+        button {
+            display: block; width: 100%; margin-top: 24px; padding: 17px 20px; border: 0; border-radius: 16px; cursor: pointer;
+            font: inherit; font-size: 1.1rem; font-weight: 800; color: #fff; background: var(--primary);
+            box-shadow: 0 8px 20px rgba(0, 75, 191, 0.25); transition: transform .15s ease, background .15s ease;
+        }
+        button:active { transform: scale(0.98); background: var(--primary-hover); }
+        button:disabled { opacity: .75; cursor: default; transform: none; }
+        .status { min-height: 1.4em; margin-top: 14px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); }
+        .status.fail { color: #E5484D; }
+        .status.ok { color: #1B9A5A; }
+        .spin { display: inline-block; width: 1em; height: 1em; margin-right: 8px; vertical-align: -0.15em; border: 2.5px solid rgba(255,255,255,.45); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+        .shake { animation: shake .35s ease; }
+        .brand { margin-top: 22px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); letter-spacing: .2px; }
+        @media (prefers-reduced-motion: reduce) { .spin, .shake { animation: none; } }
+    </style>
+</head>
+<body>
+    <main class="card" id="card">
+        <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l20 20"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.8a15 15 0 0 1 4.2-2.6"/><path d="M10.7 5.1A15 15 0 0 1 22 8.8"/><path d="M5 12.9a10 10 0 0 1 5.2-2.7"/><path d="M13.9 10.4A10 10 0 0 1 19 12.9"/><path d="M12 20h.01"/></svg>
+        </div>
+        <h1>인터넷에 연결되어 있지 않아요</h1>
+        <p>연결이 돌아오면 자동으로 이전 화면으로 돌아가요.</p>
+        <div class="tips">
+            <b>확인해 보세요</b><br>
+            · 와이파이가 켜져 있는지<br>
+            · 학원 공유기 연결이 되어 있는지<br>
+            · 비행기 모드가 꺼져 있는지
+        </div>
+        <button type="button" id="retry">다시 시도</button>
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+        <div class="brand">K&amp;P 수학입시학원</div>
+    </main>
+    <script>
+        (function () {
+            var btn = document.getElementById('retry'), status = document.getElementById('status'), card = document.getElementById('card');
+            var busy = false;
+
+            // 이 주소(서비스 워커가 가로챈 원래 페이지)를 서버에 직접 물어서 실제로 연결됐는지 확인한다.
+            // navigator.onLine은 와이파이만 붙어 있어도 true라서 믿을 수 없다.
+            function check() {
+                var ctl = typeof AbortController === 'function' ? new AbortController() : null;
+                var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 6000);
+                return fetch(location.href, { method: 'GET', cache: 'no-store', credentials: 'same-origin', signal: ctl ? ctl.signal : undefined })
+                    .then(function (res) { clearTimeout(timer); return res && (res.ok || res.status < 500); })
+                    .catch(function () { clearTimeout(timer); return false; });
+            }
+
+            function setBusy(on) {
+                busy = on; btn.disabled = on;
+                btn.innerHTML = on ? '<span class="spin"></span>연결 확인 중…' : '다시 시도';
+            }
+
+            function attempt(manual) {
+                if (busy) return;
+                if (manual) { setBusy(true); status.className = 'status'; status.textContent = ''; }
+                check().then(function (online) {
+                    if (online) {
+                        status.className = 'status ok'; status.textContent = '연결됐어요! 이동 중…';
+                        location.reload();
+                        return;
+                    }
+                    if (manual) {
+                        setBusy(false);
+                        status.className = 'status fail'; status.textContent = '아직 연결되지 않았어요. 잠시 후 다시 시도해 주세요.';
+                        card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+                    }
+                });
+            }
+
+            btn.addEventListener('click', function () { attempt(true); });
+            window.addEventListener('online', function () { attempt(false); });           // 연결이 돌아오는 순간
+            document.addEventListener('visibilitychange', function () { if (!document.hidden) attempt(false); }); // 화면을 다시 켰을 때
+            setInterval(function () { if (!document.hidden) attempt(false); }, 10000);   // 조용히 10초마다 확인
+        })();
+    </script>
+</body>
+</html>

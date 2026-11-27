@@ -429,6 +429,12 @@ button:hover{background:#003a94;box-shadow:none;transform:none}button:active{tra
 </style>
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/components.css">
+    <!-- 인터넷이 끊겼을 때 흰 화면·공룡 대신 "다시 시도" 안내 화면(offline.html)을 보여 주는 서비스 워커 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+        }
+    </script>
 </head>
 <body>
 

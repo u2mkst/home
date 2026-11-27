@@ -451,6 +451,12 @@
     </style>
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/components.css">
+    <!-- 인터넷이 끊겼을 때 흰 화면·공룡 대신 "다시 시도" 안내 화면(offline.html)을 보여 주는 서비스 워커 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+        }
+    </script>
 </head>
 <body>
 
@@ -949,6 +955,8 @@
             }
 
             if (retryBtn) retryBtn.addEventListener('click', load);
+            // 인터넷이 끊겨서 못 불러왔다면, 연결이 돌아오는 순간 저절로 다시 불러온다.
+            window.addEventListener('online', () => { if (panel.classList.contains('is-error')) load(); });
             load();
         })();
 

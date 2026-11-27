@@ -61,6 +61,12 @@
 
         .hint { margin-top: 26px; text-align: center; font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
     </style>
+    <!-- 인터넷이 끊겼을 때 흰 화면·공룡 대신 "다시 시도" 안내 화면(offline.html)을 보여 주는 서비스 워커 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+        }
+    </script>
 </head>
 <body>
     <div class="page">
