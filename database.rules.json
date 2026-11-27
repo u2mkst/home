@@ -61,15 +61,28 @@
         "teacher"
       ],
       "$msgId": {
-        ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2' || (!data.exists() && newData.child('studentUid').val() === auth.uid))",
+        ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2' || (!data.exists() && newData.child('studentUid').val() === auth.uid && newData.hasChildren(['studentUid', 'teacher', 'message', 'timestamp']) && newData.child('timestamp').val() === now && newData.child('read').val() === false && newData.parent().parent().child('writeThrottle').child(auth.uid).child('messages').val() === now && (!root.child('writeThrottle').child(auth.uid).child('messages').exists() || now - root.child('writeThrottle').child(auth.uid).child('messages').val() >= 3000)))",
         ".validate": "$msgId.matches(/^[-0-9A-Za-z_]{1,40}$/)",
         "message": {
-          ".validate": "newData.isString() && newData.val().length < 5000"
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length < 5000"
         },
         "replies": {
           "$rid": {
             ".validate": "$rid.matches(/^[-0-9A-Za-z_]{1,40}$/)"
-          }
+          },
+          ".validate": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')"
+        },
+        "studentName": {
+          ".validate": "newData.isString() && newData.val().length < 200"
+        },
+        "u2mId": {
+          ".validate": "newData.isString() && newData.val().length < 200"
+        },
+        "teacher": {
+          ".validate": "newData.isString() && newData.val().length < 200"
+        },
+        "$other": {
+          ".validate": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2' || $other === 'studentUid' || $other === 'timestamp' || $other === 'read')"
         }
       }
     },
@@ -79,9 +92,13 @@
           "read"
         ],
         ".read": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
-        ".write": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        ".write": "auth != null && (auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
         "$mid": {
-          ".validate": "$mid.matches(/^[-0-9A-Za-z_]{1,40}$/)"
+          ".validate": "$mid.matches(/^[-0-9A-Za-z_]{1,40}$/)",
+          "read": {
+            ".write": "auth != null && auth.uid === $uid && data.parent().exists()",
+            ".validate": "newData.isBoolean()"
+          }
         }
       }
     },
@@ -98,7 +115,16 @@
     "device_status": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
-        ".write": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')"
+        ".write": "auth != null && ((auth.uid === $uid && newData.child('lastUpdated').val() === now && (!data.child('lastUpdated').exists() || now - data.child('lastUpdated').val() >= 20000)) || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
+        "battery": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+        },
+        "lastUpdated": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "mathQuizProgress": {
@@ -106,7 +132,18 @@
         ".read": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
         ".write": "auth != null && (auth.uid === $uid || auth.uid === '9temrm7WfSXRKo5v5jJiz65t8yF2' || auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2')",
         "$date": {
-          ".validate": "$date.matches(/^[0-9]{8}$/)"
+          ".validate": "$date.matches(/^[0-9]{8}$/)",
+          "correctIndexes": {
+            "$i": {
+              ".validate": "$i.matches(/^[0-9]{1,2}$/) && newData.val() === true"
+            }
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
         }
       }
     },
@@ -125,10 +162,28 @@
         "timestamp"
       ],
       "$key": {
-        ".write": "auth != null && (auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2' || (!data.exists() && newData.child('studentUid').val() === auth.uid))",
+        ".write": "auth != null && (auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2' || (!data.exists() && newData.child('studentUid').val() === auth.uid && newData.hasChildren(['studentUid', 'content', 'timestamp']) && newData.child('timestamp').val() === now && newData.parent().parent().child('writeThrottle').child(auth.uid).child('suggestions').val() === now && (!root.child('writeThrottle').child(auth.uid).child('suggestions').exists() || now - root.child('writeThrottle').child(auth.uid).child('suggestions').val() >= 30000)))",
         ".validate": "$key.matches(/^[-0-9A-Za-z_]{1,40}$/)",
         "content": {
-          ".validate": "newData.isString() && newData.val().length < 5000"
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length < 5000"
+        },
+        "$other": {
+          ".validate": "auth != null && (auth.uid === 'OUcTOJNMDVXaMwouAqUluSvd2nH2' || $other === 'studentName' || $other === 'studentUid' || $other === 'schoolName' || $other === 'category' || $other === 'author' || $other === 'authorProfile' || $other === 'timestamp')"
+        },
+        "studentName": {
+          ".validate": "newData.isString() && newData.val().length < 400"
+        },
+        "schoolName": {
+          ".validate": "newData.isString() && newData.val().length < 400"
+        },
+        "category": {
+          ".validate": "newData.isString() && newData.val().length < 400"
+        },
+        "author": {
+          ".validate": "newData.isString() && newData.val().length < 400"
+        },
+        "authorProfile": {
+          ".validate": "newData.isString() && newData.val().length < 400"
         }
       }
     },
@@ -189,6 +244,14 @@
     },
     "lottoDraws": {
       ".read": "auth != null"
+    },
+    "writeThrottle": {
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        "$kind": {
+          ".validate": "($kind === 'messages' || $kind === 'suggestions') && newData.isNumber() && newData.val() === now"
+        }
+      }
     }
   }
 }

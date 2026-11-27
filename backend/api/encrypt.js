@@ -1,6 +1,7 @@
 const { applyCors } = require("../lib/cors");
 const { requireAuth } = require("../lib/firebaseAdmin");
 const { encryptOne, assertValidBatch } = require("../lib/aes");
+const { rejectIfUserRateLimited } = require("../lib/guard");
 
 module.exports = async (req, res) => {
     if (applyCors(req, res)) return;
@@ -10,7 +11,9 @@ module.exports = async (req, res) => {
     }
 
     try {
-        await requireAuth(req);
+        const decoded = await requireAuth(req);
+        // 계정당 분당 60회(메시지·문의·프로필 저장 등 정상 사용량의 수십 배)
+        if (await rejectIfUserRateLimited(res, decoded.uid, "encrypt", 60, 60 * 1000)) return;
 
         const { texts } = req.body || {};
         assertValidBatch(texts);

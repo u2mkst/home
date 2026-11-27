@@ -2090,6 +2090,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (hasBadWord) { showToast("🚨 비속어 및 욕설이 감지되어 등록할 수 없습니다."); return; }
 
         const currentUser = auth.currentUser;
+        const waitMs = cooldownLeftMs('suggestions');
+        if (waitMs > 0) { showToast(`⏳ 문의는 ${Math.ceil(waitMs / 1000)}초 뒤에 다시 보낼 수 있어요.`); return; }
         const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
 
         try {
@@ -2099,7 +2101,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             ]);
 
             const inquiryData = {
-                studentName: realName,
+                studentName: String(realName),
                 studentUid: currentUser ? currentUser.uid : "익명",
                 schoolName: currentStudentData.schoolName || "미지정",
                 category: "학원에 문의하기",
@@ -2109,11 +2111,11 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
-            await database.ref('suggestions').push(inquiryData);
+            await pushWithThrottle('suggestions', inquiryData);
             showToast("🏫 원장님께 문의가 접수되었습니다.");
             showView('home');
         } catch (err) {
-            showToast('전송 실패: ' + err.message);
+            showToast(friendlySendError(err, 'suggestions'));
         }
     }
 
@@ -3043,9 +3045,9 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     const level = window.AndroidApp.getBatteryLevel();
                     if (level !== undefined && level !== null) {
                         database.ref(`device_status/${studentUid}`).set({
-                            battery: parseInt(level),
+                            battery: Math.max(0, Math.min(100, parseInt(level) || 0)),
                             lastUpdated: firebase.database.ServerValue.TIMESTAMP
-                        });
+                        }).catch(() => {}); // 쓰기 간격 제한(20초)에 걸려도 다음 주기에 다시 보고한다
                     }
                 } catch (e) { console.error("배터리 텔레메트리 에러:", e); }
             } else if (navigator.getBattery) {
@@ -3053,7 +3055,7 @@ body{background-color:var(--bg-page);color:var(--text-main)}
                     database.ref(`device_status/${studentUid}`).set({
                         battery: Math.round(battery.level * 100),
                         lastUpdated: firebase.database.ServerValue.TIMESTAMP
-                    });
+                    }).catch(() => {});
                 });
             }
         }, 60000);
@@ -3483,6 +3485,34 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         historyListeners = [];
     }
 
+    /* 🚦 연속 전송 제한 (Firebase 규칙과 같은 값). 규칙은 같은 쓰기에서 writeThrottle/{내 uid}/{종류} 를 서버 시각으로
+       갱신해야만 새 글을 받아 주고, 직전 기록과 간격이 너무 짧으면 거절한다. 화면에서도 미리 막아 친절하게 안내한다. */
+    const SEND_COOLDOWN_MS = { messages: 3000, suggestions: 30000 };
+    const lastSendAt = { messages: 0, suggestions: 0 };
+
+    function cooldownLeftMs(kind) {
+        return Math.max(0, lastSendAt[kind] + SEND_COOLDOWN_MS[kind] - Date.now());
+    }
+
+    // kind('messages' | 'suggestions')의 새 글 하나를 제한 기록과 함께 저장한다.
+    function pushWithThrottle(kind, data) {
+        const uid = auth.currentUser.uid;
+        const key = database.ref(kind).push().key;
+        return database.ref().update({
+            [`${kind}/${key}`]: data,
+            [`writeThrottle/${uid}/${kind}`]: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => { lastSendAt[kind] = Date.now(); });
+    }
+
+    function friendlySendError(err, kind) {
+        const denied = err && (err.code === 'PERMISSION_DENIED' || /permission/i.test(err.message || ''));
+        if (denied) {
+            lastSendAt[kind] = Date.now(); // 규칙이 막았다면 방금 보낸 것으로 보고 잠시 쉰다
+            return kind === 'suggestions' ? '문의를 너무 자주 보내고 있어요. 잠시 후 다시 시도해 주세요.' : '메시지를 너무 빨리 보내고 있어요. 잠시 후 다시 시도해 주세요.';
+        }
+        return '전송 오류: ' + (err && err.message ? err.message : err);
+    }
+
     async function sendMessageToTeacher() {
         const msgInput = document.getElementById('chat-input');
         if (!msgInput) return;
@@ -3490,6 +3520,8 @@ body{background-color:var(--bg-page);color:var(--text-main)}
         if (!text) return;
         if (!currentStudentData || !currentStudentData.teacher) { showToast('선생님 정보 동기화에 실패했습니다.'); return; }
         const currentUser = auth.currentUser;
+        const waitMs = cooldownLeftMs('messages');
+        if (waitMs > 0) { showToast(`⏳ 메시지는 ${Math.ceil(waitMs / 1000)}초 뒤에 다시 보낼 수 있어요.`); return; }
 
         const rawName = currentStudentData.name || currentStudentData.studentName || currentStudentData.userName || '이름없음';
 
@@ -3497,22 +3529,22 @@ body{background-color:var(--bg-page);color:var(--text-main)}
             const [realName, encMessage] = await Promise.all([decryptAES(rawName), encryptAES(text)]);
 
             const msgData = {
-                studentName: realName,
-                u2mId: currentStudentData.u2mId || '',
+                studentName: String(realName),
+                u2mId: String(currentStudentData.u2mId || ''),
                 studentUid: currentUser.uid,
-                teacher: currentStudentData.teacher,
+                teacher: String(currentStudentData.teacher),
                 message: encMessage,
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
                 read: false
             };
 
-            await database.ref('messages').push(msgData);
+            await pushWithThrottle('messages', msgData);
             msgInput.value = '';
             showToast("💬 메시지가 성공적으로 전송되었습니다.");
             const zoneEl = document.getElementById('messageHistoryZone');
             if (zoneEl) zoneEl.scrollTop = zoneEl.scrollHeight;
         } catch (err) {
-            showToast('전송 오류: ' + err.message);
+            showToast(friendlySendError(err, 'messages'));
         }
     }
 

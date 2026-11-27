@@ -1,5 +1,7 @@
 const crypto = require("crypto");
 const { admin } = require("./firebaseAdmin");
+const { nextQuotaState, evaluateQuota } = require("./quota");
+const { ADMIN_UIDS } = require("./adminUids");
 
 const MAX_ID_LEN = 64;
 const RECAPTCHA_SCORE_THRESHOLD = 0.5;
@@ -122,18 +124,34 @@ async function clearLockout(normalizedId) {
 // ---- IP별 요청 제한 (고정 윈도우) -----------------------------------------
 // 여러 계정에 돌아가며 흔한 PIN을 찔러보는 공격과 가입 남발을 막는다. 학원 와이파이처럼
 // 한 IP를 여러 학생이 같이 쓰는 환경이라 한도는 넉넉하게 잡는다.
-async function consumeIpQuota(req, bucket, maxPerWindow, windowMs) {
-    const ref = admin.database().ref(`rateLimits/${dbKey(bucket)}/${hashIp(getClientIp(req))}`);
+async function consumeQuota(bucket, key, maxPerWindow, windowMs) {
+    const ref = admin.database().ref(`rateLimits/${dbKey(bucket)}/${key}`);
     const now = Date.now();
-    const result = await ref.transaction((current) => {
-        if (!current || current.resetAt <= now) return { count: 1, resetAt: now + windowMs };
-        return { count: current.count + 1, resetAt: current.resetAt };
-    });
+    const result = await ref.transaction((current) => nextQuotaState(current, now, windowMs));
     const value = result.snapshot.val() || { count: 1, resetAt: now + windowMs };
-    return {
-        allowed: value.count <= maxPerWindow,
-        retryAfterMs: Math.max(0, value.resetAt - now),
-    };
+    return evaluateQuota(value, maxPerWindow, now);
+}
+
+async function consumeIpQuota(req, bucket, maxPerWindow, windowMs) {
+    return consumeQuota(bucket, hashIp(getClientIp(req)), maxPerWindow, windowMs);
+}
+
+// ---- 로그인한 계정(UID)별 요청 제한 ----------------------------------------
+// 로그인만 하면 누구나 부를 수 있는 API(암호화·복호화·출석)를 한 계정이 반복 호출해 서버 호출량(Vercel)과
+// DB를 소모하는 것을 막는다. 같은 와이파이를 여러 학생이 쓰는 환경이라 IP가 아니라 계정 기준으로 센다.
+// 관리자·마스터 계정은 운영 화면에서 많이 부르므로 제한하지 않는다. DB 오류면 막지 않는다(fail-open).
+async function rejectIfUserRateLimited(res, uid, bucket, maxPerWindow, windowMs, deps = {}) {
+    if (!uid || ADMIN_UIDS.has(uid)) return false;
+    const consume = deps.consumeQuota || consumeQuota;
+    try {
+        const quota = await consume(`user-${bucket}`, crypto.createHash("sha256").update(`uid:${uid}`).digest("hex").slice(0, 24), maxPerWindow, windowMs);
+        if (!quota.allowed) {
+            res.setHeader("Retry-After", String(Math.ceil(quota.retryAfterMs / 1000)));
+            res.status(429).json({ error: "user_limited", retryAfterMs: quota.retryAfterMs });
+            return true;
+        }
+    } catch (e) { /* fail-open */ }
+    return false;
 }
 
 // 로그인이 필요 없는 공개 프록시 API(NEIS/컴시간/날씨)의 남용을 막는 IP별 시간당 한도. DB 오류면 막지 않는다.
@@ -160,6 +178,7 @@ module.exports = {
     getLockout,
     beginAttempt,
     rejectIfRateLimited,
+    rejectIfUserRateLimited,
     clearLockout,
     consumeIpQuota,
 };

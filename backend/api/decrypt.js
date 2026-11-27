@@ -1,5 +1,6 @@
 const { applyCors } = require("../lib/cors");
 const { admin, requireAuth } = require("../lib/firebaseAdmin");
+const { rejectIfUserRateLimited } = require("../lib/guard");
 const { decryptOne, getDecryptKeys, assertValidBatch } = require("../lib/aes");
 const { ADMIN_UIDS } = require("../lib/adminUids");
 
@@ -68,6 +69,8 @@ module.exports = async (req, res) => {
     try {
         const decoded = await requireAuth(req);
         const isAdmin = ADMIN_UIDS.has(decoded.uid);
+        // 계정당 분당 300회(관리자는 제외)
+        if (await rejectIfUserRateLimited(res, decoded.uid, "decrypt", 300, 60 * 1000)) return;
         const isOwnStudentField = makeOwnFieldChecker();
 
         const body = req.body || {};

@@ -2,6 +2,7 @@ const { applyCors } = require("../lib/cors");
 const { admin, requireAuth } = require("../lib/firebaseAdmin");
 const { kstDateParts } = require("../lib/kst");
 const { grantAttendanceBadges } = require("../lib/achievements");
+const { rejectIfUserRateLimited } = require("../lib/guard");
 
 // 🔒 출석 체크. 예전엔 클라이언트가 attendance/{uid}에 날짜와 횟수를 직접 써서, 학생이 이번 달
 // 날짜를 전부 써넣거나 횟수를 마음대로 올릴 수 있었다. 이제 서버가 "서버 시각 기준 오늘"만
@@ -12,6 +13,8 @@ module.exports = async (req, res) => {
 
     try {
         const { uid } = await requireAuth(req);
+        // 출석은 하루 한 번이면 충분하다. 계정당 분당 20회까지만 받는다.
+        if (await rejectIfUserRateLimited(res, uid, "attendance", 20, 60 * 1000)) return;
         const { yearMonth, date } = kstDateParts();
         const monthRef = admin.database().ref(`attendance/${uid}/${yearMonth}`);
 

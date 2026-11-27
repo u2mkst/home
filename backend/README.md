@@ -50,6 +50,26 @@ Vercel 서버리스 함수. AES 키·NEIS 키·Firebase 관리자 권한처럼 �
 
 테스트: `node backend/lib/notionPublic.test.js` (가짜 fetch, 네트워크·Firebase 불필요)
 
+## 요청 제한 (남용 방지)
+
+**Firebase 규칙** (`database.rules.json`, 콘솔에서 직접 게시) — 로그인한 학생이 직접 쓰는 경로의 연속 쓰기와 모양을 제한한다.
+- `messages`(학생→선생님): **3초 간격**. `timestamp`는 서버 시각이어야 하고, **같은 쓰기에서 `writeThrottle/{내uid}/messages`도 서버 시각으로 갱신**해야 받아 준다(규칙은 간격을 저장된 마지막 시각으로만 판단할 수 있다). 학생이 첫 메시지에 가짜 선생님 답글(`replies`)·정의되지 않은 필드를 붙이는 것도 막는다.
+- `suggestions`(원장 문의): **30초 간격**, 같은 방식(`writeThrottle/{uid}/suggestions`).
+- `device_status`: **20초 간격**(앱은 60초마다 보고), 모양 고정(`battery` 0~100, `lastUpdated` 서버 시각).
+- `student_messages`: 학생은 자기 알림의 `read` 표시만 바꿀 수 있다(알림 생성·내용 수정은 선생님만).
+- `mathQuizProgress`: 정답 번호(0~99)·`true`·`updatedAt` 모양만 허용.
+- 학생 화면(`index.html`)은 `pushWithThrottle()`로 새 글과 제한 기록을 한 번의 `update()`로 저장하고, 3초/30초 안에 다시 누르면 안내 문구를 보여 준다.
+- ⚠️ 규칙을 게시하기 **전에** 이 화면 변경이 먼저 배포돼 있어야 한다. 규칙을 먼저 게시하면 예전 화면(캐시된 페이지)에서는 메시지·문의가 거절된다(새로고침하면 정상).
+- 검증: `cd backend/rules-test && npm install && npm test` — 실제 Realtime Database 에뮬레이터(Java 필요)로 53개 시나리오를 돌린다. `npm run abuse`는 연타·쓰레기 데이터 시도가 막히는지 숫자로 보여 준다.
+
+**서버 API** — IP별(공개 API) 한도는 `lib/guard.js`의 `rejectIfRateLimited`, **로그인한 계정별** 한도는 `rejectIfUserRateLimited`(UID를 해시해 `rateLimits/user-{버킷}/` 아래에 센다. 관리자·마스터는 제외, DB 오류면 막지 않음).
+| API | 한도 |
+|---|---|
+| `/api/encrypt` | 계정당 분당 60회 |
+| `/api/decrypt` | 계정당 분당 300회 |
+| `/api/attendance` | 계정당 분당 20회 |
+- 초과하면 `429 user_limited` + `Retry-After`. 계산부는 `lib/quota.js`(테스트: `node backend/lib/quota.test.js`).
+
 ## 태블릿 허용 사이트
 
 학원 태블릿 앱(브라우저)이 열 수 있는 사이트 목록을 서버에서 관리한다(`lib/tabletSites.js`).
