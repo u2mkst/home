@@ -50,6 +50,16 @@ Vercel 서버리스 함수. AES 키·NEIS 키·Firebase 관리자 권한처럼 �
 
 테스트: `node backend/lib/notionPublic.test.js` (가짜 fetch, 네트워크·Firebase 불필요)
 
+## 태블릿 허용 사이트
+
+학원 태블릿 앱(브라우저)이 열 수 있는 사이트 목록을 서버에서 관리한다(`lib/tabletSites.js`).
+
+- **저장:** RTDB `config/tabletSites` `{ hosts, updatedAt, updatedBy }` (서버 관리자 SDK만 쓴다). 저장된 게 없으면 내장 기본 목록(우리 사이트·유투엠·매쓰플랫·나이스).
+- **앱이 읽기(공개):** `GET /api/weather?data=tablet-sites` → `{ ok, hosts, updatedAt }`. 호스트 이름뿐이라 비밀이 아니며, 서버 캐시 1분 + 엣지 캐시, IP당 한도 1200/시간(학원 태블릿이 같은 공유기를 쓰므로 넉넉히). 읽기에 실패하면 502이고, 앱은 마지막으로 받아 저장해 둔 목록을 계속 쓴다. (Vercel 함수 12개 제한 때문에 `weather.js`의 `data` 갈래로 붙였다.)
+- **마스터가 편집:** `POST /api/admin` `action: "tablet-sites-get" | "tablet-sites-set"` (마스터 UID만). 저장 시 `https://`·`www.`·경로를 떼어 호스트로 정리하고, 우리 사이트(`u2mkst.github.io`)는 항상 맨 앞에 넣는다. `co.kr`·`github.io` 같은 공용 도메인(그 아래 모든 사이트가 열림)이나 형식이 틀린 항목이 하나라도 있으면 **아무것도 저장하지 않고** `400 bad_hosts` + `rejected` 목록을 돌려준다. 최대 50개. 화면은 `master.html` "태블릿 허용 사이트".
+- **적용 시점:** 앱이 켤 때·10분마다·화면이 다시 켜질 때 받아 온다. 서버 캐시가 있어 저장 후 반영까지 최대 약 1~2분 + 태블릿 갱신 주기(최대 10분).
+- 검사 규칙은 앱의 `SiteAccessPolicy.java`와 같아야 한다(바꿀 때 양쪽을 같이). 테스트: `node backend/lib/tabletSites.test.js`.
+
 ## 로또
 
 - 1회차 추첨일(2002-12-07 토 20:35 KST)로부터 매주 한 회차. 서버가 "지금 끝났어야 할 회차"를 계산한다.
