@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const { admin } = require("./firebaseAdmin");
-const { nextQuotaState, evaluateQuota } = require("./quota");
+const { nextQuotaState, evaluateQuota, computeLockoutMs, computeAdminLockoutMs, FAIL_MEMORY_MS } = require("./quota");
 const { ADMIN_UIDS } = require("./adminUids");
 
 const MAX_ID_LEN = 64;
@@ -73,17 +73,6 @@ async function isBotSuspected(token, expectedAction) {
 }
 
 // ---- 계정별 로그인 실패 락아웃 (서버 저장) --------------------------------
-function computeLockoutMs(failCount) {
-    if (failCount >= 50) return 24 * 60 * 60 * 1000;
-    if (failCount >= 20) return 60 * 60 * 1000;
-    if (failCount >= 8) return 10 * 60 * 1000;
-    if (failCount >= 5) return 2 * 60 * 1000;
-    if (failCount >= 3) return 30 * 1000;
-    return 0;
-}
-
-const FAIL_MEMORY_MS = 24 * 60 * 60 * 1000; // 마지막 실패 후 하루가 지나면 카운터 초기화
-
 function lockoutRef(normalizedId) {
     return admin.database().ref(`loginLockouts/${dbKey(normalizedId)}`);
 }
@@ -101,7 +90,7 @@ async function getLockout(normalizedId) {
 // 예전엔 "읽고 → 검증하고 → 실패하면 +1"이라, 같은 순간에 보낸 수십 개의 요청이 전부 "실패 0회"를 읽고
 // 통과해서 시도 횟수가 거의 세어지지 않았다(병렬 대입 공격). 이제 검증 전에 +1을 먼저 반영하고,
 // 성공하면 clearLockout으로 지운다. 잠금 중이면 allowed=false.
-async function beginAttempt(normalizedId) {
+async function beginAttempt(normalizedId, ladder = computeLockoutMs) {
     const now = Date.now();
     let blocked = false;
     const tx = await lockoutRef(normalizedId).transaction((cur) => {
@@ -110,7 +99,7 @@ async function beginAttempt(normalizedId) {
         if (state.lastFailAt && now - state.lastFailAt > FAIL_MEMORY_MS) state = { failCount: 0, lockedUntil: 0 };
         if ((state.lockedUntil || 0) > now) { blocked = true; return undefined; } // 잠금 중 → 변경 없이 중단
         const failCount = (state.failCount || 0) + 1;
-        const lockoutMs = computeLockoutMs(failCount);
+        const lockoutMs = ladder(failCount);
         return { failCount, lastFailAt: now, lockedUntil: lockoutMs > 0 ? now + lockoutMs : 0 };
     });
     const state = tx.snapshot.val() || { failCount: 0, lockedUntil: 0 };
@@ -134,6 +123,18 @@ async function consumeQuota(bucket, key, maxPerWindow, windowMs) {
 
 async function consumeIpQuota(req, bucket, maxPerWindow, windowMs) {
     return consumeQuota(bucket, hashIp(getClientIp(req)), maxPerWindow, windowMs);
+}
+
+// 센 횟수를 올리지 않고 "이미 한도를 넘었는가"만 본다. "로그인 실패"처럼 실패했을 때만 따로 세는 버킷에 쓴다
+// (성공한 로그인은 세지 않으므로, 한 IP에서 정상적으로 로그인하는 학생들이 많아도 걸리지 않는다). DB 오류면 막지 않는다.
+async function isIpQuotaExceeded(req, bucket, maxPerWindow) {
+    try {
+        const snap = await admin.database().ref(`rateLimits/${dbKey(bucket)}/${hashIp(getClientIp(req))}`).once("value");
+        const v = snap.val();
+        const now = Date.now();
+        if (v && Number(v.resetAt) > now && Number(v.count) >= maxPerWindow) return { exceeded: true, retryAfterMs: v.resetAt - now };
+    } catch (e) { /* fail-open */ }
+    return { exceeded: false, retryAfterMs: 0 };
 }
 
 // ---- 로그인한 계정(UID)별 요청 제한 ----------------------------------------
@@ -181,4 +182,7 @@ module.exports = {
     rejectIfUserRateLimited,
     clearLockout,
     consumeIpQuota,
+    isIpQuotaExceeded,
+    computeLockoutMs,
+    computeAdminLockoutMs,
 };

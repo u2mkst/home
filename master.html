@@ -685,6 +685,34 @@ body{background:#F2F4F6;color:#191F28}
                             <div style="height: 12px;"></div>
                             <div id="adm-lock-list" class="feed-container"><div class="no-data">불러오는 중...</div></div>
                         </div>
+
+                        <div class="panel-card">
+                            <h3>🛡️ 옛 학생 계정 보호</h3>
+                            <p class="panel-desc">예전 방식의 학생 계정은 Firebase 로그인 주소를 서버를 거치지 않고 직접 두드려 PIN을 알아낼 수 있어요. 아래 버튼은 그런 계정을 서버가 PIN을 검증하는 방식으로 이전해서 직접 대입을 막습니다. 학생은 아무것도 바꿀 필요가 없고, 이전해도 같은 PIN으로 그대로 로그인돼요.</p>
+                            <div id="legacy-status" class="adm-meta" style="margin-bottom:12px;">확인 중...</div>
+                            <button class="btn-block btn-purple" id="legacy-run" onclick="runLegacyMigration()" disabled>🛡️ 보호 안 된 계정 모두 보호하기</button>
+                            <div id="legacy-result" class="adm-meta" style="margin-top:12px;"></div>
+                        </div>
+
+                        <div class="panel-card">
+                            <h3>🔑 관리자 · 마스터 비밀번호</h3>
+                            <p class="panel-desc">관리자·마스터 로그인은 서버가 비밀번호를 검증하고, 틀리면 잠깁니다. 약한 비밀번호는 시간이 지나면 결국 추측되니 <b>12자 이상, 영문과 숫자를 함께</b> 쓰는 긴 비밀번호(문장)로 바꿔 두세요. 선생님들이 같이 쓰는 계정은 바꾼 뒤 선생님들께 알려 주세요.</p>
+                            <div id="adm-pw-accounts" class="feed-container"><div class="no-data">불러오는 중...</div></div>
+                            <div style="height: 12px;"></div>
+                            <div class="form-group">
+                                <label for="adm-pw-target">바꿀 계정</label>
+                                <select id="adm-pw-target" class="form-control"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="adm-pw-new">새 비밀번호 (12자 이상, 영문+숫자)</label>
+                                <input type="password" id="adm-pw-new" class="form-control" autocomplete="new-password">
+                            </div>
+                            <div class="form-group">
+                                <label for="adm-pw-confirm">새 비밀번호 한 번 더</label>
+                                <input type="password" id="adm-pw-confirm" class="form-control" autocomplete="new-password">
+                            </div>
+                            <button class="btn-block btn-purple" onclick="changeAdminPassword()">🔑 비밀번호 변경</button>
+                        </div>
                     </section>
 
                     <!-- 시스템 상태 -->
@@ -915,13 +943,36 @@ body{background:#F2F4F6;color:#191F28}
         }
         setTimeout(hideKstLoading, 2500); // 안전장치
 
+        // 관리자 로그인은 서버(/api/student-login, admin:true)가 비밀번호를 검증한다.
+        // Firebase 로그인 주소를 직접 부르면 서버의 잠금·IP 제한을 거치지 않는 무차별 대입에 노출되기 때문이다.
+        function adminLoginErrorMessage(status, data) {
+            const mins = (ms) => Math.max(1, Math.ceil((ms - Date.now()) / 60000));
+            const until = data && data.lockedUntil ? data.lockedUntil : (data && data.retryAfterMs ? Date.now() + data.retryAfterMs : 0);
+            if (status === 401) return until > Date.now() ? `이메일 또는 비밀번호가 올바르지 않아요. 시도가 많아서 ${mins(until)}분 동안 잠겼어요.` : '이메일 또는 비밀번호가 올바르지 않아요.';
+            if (status === 429) return `로그인 시도가 너무 많아요. ${until > Date.now() ? mins(until) + '분' : '잠시'} 뒤에 다시 시도해 주세요.`;
+            if (status === 400) return '이메일과 비밀번호를 확인해 주세요.';
+            if (status === 403) return '사용할 수 없는 계정이에요.';
+            return '로그인 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.';
+        }
+
+        async function serverAdminLogin(email, password) {
+            const res = await fetch(`${BACKEND_URL}/api/student-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ admin: true, email, password })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.token) throw new Error(adminLoginErrorMessage(res.status, data));
+            return data.token;
+        }
+
         function handleAdminLogin() {
             const email = document.getElementById('admin-email').value.trim();
             const password = document.getElementById('admin-password').value.trim();
             if (!email || !password) { alert("이메일과 비밀번호를 입력하세요."); return; }
-            auth.signInWithEmailAndPassword(email, password).catch(err => {
-                alert("인증 실패: " + err.message);
-            });
+            serverAdminLogin(email, password)
+                .then((token) => auth.signInWithCustomToken(token))
+                .catch(err => { alert("인증 실패: " + err.message); });
         }
 
         function handleAdminLogout() {
@@ -1587,6 +1638,78 @@ body{background:#F2F4F6;color:#191F28}
             }
         }
 
+        // ---------- 옛 학생 계정 보호 ----------
+        async function loadLegacyStatus() {
+            const st = document.getElementById('legacy-status'), btn = document.getElementById('legacy-run');
+            try {
+                const d = await adminApi('legacy-auth-status');
+                st.textContent = d.pending
+                    ? `전체 ${d.total}명 중 ${d.protected}명 보호됨 · 보호 안 된 계정 ${d.pending}개`
+                    : `전체 ${d.total}명 모두 보호되어 있어요 ✅`;
+                btn.disabled = !d.pending;
+            } catch (e) { st.textContent = '확인하지 못했습니다: ' + e.message; }
+        }
+
+        async function runLegacyMigration() {
+            const btn = document.getElementById('legacy-run'), out = document.getElementById('legacy-result');
+            if (!confirm('보호 안 된 학생 계정을 서버 PIN 검증 방식으로 이전할까요? 학생은 같은 PIN으로 그대로 로그인해요. 시간이 조금 걸릴 수 있어요.')) return;
+            btn.disabled = true;
+            const skip = []; let migrated = 0, mismatch = [], noPin = [], errors = [], throttled = 0;
+            try {
+                for (let guard = 0; guard < 200; guard++) {
+                    const d = await adminApi('legacy-auth-migrate', { skip });
+                    skip.push(...d.tried);
+                    migrated += d.migrated; mismatch = mismatch.concat(d.mismatch); noPin = noPin.concat(d.noPin); errors = errors.concat(d.errors); throttled += d.throttled;
+                    out.textContent = `진행 중… 이전 ${migrated}명 (남은 계정 ${Math.max(0, d.remaining)}개)`;
+                    if (d.done || !d.tried.length) break;
+                    if (d.throttled) { await new Promise(r => setTimeout(r, 5000)); }
+                }
+                const lines = [`이전 완료 ${migrated}명`];
+                if (mismatch.length) lines.push(`저장된 PIN과 실제 비밀번호가 달라 건드리지 않은 계정 ${mismatch.length}개(그 학생이 한 번 로그인하면 서버가 이전해요): ${mismatch.join(', ')}`);
+                if (noPin.length) lines.push(`PIN 정보가 없어 건너뜀 ${noPin.length}개: ${noPin.join(', ')}`);
+                if (throttled) lines.push(`Firebase가 잠시 제한한 계정 ${throttled}개 — 잠시 뒤 다시 눌러 주세요.`);
+                if (errors.length) lines.push(`오류 ${errors.length}건: ${errors.join(' / ')}`);
+                out.textContent = lines.join('\n'); out.style.whiteSpace = 'pre-wrap';
+            } catch (e) { out.textContent = '중단됨: ' + e.message; }
+            loadLegacyStatus();
+        }
+
+        // ---------- 관리자 · 마스터 비밀번호 ----------
+        async function loadAdminAccounts() {
+            const box = document.getElementById('adm-pw-accounts'), sel = document.getElementById('adm-pw-target');
+            try {
+                const { accounts } = await adminApi('admin-accounts');
+                const frag = document.createDocumentFragment();
+                accounts.forEach(a => {
+                    const row = admEl('div', 'adm-item'), main = admEl('div', 'adm-main');
+                    const nm = admEl('div', 'adm-name', a.email || a.uid);
+                    nm.appendChild(admTag(a.isMaster ? '마스터' : '선생님 공용', a.isMaster ? 'amber' : 'green'));
+                    main.appendChild(nm);
+                    main.appendChild(admEl('div', 'adm-meta', a.serverPassword
+                        ? (a.changedAt ? `비밀번호 마지막 변경: ${fmtDateTime(a.changedAt)}` : '서버 검증 방식 적용됨 (비밀번호는 아직 예전 그대로 — 긴 비밀번호로 바꿔 두세요)')
+                        : '아직 서버 검증 방식 전환 전 — 이 계정으로 한 번 로그인하면 자동으로 전환돼요'));
+                    row.appendChild(main); frag.appendChild(row);
+                });
+                box.replaceChildren(frag.childNodes.length ? frag : admEl('div', 'no-data', '계정이 없습니다.'));
+                sel.replaceChildren(...accounts.map(a => { const o = document.createElement('option'); o.value = a.uid; o.textContent = (a.isMaster ? '마스터 · ' : '선생님 공용 · ') + (a.email || a.uid); return o; }));
+            } catch (e) { box.replaceChildren(admEl('div', 'no-data', '불러오지 못했습니다: ' + e.message)); }
+        }
+
+        async function changeAdminPassword() {
+            const uid = document.getElementById('adm-pw-target').value;
+            const pw = document.getElementById('adm-pw-new').value, pw2 = document.getElementById('adm-pw-confirm').value;
+            if (!uid) { alert('바꿀 계정을 선택하세요.'); return; }
+            if (pw.length < 12 || !/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) { alert('비밀번호는 12자 이상이고 영문과 숫자를 모두 포함해야 해요.'); return; }
+            if (pw !== pw2) { alert('두 비밀번호가 서로 달라요.'); return; }
+            if (!confirm('이 계정의 비밀번호를 바꿀까요? 바꾸면 그 계정으로 로그인 중인 사람은 다음 로그인부터 새 비밀번호를 써야 해요.')) return;
+            try {
+                await adminApi('admin-password-set', { uid, password: pw });
+                document.getElementById('adm-pw-new').value = ''; document.getElementById('adm-pw-confirm').value = '';
+                alert('비밀번호를 바꿨어요.');
+                loadAdminAccounts();
+            } catch (e) { admError('변경 실패', e.message === 'weak_password' ? new Error('비밀번호가 너무 약해요. 12자 이상, 영문+숫자 포함.') : e); }
+        }
+
         // ---------- 시스템 상태 ----------
         const ADM_ENV_LABELS = {
             AES_KEY: ['AES 암호화 키', true], AES_KEY_STRONG: ['AES 키 길이(32자 이상)', true], AES_KEY_OLD: ['옛 AES 키 (교체 끝났다면 꺼져 있어야 함)', false],
@@ -1774,7 +1897,7 @@ body{background:#F2F4F6;color:#191F28}
             switchSection = function (id) {
                 original(id);
                 if (id === 'section-students') loadStudents();
-                else if (id === 'section-locks') loadLocks();
+                else if (id === 'section-locks') { loadLocks(); loadLegacyStatus(); loadAdminAccounts(); }
                 else if (id === 'section-status') loadStatus();
                 else if (id === 'section-sites') loadTabletSites();
                 else if (id === 'section-lotto') { refreshLottoStatus(); loadLottoSummary(); }

@@ -10,6 +10,8 @@ const { grantAttendanceBadges } = require("../lib/achievements");
 const { purgeStudentData } = require("../lib/purge");
 const lotto = require("./lotto");
 const tabletSites = require("../lib/tabletSites");
+const authMigration = require("../lib/authMigration");
+const { hashSecret } = require("../lib/pin");
 
 // 🛠️ 마스터 전용 운영 도구. 학생 계정/잠금/PIN/출석/로또처럼 클라이언트 규칙으로는 열어줄 수 없는
 // (서버만 쓸 수 있는) 데이터를 마스터 화면에서 다루기 위한 단일 엔드포인트다.
@@ -58,7 +60,9 @@ async function listLocks() {
 }
 
 async function unlock(body) {
-    const id = normalizeLoginId(body.id);
+    // 관리자·마스터 계정의 잠금은 `admin:이메일` 형태로 저장된다(학생 아이디와 겹치지 않게).
+    const raw = typeof body.id === "string" ? body.id.trim().toLowerCase() : "";
+    const id = /^admin:[a-z0-9._@+-]{3,160}$/.test(raw) ? raw : normalizeLoginId(body.id);
     if (!id) throw fail(400, "bad_id");
     await admin.database().ref(`loginLockouts/${dbKey(id)}`).remove();
     return { ok: true };
@@ -353,7 +357,71 @@ async function tabletSitesSet(body) {
     }
 }
 
+// ---------- 옛 학생 계정 보호 ----------
+// Firebase 비밀번호가 아직 "00"+PIN 그대로인 계정은 Firebase 로그인 주소를 직접 두드리는 대입에 노출돼 있다.
+// 이 버튼은 그런 계정을 서버 PIN 검증 방식으로 이전한다(한 번에 PER_CALL명씩, 화면이 남은 수가 0이 될 때까지 반복 호출).
+const MIGRATE_PER_CALL = 8;
+
+async function legacyAuthStatus() {
+    const { total, done, pending } = await authMigration.listPending();
+    return { total, protected: done, pending: pending.length };
+}
+
+async function legacyAuthMigrate(body) {
+    // 이전이 안 되는 계정(저장된 PIN과 실제 비밀번호가 다름 등)이 앞에 몰려 있어도 뒤 계정이 막히지 않게,
+    // 화면이 이미 시도한 uid(skip)를 보내면 그것들은 건너뛴다.
+    const skip = new Set((Array.isArray(body.skip) ? body.skip : []).filter((x) => typeof x === "string").slice(0, 1000));
+    const { pending } = await authMigration.listPending();
+    const batch = pending.filter((p) => !skip.has(p.uid)).slice(0, MIGRATE_PER_CALL);
+    const out = { migrated: 0, mismatch: [], noPin: [], throttled: 0, errors: [], tried: batch.map((p) => p.uid) };
+    for (const p of batch) {
+        const r = await authMigration.migrateOne({ uid: p.uid, student: p.student, apply: true });
+        if (r.status === "migrated") out.migrated++;
+        else if (r.status === "mismatch") out.mismatch.push(p.label);
+        else if (r.status === "no_pin") out.noPin.push(p.label);
+        else if (r.status === "throttled") out.throttled++;
+        else out.errors.push(`${p.label}: ${r.message || "error"}`);
+        await new Promise((resolve) => setTimeout(resolve, 250)); // Firebase 자체 제한을 건드리지 않도록 천천히
+    }
+    out.remaining = pending.filter((p) => !skip.has(p.uid)).length - batch.length; // 아직 시도 안 한 계정 수
+    out.done = out.remaining <= 0;
+    return out;
+}
+
+// ---------- 관리자·마스터 비밀번호 ----------
+// 이제 서버가 비밀번호를 검증하므로 Firebase의 "비밀번호 최대 6자" 정책과 무관하게 긴 비밀번호를 쓸 수 있다.
+// 시도 횟수는 잠금으로 제한되지만 약한 비밀번호는 결국 추측되므로, 12자 이상(영문+숫자 포함)만 받는다.
+async function adminAccounts() {
+    const accounts = [];
+    for (const uid of ADMIN_UIDS) {
+        try {
+            const user = await admin.auth().getUser(uid);
+            const secret = (await admin.database().ref(`loginSecrets/${uid}`).once("value")).val();
+            accounts.push({ uid, email: user.email || "", serverPassword: Boolean(secret && secret.hash), randomized: Boolean(secret && secret.randomized), changedAt: (secret && secret.changedAt) || 0, isMaster: MASTER_UIDS.has(uid) });
+        } catch (e) { /* 계정이 없으면 목록에서 뺀다 */ }
+    }
+    return { accounts };
+}
+
+async function adminPasswordSet(body) {
+    if (typeof body.uid !== "string" || !ADMIN_UIDS.has(body.uid)) throw fail(400, "bad_uid");
+    const pw = body.password;
+    if (typeof pw !== "string" || pw.length < 12 || pw.length > 128 || !/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) throw fail(400, "weak_password");
+    const user = await admin.auth().getUser(body.uid);
+    const ref = admin.database().ref(`loginSecrets/${body.uid}`);
+    await ref.set({ ...hashSecret(pw), randomized: false, changedAt: admin.database.ServerValue.TIMESTAMP, changedBy: body.__uid || null });
+    // Firebase 쪽 비밀번호는 무작위 값으로 바꿔 둔다(주소를 직접 두드려도 대입할 수 없게).
+    await admin.auth().updateUser(body.uid, { password: randomAuthPassword() });
+    await ref.child("randomized").set(true);
+    if (user.email) await admin.database().ref(`loginLockouts/${dbKey(`admin:${user.email.toLowerCase()}`)}`).remove(); // 비밀번호를 바꾸면 잠금도 풀어 준다
+    return { ok: true };
+}
+
 const ACTIONS = {
+    "admin-accounts": adminAccounts,
+    "admin-password-set": adminPasswordSet,
+    "legacy-auth-status": legacyAuthStatus,
+    "legacy-auth-migrate": legacyAuthMigrate,
     "tablet-sites-get": tabletSitesGet,
     "tablet-sites-set": tabletSitesSet,
     locks: listLocks,

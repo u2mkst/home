@@ -1,1 +1,1 @@
-{ "emulators": { "database": { "port": 9199 }, "ui": { "enabled": false } } }
+{ "emulators": { "auth": { "port": 9099 }, "database": { "port": 9199 }, "ui": { "enabled": false } } }

@@ -33,4 +33,5 @@ function isValidPin(pin) {
     return typeof pin === "string" && /^\d{4}$/.test(pin);
 }
 
-module.exports = { hashPin, verifyPin, isValidPin };
+// 관리자 비밀번호처럼 PIN이 아닌 비밀값도 같은 방식(salt + 서버 후추 + scrypt)으로 해시한다.
+module.exports = { hashPin, verifyPin, isValidPin, hashSecret: hashPin, verifySecret: verifyPin };

@@ -30,9 +30,6 @@ for (const name of ["FIREBASE_SERVICE_ACCOUNT", "AES_KEY", "PIN_PEPPER"]) {
 }
 
 const { admin } = require("../lib/firebaseAdmin");
-const { decryptOne, getDecryptKeys } = require("../lib/aes");
-const { hashPin, isValidPin } = require("../lib/pin");
-const { randomAuthPassword } = require("../lib/authPassword");
 const { ADMIN_UIDS } = require("../lib/adminUids");
 
 const APPLY = process.argv.includes("--apply");
@@ -40,20 +37,8 @@ const FORCE = process.argv.includes("--force");
 const onlyIdx = process.argv.indexOf("--only");
 const ONLY = onlyIdx >= 0 ? String(process.argv[onlyIdx + 1] || "").toLowerCase() : null;
 if (FORCE && !ONLY) { console.error("--force 는 --only <아이디> 와 함께만 쓸 수 있습니다."); process.exit(1); }
-const FIREBASE_WEB_API_KEY = "AIzaSyD-F55blgdfzEygJ9-OUEqw22_EHKOhggg";
+const { migrateOne } = require("../lib/authMigration");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function passwordWorks(email, pin) {
-    const res = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_WEB_API_KEY}`,
-        { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password: `00${pin}`, returnSecureToken: false }) }
-    );
-    if (res.ok) return "ok";
-    const json = await res.json().catch(() => ({}));
-    const message = (json.error && json.error.message) || "";
-    return message.startsWith("TOO_MANY_ATTEMPTS") ? "throttled" : "wrong";
-}
 
 (async () => {
     const db = admin.database();
@@ -69,32 +54,13 @@ async function passwordWorks(email, pin) {
         if (ONLY && String(s.u2mId || "").toLowerCase() !== ONLY) continue;
         if (secrets[uid] && secrets[uid].randomized && !FORCE) { stats.alreadyDone++; continue; }
         const label = `${s.u2mId || uid}`;
-        try {
-            const pin = decryptOne(getDecryptKeys(), s.phone);
-            if (!isValidPin(pin)) { stats.noPin.push(label); continue; }
-
-            const user = await admin.auth().getUser(uid);
-            if (!FORCE) {
-                const result = await passwordWorks(user.email, pin);
-                await sleep(300);
-                if (result === "throttled") { stats.throttled.push(label); continue; }
-                if (result !== "ok") { stats.mismatched.push(label); continue; }
-            }
-
-            if (APPLY) {
-                // 해시를 먼저 저장(이후 서버가 해시로 로그인시킴) → 그 다음 Firebase 비밀번호를 무작위로 교체.
-                // 교체에 실패해도 해시는 남아 로그인은 되고, randomized 표시가 없으니 다음 실행/로그인 때 다시 시도한다.
-                await db.ref(`loginSecrets/${uid}`).update({ ...hashPin(pin), migratedAt: admin.database.ServerValue.TIMESTAMP });
-                if (!FORCE) {
-                    await admin.auth().updateUser(uid, { password: randomAuthPassword() });
-                    await db.ref(`loginSecrets/${uid}/randomized`).set(true);
-                }
-            }
-            stats.migrated++;
-            console.log(`${APPLY ? "이전 완료" : "이전 가능"}: ${label}`);
-        } catch (e) {
-            stats.errors.push(`${label}: ${e.message}`);
-        }
+        const r = await migrateOne({ uid, student: s, apply: APPLY, force: FORCE });
+        if (!FORCE) await sleep(300);
+        if (r.status === "throttled") stats.throttled.push(label);
+        else if (r.status === "mismatch") stats.mismatched.push(label);
+        else if (r.status === "no_pin") stats.noPin.push(label);
+        else if (r.status === "error") stats.errors.push(`${label}: ${r.message}`);
+        else { stats.migrated++; console.log(`${APPLY ? "이전 완료" : "이전 가능"}: ${label}`); }
     }
 
     console.log("\n==== 결과 (" + (APPLY ? "적용" : "미리보기") + ") ====");
